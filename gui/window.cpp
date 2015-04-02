@@ -280,19 +280,19 @@ LRESULT CALLBACK EditCmdProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 void CreateButtons(HWND hWnd)
 {
-	hwndProcess = CreateWindow(L"Button", L"Process", WS_CHILD | WS_VISIBLE,
+	hwndProcess = CreateWindow(L"Button", L"프로세스", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndOption = CreateWindow(L"Button", L"Option", WS_CHILD | WS_VISIBLE,
+	hwndOption = CreateWindow(L"Button", L"옵션", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndClear = CreateWindow(L"Button", L"Clear", WS_CHILD | WS_VISIBLE,
+	hwndClear = CreateWindow(L"Button", L"지우기", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndSave = CreateWindow(L"Button", L"Save", WS_CHILD | WS_VISIBLE,
+	hwndSave = CreateWindow(L"Button", L"저장", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndRemoveLink = CreateWindow(L"Button", L"Unlink", WS_CHILD | WS_VISIBLE,
+	hwndRemoveLink = CreateWindow(L"Button", L"링크해제", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndRemoveHook = CreateWindow(L"Button", L"Unhook", WS_CHILD | WS_VISIBLE,
+	hwndRemoveHook = CreateWindow(L"Button", L"후킹해제", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndTop = CreateWindow(L"Button", L"Top", WS_CHILD | WS_VISIBLE | BS_PUSHLIKE | BS_CHECKBOX,
+	hwndTop = CreateWindow(L"Button", L"항상위", WS_CHILD | WS_VISIBLE | BS_PUSHLIKE | BS_CHECKBOX,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndProcessComboBox = CreateWindow(L"ComboBox", NULL,
 		WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST |
