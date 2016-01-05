@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ITH.h"
 #include "utility.h" // UniqueHandle, CriticalSection
 

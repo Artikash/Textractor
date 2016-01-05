@@ -23,11 +23,13 @@ typedef unsigned long seh_dword_t; // DWORD in <windows.h>
 
 // 12/13/2013 jichi
 // The list implementation is not thread-safe
-extern seh_dword_t seh_esp[seh_capacity], // LPVOID, current stack
-                   seh_eip[seh_capacity], // LPVOID, current IP address
-                   seh_eh[seh_capacity];  // EXCEPTION_ROUTINE, current exception handler function address
-extern seh_dword_t seh_count; // current number of exception handlers
-extern seh_dword_t seh_handler; //extern PEXCEPTION_ROUTINE seh_handler;
+extern seh_dword_t
+  seh_count     // current number of exception handlers
+  , seh_handler // extern PEXCEPTION_ROUTINE seh_handler;
+  , seh_esp[seh_capacity]   // LPVOID, current stack
+  , seh_eip[seh_capacity]   // LPVOID, current IP address
+  , seh_eh[seh_capacity]    // EXCEPTION_ROUTINE, current exception handler function address
+;
 
 /**
  *  Push SEH handler
@@ -49,21 +51,22 @@ extern seh_dword_t seh_handler; //extern PEXCEPTION_ROUTINE seh_handler;
  *
  *  EPB and ESP
  *  http://stackoverflow.com/questions/1395591/what-is-exactly-the-base-pointer-and-stack-pointer-to-what-do-they-point
+ *
+ *  TODO: get sizeof dword instead of hardcode 4
  */
 #define seh_push_(_label, _eh, _r1, _r2) \
   { \
-    __asm mov _r1, _eh /* move new handler address */ \
-    __asm mov _r2, seh_count /* get current seh counter */ \
-    __asm mov dword ptr seh_eh[_r2*4], _r1 /* set recover exception hander */ \
-    __asm mov _r1, _label /* move jump label address */ \
+    __asm mov _r1, _eh                      /* move new handler address */ \
+    __asm mov _r2, seh_count                /* get current seh counter */ \
+    __asm mov dword ptr seh_eh[_r2*4], _r1  /* set recover exception hander */ \
+    __asm mov _r1, _label                   /* move jump label address */ \
     __asm mov dword ptr seh_eip[_r2*4], _r1 /* set recover eip as the jump label */  \
-    __asm push seh_handler /* push new safe seh handler */ \
-    __asm push fs:[0] /* push old fs:0 */ \
+    __asm push seh_handler                  /* push new safe seh handler */ \
+    __asm push fs:[0]                       /* push old fs:0 */ \
     __asm mov dword ptr seh_esp[_r2*4], esp /* safe current stack address */ \
-    __asm mov fs:[0], esp /* change fs:0 to the current stack */ \
-    __asm inc seh_count /* increase number of seh */ \
+    __asm mov fs:[0], esp                   /* change fs:0 to the current stack */ \
+    __asm inc seh_count                     /* increase number of seh */ \
   }
-  //TODO: get sizeof dword instead of hardcode 4
 
 /**
  *  Restore old SEH handler
@@ -71,12 +74,13 @@ extern seh_dword_t seh_handler; //extern PEXCEPTION_ROUTINE seh_handler;
  */
 #define seh_pop_(_label) \
   { \
-    __asm _label: /* the exception recover label */ \
-    __asm pop dword ptr fs:[0] /* restore old fs:0 */ \
-    __asm add esp, 4 /* pop seh_handler */ \
-    __asm dec seh_count /* decrease number of seh */ \
+    __asm _label:               /* the exception recover label */ \
+    __asm pop dword ptr fs:[0]  /* restore old fs:0 */ \
+    __asm add esp, 4            /* pop seh_handler */ \
+    __asm dec seh_count         /* decrease number of seh */ \
   }
 
+// Define seh_exit as the shared exit label
 #define seh_pop()   seh_pop_(seh_exit)
 #define seh_push()  seh_push_(seh_exit, 0, eax, ecx) // use ecx as counter better than ebx
 
@@ -93,7 +97,7 @@ extern seh_dword_t seh_handler; //extern PEXCEPTION_ROUTINE seh_handler;
   { \
     seh_push() \
     __VA_ARGS__ \
-    ; \
+    ; /* allow __VA_ARGS__ to be an expression */ \
     seh_pop() \
   }
 
@@ -106,7 +110,7 @@ extern seh_dword_t seh_handler; //extern PEXCEPTION_ROUTINE seh_handler;
   { \
     seh_push_eh(_eh) \
     __VA_ARGS__ \
-    ; \
+    ; /* allow __VA_ARGS__ to be an expression */ \
     seh_pop() \
   }
 

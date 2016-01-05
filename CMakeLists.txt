@@ -1,55 +1,3 @@
-# common.pri
-# DEFINES += _CRT_NON_CONFORMING_SWPRINTFS
-
-# config.pri
-# win32 {
-#   DEFINES += _SECURE_SCL=0 _SCL_SECURE_NO_WARNINGS
-#   DEFINES += _CRT_SECURE_NO_WARNINGS
-#   QMAKE_CXXFLAGS += -wd4819
-# }
-
-# config.pri
-# win32 {
-#   CONFIG(nocrt) {
-#     message(CONFIG nocrt)
-#     QMAKE_CFLAGS                -= /MD /MDd
-#     QMAKE_CFLAGS_DEBUG          -= /MD /MDd
-#     QMAKE_CFLAGS_RELEASE        -= /MD /MDd
-#     QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO -= /MD /MDd
-#     QMAKE_CXXFLAGS              -= /MD /MDd
-#     QMAKE_CXXFLAGS_DEBUG        -= /MD /MDd
-#     QMAKE_CXXFLAGS_RELEASE      -= /MD /MDd
-#     QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO -= /MD /MDd
-#   }
-#   CONFIG(eha) {
-#     message(CONFIG eha)
-#     QMAKE_CXXFLAGS_STL_ON        -= /EHsc
-#     QMAKE_CXXFLAGS_EXCEPTIONS_ON -= /EHsc
-#     QMAKE_CXXFLAGS_STL_ON        += /EHa
-#     QMAKE_CXXFLAGS_EXCEPTIONS_ON += /EHa
-#   }
-#   CONFIG(noeh) {
-#     message(CONFIG noeh)
-#     QMAKE_CXXFLAGS          += /GR-
-#     QMAKE_CXXFLAGS_RTTI_ON  -= /GR
-#     QMAKE_CXXFLAGS_STL_ON        -= /EHsc
-#     QMAKE_CXXFLAGS_EXCEPTIONS_ON -= /EHsc
-#     CONFIG(dll) {
-#       QMAKE_LFLAGS +=  /ENTRY:"DllMain"
-#     }
-#   }
-#   CONFIG(nosafeseh) {
-#     message(CONFIG nosafeseh)
-#     QMAKE_LFLAGS += -safeseh:no
-#   }
-# }
-
-# dllconfig.pri
-# win32 {
-#   CONFIG(eh): DEFINES += ITH_HAS_SEH
-#   CONFIG(noeh): DEFINES -= ITH_HAS_SEH
-# }
-
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
@@ -66,10 +14,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release")
 
 set(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION ON)
 
+
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_VERSION_MAJOR 3)
-set(CPACK_PACKAGE_VERSION_MINOR 4152)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_MINOR 5640)
+set(CPACK_PACKAGE_VERSION_PATCH 1)
 set(CPACK_SOURCE_GENERATOR "ZIP")
 set(CPACK_SOURCE_IGNORE_FILES "/CVS/;/\\\\.svn/;/\\\\.bzr/;/\\\\.hg/;/\\\\.git/;\\\\.swp$;\\\\.#;/#" ".*\\\\.user$" "\\\\.gitignore$" "\\\\.gitmodules$" "\\\\.git$")
 include(CPack)
@@ -84,24 +33,20 @@ add_compile_options(
 )
 
 add_definitions(
-  -D_SECURE_SCL=0 # config.pri
-  -D_SCL_SECURE_NO_WARNINGS # config.pri
-  -D_CRT_SECURE_NO_WARNINGS # config.pri
-  -DUNICODE # config.pri
-  -D_UNICODE
-  -D_CRT_NON_CONFORMING_SWPRINTFS # common.pri
-  -DITH_HAS_CRT
+  /D_SECURE_SCL=0 # config.pri
+  /D_SCL_SECURE_NO_WARNINGS # config.pri
+  /D_CRT_SECURE_NO_WARNINGS # config.pri
+  /DUNICODE # config.pri
+  /D_UNICODE
+  /D_CRT_NON_CONFORMING_SWPRINTFS # common.pri
+  /DITH_HAS_CRT
 )
 
-include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/vnr ${CMAKE_BINARY_DIR}/gui)
-
-set(common_src
-  vnr/ith/common/const.h
-  vnr/ith/common/defs.h
-  vnr/ith/common/except.h
-  vnr/ith/common/growl.h
-  vnr/ith/common/memory.h
-  vnr/ith/common/types.h
+include_directories(
+  .
+  vnr
+  vnr/texthook
+  ${CMAKE_BINARY_DIR}/gui
 )
 
 set(resource_src
@@ -119,13 +64,8 @@ set(ithvnr_src
   gui/main.cpp
   gui/ProcessWindow.cpp
   gui/ProcessWindow.h
-  gui/Profile.cpp
-  gui/Profile.h
   gui/ProfileManager.cpp
   gui/ProfileManager.h
-  gui/pugiconfig.hpp
-  gui/pugixml.cpp
-  gui/pugixml.hpp
   gui/resource.h
   gui/utility.cpp
   gui/utility.h
@@ -135,17 +75,15 @@ set(ithvnr_src
   gui/window.h
   gui/TextBuffer.cpp
   gui/TextBuffer.h
-  ${common_src}
   ${resource_src}
 )
-
-source_group("common" FILES ${common_src})
 
 source_group("Resource Files" FILES ${resource_src})
 
 add_executable(${PROJECT_NAME} ${ithvnr_src})
 
 add_subdirectory(vnr)
+# add_subdirectory(profile)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
   LINK_FLAGS "/SUBSYSTEM:WINDOWS /MANIFESTDEPENDENCY:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\""
@@ -158,8 +96,9 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+  profile
   vnrhost
-  vnrsys
+  ithsys
   ${WDK_HOME}/lib/wxp/i386/ntdll.lib
   comctl32.lib
   psapi.lib

@@ -5,7 +5,7 @@
 #include "ntdll/ntdll.h"
 //#include <cstdio>
 
-// - Global variables -
+// - Define global variables -
 
 seh_dword_t seh_esp[seh_capacity],
             seh_eip[seh_capacity],
@@ -29,16 +29,16 @@ seh_dword_t seh_count;
 // EXCEPTION_DISPOSITION
 // NTAPI
 // EXCEPTION_ROUTINE (
-//     _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
-//     _In_ PVOID EstablisherFrame,
-//     _In_ struct _CONTEXT *ContextRecord,
-//     _In_ PVOID DispatcherContext
-//     );
+//   _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+//   _In_ PVOID EstablisherFrame,
+//   _In_ struct _CONTEXT *ContextRecord,
+//   _In_ PVOID DispatcherContext
+// );
 extern "C" EXCEPTION_DISPOSITION _seh_handler( // extern C is needed to avoid name hashing in C++
   _In_ PEXCEPTION_RECORD ExceptionRecord,
-  _In_ PVOID EstablisherFrame,     // does not work if I use ULONG64
+  _In_ PVOID EstablisherFrame,  // do not work if I use ULONG64
   _Inout_ PCONTEXT ContextRecord,
-  _In_ PVOID DispatcherContext) // PDISPATCHER_CONTEXT is not declared in windows.h
+  _In_ PVOID DispatcherContext) // PDISPATCHER_CONTEXT is not declared in windows.h, use PVOID instead
 {
   //assert(::seh_count > 0);
   ContextRecord->Esp = ::seh_esp[::seh_count - 1];

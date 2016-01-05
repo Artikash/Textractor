@@ -18,15 +18,16 @@
 #include "ProcessWindow.h"
 #include "resource.h"
 #include "language.h"
-#include "ith/host/srv.h"
-#include "ith/host/hookman.h"
-#include "ith/common/const.h"
+#include "host/host.h"
+#include "host/hookman.h"
+#include "vnrhook/include/const.h"
 #include "version.h"
 #include "ProfileManager.h"
-#include "ith/host/SettingManager.h"
+#include "host/settings.h"
 #include "CustomFilter.h"
-#include "Profile.h"
+#include "profile/Profile.h"
 #include "TextBuffer.h"
+#include "profile/misc.h"
 
 #define CMD_SIZE 512
 
@@ -46,39 +47,38 @@ extern ProfileManager* pfman; // ProfileManager.cpp
 extern HookManager* man; // main.cpp
 extern CustomFilter* mb_filter; // main.cpp
 extern CustomFilter* uni_filter; // main.cpp
-extern SettingManager* setman; // main.cpp
+extern Settings* setman; // main.cpp
 #define COMMENT_BUFFER_LENGTH 512
 static WCHAR comment_buffer[COMMENT_BUFFER_LENGTH];
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void SaveSettings(); // main.cpp
 extern LONG split_time, process_time, inject_delay, insert_delay,
-	auto_inject, auto_insert, clipboard_flag, cyclic_remove, global_filter; //main.cpp
+auto_inject, auto_insert, clipboard_flag, cyclic_remove, global_filter; //main.cpp
 static int last_select, last_edit;
-void AddLinksToHookManager(const Profile& pf, size_t thread_profile_index, const TextThread& thread);
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= NULL;
-	wcex.hCursor		= NULL;
-	wcex.hbrBackground	= GetStockBrush(WHITE_BRUSH);
-	wcex.lpszMenuName	= NULL;
-	wcex.lpszClassName	= ClassName;
-	wcex.hIconSm		= LoadIcon(hInstance, (LPWSTR)IDI_ICON1);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = NULL;
+	wcex.hCursor = NULL;
+	wcex.hbrBackground = GetStockBrush(WHITE_BRUSH);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = ClassName;
+	wcex.hIconSm = LoadIcon(hInstance, (LPWSTR)IDI_ICON1);
 	return RegisterClassEx(&wcex);
 }
 
 BOOL InitInstance(HINSTANCE hInstance, DWORD nAdmin, RECT* rc)
 {
 	hIns = hInstance;
-	LPCWSTR name =  (nAdmin) ? ClassNameAdmin : ClassName;
+	LPCWSTR name = (nAdmin) ? ClassNameAdmin : ClassName;
 	hMainWnd = CreateWindow(ClassName, name, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 		rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, NULL, NULL, hInstance, 0);
 	if (!hMainWnd)
@@ -137,8 +137,8 @@ BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			clipboard_flag = IsDlgButtonChecked(hDlg, IDC_CHECK3);
 			cyclic_remove = IsDlgButtonChecked(hDlg, IDC_CHECK4);
 			global_filter = IsDlgButtonChecked(hDlg, IDC_CHECK5);
-			setman->SetValue(SETTING_CLIPFLAG, clipboard_flag);
-			setman->SetValue(SETTING_SPLIT_TIME, split_time);
+			setman->clipboardFlag = clipboard_flag;
+			setman->splittingInterval = split_time;
 			if (auto_inject == 0) auto_insert = 0;
 		}
 		case IDCANCEL:
@@ -187,15 +187,15 @@ BOOL CALLBACK ProcessDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			pswnd->DetachProcess();
 			break;
 		case IDC_BUTTON5:
-			pswnd->AddCurrentToProfile();
+            pswnd->CreateProfileForSelectedProcess();
 			break;
 		case IDC_BUTTON6:
-			pswnd->RemoveCurrentFromProfile();
+            pswnd->DeleteProfileForSelectedProcess();
 			break;
 		}
 	}
 	return TRUE;
-	
+
 	case WM_NOTIFY:
 	{
 		LPNMHDR dr = (LPNMHDR)lParam;
@@ -223,22 +223,22 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CHAR:  //Filter user input.
-			if (GetKeyState(VK_CONTROL) & 0x8000)
-			{
-				if (wParam == 1)
-				{
-					Edit_SetSel(hwndEdit, 0, -1);
-					SendMessage(hwndEdit, WM_COPY, 0, 0);
-				}
-			}
-			return 0;
-	case WM_LBUTTONUP:
-			if (hwndEdit)
-				SendMessage(hwndEdit, WM_COPY, 0, 0);
-	default:
+		if (GetKeyState(VK_CONTROL) & 0x8000)
 		{
-			return proc(hWnd, message, wParam, lParam);
+			if (wParam == 1)
+			{
+				Edit_SetSel(hwndEdit, 0, -1);
+				SendMessage(hwndEdit, WM_COPY, 0, 0);
+			}
 		}
+		return 0;
+	case WM_LBUTTONUP:
+		if (hwndEdit)
+			SendMessage(hwndEdit, WM_COPY, 0, 0);
+	default:
+	{
+		return proc(hWnd, message, wParam, lParam);
+	}
 
 	}
 }
@@ -280,29 +280,29 @@ LRESULT CALLBACK EditCmdProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 void CreateButtons(HWND hWnd)
 {
-	hwndProcess = CreateWindow(L"Button", L"í”„ë¡œì„¸ìŠ¤", WS_CHILD | WS_VISIBLE,
+	hwndProcess = CreateWindow(L"Button", L"ÇÁ·Î¼¼½º", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndOption = CreateWindow(L"Button", L"ì˜µì…˜", WS_CHILD | WS_VISIBLE,
+	hwndOption = CreateWindow(L"Button", L"¿É¼Ç", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndClear = CreateWindow(L"Button", L"ì§€ìš°ê¸°", WS_CHILD | WS_VISIBLE,
+	hwndClear = CreateWindow(L"Button", L"Áö¿ì±â", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndSave = CreateWindow(L"Button", L"ì €ìž¥", WS_CHILD | WS_VISIBLE,
+	hwndSave = CreateWindow(L"Button", L"ÀúÀå", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndRemoveLink = CreateWindow(L"Button", L"ë§í¬í•´ì œ", WS_CHILD | WS_VISIBLE,
+	hwndRemoveLink = CreateWindow(L"Button", L"¸µÅ©ÇØÁ¦", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndRemoveHook = CreateWindow(L"Button", L"í›„í‚¹í•´ì œ", WS_CHILD | WS_VISIBLE,
+	hwndRemoveHook = CreateWindow(L"Button", L"ÈÄÅ·ÇØÁ¦", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndTop = CreateWindow(L"Button", L"í•­ìƒìœ„", WS_CHILD | WS_VISIBLE | BS_PUSHLIKE | BS_CHECKBOX,
+	hwndTop = CreateWindow(L"Button", L"Ç×»óÀ§", WS_CHILD | WS_VISIBLE | BS_PUSHLIKE | BS_CHECKBOX,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndProcessComboBox = CreateWindow(L"ComboBox", NULL,
 		WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST |
 		CBS_SORT | WS_VSCROLL | WS_TABSTOP,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndCmd = CreateWindowEx(WS_EX_CLIENTEDGE, L"Edit", NULL,
-		WS_CHILD | WS_VISIBLE | ES_NOHIDESEL| ES_LEFT | ES_AUTOHSCROLL,
+		WS_CHILD | WS_VISIBLE | ES_NOHIDESEL | ES_LEFT | ES_AUTOHSCROLL,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"Edit", NULL,
-		WS_CHILD | WS_VISIBLE | ES_NOHIDESEL| WS_VSCROLL |
+		WS_CHILD | WS_VISIBLE | ES_NOHIDESEL | WS_VSCROLL |
 		ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 }
@@ -336,7 +336,7 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 	else if (h == hwndTop)
 	{
-		if (Button_GetCheck(h)==BST_CHECKED)
+		if (Button_GetCheck(h) == BST_CHECKED)
 		{
 			Button_SetCheck(h, BST_UNCHECKED);
 			SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
@@ -363,7 +363,7 @@ void ClickButton(HWND hWnd, HWND h)
 			DWORD pid = std::stoul(str);
 			SaveProcessProfile(pid);
 		}
-		pfman->SaveProfile();
+		pfman->SaveProfiles();
 	}
 	else if (h == hwndRemoveLink)
 	{
@@ -372,7 +372,7 @@ void ClickButton(HWND hWnd, HWND h)
 		{
 			DWORD from = std::stoul(str, NULL, 16);
 			if (from != 0)
-				IHF_UnLink(from);
+				Host_UnLink(from);
 		}
 	}
 	else if (h == hwndRemoveHook)
@@ -388,12 +388,12 @@ void ClickButton(HWND hWnd, HWND h)
 			entry = entry.substr(i + 1);
 			DWORD addr = std::stoul(entry, NULL, 16);
 			if (threadNumber != 0)
-				IHF_RemoveHook(pid, addr);
+				Host_RemoveHook(pid, addr);
 		}
 	}
 }
 
-DWORD ThreadFilter(TextThread* thread, BYTE* out,DWORD len, DWORD new_line, PVOID data, bool space)
+DWORD ThreadFilter(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
 {
 	DWORD status = thread->Status();
 	if (global_filter && !new_line && thread->Number() != 0)
@@ -444,7 +444,7 @@ DWORD ThreadFilter(TextThread* thread, BYTE* out,DWORD len, DWORD new_line, PVOI
 	return len;
 }
 
-DWORD ThreadOutput(TextThread* thread, BYTE* out,DWORD len, DWORD new_line, PVOID data, bool space)
+DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
 {
 	if (len == 0)
 		return len;
@@ -498,11 +498,16 @@ bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)
 	return result;
 }
 
-void AddToCombo(TextThread& thread, bool replace)
+std::wstring GetEntryString(TextThread& thread)
 {
-	WCHAR entry[512];
+	CHAR entry[512];
 	thread.GetEntryString(entry, 512);
-	std::wstring entryWithLink(entry);
+	return toUnicodeString(entry);
+}
+
+std::wstring CreateEntryWithLink(TextThread& thread, std::wstring& entry)
+{
+	std::wstring entryWithLink = entry;
 	if (thread.Link())
 		entryWithLink += L"->" + ToHexString(thread.LinkNumber());
 	if (thread.PID() == 0)
@@ -510,7 +515,14 @@ void AddToCombo(TextThread& thread, bool replace)
 	HookParam hp = {};
 	if (GetHookParam(thread.PID(), thread.Addr(), hp))
 		entryWithLink += L" (" + GetCode(hp, thread.PID()) + L")";
-	int i = ComboBox_FindString(hwndCombo, 0, entry);
+	return entryWithLink;
+}
+
+void AddToCombo(TextThread& thread, bool replace)
+{
+	std::wstring entry = GetEntryString(thread);
+	std::wstring entryWithLink = CreateEntryWithLink(thread, entry);
+	int i = ComboBox_FindString(hwndCombo, -1, entry.c_str());
 	if (replace)
 	{
 		int sel = ComboBox_GetCurSel(hwndCombo);
@@ -531,11 +543,12 @@ void AddToCombo(TextThread& thread, bool replace)
 
 void RemoveFromCombo(TextThread* thread)
 {
-	WCHAR entry[512];
+	CHAR entry[512];
 	thread->GetEntryString(entry, 512);
+	std::wstring unicodeEntry = toUnicodeString(entry);
 	if (thread->PID() == 0)
-		std::wcscat(entry, L"ConsoleOutput");
-	int i = ComboBox_FindString(hwndCombo, 0, entry);
+		unicodeEntry += L"ConsoleOutput";
+	int i = ComboBox_FindString(hwndCombo, 0, unicodeEntry.c_str());
 	if (i != CB_ERR)
 	{
 		if (ComboBox_DeleteString(hwndCombo, i) == CB_ERR)
@@ -595,6 +608,36 @@ DWORD AddRemoveLink(TextThread* thread)
 	return 0;
 }
 
+bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
+void AddLinksToHookManager(const Profile* pf, size_t thread_index, const TextThread* thread);
+
+DWORD ThreadCreate(TextThread* thread)
+{
+	thread->RegisterOutputCallBack(ThreadOutput, 0);
+	thread->RegisterFilterCallBack(ThreadFilter, 0);
+	AddToCombo(*thread, false);
+	const auto& tp = thread->GetThreadParameter();
+	auto pr = man->GetProcessRecord(tp->pid);
+	if (pr == NULL)
+		return 0;
+	if (IsUnicodeHook(*pr, tp->hook))
+		thread->Status() |= USING_UNICODE;
+	auto pf = pfman->GetProfile(tp->pid);
+	if (!pf)
+		return 0;
+	const std::wstring& hook_name = GetHookNameByAddress(*pr, thread->GetThreadParameter()->hook);
+	auto thread_profile = pf->FindThread(thread->GetThreadParameter(), hook_name);
+	if (thread_profile != pf->Threads().end())
+	{
+		(*thread_profile)->HookManagerIndex() = thread->Number();
+		auto thread_index = thread_profile - pf->Threads().begin();
+		AddLinksToHookManager(pf, thread_index, thread);
+		if (pf->IsThreadSelected(thread_profile))
+			ThreadReset(thread);
+	}
+	return 0;
+}
+
 bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 {
 	bool res = false;
@@ -612,50 +655,21 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 	return res;
 }
 
-DWORD ThreadCreate(TextThread* thread)
+void AddLinksToHookManager(const Profile* pf, size_t thread_index, const TextThread* thread)
 {
-	thread->RegisterOutputCallBack(ThreadOutput, 0);
-	thread->RegisterFilterCallBack(ThreadFilter, 0);
-	AddToCombo(*thread, false);
-	const auto tp = thread->GetThreadParameter();
-	auto pr = man->GetProcessRecord(tp->pid);
-	if (pr != NULL)
+	for (auto lp = pf->Links().begin(); lp != pf->Links().end(); ++lp)
 	{
-		if (IsUnicodeHook(*pr, tp->hook))
-			thread->Status() |= USING_UNICODE;
-	}
-
-	auto pf = pfman->GetProfile(tp->pid);
-	if (pf)
-	{
-		auto thread_profile = pf->FindThreadProfile(*tp);
-		if (thread_profile != pf->Threads().end())
+		if ((*lp)->FromIndex() == thread_index)
 		{
-			(*thread_profile)->HookManagerIndex() = thread->Number();
-			auto thread_profile_index = thread_profile - pf->Threads().begin();
-			AddLinksToHookManager(*pf, thread_profile_index, *thread);
-			if (pf->SelectedIndex() == thread_profile_index)
-				ThreadReset(thread);
-		}
-	}
-	return 0;
-}
-
-void AddLinksToHookManager(const Profile& pf, size_t thread_profile_index, const TextThread& thread)
-{
-	for (auto lp = pf.Links().begin(); lp != pf.Links().end(); ++lp)
-	{
-		if ((*lp)->FromIndex() == thread_profile_index)
-		{
-			WORD to_index = pf.Threads()[(*lp)->ToIndex()]->HookManagerIndex();
+			WORD to_index = pf->Threads()[(*lp)->ToIndex()]->HookManagerIndex();
 			if (to_index != 0)
-				man->AddLink(thread.Number(), to_index);
+				man->AddLink(thread->Number(), to_index);
 		}
-		if ((*lp)->ToIndex() == thread_profile_index)
+		if ((*lp)->ToIndex() == thread_index)
 		{
-			WORD from_index = pf.Threads()[(*lp)->FromIndex()]->HookManagerIndex();
+			WORD from_index = pf->Threads()[(*lp)->FromIndex()]->HookManagerIndex();
 			if (from_index != 0)
-				man->AddLink(from_index, thread.Number());
+				man->AddLink(from_index, thread->Number());
 		}
 	}
 }
@@ -663,14 +677,6 @@ void AddLinksToHookManager(const Profile& pf, size_t thread_profile_index, const
 DWORD ThreadRemove(TextThread* thread)
 {
 	RemoveFromCombo(thread);
-	const auto tp = thread->GetThreadParameter();
-	auto pf = pfman->GetProfile(tp->pid);
-	if (pf)
-	{
-		auto thread_profile = pf->FindThreadProfile(*tp);
-		if (thread_profile != pf->Threads().end())
-			(*thread_profile)->HookManagerIndex() = 0; // reset hookman index number
-	}
 	return 0;
 }
 
@@ -684,7 +690,6 @@ DWORD RegisterProcessList(DWORD pid)
 		ComboBox_AddString(hwndProcessComboBox, str);
 		if (ComboBox_GetCount(hwndProcessComboBox) == 1)
 			ComboBox_SetCurSel(hwndProcessComboBox, 0);
-		pfman->FindProfileAndUpdateHookAddresses(pid, path);
 	}
 	return 0;
 }
@@ -706,9 +711,6 @@ DWORD RemoveProcessList(DWORD pid)
 
 DWORD RefreshProfileOnNewHook(DWORD pid)
 {
-	auto path = GetProcessPath(pid);
-	if (!path.empty())
-		pfman->FindProfileAndUpdateHookAddresses(pid, path);
 	return 0;
 }
 
@@ -716,136 +718,138 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-		case WM_CREATE:
-			CreateButtons(hWnd);
-			// Add text to the window.
-			Edit_LimitText(hwndEdit, -1);
-			SendMessage(hwndEdit, WM_INPUTLANGCHANGEREQUEST, 0, 0x411);
-			proc = (WNDPROC)SetWindowLong(hwndEdit, GWL_WNDPROC, (LONG)EditProc);
-			proccmd = (WNDPROC)SetWindowLong(hwndCmd, GWL_WNDPROC, (LONG)EditCmdProc);
-			hwndCombo = CreateWindow(L"ComboBox", NULL,
-									WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST |
-									CBS_SORT | WS_VSCROLL | WS_TABSTOP,
-									0, 0, 0, 0, hWnd, 0, hIns, NULL);
+	case WM_CREATE:
+		CreateButtons(hWnd);
+		// Add text to the window.
+		Edit_LimitText(hwndEdit, -1);
+		SendMessage(hwndEdit, WM_INPUTLANGCHANGEREQUEST, 0, 0x411);
+		proc = (WNDPROC)SetWindowLong(hwndEdit, GWL_WNDPROC, (LONG)EditProc);
+		proccmd = (WNDPROC)SetWindowLong(hwndCmd, GWL_WNDPROC, (LONG)EditCmdProc);
+		hwndCombo = CreateWindow(L"ComboBox", NULL,
+			WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST |
+			CBS_SORT | WS_VSCROLL | WS_TABSTOP,
+			0, 0, 0, 0, hWnd, 0, hIns, NULL);
+		{
+			HDC hDC = GetDC(hWnd);
+			int nHeight = -MulDiv(12, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+			ReleaseDC(hWnd, hDC);
+			HFONT hf = CreateFont(nHeight, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+				L"MS Gothic");
+			hWhiteBrush = GetStockBrush(WHITE_BRUSH);
+			SendMessage(hwndCmd, WM_SETFONT, (WPARAM)hf, 0);
+			SendMessage(hwndEdit, WM_SETFONT, (WPARAM)hf, 0);
+			SendMessage(hwndCombo, WM_SETFONT, (WPARAM)hf, 0);
+			SendMessage(hwndProcessComboBox, WM_SETFONT, (WPARAM)hf, 0);
+			texts = new TextBuffer(hwndEdit);
+			man->RegisterThreadCreateCallback(ThreadCreate);
+			man->RegisterThreadRemoveCallback(ThreadRemove);
+			man->RegisterThreadResetCallback(ThreadReset);
+			TextThread* console = man->FindSingle(0);
+			console->RegisterOutputCallBack(ThreadOutput, NULL);
+			AddToCombo(*console, false);
+			man->RegisterProcessAttachCallback(RegisterProcessList);
+			man->RegisterProcessDetachCallback(RemoveProcessList);
+			man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
+			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
+			man->RegisterConsoleCallback(ConsoleOutput);
+			Host_Start();
 			{
-				HFONT hf = CreateFont(18, 0, 0, 0, FW_LIGHT, 0, 0, 0, SHIFTJIS_CHARSET, 0, 0, ANTIALIASED_QUALITY, 0,
-					L"MS Gothic");
-				hWhiteBrush = GetStockBrush(WHITE_BRUSH);
-				SendMessage(hwndCmd, WM_SETFONT, (WPARAM)hf, 0);
-				SendMessage(hwndEdit, WM_SETFONT, (WPARAM)hf, 0);
-				SendMessage(hwndCombo, WM_SETFONT, (WPARAM)hf, 0);
-				SendMessage(hwndProcessComboBox, WM_SETFONT, (WPARAM)hf, 0);
-				texts = new TextBuffer(hwndEdit);
-				man->RegisterThreadCreateCallback(ThreadCreate);
-				man->RegisterThreadRemoveCallback(ThreadRemove);
-				man->RegisterThreadResetCallback(ThreadReset);
-				TextThread* console = man->FindSingle(0);
-				console->RegisterOutputCallBack(ThreadOutput, NULL);
-				AddToCombo(*console, false);
-				man->RegisterProcessAttachCallback(RegisterProcessList);
-				man->RegisterProcessDetachCallback(RemoveProcessList);
-				man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
-				man->RegisterAddRemoveLinkCallback(AddRemoveLink);
-				man->RegisterConsoleCallback(ConsoleOutput);
-				IHF_Start();
-				{
-					static const WCHAR program_name[] = L"Interactive Text Hooker";
-					//static const WCHAR program_version[] = L"3.0";
-					static WCHAR version_info[256];
-					std::swprintf(version_info, L"%s %s (%s)", program_name, program_version, build_date);
-					man->AddConsoleOutput(version_info);
-					man->AddConsoleOutput(InitMessage);
-				}
-
-				if (background == 0)
-					man->AddConsoleOutput(BackgroundMsg);
-				if (!IHF_IsAdmin())
-					man->AddConsoleOutput(NotAdmin);
+				static const WCHAR program_name[] = L"Interactive Text Hooker";
+				//static const WCHAR program_version[] = L"3.0";
+				static WCHAR version_info[256];
+				std::swprintf(version_info, L"%s %s (%s)", program_name, program_version, build_date);
+				man->AddConsoleOutput(version_info);
+				man->AddConsoleOutput(InitMessage);
 			}
 
-			return 0;
-		case WM_COMMAND:
+			if (background == 0)
+				man->AddConsoleOutput(BackgroundMsg);
+		}
+
+		return 0;
+	case WM_COMMAND:
+	{
+		DWORD wmId, wmEvent, dwId;
+		wmId = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
+		switch (wmEvent)
+		{
+		case EN_VSCROLL:
+		{
+			SCROLLBARINFO info = { sizeof(info) };
+			GetScrollBarInfo(hwndEdit, OBJID_VSCROLL, &info);
+			InvalidateRect(hwndEdit, 0, 1);
+			ValidateRect(hwndEdit, &info.rcScrollBar);
+			RedrawWindow(hwndEdit, 0, 0, RDW_ERASE);
+		}
+		break;
+		case CBN_SELENDOK:
+		{
+			if ((HWND)lParam == hwndProcessComboBox)
+				return 0;
+			dwId = ComboBox_GetCurSel(hwndCombo);
+			int len = ComboBox_GetLBTextLen(hwndCombo, dwId);
+			if (len > 0)
 			{
-				DWORD wmId, wmEvent, dwId;
-				wmId    = LOWORD(wParam);
-				wmEvent = HIWORD(wParam);
-				switch (wmEvent)
-				{
-				case EN_VSCROLL:
-					{
-						SCROLLBARINFO info={sizeof(info)};
-						GetScrollBarInfo(hwndEdit, OBJID_VSCROLL, &info);
-						InvalidateRect(hwndEdit, 0, 1);
-						ValidateRect(hwndEdit, &info.rcScrollBar);
-						RedrawWindow(hwndEdit, 0, 0, RDW_ERASE);
-					}
-					break;
-				case CBN_SELENDOK:
-					{
-						if ((HWND)lParam == hwndProcessComboBox)
-							return 0;
-						dwId = ComboBox_GetCurSel(hwndCombo);
-						int len = ComboBox_GetLBTextLen(hwndCombo, dwId);
-						if (len > 0)
-						{
-							LPWSTR pwcEntry = new WCHAR[len + 1];
-							len = ComboBox_GetLBText(hwndCombo, dwId, pwcEntry);
-							DWORD num = std::stoul(pwcEntry, NULL, 16);
-							man->SelectCurrent(num);
-							delete[] pwcEntry;
-						}
-					}
-					return 0;
-				case BN_CLICKED:
-					ClickButton(hWnd, (HWND)lParam);
-					break;
-				default:
-					break;
-				}
+				LPWSTR pwcEntry = new WCHAR[len + 1];
+				len = ComboBox_GetLBText(hwndCombo, dwId, pwcEntry);
+				DWORD num = std::stoul(pwcEntry, NULL, 16);
+				man->SelectCurrent(num);
+				delete[] pwcEntry;
 			}
+		}
+		return 0;
+		case BN_CLICKED:
+			ClickButton(hWnd, (HWND)lParam);
 			break;
-		case WM_SETFOCUS:
-			SetFocus(hwndEdit);
-			return 0;
-		case WM_SIZE:
-			{
-				WORD width = LOWORD(lParam);
-				WORD height = HIWORD(lParam);
-				DWORD l = width / 7;
-				WORD h = HIWORD(GetDialogBaseUnits()); // height of the system font
-				h = h + (h / 2);
-				HDC hDC = GetDC(hWnd);
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-				FillRect(hDC, &rc, hWhiteBrush);
-				ReleaseDC(hWnd, hDC);
-				MoveWindow(hwndProcess, 0, 0, l, h, TRUE);
-				MoveWindow(hwndOption, l * 1, 0, l, h, TRUE);
-				MoveWindow(hwndTop, l * 2, 0, l, h, TRUE);
-				MoveWindow(hwndClear, l * 3, 0, l, h, TRUE);
-				MoveWindow(hwndRemoveLink, l * 4, 0, l, h, TRUE);
-				MoveWindow(hwndRemoveHook, l * 5, 0, l, h, TRUE);
-				MoveWindow(hwndSave, l * 6, 0, width - 6 * l, h, TRUE);
-				l *= 2;
-				MoveWindow(hwndProcessComboBox, 0, h, l, 200, TRUE);
-				MoveWindow(hwndCmd, l, h, width - l, h, TRUE);
-				MoveWindow(hwndCombo, 0, h * 2, width, 200, TRUE);
-				h *= 3;
-				MoveWindow(hwndEdit, 0, h, width, height - h, TRUE);
-			}
-			return 0;
-		case WM_DESTROY:
-			man->RegisterThreadCreateCallback(0);
-			man->RegisterThreadRemoveCallback(0);
-			man->RegisterThreadResetCallback(0);
-			man->RegisterProcessAttachCallback(0);
-			man->RegisterProcessDetachCallback(0);
-			//delete texts;
-			SaveSettings();
-			PostQuitMessage(0);
-			return 0;
 		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			break;
+		}
+	}
+	break;
+	case WM_SETFOCUS:
+		SetFocus(hwndEdit);
+		return 0;
+	case WM_SIZE:
+	{
+		WORD width = LOWORD(lParam);
+		WORD height = HIWORD(lParam);
+		DWORD l = width / 7;
+		WORD h = HIWORD(GetDialogBaseUnits()); // height of the system font
+		h = h + (h / 2);
+		HDC hDC = GetDC(hWnd);
+		RECT rc;
+		GetClientRect(hWnd, &rc);
+		FillRect(hDC, &rc, hWhiteBrush);
+		ReleaseDC(hWnd, hDC);
+		MoveWindow(hwndProcess, 0, 0, l, h, TRUE);
+		MoveWindow(hwndOption, l * 1, 0, l, h, TRUE);
+		MoveWindow(hwndTop, l * 2, 0, l, h, TRUE);
+		MoveWindow(hwndClear, l * 3, 0, l, h, TRUE);
+		MoveWindow(hwndRemoveLink, l * 4, 0, l, h, TRUE);
+		MoveWindow(hwndRemoveHook, l * 5, 0, l, h, TRUE);
+		MoveWindow(hwndSave, l * 6, 0, width - 6 * l, h, TRUE);
+		l *= 2;
+		MoveWindow(hwndProcessComboBox, 0, h, l, 200, TRUE);
+		MoveWindow(hwndCmd, l, h, width - l, h, TRUE);
+		MoveWindow(hwndCombo, 0, h * 2, width, 200, TRUE);
+		h *= 3;
+		MoveWindow(hwndEdit, 0, h, width, height - h, TRUE);
+	}
+	return 0;
+	case WM_DESTROY:
+		man->RegisterThreadCreateCallback(0);
+		man->RegisterThreadRemoveCallback(0);
+		man->RegisterThreadResetCallback(0);
+		man->RegisterProcessAttachCallback(0);
+		man->RegisterProcessDetachCallback(0);
+		//delete texts;
+		SaveSettings();
+		PostQuitMessage(0);
+		return 0;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
 }

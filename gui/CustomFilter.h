@@ -16,6 +16,7 @@
  */
 
 #pragma once
+
 #include "ITH.h"
 
 typedef void (*CustomFilterCallBack) (WORD, PVOID);

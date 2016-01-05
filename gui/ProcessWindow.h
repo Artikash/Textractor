@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ITH.h"
 
 class ProcessWindow
@@ -9,8 +10,8 @@ public:
 	void RefreshProcess();
 	void AttachProcess();
 	void DetachProcess();
-	void AddCurrentToProfile();
-	void RemoveCurrentFromProfile();
+    void CreateProfileForSelectedProcess();
+    void DeleteProfileForSelectedProcess();
 	void RefreshThread(int index);
 private:
 	void RefreshThreadWithPID(DWORD pid, bool isAttached);

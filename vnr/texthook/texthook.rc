@@ -1,0 +1,38 @@
+/*
+ * texthook.rc
+ * 10/20/2011 jichi
+ */
+#if defined(UNDER_CE)
+# include <winbase.h>
+#else
+# include <winver.h>
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+   FILEVERSION 1,0,0,0
+   PRODUCTVERSION 1,0,0,0
+   FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+   FILEFLAGS VS_FF_DEBUG
+#else
+   FILEFLAGS 0x0L
+#endif
+   FILEOS VOS__WINDOWS32
+   FILETYPE VFT_DLL
+   FILESUBTYPE 0x0L
+   BEGIN
+      BLOCK "StringFileInfo"
+      BEGIN
+         BLOCK "040904B0"
+         BEGIN
+            VALUE "CompanyName", "Sakuradite\0"
+            VALUE "FileDescription", "Text Hook\0"
+            VALUE "FileVersion", "1.0.0.0\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012.\0"
+            VALUE "OriginalFilename", "texthook.dll\0"
+            VALUE "ProductName", "texthook\0"
+         END
+      END
+   END
+
+/* End of Version info */

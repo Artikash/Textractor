@@ -1,5 +1,5 @@
 ; safeseh.asm
-; 12/13/2013  jichi
+; 12/13/2013 jichi
 ; see: http://stackoverflow.com/questions/12019689/custom-seh-handler-with-safeseh
 ; see: http://code.metager.de/source/xref/WebKit/Source/WebCore/platform/win/makesafeseh.asm
 ; see: http://jpassing.com/2008/05/20/fun-with-low-level-seh/

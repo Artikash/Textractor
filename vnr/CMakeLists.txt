@@ -1,33 +1,29 @@
+# config.pri
+#  DEFINES += _SECURE_SCL=0 _SCL_SECURE_NO_WARNINGS
+#  DEFINES += _CRT_SECURE_NO_WARNINGS
+
 cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 project(vnr)
 
-set(WDK_HOME "C:\\WinDDK\\7600.16385.1" CACHE FILEPATH "path to the Windows DDK directory")
+set(WDK_HOME "C:\\WinDDK\\7600.16385.1" CACHE FILEPATH "Windows Driver Kit path")
 
 add_definitions(
-  -DUNICODE
-  -D_UNICODE
+  /DUNICODE
+  /D_UNICODE
+  /D_SECURE_SCL=0
+  /D_SCL_SECURE_NO_WARNINGS
+  /D_CRT_SECURE_NO_WARNINGS
 )
 
-include_directories(${PROJECT_SOURCE_DIR})
-
-set(common_src
-  ${PROJECT_SOURCE_DIR}/ith/common/const.h
-  ${PROJECT_SOURCE_DIR}/ith/common/defs.h
-  ${PROJECT_SOURCE_DIR}/ith/common/except.h
-  ${PROJECT_SOURCE_DIR}/ith/common/growl.h
-  ${PROJECT_SOURCE_DIR}/ith/common/memory.h
-  ${PROJECT_SOURCE_DIR}/ith/common/types.h
-)
-  
-set(import_src
-  ${PROJECT_SOURCE_DIR}/ith/import/mono/funcinfo.h
-  ${PROJECT_SOURCE_DIR}/ith/import/mono/types.h
-  ${PROJECT_SOURCE_DIR}/ith/import/ppsspp/funcinfo.h
+include_directories(
+  ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/texthook
 )
 
-add_subdirectory(ith/hook)
-add_subdirectory(ith/host)
-add_subdirectory(ith/sys)
+add_subdirectory(vnrhook)
+add_subdirectory(texthook/host)
+add_subdirectory(ithsys)
+add_subdirectory(profile)

@@ -3,7 +3,7 @@
 # This file is for Windows only.
 # Compile SAFESEH table from the ASM file.
 # See: http://stackoverflow.com/questions/19722308/exception-handler-not-called-in-c
-# See: ::http://stackoverflow.com/questions/12019689/custom-seh-handler-with-safeseh
+# See: http://stackoverflow.com/questions/12019689/custom-seh-handler-with-safeseh
 # See: http://msdn.microsoft.com/en-us/library/16aexws6.aspx
 
 BUILDDIR = ../../../build

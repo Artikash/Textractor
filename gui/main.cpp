@@ -16,11 +16,11 @@
  */
 
 #include "ITH.h"
-#include "ith/host/srv.h"
-#include "ith/host/hookman.h"
-#include "ith/host/SettingManager.h"
+#include "host/host.h"
+#include "host/hookman.h"
+#include "host/settings.h"
 #include "CustomFilter.h"
-#include "profile.h"
+#include "profile/Profile.h"
 #include "ProfileManager.h"
 
 HINSTANCE hIns;
@@ -39,10 +39,10 @@ extern "C" {
 CustomFilter* uni_filter;
 CustomFilter* mb_filter;
 HookManager* man;
-SettingManager* setman;
+Settings* setman;
 LONG split_time, cyclic_remove, global_filter;
 LONG process_time, inject_delay, insert_delay,
-	auto_inject, auto_insert, clipboard_flag;
+auto_inject, auto_insert, clipboard_flag;
 
 std::map<std::wstring, long> setting;
 
@@ -69,11 +69,13 @@ void RecordUniChar(WORD uni, PVOID f)
 
 void SaveSettings()
 {
-	GetWindowRect(hMainWnd, &window);
-	setting[L"window_left"] = window.left;
-	setting[L"window_right"] = window.right;
-	setting[L"window_top"] = window.top;
-	setting[L"window_bottom"] = window.bottom;
+	WINDOWPLACEMENT wndpl;
+	wndpl.length = sizeof(WINDOWPLACEMENT);
+	GetWindowPlacement(hMainWnd, &wndpl);
+	setting[L"window_left"] = wndpl.rcNormalPosition.left;
+	setting[L"window_right"] = wndpl.rcNormalPosition.right;
+	setting[L"window_top"] = wndpl.rcNormalPosition.top;
+	setting[L"window_bottom"] = wndpl.rcNormalPosition.bottom;
 	setting[L"split_time"] = split_time;
 	setting[L"process_time"] = process_time;
 	setting[L"inject_delay"] = inject_delay;
@@ -238,17 +240,18 @@ LONG WINAPI UnhandledExcept(_EXCEPTION_POINTERS *ExceptionInfo)
 	return 0;
 }
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	InitCommonControls();
 	if (!IthInitSystemService())
 		TerminateProcess(GetCurrentProcess(), 0);
 	CreateMutex(NULL, TRUE, L"ITH_MAIN_RUNNING");
-	if (IHF_Init())
+	if (Host_Open())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
-		IHF_GetHookManager(&man);
-		IHF_GetSettingManager(&setman);
-		setman->SetValue(SETTING_SPLIT_TIME, 200);
+		Host_GetHookManager(&man);
+		Host_GetSettings(&setman);
+		setman->splittingInterval = 200;
 		MonitorFlag = true;
 		pfman = new ProfileManager();
 		mb_filter = new CustomFilter();
@@ -256,11 +259,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		DefaultSettings();
 		LoadSettings();
 		InitializeSettings();
-		setman->SetValue(SETTING_SPLIT_TIME, split_time);
-		setman->SetValue(SETTING_CLIPFLAG, clipboard_flag);
+		setman->splittingInterval = split_time;
+		setman->clipboardFlag = clipboard_flag > 0;
 		hIns = hInstance;
 		MyRegisterClass(hIns);
-		InitInstance(hIns, IHF_IsAdmin(), &window);
+		InitInstance(hIns, FALSE, &window);
 		MSG msg;
 		while (GetMessage(&msg, NULL, 0, 0))
 		{
@@ -277,7 +280,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	{
 		FindITH();
 	}
-	IHF_Cleanup();
+	Host_Close();
 	IthCloseSystemService();
 	TerminateProcess(GetCurrentProcess(), 0);
 }

@@ -1,0 +1,11 @@
+12/16/2013
+
+Differences between xp.dll and non-xp.dll for vnrhook.
+
+non-xp:
+  CONFIG += eh
+
+xp:
+  CONFIG += noeh
+  CONFIG -= embed_manifest_dll # Pure dynamic determined. The manifest would break Windows XP support
+  include($$LIBDIR/winseh/winseh_safe.pri)

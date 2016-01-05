@@ -1,0 +1,20 @@
+# 6/6/2012
+# IHF.dll
+# Skip swprintf and MessageBox statements in GetDebugPriv
+#
+# SVN checkout:    2012/6/6
+# - IHF/main.cpp:  2012/4/8
+# - IHF.{dll,lib}: 2012/6/5
+
+6F753055 CALL DWORD PTR DS:ntdll.ZwAdjustPrivilegesTOken
+6F75305B TEST EAX,EAX
+6F75305B JNE SHORT 6F753077 => JNE SHORT 6F75309F
+...
+6F753077 PUSH EAX
+...
+6F75309F MOVE EAX,DWORD PTR SS:[ESP]
+6F7530A2 PUSH EAX
+6F7530A3 CALL DWORD PTR DS:ntdll.NtClose
+...
+
+# EOF

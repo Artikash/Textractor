@@ -5,14 +5,53 @@
 // 4/20/2014 jichi
 
 #include "memdbg/memdbg.h"
+#ifndef MEMDBG_NO_STL
+# include <functional>
+#endif // MEMDBG_NO_STL
 
 MEMDBG_BEGIN_NAMESPACE
 
 /// Estimated maximum size of the caller function, the same as ITH FindCallAndEntryAbs
 enum { MaximumFunctionSize = 0x800 };
 
+/// Offset added to the beginning of the searched address
+enum { MemoryPaddingOffset = 0x1000 };
+
+enum { MemoryAlignedStep = 0x10 };
+
+#ifndef MEMDBG_NO_STL
+///  Iterate address and return false if abort iteration.
+typedef std::function<bool (dword_t)> address_fun_t;
+typedef std::function<bool (dword_t, dword_t)> address2_fun_t;
+
 /**
- *  Return the absolute address of the caller function
+ *  Iterate all call and caller addresses
+ *  @param  fun  the first parameter is the address of the caller, and the second parameter is the address of the call itself
+ *  @return  false if return early, and true if iterate all elements
+ */
+bool iterCallerAddress(const address2_fun_t &fun, dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+bool iterCallerAddressAfterInt3(const address2_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+bool iterUniqueCallerAddress(const address_fun_t &fun, dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+bool iterUniqueCallerAddressAfterInt3(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+
+/**
+ *  Iterate all call and caller addresses
+ *  @param  fun  the parameter is the address of the call
+ *  @return  false if return early, and true if iterate all elements
+ */
+bool iterFarCallAddress(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+bool iterNearCallAddress(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+bool iterLongJumpAddress(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+bool iterShortJumpAddress(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+
+bool iterAlignedNearCallerAddress(const address_fun_t &fun, dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+
+bool iterFindBytes(const address_fun_t &fun, const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
+bool iterMatchBytes(const address_fun_t &fun, const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
+#endif // MEMDBG_NO_STL
+
+/**
+ *  Return the absolute address of the far caller function
  *  The same as ITH FindCallAndEntryAbs().
  *
  *  @param  funcAddr  callee function address
@@ -27,12 +66,15 @@ enum { MaximumFunctionSize = 0x800 };
  *  0x81,0xec: sub esp XXOO (0xec81)
  *  0x83,0xec: sub esp XXOO (0xec83)
  */
-dword_t findCallerAddress(dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize);
-dword_t findCallerAddressAfterInt3(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize);
-dword_t findLastCallerAddress(dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize);
-dword_t findLastCallerAddressAfterInt3(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize);
+dword_t findCallerAddress(dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+dword_t findCallerAddressAfterInt3(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+dword_t findLastCallerAddress(dword_t funcAddr, dword_t funcInst, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+dword_t findLastCallerAddressAfterInt3(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
 
-dword_t findMultiCallerAddress(dword_t funcAddr, const dword_t funcInsts[], dword_t funcInstCount, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize);
+dword_t findMultiCallerAddress(dword_t funcAddr, const dword_t funcInsts[], dword_t funcInstCount, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+
+dword_t findAlignedNearCallerAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
+dword_t findLastAlignedNearCallerAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t callerSearchSize = MaximumFunctionSize, dword_t offset = MemoryPaddingOffset);
 
 /**
  *  Return the absolute address of the long jump (not short jump) instruction address.
@@ -41,9 +83,14 @@ dword_t findMultiCallerAddress(dword_t funcAddr, const dword_t funcInsts[], dwor
  *  @param  funcAddr  callee function address
  *  @param  lowerBound  the lower memory address to search
  *  @param  upperBound  the upper memory address to search
+ *  @param* offset  the relative address to search from  the lowerBound
+ *  @param* range  the relative size to search, use lowerBound - upperBound when zero
  *  @return  the call instruction address if succeed or 0 if fail
  */
-dword_t findJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound);
+dword_t findLongJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+dword_t findShortJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+dword_t findLastLongJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+dword_t findLastShortJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
 
 /**
  *  Return the absolute address of the far call (inter-module) instruction address.
@@ -52,16 +99,28 @@ dword_t findJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound
  *  @param  funcAddr  callee function address
  *  @param  lowerBound  the lower memory address to search
  *  @param  upperBound  the upper memory address to search
+ *  @param* offset  the relative address to search from  the lowerBound
+ *  @param* range  the relative size to search, use lowerBound - upperBound when zero
  *  @return  the call instruction address if succeed or 0 if fail
  */
-dword_t findFarCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound);
+dword_t findFarCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+dword_t findLastFarCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
 
 ///  Near call (intra-module)
-dword_t findNearCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound);
+dword_t findNearCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
+dword_t findLastNearCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0);
 
-///  Default to far call
-inline dword_t findCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound)
-{ return findFarCallAddress(funcAddr, lowerBound, upperBound); }
+///  Default to far call, for backward compatibility
+inline dword_t findCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0)
+{ return findFarCallAddress(funcAddr, lowerBound, upperBound, offset, range); }
+inline dword_t findLastCallAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0)
+{ return findLastFarCallAddress(funcAddr, lowerBound, upperBound, offset, range); }
+
+///  Default to long jump, for backward compatibility
+inline dword_t findJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0)
+{ return findLongJumpAddress(funcAddr, lowerBound, upperBound, offset, range); }
+inline dword_t findLastJumpAddress(dword_t funcAddr, dword_t lowerBound, dword_t upperBound, dword_t offset = MemoryPaddingOffset, dword_t range = 0)
+{ return findLastLongJumpAddress(funcAddr, lowerBound, upperBound, offset, range); }
 
 ///  Push value >= 0xff
 dword_t findPushDwordAddress(dword_t value, dword_t lowerBound, dword_t upperBound);
@@ -87,6 +146,10 @@ inline dword_t findPushAddress(dword_t value, dword_t lowerBound, dword_t upperB
  *  @exception  illegal memory access
  */
 dword_t findEnclosingAlignedFunction(dword_t addr, dword_t searchSize = MaximumFunctionSize);
+dword_t findEnclosingFunctionBeforeDword(dword_t sig, dword_t addr, dword_t searchSize = MaximumFunctionSize, dword_t step = MemoryAlignedStep);
+dword_t findEnclosingFunctionAfterDword(dword_t sig, dword_t addr, dword_t searchSize = MaximumFunctionSize, dword_t step = MemoryAlignedStep);
+dword_t findEnclosingFunctionAfterInt3(dword_t addr, dword_t searchSize = MaximumFunctionSize, dword_t step = MemoryAlignedStep);
+dword_t findEnclosingFunctionAfterNop(dword_t addr, dword_t searchSize = MaximumFunctionSize, dword_t step = MemoryAlignedStep);
 
 /**
  *  Return the address of the first matched pattern.
@@ -102,6 +165,7 @@ dword_t findEnclosingAlignedFunction(dword_t addr, dword_t searchSize = MaximumF
  *  @exception  illegal memory access
  */
 dword_t findBytes(const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
+//dword_t reverseFindBytes(const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
 
 /**
  *  jichi 2/5/2014: The same as findBytes except it uses widecard to match everything.

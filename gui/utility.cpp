@@ -16,10 +16,11 @@
  */
 
 #include "utility.h"
-#include "ith/host/srv.h"
-#include "ith/host/hookman.h"
-#include "ith/common/types.h"
-#include "ith/common/const.h"
+#include "host/host.h"
+#include "host/hookman.h"
+#include "vnrhook/include/types.h"
+#include "vnrhook/include/const.h"
+#include "profile/misc.h"
 
 extern HookManager* man; // main.cpp
 
@@ -65,11 +66,11 @@ std::wstring GetWindowsPath(const std::wstring& path)
 	// path is in device form
 	// \Device\HarddiskVolume2\Windows\System32\taskhost.exe
 	auto pathOffset = path.find(L'\\', 1) + 1;
-	pathOffset = path.find(L'\\',  pathOffset);
+	pathOffset = path.find(L'\\', pathOffset);
 	std::wstring devicePath = path.substr(0, pathOffset); // \Device\HarddiskVolume2
 	std::wstring dosDrive = GetDriveLetter(devicePath); // C:
 	if (dosDrive.empty())
-		return L"";
+		return path;
 	std::wstring dosPath = dosDrive; // C:
 	dosPath += path.substr(pathOffset); // C:\Windows\System32\taskhost.exe
 	return dosPath;
@@ -117,16 +118,16 @@ std::wstring GetCode(const HookParam& hp, DWORD pid)
 	code += c;
 	if (hp.type & NO_CONTEXT)
 		code += L'N';
-	if (hp.off >> 31)
-		code += L"-" + ToHexString(-(hp.off + 4));
+	if (hp.offset >> 31)
+		code += L"-" + ToHexString(-(hp.offset + 4));
 	else
-		code += ToHexString(hp.off);
+		code += ToHexString(hp.offset);
 	if (hp.type & DATA_INDIRECT)
 	{
-		if (hp.ind >> 31)
-			code += L"*-" + ToHexString(-hp.ind);
+		if (hp.index >> 31)
+			code += L"*-" + ToHexString(-hp.index);
 		else
-			code += L"*" + ToHexString(hp.ind);
+			code += L"*" + ToHexString(hp.index);
 	}
 	if (hp.type & USING_SPLIT)
 	{
@@ -137,21 +138,21 @@ std::wstring GetCode(const HookParam& hp, DWORD pid)
 	}
 	if (hp.type & SPLIT_INDIRECT)
 	{
-		if (hp.split_ind >> 31)
-			code += L"*-" + ToHexString(-hp.split_ind);
+		if (hp.split_index >> 31)
+			code += L"*-" + ToHexString(-hp.split_index);
 		else
-			code += L"*" + ToHexString(hp.split_ind);
+			code += L"*" + ToHexString(hp.split_index);
 	}
 	if (pid)
 	{
-		PVOID allocationBase = GetAllocationBase(pid, (LPCVOID)hp.addr);
+		PVOID allocationBase = GetAllocationBase(pid, (LPCVOID)hp.address);
 		if (allocationBase)
 		{
 			std::wstring path = GetModuleFileNameAsString(pid, allocationBase);
 			if (!path.empty())
 			{
 				auto fileName = path.substr(path.rfind(L'\\') + 1);
-				DWORD relativeHookAddress = hp.addr - (DWORD)allocationBase;
+				DWORD relativeHookAddress = hp.address - (DWORD)allocationBase;
 				code += L"@" + ToHexString(relativeHookAddress) + L":" + fileName;
 				return code;
 			}
@@ -159,20 +160,20 @@ std::wstring GetCode(const HookParam& hp, DWORD pid)
 	}
 	if (hp.module)
 	{
-		code += L"@" + ToHexString(hp.addr) + L"!" + ToHexString(hp.module);
+		code += L"@" + ToHexString(hp.address) + L"!" + ToHexString(hp.module);
 		if (hp.function)
 			code += L"!" + ToHexString(hp.function);
 	}
 	else
 	{
-		// hack, the original address is stored in the function field
-		// if (module == NULL && function != NULL)
-		// in TextHook::UnsafeInsertHookCode() MODULE_OFFSET and FUNCTION_OFFSET are removed from
-		// HookParam.type
+		// Hack. The original address is stored in the function field
+		// if (module == NULL && function != NULL).
+		// MODULE_OFFSET and FUNCTION_OFFSET are removed from HookParam.type in
+		// TextHook::UnsafeInsertHookCode() and can not be used here.
 		if (hp.function)
 			code += L"@" + ToHexString(hp.function);
 		else
-			code += L"@" + ToHexString(hp.addr) + L":";
+			code += L"@" + ToHexString(hp.address) + L":";
 	}
 	return code;
 }
@@ -282,13 +283,13 @@ HANDLE IthCreateFile(LPCWSTR name, DWORD option, DWORD share, DWORD disposition)
 	return CreateFile(path.c_str(), option, share, NULL, disposition, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-//SJIS->Unicode. 'mb' must be null-terminated. 'wc_length' is the length of 'wc' in characters.
+//SJIS->Unicode. mb must be null-terminated. wc_length is the length of wc in characters.
 int MB_WC(const char* mb, wchar_t* wc, int wc_length)
 {
 	return MultiByteToWideChar(932, 0, mb, -1, wc, wc_length);
 }
 
-// Count characters in wide string. 'mb_length' is the number of bytes from 'mb' to convert or
+// Count characters in wide string. mb_length is the number of bytes from mb to convert or
 // -1 if the string is null terminated.
 int MB_WC_count(const char* mb, int mb_length)
 {
@@ -299,13 +300,4 @@ int MB_WC_count(const char* mb, int mb_length)
 int WC_MB(const wchar_t *wc, char* mb, int mb_length)
 {
 	return WideCharToMultiByte(932, 0, wc, -1, mb, mb_length, NULL, NULL);
-}
-
-DWORD Hash(const std::wstring& module, int length)
-{
-	DWORD hash = 0;
-	auto end = length < 0 || static_cast<std::size_t>(length) > module.length() ? module.end() : module.begin() + length;
-	for (auto it = module.begin(); it != end; ++it)
-		hash = _rotr(hash, 7) + *it;
-	return hash;
 }

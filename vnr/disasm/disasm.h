@@ -4,7 +4,7 @@
 
 // Include typedef of BYTE
 //#include <windef.h>
-#include <windows.h>
+//#include <windows.h>
 
 //#ifdef QT_CORE_LIB
 //# include <qt_windows.h>
@@ -20,7 +20,13 @@
 #endif
 
 DISASM_BEGIN_NAMESPACE
-int disasm(const BYTE *opcode0); // return: op length if success, 0 if error
+/**
+ *  This function can do more, but currently only used to estimate the length of an instruction.
+ *  Warning: The current implementation is stateful and hence not thread-safe.
+ *  @param  address of the instruction to look at
+ *  @return  length of the instruction at the address or 0 if failed
+ */
+size_t disasm(const void *address);
 DISASM_END_NAMESPACE
 
 // EOF

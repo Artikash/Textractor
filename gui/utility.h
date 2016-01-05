@@ -1,10 +1,10 @@
 #pragma once
+
 #include "ITH.h"
 
 struct HookParam;
 struct ProcessRecord;
 
-DWORD Hash(const std::wstring& module, int length = -1);
 DWORD ProcessCommand(const std::wstring& cmd, DWORD pid);
 std::wstring GetProcessPath(DWORD pid);
 void ConsoleOutput(LPCWSTR);
@@ -57,13 +57,6 @@ int MB_WC(const char* mb, wchar_t* wc, int wc_length);
 int MB_WC_count(const char* mb, int mb_length);
 int WC_MB(const wchar_t *wc, char* mb, int mb_length);
 bool Parse(const std::wstring& cmd, HookParam& hp);
-
-template <typename T>
-std::wstring ToHexString(T i) {
-	std::wstringstream ss;
-	ss << std::uppercase << std::hex << i;
-	return ss.str();
-}
 
 // http://jrdodds.blogs.com/blog/2004/08/raii_in_c.html
 class CriticalSection

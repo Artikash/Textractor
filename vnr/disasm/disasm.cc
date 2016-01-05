@@ -9,6 +9,7 @@
 //     3024b815   0f1302           movlps qword ptr ds:[edx],xmm0
 
 #include "disasm.h"
+#include <windows.h>
 
 // disasm_flag values:
 enum : unsigned {
@@ -29,21 +30,22 @@ DISASM_BEGIN_NAMESPACE
 // But the are currently unused and could make disasm thread-unsafe
 namespace { // unnamed
 
-BYTE  disasm_seg,       // CS DS ES SS FS GS
-      disasm_rep,       // REPZ/REPNZ
-      disasm_opcode,    // opcode
-      disasm_opcode2,   // used when opcode==0f
-      disasm_modrm,     // modxxxrm
-      disasm_sib,       // scale-index-base
-      disasm_mem[8],    // mem addr value
-      disasm_data[8];   // data value
+BYTE disasm_seg     // CS DS ES SS FS GS
+   , disasm_rep     // REPZ/REPNZ
+   , disasm_opcode  // opcode
+   , disasm_opcode2 // used when opcode==0f
+   , disasm_modrm   // modxxxrm
+   , disasm_sib     // scale-index-base
+   , disasm_mem[8]  // mem addr value
+   , disasm_data[8] // data value
+   ;
 
 } // unnamed namespace
 
 // return: length if success, 0 if error
-int disasm(const BYTE *opcode0)
+size_t disasm(const void *opcode0)
 {
-  const BYTE *opcode = opcode0;
+  const BYTE *opcode = (const BYTE *)opcode0;
 
   DWORD disasm_len = 0,      // 0 if error
         disasm_flag = 0,     // C_xxx
@@ -253,7 +255,7 @@ retry:
   for (DWORD i = 0; i < disasm_datasize; i++)
     disasm_data[i] = *opcode++;
 
-  disasm_len = opcode - opcode0;
+  disasm_len = opcode - (const BYTE *)opcode0;
 
   return disasm_len;
 } // disasm

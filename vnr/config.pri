@@ -72,8 +72,8 @@ win32 {
 ## External Libraries
 
 win32 {
-  D3D_HOME      = "$$PROGRAMFILES/Microsoft DirectX SDK"
-  DETOURS_HOME  = "$$PROGRAMFILES/Microsoft Research/Detours Express 3.0"
+  D3D_HOME      = "C:/Program Files/Microsoft DirectX SDK"
+  DETOURS_HOME  = "C:/Program Files/Microsoft Research/Detours Express 3.0"
   #DEV_HOME      = c:/dev
   DEV_HOME      = z:/local/windows/developer
   BOOST_HOME    = $$DEV_HOME/boost/build
@@ -81,8 +81,8 @@ win32 {
   MSIME_HOME    = $$DEV_HOME/msime
   #PYTHON_HOME  = $$ROOTDIR/../Python
   #PYTHON_HOME   = C:/Python
-  PYTHON_HOME   = Z:/Local/Windows/Developer/Python
-  PYSIDE_HOME   = $$PYTHON_HOME/Lib/site-packages/PySide
+  PYTHON_HOME   = $$DEV_HOME/python
+  PYSIDE_HOME   = $$PYTHON_HOME/lib/site-packages/PySide
   QT_HOME       = c:/qt/4
   QT_SRC        = c:/qt
   SAPI_HOME     = "$$PROGRAMFILES/Microsoft Speech SDK 5.1"
@@ -161,7 +161,7 @@ win32 {
     QMAKE_CXXFLAGS_EXCEPTIONS_ON += -EHa
   }
 
-  CONFIG(noeh) { # No Exception handler
+  CONFIG(noeh) { # No exception handler
     message(CONFIG noeh)
     #CONFIG -= rtti #-exceptions -stl
     QMAKE_CXXFLAGS          += /GR-
@@ -175,7 +175,7 @@ win32 {
     }
   }
 
-  CONFIG(nosafeseh) { # No Exception handler
+  CONFIG(nosafeseh) { # No safe exception handler
     message(CONFIG nosafeseh)
 
     # Disable SafeSEH table

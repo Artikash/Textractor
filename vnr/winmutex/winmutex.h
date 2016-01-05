@@ -31,7 +31,7 @@ template <typename _Mutex>
     native_handle_type native_handle() { return _M_mutex.native_handle(); }
     void unlock() { _M_mutex.unlock(); _M_locked = false; }
     void lock() { _M_mutex.lock(); _M_locked = true; }
-    bool tryLock() { return _M_locked = _M_mutex.tryLock(); }
+    bool try_lock() { return _M_locked = _M_mutex.try_lock(); }
   };
 
 // Mutex

@@ -15,7 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
-#include <windows.h>
+
+#include <Windows.h>
 #include <string>
 #include <sstream>
 #include <ios>
@@ -29,9 +30,8 @@
 #include <map>
 #include <CommCtrl.h>
 #include <intrin.h>
-#include <WindowsX.h>
 #include <sstream>
 #include <regex>
 #include <set>
-#include "pugixml.hpp"
+#include "profile/pugixml.hpp"
 #pragma warning(disable: 4146)

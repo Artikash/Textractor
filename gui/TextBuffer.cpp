@@ -3,8 +3,8 @@
 DWORD WINAPI FlushThread(LPVOID lParam); // window.cpp
 
 TextBuffer::TextBuffer(HWND edit) : hThread(IthCreateThread(FlushThread, (DWORD)this)),
-	hEdit(edit),
-	running(true)
+hEdit(edit),
+running(true)
 {
 }
 

@@ -1,9 +1,9 @@
 #include "ProcessWindow.h"
 #include "resource.h"
-#include "ith/host/srv.h"
-#include "ith/host/hookman.h"
+#include "host/host.h"
+#include "host/hookman.h"
 #include "ProfileManager.h"
-#include "Profile.h"
+#include "profile/Profile.h"
 
 extern HookManager* man; // main.cpp
 extern ProfileManager* pfman; // ProfileManager.cpp
@@ -22,6 +22,8 @@ ProcessWindow::ProcessWindow(HWND hDialog) : hDlg(hDialog)
 	ListView_SetExtendedListViewStyleEx(hlProcess, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	InitProcessDlg();
 	RefreshProcess();
+	EnableWindow(hbDetach, FALSE);
+	EnableWindow(hbAttach, FALSE);
 }
 
 void ProcessWindow::InitProcessDlg()
@@ -73,30 +75,33 @@ void ProcessWindow::RefreshProcess()
 void ProcessWindow::AttachProcess()
 {
 	DWORD pid = GetSelectedPID();
-	if (IHF_InjectByPID(pid) != -1)
+	if (Host_InjectByPID(pid))
+	{
+		Host_HijackProcess(pid);
 		RefreshThreadWithPID(pid, true);
+	}
 }
 
 void ProcessWindow::DetachProcess()
 {
 	DWORD pid = GetSelectedPID();
-	if (IHF_ActiveDetachProcess(pid) == 0)
+	if (Host_ActiveDetachProcess(pid) == 0)
 		RefreshThreadWithPID(pid, false);
 }
 
-void ProcessWindow::AddCurrentToProfile()
+void ProcessWindow::CreateProfileForSelectedProcess()
 {
 	DWORD pid = GetSelectedPID();
 	auto path = GetProcessPath(pid);
 	if (!path.empty())
 	{
-		Profile* pf = pfman->AddProfile(path, pid);
-		pfman->FindProfileAndUpdateHookAddresses(pid, path);
+		Profile* pf = pfman->CreateProfile(pid);
+        pfman->SaveProfiles();
 		RefreshThread(ListView_GetSelectionMark(hlProcess));
 	}
 }
 
-void ProcessWindow::RemoveCurrentFromProfile()
+void ProcessWindow::DeleteProfileForSelectedProcess()
 {
 	DWORD pid = GetSelectedPID();
 	auto path = GetProcessPath(pid);
@@ -132,7 +137,7 @@ void ProcessWindow::RefreshThreadWithPID(DWORD pid, bool isAttached)
 
 DWORD ProcessWindow::GetSelectedPID()
 {
-	LVITEM item={};
+	LVITEM item = {};
 	item.mask = LVIF_PARAM;
 	item.iItem = ListView_GetSelectionMark(hlProcess);
 	ListView_GetItem(hlProcess, &item);
