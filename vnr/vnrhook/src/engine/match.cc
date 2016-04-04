@@ -84,7 +84,7 @@ bool DeterminePCEngine()
 
     // 3/20/2015 jichi
     // Always insert GDI hooks even for Mono games
-    // For example: ãæá¦?ãÆ? need GetGlyphOutlineA
+    // For example: Ã£Ã¦Ã¡Â¦?Ã£Ã†? need GetGlyphOutlineA
     PcHooks::hookGDIFunctions();
     return true;
   }
@@ -269,7 +269,7 @@ bool DetermineEngineByFile2()
     InsertTinkerBellHook();
     return true;
   }
-  if (IthFindFile(L"*.vfs")) { // jichi 7/6/2014: Better to test AoiLib.dll? ja.wikipedia.org/wiki/«½«Õ«È«Ï«¦«¹«­«ã«é
+  if (IthFindFile(L"*.vfs")) { // jichi 7/6/2014: Better to test AoiLib.dll? ja.wikipedia.org/wiki/Â«Â½Â«Ã•Â«ÃˆÂ«ÃÂ«Â¦Â«Â¹Â«Â­Â«Ã£Â«Ã©
     InsertSystemAoiHook();
     return true;
   }
@@ -279,7 +279,7 @@ bool DetermineEngineByFile2()
   }
   // jichi 8/1/2014: YU-RIS engine, lots of clockup game also has this pattern
   if (IthFindFile(L"pac\\*.ypf") || IthFindFile(L"*.ypf")) {
-    // jichi 8/14/2013: CLOCLUP: "«Î?«Ö«ì«¹«ª«Ö«ê?«¸«å" would crash the game.
+    // jichi 8/14/2013: CLOCLUP: "Â«Ã?Â«Ã–Â«Ã¬Â«Â¹Â«ÂªÂ«Ã–Â«Ãª?Â«Â¸Â«Ã¥" would crash the game.
     if (!IthCheckFile(L"noblesse.exe"))
       InsertYurisHook();
     return true;
@@ -333,7 +333,7 @@ bool DetermineEngineByFile3()
     InsertTriangleHook();
     return true;
   }
-  // jichi 2/28/2015: No longer work for "ÓŞïá¡¿??«¢«ê«¹ episode I" from Primula
+  // jichi 2/28/2015: No longer work for "Ã“ÃÃ¯Ã¡Â¡Â¿??Â«Â¢Â«ÃªÂ«Â¹ episode I" from Primula
   //if (IthCheckFile(L"PSetup.exe")) {
   //  InsertPensilHook();
   //  return true;
@@ -398,7 +398,7 @@ bool DetermineEngineByFile4()
     InsertExpHook();
     return true;
   }
-  // jichi 2/6/2015 øÁäÌïÍ
+  // jichi 2/6/2015 Ã¸ÃÃ¤ÃŒÃ¯Ã
   // dPi.dat, dPih.dat, dSc.dat, dSch.dat, dSo.dat, dSoh.dat, dSy.dat
   //if (IthCheckFile(L"dSoh.dat")) { // no idea why this file does not work
   if (IthCheckFile(L"dSch.dat")) {
@@ -407,7 +407,7 @@ bool DetermineEngineByFile4()
   }
 
   // jichi 2/28/2015: Delay checking Pensil in case something went wrong
-  // File pattern observed in [Primula] ÓŞïá¡¿??«¢«ê«¹ episode I
+  // File pattern observed in [Primula] Ã“ÃÃ¯Ã¡Â¡Â¿??Â«Â¢Â«ÃªÂ«Â¹ episode I
   // - PSetup.exe no longer exists
   // - MovieTexture.dll information shows MovieTex dynamic library, copyright Pensil 2013
   // - ta_trial.exe information shows 2XT - Primula Adventure Engine
@@ -429,7 +429,7 @@ bool DetermineEngineByProcessName()
     return true;
   }
 
-  // jichi 8/19/2013: DO NOT WORK for games like¡¸«Ï«Ô«á«¢¡¹
+  // jichi 8/19/2013: DO NOT WORK for games likeÂ¡Â¸Â«ÃÂ«Ã”Â«Ã¡Â«Â¢Â¡Â¹
   //if (wcsstr(str,L"cmvs32") || wcsstr(str,L"cmvs64")) {
   //  InsertCMVSHook();
   //  return true;
@@ -506,7 +506,7 @@ bool DetermineEngineByProcessName()
     return true;
 
   // jichi 7/23/2015  It also has gameexe.bin existed
-  if (IthCheckFile(L"configure.exe") && IthCheckFile(L"configure.cfg") && IthCheckFile(L"gfx.bin")) {
+  if (IthCheckFile(L"configure.cfg") && IthCheckFile(L"gfx.bin")) {
     InsertEscudeHook();
     return true;
   }
@@ -575,7 +575,7 @@ bool DetermineEngineOther()
 // Put the patterns that might break other games at last
 bool DetermineEngineAtLast()
 {
-  if (IthCheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as Ù½í­äñ2??÷ú, which is checked first
+  if (IthCheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as Ã™Â½Ã­Â­Ã¤Ã±2??Ã·Ãº, which is checked first
     return true;
   if (IthFindFile(L"system") && IthFindFile(L"system.dat")) { // jichi 7/31/2015
     InsertAbelHook();
@@ -643,7 +643,7 @@ bool DetermineEngineGeneric()
     ret = true;
   }
   //}  else if (IthFindFile(L"image\\*.po2") || IthFindFile(L"image\\*.jo2")) {
-  //  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // ªÏªëª«ª«ªÊª¿
+  //  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // ÂªÃÂªÃ«ÂªÂ«ÂªÂ«ÂªÃŠÂªÂ¿
   //  ret = true;
   //}
   if (ret)
@@ -668,7 +668,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 11/22/2015: ÔĞÌÈNECRO ??÷ú
+  // jichi 11/22/2015: Ã”ÃÃŒÃˆNECRO ??Ã·Ãº
   if (IthFindFile(L"*.npk")) {
     ConsoleOutput("vnreng: IGNORE new Nitroplus");
     return true;
@@ -686,7 +686,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 2/14/2015: Guilty+ £Ò£É£Î¡¿£Ó£Å£Î (PK)
+  // jichi 2/14/2015: Guilty+ Â£Ã’Â£Ã‰Â£ÃÂ¡Â¿Â£Ã“Â£Ã…Â£Ã (PK)
   if (IthCheckFile(L"rio.ini") || IthFindFile(L"*.war")) {
     ConsoleOutput("vnreng: IGNORE unknown ShinaRio");
     return true;
@@ -707,7 +707,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 4/30/2015: Skip games made from ªéª¹ª³ª¦, such as ªÈª¢ªëìÑô£ªÎ«Í«È«é«ìŞÀï×
+  // jichi 4/30/2015: Skip games made from ÂªÃ©ÂªÂ¹ÂªÂ³ÂªÂ¦, such as ÂªÃˆÂªÂ¢ÂªÃ«Ã¬Ã‘Ã´Â£ÂªÃÂ«ÃÂ«ÃˆÂ«Ã©Â«Ã¬ÃÃ€Ã¯Ã—
   // It has garbage from lstrlenW. Correct text is supposed to be in TabbedTextOutA.
   if (IthCheckFile(L"data_cg.dpm")) {
     ConsoleOutput("vnreng: IGNORE DPM data_cg.dpm");
@@ -770,7 +770,7 @@ bool DetermineNoEngine()
   *(DWORD *)(str + i + 1) = 0x630068; //.hcb
   *(DWORD *)(str + i + 3) = 0x62;
   if (IthCheckFile(str)) {
-    ConsoleOutput("vnreng: IGNORE FVP"); // jichi 10/3/2013: such like «¢«È«ê«¨ª«ª°ªä
+    ConsoleOutput("vnreng: IGNORE FVP"); // jichi 10/3/2013: such like Â«Â¢Â«ÃˆÂ«ÃªÂ«Â¨ÂªÂ«ÂªÂ°ÂªÃ¤
     return true;
   }
   return false;
