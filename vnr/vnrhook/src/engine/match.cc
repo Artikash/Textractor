@@ -927,7 +927,6 @@ extern "C" {
     // MSVC libs use _chkstk for stack-probing. MinGW equivalent is _alloca.
   //void _alloca();
   //void _chkstk() { _alloca(); }
-
   // MSVC uses security cookies to prevent some buffer overflow attacks.
   // provide dummy implementations.
   //void _fastcall __security_check_cookie(intptr_t i) {}
