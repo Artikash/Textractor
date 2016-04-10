@@ -84,7 +84,7 @@ bool DeterminePCEngine()
 
     // 3/20/2015 jichi
     // Always insert GDI hooks even for Mono games
-    // For example: ãæá¦?ãÆ? need GetGlyphOutlineA
+    // For example: 新世黙示録 need GetGlyphOutlineA
     PcHooks::hookGDIFunctions();
     return true;
   }
@@ -269,7 +269,7 @@ bool DetermineEngineByFile2()
     InsertTinkerBellHook();
     return true;
   }
-  if (IthFindFile(L"*.vfs")) { // jichi 7/6/2014: Better to test AoiLib.dll? ja.wikipedia.org/wiki/«½«Õ«È«Ï«¦«¹«­«ã«é
+  if (IthFindFile(L"*.vfs")) { // jichi 7/6/2014: Better to test AoiLib.dll? ja.wikipedia.org/wiki/ソフトハウスキャラ
     InsertSystemAoiHook();
     return true;
   }
@@ -279,7 +279,7 @@ bool DetermineEngineByFile2()
   }
   // jichi 8/1/2014: YU-RIS engine, lots of clockup game also has this pattern
   if (IthFindFile(L"pac\\*.ypf") || IthFindFile(L"*.ypf")) {
-    // jichi 8/14/2013: CLOCLUP: "«Î?«Ö«ì«¹«ª«Ö«ê?«¸«å" would crash the game.
+    // jichi 8/14/2013: CLOCLUP: "ノーブレスオブリージュ" would crash the game.
     if (!IthCheckFile(L"noblesse.exe"))
       InsertYurisHook();
     return true;
@@ -333,7 +333,7 @@ bool DetermineEngineByFile3()
     InsertTriangleHook();
     return true;
   }
-  // jichi 2/28/2015: No longer work for "ÓÞïá¡¿??«¢«ê«¹ episode I" from Primula
+  // jichi 2/28/2015: No longer work for "大正×対称アリス episode I" from Primula
   //if (IthCheckFile(L"PSetup.exe")) {
   //  InsertPensilHook();
   //  return true;
@@ -398,7 +398,7 @@ bool DetermineEngineByFile4()
     InsertExpHook();
     return true;
   }
-  // jichi 2/6/2015 øÁäÌïÍ
+  // jichi 2/6/2015 平安亭
   // dPi.dat, dPih.dat, dSc.dat, dSch.dat, dSo.dat, dSoh.dat, dSy.dat
   //if (IthCheckFile(L"dSoh.dat")) { // no idea why this file does not work
   if (IthCheckFile(L"dSch.dat")) {
@@ -407,7 +407,7 @@ bool DetermineEngineByFile4()
   }
 
   // jichi 2/28/2015: Delay checking Pensil in case something went wrong
-  // File pattern observed in [Primula] ÓÞïá¡¿??«¢«ê«¹ episode I
+  // File pattern observed in [Primula] 大正×対称アリス episode I
   // - PSetup.exe no longer exists
   // - MovieTexture.dll information shows MovieTex dynamic library, copyright Pensil 2013
   // - ta_trial.exe information shows 2XT - Primula Adventure Engine
@@ -429,7 +429,7 @@ bool DetermineEngineByProcessName()
     return true;
   }
 
-  // jichi 8/19/2013: DO NOT WORK for games like¡¸«Ï«Ô«á«¢¡¹
+  // jichi 8/19/2013: DO NOT WORK for games like「ハピメア」
   //if (wcsstr(str,L"cmvs32") || wcsstr(str,L"cmvs64")) {
   //  InsertCMVSHook();
   //  return true;
@@ -544,27 +544,35 @@ bool DetermineEngineOther()
   static BYTE static_file_info[0x1000];
   if (IthGetFileInfo(L"*01", static_file_info))
     if (*(DWORD*)static_file_info == 0) {
+      STATUS_INFO_LENGTH_MISMATCH;
       static WCHAR static_search_name[MAX_PATH];
       LPWSTR name=(LPWSTR)(static_file_info+0x5E);
       int len = wcslen(name);
-      name[len - 2] = L'*';
-      name[len - 1] = 0;
-      wcscpy(static_search_name, name);
-      IthGetFileInfo(static_search_name, static_file_info);
-      union {
-        FILE_BOTH_DIR_INFORMATION *both_info;
-        DWORD addr;
-      };
-      both_info = (FILE_BOTH_DIR_INFORMATION *)static_file_info;
-      //BYTE* ptr=static_file_info;
-      len = 0;
-      while (both_info->NextEntryOffset) {
-        addr += both_info->NextEntryOffset;
-        len++;
-      }
-      if (len > 3) {
-        InsertAbelHook();
-        return true;
+      name[len-2] = L'.';
+      name[len-1] = L'e';
+      name[len] = L'x';
+      name[len+1] = L'e';
+      name[len+2] = 0;
+      if (IthCheckFile(name)) {
+        name[len-2] = L'*';
+        name[len-1] = 0;
+        wcscpy(static_search_name,name);
+        IthGetFileInfo(static_search_name,static_file_info);
+        union {
+          FILE_BOTH_DIR_INFORMATION *both_info;
+          DWORD addr;
+        };
+        both_info = (FILE_BOTH_DIR_INFORMATION *)static_file_info;
+        //BYTE* ptr=static_file_info;
+        len=0;
+        while (both_info->NextEntryOffset) {
+          addr += both_info->NextEntryOffset;
+          len++;
+        }
+        if (len > 3) {
+          InsertAbelHook();
+          return true;
+        }
       }
     }
 
@@ -575,7 +583,7 @@ bool DetermineEngineOther()
 // Put the patterns that might break other games at last
 bool DetermineEngineAtLast()
 {
-  if (IthCheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as Ù½í­äñ2??÷ú, which is checked first
+  if (IthCheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as 母子愛2体験版, which is checked first
     return true;
   if (IthFindFile(L"system") && IthFindFile(L"system.dat")) { // jichi 7/31/2015
     InsertAbelHook();
@@ -643,7 +651,7 @@ bool DetermineEngineGeneric()
     ret = true;
   }
   //}  else if (IthFindFile(L"image\\*.po2") || IthFindFile(L"image\\*.jo2")) {
-  //  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // ªÏªëª«ª«ªÊª¿
+  //  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // はるかかなた
   //  ret = true;
   //}
   if (ret)
@@ -668,7 +676,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 11/22/2015: ÔÐÌÈNECRO ??÷ú
+  // jichi 11/22/2015: 凍京NECRO 体験版
   if (IthFindFile(L"*.npk")) {
     ConsoleOutput("vnreng: IGNORE new Nitroplus");
     return true;
@@ -686,7 +694,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 2/14/2015: Guilty+ £Ò£É£Î¡¿£Ó£Å£Î (PK)
+  // jichi 2/14/2015: Guilty+ ＲＩＮ×ＳＥＮ (PK)
   if (IthCheckFile(L"rio.ini") || IthFindFile(L"*.war")) {
     ConsoleOutput("vnreng: IGNORE unknown ShinaRio");
     return true;
@@ -707,7 +715,7 @@ bool DetermineNoEngine()
     return true;
   }
 
-  // jichi 4/30/2015: Skip games made from ªéª¹ª³ª¦, such as ªÈª¢ªëìÑô£ªÎ«Í«È«é«ìÞÀï×
+  // jichi 4/30/2015: Skip games made from らすこう, such as とある人妻のネトラレ事情
   // It has garbage from lstrlenW. Correct text is supposed to be in TabbedTextOutA.
   if (IthCheckFile(L"data_cg.dpm")) {
     ConsoleOutput("vnreng: IGNORE DPM data_cg.dpm");
@@ -770,7 +778,7 @@ bool DetermineNoEngine()
   *(DWORD *)(str + i + 1) = 0x630068; //.hcb
   *(DWORD *)(str + i + 3) = 0x62;
   if (IthCheckFile(str)) {
-    ConsoleOutput("vnreng: IGNORE FVP"); // jichi 10/3/2013: such like «¢«È«ê«¨ª«ª°ªä
+    ConsoleOutput("vnreng: IGNORE FVP"); // jichi 10/3/2013: such like アトリエかぐや
     return true;
   }
   return false;
@@ -927,6 +935,7 @@ extern "C" {
     // MSVC libs use _chkstk for stack-probing. MinGW equivalent is _alloca.
   //void _alloca();
   //void _chkstk() { _alloca(); }
+
   // MSVC uses security cookies to prevent some buffer overflow attacks.
   // provide dummy implementations.
   //void _fastcall __security_check_cookie(intptr_t i) {}
