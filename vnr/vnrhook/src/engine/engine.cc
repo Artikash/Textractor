@@ -2036,6 +2036,8 @@ bool InsertBGI2Hook()
   case 0x01312cd0 - 0x01312d8e:
   // For newer BGI2 game since コドモノアソビ (2015/11)
   case 0x00A64260 - 0x00A64318:
+  // For latest BGI2 game since タユタマ２(2016/05) by @mireado
+  case 0x00E95290 - 0x00E95345:
     hp.offset = 4 * 2;
     break;
   default:
