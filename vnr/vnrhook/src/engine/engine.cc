@@ -10924,7 +10924,8 @@ bool InsertTencoHook()
  *  00e3c354  |. 85c9                       test ecx,ecx
  *  00e3c356  |. 74 32                      je short 恋する�00e3c38a
  */
-bool InsertAOSHook()
+
+bool InsertAOS1Hook()
 {
   // jichi 4/2/2014: The starting of this function is different from ヂ�モノツキ
   // So, use a pattern in the middle of the function instead.
@@ -10982,6 +10983,51 @@ bool InsertAOSHook()
   return true;
 }
 
+bool InsertAOS2Hook()
+{
+  const BYTE bytes[] = {
+    0x51,                  // 00C4E7E0  /$  51            PUSH ECX ; mireado: hook here, function begins
+    0x33,0xc0,             // 00C4E7E1  |.  33C0          XOR EAX,EAX
+    0x53,                  // 00C4E7E3  |.  53            PUSH EBX
+    0x55,                  // 00C4E7E4  |.  55            PUSH EBP
+    0x8b,0x2d, 0x40,0xa3,0xcf,0x00,           // 00C4E7E5  |.  8B2D 40A3CF00 MOV EBP,DWORD PTR DS:[0CFA340]
+    0x89,0x07,             // 00C4E7EB  |.  8907          MOV DWORD PTR DS:[EDI],EAX
+    0x89,0x47, 0x04,       // 00C4E7ED  |.  8947 04       MOV DWORD PTR DS:[EDI+4],EAX
+    0x56,                  // 00C4E7F0  |.  56            PUSH ESI
+    0x8b,0x75, 0x44,       // 00C4E7F1  |.  8B75 44       MOV ESI,DWORD PTR SS:[EBP+44]
+  };
+
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x51 (push ecx)
+  ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
+  //GROWL(reladdr);
+  if (!addr) {
+    ConsoleOutput("vnreng:AOS: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+  //GROWL(addr);
+  enum { push_ecx = 0x51 }; // beginning of the function
+  if (*(BYTE *)addr != push_ecx) {
+    ConsoleOutput("vnreng:AOS: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.length_offset = 1;
+  hp.offset = 8;
+  hp.type = DATA_INDIRECT;
+
+  ConsoleOutput("vnreng: INSERT AOS2");
+  NewHook(hp, "AOS2");
+  return true;
+}
+
+bool InsertAOSHook()
+{ return InsertAOS1Hook() ||  InsertAOS2Hook();}
+
+  
 /**
  *  jichi 1/10/2014: Rai7 puk
  *  See: http://www.hongfire.com/forum/showthread.php/421909-%E3%80%90Space-Warfare-Sim%E3%80%91Rai-7-PUK/page10
