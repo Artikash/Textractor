@@ -10961,14 +10961,14 @@ bool InsertAOS1Hook()
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
   //GROWL(reladdr);
   if (!addr) {
-    ConsoleOutput("vnreng:AOS: pattern not found");
+    ConsoleOutput("vnreng:AOS1: pattern not found");
     return false;
   }
   addr += addr_offset;
   //GROWL(addr);
   enum { push_ecx = 0x51 }; // beginning of the function
   if (*(BYTE *)addr != push_ecx) {
-    ConsoleOutput("vnreng:AOS: beginning of the function not found");
+    ConsoleOutput("vnreng:AOS1: beginning of the function not found");
     return false;
   }
 
@@ -10978,7 +10978,7 @@ bool InsertAOS1Hook()
   hp.offset = 8;
   hp.type = DATA_INDIRECT;
 
-  ConsoleOutput("vnreng: INSERT AOS");
+  ConsoleOutput("vnreng: INSERT AOS1");
   NewHook(hp, "AOS");
   return true;
 }
@@ -10990,7 +10990,7 @@ bool InsertAOS2Hook()
     0x33,0xc0,             // 00C4E7E1  |.  33C0          XOR EAX,EAX
     0x53,                  // 00C4E7E3  |.  53            PUSH EBX
     0x55,                  // 00C4E7E4  |.  55            PUSH EBP
-    0x8b,0x2d, 0x40,0xa3,0xcf,0x00,           // 00C4E7E5  |.  8B2D 40A3CF00 MOV EBP,DWORD PTR DS:[0CFA340]
+    0x8b,0x2d, XX4,           // 00C4E7E5  |.  8B2D 40A3CF00 MOV EBP,DWORD PTR DS:[0CFA340] ; mireado: some time changing 40A3CF00 => 40A3C000
     0x89,0x07,             // 00C4E7EB  |.  8907          MOV DWORD PTR DS:[EDI],EAX
     0x89,0x47, 0x04,       // 00C4E7ED  |.  8947 04       MOV DWORD PTR DS:[EDI+4],EAX
     0x56,                  // 00C4E7F0  |.  56            PUSH ESI
@@ -11002,14 +11002,14 @@ bool InsertAOS2Hook()
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
   //GROWL(reladdr);
   if (!addr) {
-    ConsoleOutput("vnreng:AOS: pattern not found");
+    ConsoleOutput("vnreng:AOS2: pattern not found");
     return false;
   }
   addr += addr_offset;
   //GROWL(addr);
   enum { push_ecx = 0x51 }; // beginning of the function
   if (*(BYTE *)addr != push_ecx) {
-    ConsoleOutput("vnreng:AOS: beginning of the function not found");
+    ConsoleOutput("vnreng:AOS2: beginning of the function not found");
     return false;
   }
 
