@@ -10994,7 +10994,7 @@ bool InsertAOS2Hook()
     0x89,0x07,             // 00C4E7EB  |.  8907          MOV DWORD PTR DS:[EDI],EAX
     0x89,0x47, 0x04,       // 00C4E7ED  |.  8947 04       MOV DWORD PTR DS:[EDI+4],EAX
     0x56,                  // 00C4E7F0  |.  56            PUSH ESI
-    0x8b,0x75, 0x44,       // 00C4E7F1  |.  8B75 44       MOV ESI,DWORD PTR SS:[EBP+44]
+    0x8b,0x75, 0x44        // 00C4E7F1  |.  8B75 44       MOV ESI,DWORD PTR SS:[EBP+44]
   };
 
   enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x51 (push ecx)
