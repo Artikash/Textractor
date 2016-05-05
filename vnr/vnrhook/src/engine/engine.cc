@@ -2038,6 +2038,8 @@ bool InsertBGI2Hook()
   case 0x00A64260 - 0x00A64318:
   // For latest BGI2 game since タユタマ２(2016/05) by @mireado
   case 0x00E95290 - 0x00E95345:
+  // For latest BGI2 game since 千の刃濤、桃花染の皇姫 体験版  by @mireado
+  case 0x00AF5640 - 0x00AF56FB:
     hp.offset = 4 * 2;
     break;
   default:
