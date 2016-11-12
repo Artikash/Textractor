@@ -759,14 +759,10 @@ BOOL IthInitSystemService()
     DWORD base = (DWORD)peb->ReadOnlySharedMemoryBase;
     DWORD end = base + info.RegionSize - 0x40;
 
-
-	// 일본어 코드 페이지 C_932 이 SysWow64에 없음
-	// 64bit에서 (32bit) 로 실행할 경우 SysWow64로 리다이렉트 되는 것 해제
-
+	// I_Jemin 13/11/2016
+	// Prevent redirecting SYSWOW64 to receive Shift-JIS
 	PVOID OldValue;
-
 	Wow64DisableWow64FsRedirection(&OldValue);
-	
 
     static WCHAR system32[] = L"system32";
     for (;base < end; base += 2)
@@ -777,6 +773,11 @@ BOOL IthInitSystemService()
         while (*obj != L'\\') obj++;
         break;
       }
+
+	// Eguni 13/11/2016
+	// Dispose redirection
+	Wow64EnableWow64FsRedirection(FALSE);
+
     if (base == end)
       return FALSE;
   }
