@@ -1,4 +1,4 @@
-// ithsys.cc
+﻿// ithsys.cc
 // 8/21/2013 jichi
 // Branch: ITH_SYS/SYS.cpp, rev 126
 //
@@ -758,6 +758,12 @@ BOOL IthInitSystemService()
       return FALSE;
     DWORD base = (DWORD)peb->ReadOnlySharedMemoryBase;
     DWORD end = base + info.RegionSize - 0x40;
+
+	// I_Jemin 13/11/2016
+	// Prevent redirecting SYSWOW64 to receive Shift-JIS
+	PVOID OldValue;
+	Wow64DisableWow64FsRedirection(&OldValue);
+
     static WCHAR system32[] = L"system32";
     for (;base < end; base += 2)
       if (::memcmp((PVOID)base, system32, 0x10) == 0) {
@@ -767,6 +773,11 @@ BOOL IthInitSystemService()
         while (*obj != L'\\') obj++;
         break;
       }
+
+	// Eguni 13/11/2016
+	// Dispose redirection
+	Wow64EnableWow64FsRedirection(FALSE);
+
     if (base == end)
       return FALSE;
   }
