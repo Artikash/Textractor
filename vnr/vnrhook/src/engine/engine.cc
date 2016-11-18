@@ -12378,8 +12378,37 @@ static bool InsertNewPalHook()
   NewHook(hp, "Pal");
   return true;
 }
+// Eguni 2016/11/06
+// Supporting new Pal engine, tested with 恋×シンアイ彼女
+static bool InsertNewPal2Hook()
+{
+	const BYTE bytes[] = {
+		0x55,               // 0136e220   55               push ebp
+		0x8b,0xec,          // 0136e221   8bec             mov ebp,esp
+		0x83,0xec, 0x7c,    // 0136e226   83ec 7c          sub esp,0x7c
+		0xa1, XX4,          // 0136e226   a1 788d3b01      mov eax,dword ptr ds:[0x2f008c]
+		0x33,0xc5,          // 0136e22b   33c5             xor eax,ebp
+		0x89,0x45, 0xfc,    // 0136e22d   8945 fc          mov dword ptr ss:[ebp-0x4],eax
+		0xe8				// 0136e230   e8			   call 01377800
+	};
+	ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
+	ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
+	if (!addr) {
+		ConsoleOutput("vnreng:Pal: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	//hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
+	hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
+	hp.offset = 4 * 2; // arg2
+	ConsoleOutput("vnreng: INSERT Pal");
+	NewHook(hp, "Pal");
+	return true;
+}
 bool InsertPalHook() // use Old Pal first, which does not have ruby
-{ return InsertOldPalHook() || InsertNewPalHook(); }
+{ return InsertOldPalHook() || InsertNewPal2Hook() || InsertNewPalHook(); }
 
 /** jichi 7/6/2014 NeXAS
  *  Sample game: BALDRSKYZERO EXTREME
