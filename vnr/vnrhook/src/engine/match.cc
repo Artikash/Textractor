@@ -121,7 +121,7 @@ bool DetermineEngineByFile1()
     InsertSideBHook();
     return true;
   }
-  if (IthFindFile(L"bgi.*") || IthFindFile(L"BHVC.exe") || IthFindFile(L"sysgrp.arc")) {
+  if (IthFindFile(L"bgi.*") || IthFindFile(L"sysgrp.arc")) {
     InsertBGIHook();
     return true;
   }
@@ -326,6 +326,10 @@ bool DetermineEngineByFile3()
     return true;
   }
   if (IthFindFile(L"*.mpk")) {
+    InsertStuffScriptHook();
+    return true;
+  }
+  if (IthFindFile(L"USRDIR\\*.mpk")) { // jichi 12/2/2014
     InsertStuffScriptHook();
     return true;
   }
@@ -612,6 +616,9 @@ bool DetermineEngineAtLast()
     return true;
   if (IthFindFile(L"*.pak") // jichi 12/25/2014: too common
       && InsertLeafHook())
+    return true;
+  if (IthFindFile(L"*.dat") // mireado 08/22/2016: too common
+      && InsertNekopackHook())
     return true;
   // jichi 10/31/2014
   // File description: Adobe Flash Player 10.2r153
