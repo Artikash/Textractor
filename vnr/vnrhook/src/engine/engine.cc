@@ -12465,7 +12465,7 @@ static bool InsertNewPal2Hook()
     0x83,0xec, 0x7c,    // 0124E223   83ec 7c          sub esp,0x7C
     0xa1, XX4,          // 0124E226   a1 788D2901      mov eax,dword ptr ds:[0x2f008c]
     0x33,0xc5,          // 0124E22B   33c5             xor eax,ebp
-    0x89,0x45, 0xfc     // 0124E22D   8945 FC          mov dword ptr ss:[ebp-0x8],eax
+    0x89,0x45, 0xfc,     // 0124E22D   8945 FC          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
 	0xe8				// 0136e230   e8			   call 01377800
   };
   ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
@@ -13918,51 +13918,6 @@ bool Insert5pbHook3()
   //DisableGDIHooks();
   return true;
 }
-
-void SpecialHook5pb4(DWORD esp_base, HookParam *, BYTE index, DWORD *data, DWORD *split, DWORD *len)
-{
-  // Text in arg1, name in arg2
-  if (LPCSTR text = (LPCSTR)argof(index+1, esp_base))
-    if (*text) {
-      if (index)  // trim spaces in character name
-        while (*text == ' ') text++;
-      size_t sz = ::strlen(text);
-      if (index)
-        while (sz && text[sz-1] == ' ') sz--;
-      *data = (DWORD)text;
-      *len = sz;
-      *split = FIXED_SPLIT_VALUE << index;
-    }
-}
-bool Insert5pbHook4()
-{
-  const BYTE bytes[] = { // function starts 
-    0x55,            // 0025A130   55               PUSH EBP
-    0x8b,0xec,       // 0025A131   8BEC             MOV EBP,ESP
-    0x56,            // 0025A133   56               PUSH ESI
-    0xff,0x75
-  };
-  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), module_base_, module_limit_);
-  //GROWL_DWORD3(addr, module_base_,module_limit_);
-  if (!addr) {
-    ConsoleOutput("vnreng:5pb4: pattern not found");
-    return false;
-  }
-
-  HookParam hp = {};
-  hp.address = addr;
-  hp.type = USING_STRING|NO_CONTEXT;
-  hp.text_fun = SpecialHook5pb4;
-  hp.extra_text_count = 1; // extract character name in arg1
-  hp.filter_fun = NewLineCharToSpaceFilter; // replace '\n' by ' '
-  ConsoleOutput("vnreng: INSERT 5pb4");
-  NewHook(hp, "5pb4");
-  // GDI functions are not used by 5pb games anyway.
-  //ConsoleOutput("vnreng:5pb: disable GDI hooks");
-  //DisableGDIHooks();
-  return true;
-}
-
 } // unnamed namespace
 
 bool Insert5pbHook()
