@@ -1424,6 +1424,7 @@ bool InsertKiriKiriZHook1()
   return true;
 }
 
+
 // jichi 1/30/2015: Add KiriKiriZ2 for サノバウィッ�
 // It inserts to the same location as the old KiriKiriZ, but use a different way to find it.
 bool InsertKiriKiriZHook2()
@@ -1448,7 +1449,7 @@ bool InsertKiriKiriZHook2()
 
   // 012280e0   55               push ebp
   // 012280e1   8bec             mov ebp,esp
-  addr = MemDbg::findEnclosingAlignedFunction(addr, 0x100); // 0x0122812f - 0x 012280dc = 83
+  addr = MemDbg::findEnclosingAlignedFunction(addr, 0x100); // 0x0122812f-0x012280e0 = 0x4F
   enum : BYTE { push_ebp = 0x55 };  // 011d4c80  /$ 55             push ebp
   if (!addr || *(BYTE *)addr != push_ebp) {
     ConsoleOutput("vnreng:KiriKiriZ2: pattern found but the function offset is invalid");
@@ -2001,11 +2002,12 @@ bool InsertBGI1Hook()
 bool InsertBGI2Hook()
 {
   const BYTE bytes[] = {
-    0x3c, 0x20,      // 011d4d31  |. 3c 20          cmp al,0x20
-    0x7d, XX,        // 011d4d33  |. 7d 75          jge short sekachu.011d4daa ; jichi: 0x75 or 0x58
+    // The following code does not exist in newer BGI games after BGI 1.633.0.0 (tayutama2_trial_EX)
+    //0x3c, 0x20,      // 011d4d31  |. 3c 20          cmp al,0x20
+    //0x7d, XX,        // 011d4d33  |. 7d 75          jge short sekachu.011d4daa ; jichi: 0x75 or 0x58
     0x0f,0xbe,0xc0,  // 011d4d35  |. 0fbec0         movsx eax,al
     0x83,0xc0, 0xfe, // 011d4d38  |. 83c0 fe        add eax,-0x2               ;  switch (cases 2..8)
-    0x83,0xf8, 0x06  // 011d4d3b  |. 83f8 06        cmp eax,0x6
+    0x83,0xf8//, 0x06  // 011d4d3b  |. 83f8 06        cmp eax,0x6
     // The following code does not exist in newer BGI games after 蒼の彼方
     //0x77, 0x6a     // 011d4d3e  |. 77 6a          ja short sekachu.011d4daa
   };
@@ -2033,13 +2035,15 @@ bool InsertBGI2Hook()
     hp.offset = 4 * 3;
     break;
   // for new BGI2 game since 蒼の彼方 (2014/08), text is in arg2
-  case 0x01312cd0 - 0x01312d8e:
+  case 0x01312cd0 - 0x01312D92:
   // For newer BGI2 game since コドモノアソビ (2015/11)
-  case 0x00A64260 - 0x00A64318:
+  case 0x00A64260 - 0x00A6431C:
   // For latest BGI2 game since タユタマ２(2016/05) by @mireado
-  case 0x00E95290 - 0x00E95345:
+  case 0x00E95290 - 0x00E95349:
   // For latest BGI2 game since 千の刃濤、桃花染の皇姫 体験版  by @mireado
-  case 0x00AF5640 - 0x00AF56FB:
+  case 0x00AF5640 - 0x00AF56FF:
+  // For latest BGI2 game since by BGI 1.633.0.0 @mireado
+  case 0x00D8A660 - 0x00D8A73A:
     hp.offset = 4 * 2;
     break;
   default:
@@ -7044,12 +7048,51 @@ bool InsertMalie3Hook()
   // jichi 3/15/2015: Remove 0704 in シルヴァリオ ヴェンッ�タ
   hp.filter_fun = IllegalWideCharsFilter; // remove illegal control chars such as 0x07,0x01
   hp.text_fun = SpecialHookMalie3;
-  hp.type = NO_CONTEXT|USING_UNICODE;
+  hp.type = USING_SPLIT|NO_CONTEXT|USING_UNICODE;
   //hp.filter_fun = Malie3Filter;
   ConsoleOutput("vnreng: INSERT Malie3");
   NewHook(hp, "Malie3");
   ConsoleOutput("vnreng:Malie3: disable GDI hooks");
   DisableGDIHooks();
+  return true;
+}
+
+bool InsertMalie4Hook()
+{
+  // i.e. 50 8B 45 10 D9 9F ?? ?? ?? ?? 0F B7 04 58 50 51 E8 ?? ?? ?? ?? 8B 45 14 83 C4 10
+  const BYTE bytes[] = {
+    0x50,                   // 65904E | 50                       | push eax                                | mireado: pattern starts
+    0x8B,0x45,0x10,			// 65904F | 8B 45 10                 | mov eax,dword ptr ss:[ebp+10]           |
+    0xD9,0x9F,XX4,			// 659052 | D9 9F E8 6B 87 00        | fstp dword ptr ds:[edi+876BE8]          |
+    0x0F,0xB7,0x04,0x58,	// 659058 | 0F B7 04 58              | movzx eax,word ptr ds:[eax+ebx*2]       |
+    0x50,					// 65905C | 50                       | push eax                                |
+    0x51,					// 65905D | 51                       | push ecx                                |
+    0xE8,XX4, 				// 65905E | E8 DD 1D EA FF           | call malie.4FAE40                       | mireado: hook here
+    0x8B,0x45,0x14,			// 659063 | 8B 45 14                 | mov eax,dword ptr ss:[ebp+14]           |
+    0x83,0xC4,0x10			// 659066 | 83 C4 10                 | add esp,10                              |
+  };
+  enum {addr_offset = 0x65905E - 0x65904E};
+  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_limit_);
+  if (!addr) {
+    ConsoleOutput("vnreng:Malie4: pattern not found");
+    return false;
+  }
+  
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = -8; // pusha_eax_off - 4
+  hp.length_offset = 1;
+  //hp.split = 0xc; // jichi 12/17/2013: Subcontext removed
+  //hp.type = USING_SPLIT|USING_UNICODE|NO_CONTEXT;
+  // jichi 12/17/2013: Need extern func for Electro Arms
+  // Though the hook parameter is quit similar to Malie, the original extern function does not work
+  hp.split = -0x10; // jichi 12/17/2013: This could split the furigana, but will mess up the text
+  hp.type = USING_SPLIT|NO_CONTEXT|USING_UNICODE;
+  ConsoleOutput("vnreng: INSERT Malie4");
+  NewHook(hp, "Malie4");
+
+  //GROWL_DWORD2(hp.address, reladdr);
+  //RegisterEngineType(ENGINE_MALIE);
   return true;
 }
 
@@ -7084,6 +7127,7 @@ bool InsertMalieHook()
 
     // The main disadvantage of Malie3 is that it cannot find character name
     ok = InsertMalie3Hook() || ok; // jichi 3/7/2014
+    ok = InsertMalie4Hook() || ok; 
 
     if (ok) {
       ConsoleOutput("vnreng:Malie: disable GDI hooks");
@@ -10305,7 +10349,7 @@ bool InsertUnicornHook()
  *    株式会社エヴァンジェ
  *    株式会社ポニーキャニオン
  *    株式会社大福エンターヂ�ンメン� */
-bool InsertArtemisHook()
+bool InsertArtemis1Hook()
 {
   const BYTE bytes[] = {
     0x83,0xc4, 0x0c, // add esp,0xc ; hook here
@@ -10318,7 +10362,7 @@ bool InsertArtemisHook()
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
   //GROWL_DWORD3(reladdr, module_base_, range);
   if (!addr) {
-    ConsoleOutput("vnreng:Artemis: pattern not exist");
+    ConsoleOutput("vnreng:Artemis1: pattern not exist");
     return false;
   }
 
@@ -10332,11 +10376,44 @@ bool InsertArtemisHook()
   //hp.address = 0x650a2f;
   //GROWL_DWORD(hp.address);
 
-  ConsoleOutput("vnreng: INSERT Artemis");
-  NewHook(hp, "Artemis");
-  //ConsoleOutput("Artemis");
+  ConsoleOutput("vnreng: INSERT Artemis1");
+  NewHook(hp, "Artemis1");
+  //ConsoleOutput("Artemis1");
   return true;
 }
+
+bool InsertArtemis2Hook()
+{
+  const BYTE bytes[] = {
+    0x55, 0x8B, 0xEC, 0x83, 0xE4, 0xF8, 0x6A, 0xFF, 0x68, XX4, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x50, 0x83, 0xEC, 0x28, 0xA1, XX4, 0x33, 0xC4, 0x89, 0x44, 0x24, 0x20, 0x53, 0x56, 0x57, 0xA1, XX4, 0x33, 0xC4, 0x50, 0x8D, 0x44, 0x24, 0x38, 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF1, 0x8B, 0x5D, 0x08, 0x8B, 0x4D, 0x0C
+  };
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
+  ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
+  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Artemis2: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+  enum { push_ebp = 0x55 }; // beginning of the function
+  if (*(BYTE *)addr != push_ebp) {
+    ConsoleOutput("vnreng:Artemis2: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = 4;
+  hp.type = USING_STRING|NO_CONTEXT;
+
+  ConsoleOutput("vnreng: INSERT Artemis2");
+  NewHook(hp, "Artemis2");
+  //ConsoleOutput("Artemis2");
+  return true;
+}
+
+bool InsertArtemisHook()
+{ return InsertArtemis1Hook() ||  InsertArtemis2Hook(); }
 
 /**
  *  jichi 1/2/2014: Taskforce2 Engine
@@ -12352,7 +12429,7 @@ static bool InsertOldPalHook() // this is used in case the new pattern does not 
   NewHook(hp, "Pal");
   return true;
 }
-static bool InsertNewPalHook()
+static bool InsertNewPal1Hook()
 {
   const BYTE bytes[] = {
     0x55,               // 002c6ab0   55               push ebp
@@ -12360,12 +12437,12 @@ static bool InsertNewPalHook()
     0x83,0xec, 0x78,    // 002c6ab3   83ec 78          sub esp,0x78
     0xa1, XX4,          // 002c6ab6   a1 8c002f00      mov eax,dword ptr ds:[0x2f008c]
     0x33,0xc5,          // 002c6abb   33c5             xor eax,ebp
-    0x89,0x45, 0xf8     // 002c6abd   8945 f8          mov dword ptr ss:[ebp-0x8],eax
+    0x89,0x45, 0xf8     // 002c6abd   8945 f8          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
   };
   ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
   ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
   if (!addr) {
-    ConsoleOutput("vnreng:Pal: pattern not found");
+    ConsoleOutput("vnreng:Pal1: pattern not found");
     return false;
   }
 
@@ -12374,7 +12451,7 @@ static bool InsertNewPalHook()
   //hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
   hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
   hp.offset = 4 * 2; // arg2
-  ConsoleOutput("vnreng: INSERT Pal");
+  ConsoleOutput("vnreng: INSERT Pal1");
   NewHook(hp, "Pal");
   return true;
 }
@@ -12382,33 +12459,33 @@ static bool InsertNewPalHook()
 // Supporting new Pal engine, tested with 恋×シンアイ彼女
 static bool InsertNewPal2Hook()
 {
-	const BYTE bytes[] = {
-		0x55,               // 0136e220   55               push ebp
-		0x8b,0xec,          // 0136e221   8bec             mov ebp,esp
-		0x83,0xec, 0x7c,    // 0136e226   83ec 7c          sub esp,0x7c
-		0xa1, XX4,          // 0136e226   a1 788d3b01      mov eax,dword ptr ds:[0x2f008c]
-		0x33,0xc5,          // 0136e22b   33c5             xor eax,ebp
-		0x89,0x45, 0xfc,    // 0136e22d   8945 fc          mov dword ptr ss:[ebp-0x4],eax
-		0xe8				// 0136e230   e8			   call 01377800
-	};
-	ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
-	ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
-	if (!addr) {
-		ConsoleOutput("vnreng:Pal: pattern not found");
-		return false;
-	}
+  const BYTE bytes[] = {
+    0x55,               // 0124E220   55               push ebp; doesn't works... why?
+    0x8b,0xec,          // 0124E221   8bec             mov ebp,esp
+    0x83,0xec, 0x7c,    // 0124E223   83ec 7c          sub esp,0x7C
+    0xa1, XX4,          // 0124E226   a1 788D2901      mov eax,dword ptr ds:[0x2f008c]
+    0x33,0xc5,          // 0124E22B   33c5             xor eax,ebp
+    0x89,0x45, 0xfc,     // 0124E22D   8945 FC          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
+	0xe8				// 0136e230   e8			   call 01377800
+  };
+  ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
+  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Pal2: pattern not found");
+    return false;
+  }
 
-	HookParam hp = {};
-	hp.address = addr;
-	//hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
-	hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
-	hp.offset = 4 * 2; // arg2
-	ConsoleOutput("vnreng: INSERT Pal");
-	NewHook(hp, "Pal");
-	return true;
+  HookParam hp = {};
+  hp.address = addr;
+  //hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
+  hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
+  hp.offset = 4 * 2; // arg2
+  ConsoleOutput("vnreng: INSERT Pal2");
+  NewHook(hp, "Pal");
+  return true;
 }
 bool InsertPalHook() // use Old Pal first, which does not have ruby
-{ return InsertOldPalHook() || InsertNewPal2Hook() || InsertNewPalHook(); }
+{ return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); }
 
 /** jichi 7/6/2014 NeXAS
  *  Sample game: BALDRSKYZERO EXTREME
@@ -13810,7 +13887,7 @@ void SpecialHook5pb3(DWORD esp_base, HookParam *, BYTE index, DWORD *data, DWORD
 }
 bool Insert5pbHook3()
 {
-  const BYTE bytes[] = { // function starts
+  const BYTE bytes[] = { // function starts 
     0x55,            // 0025A130   55               PUSH EBP
     0x8b,0xec,       // 0025A131   8BEC             MOV EBP,ESP
     0x56,            // 0025A133   56               PUSH ESI
@@ -13841,7 +13918,6 @@ bool Insert5pbHook3()
   //DisableGDIHooks();
   return true;
 }
-
 } // unnamed namespace
 
 bool Insert5pbHook()
@@ -14469,6 +14545,60 @@ bool InsertLeafHook()
   NewHook(hp, "Leaf");
 
   //ConsoleOutput("vnreng:Leaf: disable GDI hooks");
+  //DisableGDIHooks();
+  return true;
+}
+
+/**
+ *  mireado 8/01/2016: Add NekoPack hook
+ *
+ *  See: http://sakuradite.com/topic/1470
+ *  https://arallab.hided.net/board_codetalk/2605967
+ *
+ *  [Pure More] 少女アクティビティ_trial 1.01
+ *
+ *  base: 0x4000000
+ *	binary pattern :: 558BEC81C4C4FDFFFFB8
+ */
+
+bool InsertNekopackHook()
+{
+  const BYTE bytes[] = {
+    0x55,			// 0069637C  /$  55            PUSH EBP
+    0x8b,0xec,		// 0069637D  |.  8BEC          MOV EBP,ESP
+    0x81,0xc4, 0xC4,0xFD,0xFF,0xFF,	// 0069637F  |.  81C4 C4FDFFFF ADD ESP,-23C
+    0xb8, XX4,		// 00696385  |.  B8 A8FF7900   MOV EAX,OFFSET 0079FFA8
+    0x53,       // 0069638A  |.  53            PUSH EBX
+    0x56,       // 0069638B  |.  56            PUSH ESI
+    0x57,       // 0069638C  |.  57            PUSH EDI
+    0x8b,0x5d, 0x08       // 0069638D  |.  8B5D 08       MOV EBX,DWORD PTR SS:[ARG.1]
+  };
+  ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
+  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
+  //GROWL(reladdr);
+  if (!addr) {
+    ConsoleOutput("vnreng:NekoPack: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+  //GROWL(addr);
+  enum { push_ebp = 0x55 }; // beginning of the function
+  if (*(BYTE *)addr != push_ebp) {
+    ConsoleOutput("vnreng:NekoPack: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = 8;
+  hp.type = USING_STRING;
+
+  ConsoleOutput("vnreng: INSERT NekoPack");
+  NewHook(hp, "NekoPack");
+
+  // Disable GDIHook(um.. ?), which is cached and hence missing characters.
+  //ConsoleOutput("vnreng:NekoPack: disable GDI hooks");
   //DisableGDIHooks();
   return true;
 }

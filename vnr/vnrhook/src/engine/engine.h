@@ -120,6 +120,7 @@ bool InsertMBLHook();           // MBL: *.mbl
 bool InsertMEDHook();           // MED: *.med
 bool InsertMinkHook();          // Mink: *.at2
 //bool InsertMonoHook();          // Mono (Unity3D): */Mono/mono.dll
+bool InsertNekopackHook();      // Nekopack: *.dat
 bool InsertNeXASHook();         // NeXAS: Thumbnail.pac
 bool InsertNextonHook();        // NEXTON: aInfo.db
 bool InsertNexton1Hook();
