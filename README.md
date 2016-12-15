@@ -1,22 +1,48 @@
-# ITHVNR_kor
-ITHVNR_korean translation
-ITHVNR, 한국어 번역에 대한 파일입니다.
+# ITHVNR
 
-Copyright (C) 2010-2012  kaosu <qiupf2000@gmail.com>
-Copyright (C) 2015 zorkzero <zorkzero@hotmail.com>
-http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine
+## TODO
 
-현재, 3.5640.1 버전에 대하여 한글화 되었으며,
-추가로 Escude 인식에 변동사항이 있습니다.
+make as project
+i18n
+support x64 process hooking & integrate x86/x64 hooker
+
+## Compiling
+
+Before compiling *ITHVNR*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
+
+## Downloads
+
+Releases of *ITHVNR* can be found [here](https://github.com/mireado/ITHVNR/releases).
+
+~~mireado build server can be found [here](http://mireado.blog.me).~~
+
+## Overview
+
+*ITHVNR* is an open-source x32~~/x64~~ text hooker for Windows.
+Basically, ITHVNR base on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s version.
+
+## Activity Graph
+
+[![Throughput Graph](https://graphs.waffle.io/mireado/ITHVNR/throughput.svg)](https://waffle.io/mireado/ITHVNR/metrics/throughput)
+
+## Features
+
+- Open-source
+- Hook text
+
+## License
 
 
-Roadmap
-1.버전과 상관없는 추출능력
-2.타 코드와 호환/생성지원(VNR embed method, ATcode와 호환)
-3.UI변경 및 다국어지원
-4.VC 재배포관련
-5.관리자 권한관련
-6.어쨋든 개조..
+## Developers
 
-Issue
-Siglus, Malie, AB2Try에 UNICODE 문제가 존재했는데 검토필요
+- Copyright (C) 2010-2012  [kaosu](qiupf2000@gmail.com)
+- Copyright (C) 2015 [zorkzero](zorkzero@hotmail.com)
+- VNR engine making by [jichi](http://sakuradite.com/topic)
+- ITH updating by [Andys](http://www.hongfire.com/forum/member/126633-andys)
+- ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
+
+## Special Thanks
+
+- Everybody adding issues!
+- [IJEMIN](https://github.com/IJEMIN)
+- [Eguni](https://github.com/Eguni)
