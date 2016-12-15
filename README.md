@@ -1,11 +1,5 @@
 # ITHVNR
 
-## TODO
-
-make as project
-i18n
-support x64 process hooking & integrate x86/x64 hooker
-
 ## Compiling
 
 Before compiling *ITHVNR*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
@@ -19,6 +13,7 @@ Releases of *ITHVNR* can be found [here](https://github.com/mireado/ITHVNR/relea
 ## Overview
 
 *ITHVNR* is an open-source x32~~/x64~~ text hooker for Windows.
+
 Basically, ITHVNR base on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s version.
 
 ## Activity Graph
