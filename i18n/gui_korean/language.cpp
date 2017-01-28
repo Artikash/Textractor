@@ -14,44 +14,44 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-const wchar_t* Warning = L"°æ°í!";
+const wchar_t* Warning = L"ê²½ê³ !";
 //command.cpp
-const wchar_t* ErrorSyntax = L"¸í·É¾î ¿À·ù";
-const wchar_t* Usage = L"¸í·É¾î:\r\n\
+const wchar_t* ErrorSyntax = L"ëª…ë ¹ì–´ ì˜¤ë¥˜";
+const wchar_t* Usage = L"ëª…ë ¹ì–´:\r\n\
 \r\n\
-µµ¿ò¸» //µµ¿ò¸»À» Ãâ·ÂÇÕ´Ï´Ù\r\n\
-Ãâ¹ß µµÂø // 'Ãâ¹ß'½º·¹µå¿¡¼­ 'µµÂø'½º·¹µå·Î ¿¬°áÇÕ´Ï´Ù\r\n\
-¤¾Ãâ¹ß // 'Ãâ¹ß'½º·¹µå¿¡ ¿¬°áµÈ ¸µÅ©¸¦ ÇØÁ¦ÇÕ´Ï´Ù\r\n\
+ë„ì›€ë§ //ë„ì›€ë§ì„ ì¶œë ¥í•©ë‹ˆë‹¤\r\n\
+ì¶œë°œ ë„ì°© // 'ì¶œë°œ'ìŠ¤ë ˆë“œì—ì„œ 'ë„ì°©'ìŠ¤ë ˆë“œë¡œ ì—°ê²°í•©ë‹ˆë‹¤\r\n\
+ã…ì¶œë°œ // 'ì¶œë°œ'ìŠ¤ë ˆë“œì— ì—°ê²°ëœ ë§í¬ë¥¼ í•´ì œí•©ë‹ˆë‹¤\r\n\
 \r\n\
-'Ãâ¹ß'°ú 'µµÂø'¿¡´Â 16Áø¹ı(Çí»çÄÚµå) ½º·¹µå¹øÈ£¸¦ ÀÔ·ÂÇÕ´Ï´Ù. ½º·¹µå ¹øÈ£´Â ¸Ç ¾Õ¿¡ ÀÖ´Â Ã¹ ¹øÂ° ¼ıÀÚ¿­ÀÔ´Ï´Ù.\r\n\
+'ì¶œë°œ'ê³¼ 'ë„ì°©'ì—ëŠ” 16ì§„ë²•(í—¥ì‚¬ì½”ë“œ) ìŠ¤ë ˆë“œë²ˆí˜¸ë¥¼ ì…ë ¥í•©ë‹ˆë‹¤. ìŠ¤ë ˆë“œ ë²ˆí˜¸ëŠ” ë§¨ ì•ì— ìˆëŠ” ì²« ë²ˆì§¸ ìˆ«ìì—´ì…ë‹ˆë‹¤.\r\n\
 \r\n\
-·Î´õ ¿É¼Ç:\r\n\
-/P[{process_id|Nprocess_name}] //ÇÁ·Î¼¼½º¿¡ ºÎÂø\r\n\
+ë¡œë” ì˜µì…˜:\r\n\
+/P[{process_id|Nprocess_name}] //í”„ë¡œì„¸ìŠ¤ì— ë¶€ì°©\r\n\
 \r\n\
-HÄÚµå ÈÄÅ· ¿É¼Ç:\r\n\
+Hì½”ë“œ í›„í‚¹ ì˜µì…˜:\r\n\
 /H[X]{A|B|W|S|Q}[N][data_offset[*drdo]][:sub_offset[*drso]]@addr[:module[:{name|#ordinal}]]\r\n\
 \r\n\
-(¼­¼ö¸¦ Á¦¿ÜÇÑ) /HÄÚµåÀÇ ¸ğµç ¼ıÀÚ´Â ¾Æ¹«°Íµµ Ã³¸®µÇÁö ¾ÊÀº 16Áø¹ı(Çí»çÄÚµå)ÀÔ´Ï´Ù";
+(ì„œìˆ˜ë¥¼ ì œì™¸í•œ) /Hì½”ë“œì˜ ëª¨ë“  ìˆ«ìëŠ” ì•„ë¬´ê²ƒë„ ì²˜ë¦¬ë˜ì§€ ì•Šì€ 16ì§„ë²•(í—¥ì‚¬ì½”ë“œ)ì…ë‹ˆë‹¤";
 
 const wchar_t* ExtendedUsage = L"/H[X]{A|B|W|S|Q}[N][data_offset[*drdo]][:sub_offset[*drso]]@addr[:[module[:{name|#ordinal}]]]\r\n\
 \r\n\
-Ãß°¡ »ç¿ëÀÚÁ¤ÀÇ ÈÄÅ·¼³Á¤\r\n\
+ì¶”ê°€ ì‚¬ìš©ìì •ì˜ í›„í‚¹ì„¤ì •\r\n\
 \r\n\
-ÈÄÅ· Á¾·ù :\r\n\
-A - DBCS ¹®ÀÚ\r\n\
-B - DBCS ¹®ÀÚ(big-endian)\r\n\
-W - UCS2 ¹®ÀÚ\r\n\
-S - MBCS ¹®ÀÚ¿­\r\n\
-Q - UTF-16 ¹®ÀÚ¿­\r\n\
+í›„í‚¹ ì¢…ë¥˜ :\r\n\
+A - DBCS ë¬¸ì\r\n\
+B - DBCS ë¬¸ì(big-endian)\r\n\
+W - UCS2 ë¬¸ì\r\n\
+S - MBCS ë¬¸ìì—´\r\n\
+Q - UTF-16 ë¬¸ìì—´\r\n\
 \r\n\
-¸Å°³º¯¼ö:\r\n\
-X - ÇÏµå¿ş¾î ±¸È¹Á¡ »ç¿ë\r\n\
-N - ¹®¹ıÀ» »ç¿ëÇÏÁö ¾ÊÀ½\r\n\
+ë§¤ê°œë³€ìˆ˜:\r\n\
+X - í•˜ë“œì›¨ì–´ êµ¬íšì  ì‚¬ìš©\r\n\
+N - ë¬¸ë²•ì„ ì‚¬ìš©í•˜ì§€ ì•ŠìŒ\r\n\
 data_offset - stack offset to char / string pointer\r\n\
 drdo - add a level of indirection to data_offset\r\n\
 sub_offset - stack offset to subcontext\r\n\
 drso - add a level of indirection to sub_offset\r\n\
-addr - ÈÄÅ·ÇÒ ÁÖ¼Ò\r\n\
+addr - í›„í‚¹í•  ì£¼ì†Œ\r\n\
 module - name of the module to use as base for 'addr'\r\n\
 name - name of the 'module' export to use as base for 'addr'\r\n\
 ordinal - number of the 'module' export ordinal to use as base for 'addr'\r\n\
@@ -64,70 +64,70 @@ Negative values of 'data_offset' and 'sub_offset' refer to registers: \r\n\
 All numbers except ordinal are hexadecimal without any prefixes";
 
 //inject.cpp
-const wchar_t* ErrorRemoteThread = L"¿ø°İ ½º·¹µå¸¦ »ı¼ºÇÒ ¼ö ¾øÀ½.";
-const wchar_t* ErrorOpenProcess = L"ÇÁ·Î¼¼½º¸¦ ¿­ ¼ö ¾øÀ½.";
-const wchar_t* ErrorNoProcess = L"ÇÁ·Î¼¼½º¸¦ Ã£À» ¼ö ¾øÀ½";
-const wchar_t* SelfAttach = L"ITH.exe¿¡ ºÎÂøÇÏÁö ¸»¾Æ ÁÖ¼¼¿ä";
-const wchar_t* AlreadyAttach = L"ÇÁ·Î¼¼½º°¡ ÀÌ¹Ì ºÎÂøµÊ.";
-const wchar_t* FormatInject = L"ÇÁ·Î¼¼½º %d¿¡ ÀÎÁ§¼Ç. ¸ğµâ ±â¹İ %.8X";
+const wchar_t* ErrorRemoteThread = L"ì›ê²© ìŠ¤ë ˆë“œë¥¼ ìƒì„±í•  ìˆ˜ ì—†ìŒ.";
+const wchar_t* ErrorOpenProcess = L"í”„ë¡œì„¸ìŠ¤ë¥¼ ì—´ ìˆ˜ ì—†ìŒ.";
+const wchar_t* ErrorNoProcess = L"í”„ë¡œì„¸ìŠ¤ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ";
+const wchar_t* SelfAttach = L"ITH.exeì— ë¶€ì°©í•˜ì§€ ë§ì•„ ì£¼ì„¸ìš”";
+const wchar_t* AlreadyAttach = L"í”„ë¡œì„¸ìŠ¤ê°€ ì´ë¯¸ ë¶€ì°©ë¨.";
+const wchar_t* FormatInject = L"í”„ë¡œì„¸ìŠ¤ %dì— ì¸ì ì…˜. ëª¨ë“ˆ ê¸°ë°˜ %.8X";
 //main.cpp
-const wchar_t* NotAdmin = L"SeDebugPrevilegeÀ» È°¼ºÈ­ ÇÒ ¼ö ¾ø½À´Ï´Ù. ITH°¡ Á¦´ë·Î ÀÛµ¿ÇÏÁö ¸øÇÕ´Ï´Ù.\r\n\
-°ü¸®ÀÚ °èÁ¤À¸·Î ½ÇÇàÇÏ½Ã°Å³ª UAC¸¦ ²ô½Ã°í ITH¸¦ ½ÇÇàÇØ ÁÖ¼¼¿ä.";
+const wchar_t* NotAdmin = L"SeDebugPrevilegeì„ í™œì„±í™” í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ITHê°€ ì œëŒ€ë¡œ ì‘ë™í•˜ì§€ ëª»í•©ë‹ˆë‹¤.\r\n\
+ê´€ë¦¬ì ê³„ì •ìœ¼ë¡œ ì‹¤í–‰í•˜ì‹œê±°ë‚˜ UACë¥¼ ë„ì‹œê³  ITHë¥¼ ì‹¤í–‰í•´ ì£¼ì„¸ìš”.";
 //pipe.cpp
-const wchar_t* ErrorCreatePipe = L"ÅØ½ºÆ® ÆÄÀÌÇÁ¸¦ »ı¼ºÇÒ ¼ö ¾ø°Å³ª, ¿äÃ»ÀÌ ³Ê¹« ¸¹½À´Ï´Ù.";
-const wchar_t* FormatDetach = L"ÇÁ·Î¼¼½º %d°¡ Å»ÂøµÊ.";
-const wchar_t* ErrorCmdQueueFull = L"¸í·É¾î ´ë±â¿­ÀÌ °¡µæÂü.";
-const wchar_t* ErrorNoAttach = L"ÇÁ·Î¼¼½º°¡ ºÎÂøµÇÁö ¾ÊÀ½.";
+const wchar_t* ErrorCreatePipe = L"í…ìŠ¤íŠ¸ íŒŒì´í”„ë¥¼ ìƒì„±í•  ìˆ˜ ì—†ê±°ë‚˜, ìš”ì²­ì´ ë„ˆë¬´ ë§ìŠµë‹ˆë‹¤.";
+const wchar_t* FormatDetach = L"í”„ë¡œì„¸ìŠ¤ %dê°€ íƒˆì°©ë¨.";
+const wchar_t* ErrorCmdQueueFull = L"ëª…ë ¹ì–´ ëŒ€ê¸°ì—´ì´ ê°€ë“ì°¸.";
+const wchar_t* ErrorNoAttach = L"í”„ë¡œì„¸ìŠ¤ê°€ ë¶€ì°©ë˜ì§€ ì•ŠìŒ.";
 
 //profile.cpp
-const wchar_t* ErrorMonitor = L"ÇÁ·Î¼¼½º¸¦ °¨½ÃÇÒ ¼ö ¾øÀ½.";
+const wchar_t* ErrorMonitor = L"í”„ë¡œì„¸ìŠ¤ë¥¼ ê°ì‹œí•  ìˆ˜ ì—†ìŒ.";
 //utility.cpp
 const wchar_t* InitMessage = L"Copyright (C) 2010-2012  kaosu <qiupf2000@gmail.com>\r\n\
 Copyright (C) 2015 zorkzero <zorkzero@hotmail.com>\r\n\
-¼Ò½ºÄÚµå <https://code.google.com/p/interactive-text-hooker/>\r\n\
-ÀÏ¹İÅä·Ğ <https://groups.google.com/forum/?fromgroups#!forum/interactive-text-hooker>\r\n\
-ÇÑ±ÛÈ­ @mireado<https://twitter.com/mireado>";
-const wchar_t* BackgroundMsg = L"µµ¿ò¸»À» º¸½Ã·Á¸é, \"help\", \"µµ¿ò¸»\"ÀÌ³ª \"µµ¿ò\"À» ÀÔ·ÂÇÏ¼¼¿ä.";
-const wchar_t* ErrorLinkExist = L"¿¬°áÀÌ Á¸ÀçÇÔ.";
-const wchar_t* ErrorCylicLink = L"¿¬°á½ÇÆĞ. ¼øÈ¯¿¬°áÀº Çã¿ëµÇÁö ¾Ê½À´Ï´Ù.";
-const wchar_t* FormatLink = L"Ãâ¹ß½º·¹µå%.4x¿¡¼­ µµÂø½º·¹µå%.4x·Î ¿¬°á.";
-const wchar_t* ErrorLink = L"¿¬°á½ÇÆĞ. Ãâ¹ß/µµÂø ½º·¹µå¸¦ Ã£À» ¼ö ¾øÀ½.";
-const wchar_t* ErrorDeleteCombo = L"±Û»óÀÚ¿¡¼­ Áö¿ì±â ½ÇÆĞ.";
+ì†ŒìŠ¤ì½”ë“œ <https://code.google.com/p/interactive-text-hooker/>\r\n\
+ì¼ë°˜í† ë¡  <https://groups.google.com/forum/?fromgroups#!forum/interactive-text-hooker>\r\n\
+í•œê¸€í™” @mireado<https://twitter.com/mireado>";
+const wchar_t* BackgroundMsg = L"ë„ì›€ë§ì„ ë³´ì‹œë ¤ë©´, \"help\", \"ë„ì›€ë§\"ì´ë‚˜ \"ë„ì›€\"ì„ ì…ë ¥í•˜ì„¸ìš”.";
+const wchar_t* ErrorLinkExist = L"ì—°ê²°ì´ ì¡´ì¬í•¨.";
+const wchar_t* ErrorCylicLink = L"ì—°ê²°ì‹¤íŒ¨. ìˆœí™˜ì—°ê²°ì€ í—ˆìš©ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.";
+const wchar_t* FormatLink = L"ì¶œë°œìŠ¤ë ˆë“œ%.4xì—ì„œ ë„ì°©ìŠ¤ë ˆë“œ%.4xë¡œ ì—°ê²°.";
+const wchar_t* ErrorLink = L"ì—°ê²°ì‹¤íŒ¨. ì¶œë°œ/ë„ì°© ìŠ¤ë ˆë“œë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ.";
+const wchar_t* ErrorDeleteCombo = L"ê¸€ìƒìì—ì„œ ì§€ìš°ê¸° ì‹¤íŒ¨.";
 
 //window.cpp
 const wchar_t* ClassName = L"ITH";
-const wchar_t* ClassNameAdmin = L"ITH (°ü¸®ÀÚ)";
-const wchar_t* ErrorNotSplit = L"¸ÕÀú ¹®´Ü ³ª´©±â¸¦ È°¼ºÈ­ÇØÁÖ¼¼¿ä!";
-const wchar_t* ErrorNotModule = L"¸ÕÀú ¸ğµâÀ» È°¼ºÈ­ÇØÁÖ¼¼¿ä!";
+const wchar_t* ClassNameAdmin = L"ITH (ê´€ë¦¬ì)";
+const wchar_t* ErrorNotSplit = L"ë¨¼ì € ë¬¸ë‹¨ ë‚˜ëˆ„ê¸°ë¥¼ í™œì„±í™”í•´ì£¼ì„¸ìš”!";
+const wchar_t* ErrorNotModule = L"ë¨¼ì € ëª¨ë“ˆì„ í™œì„±í™”í•´ì£¼ì„¸ìš”!";
 //Main window buttons
-const wchar_t* ButtonTitleProcess = L"ÇÁ·Î¼¼½º";
-const wchar_t* ButtonTitleThread = L"½º·¹µå";
-const wchar_t* ButtonTitleHook = L"ÈÄÅ·";
-const wchar_t* ButtonTitleProfile = L"ÇÁ·ÎÇÊ";
-const wchar_t* ButtonTitleOption = L"¿É¼Ç";
-const wchar_t* ButtonTitleClear = L"Áö¿ì±â";
-const wchar_t* ButtonTitleSave = L"ÀúÀå";
-const wchar_t* ButtonTitleTop = L"Ç×»óÀ§";
+const wchar_t* ButtonTitleProcess = L"í”„ë¡œì„¸ìŠ¤";
+const wchar_t* ButtonTitleThread = L"ìŠ¤ë ˆë“œ";
+const wchar_t* ButtonTitleHook = L"í›„í‚¹";
+const wchar_t* ButtonTitleProfile = L"í”„ë¡œí•„";
+const wchar_t* ButtonTitleOption = L"ì˜µì…˜";
+const wchar_t* ButtonTitleClear = L"ì§€ìš°ê¸°";
+const wchar_t* ButtonTitleSave = L"ì €ì¥";
+const wchar_t* ButtonTitleTop = L"í•­ìƒìœ„";
 //Hook window
-const wchar_t* SpecialHook = L"HÄÚµå ÈÄÅ·, AGTH ÄÚµå´Â Áö¿øÇÏÁö ¾Ê½À´Ï´Ù.";
+const wchar_t* SpecialHook = L"Hì½”ë“œ í›„í‚¹, AGTH ì½”ë“œëŠ” ì§€ì›í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.";
 //Process window
 const wchar_t* TabTitlePID = L"PID";
-const wchar_t* TabTitleMemory = L"¸Ş¸ğ¸®";
-const wchar_t* TabTitleName = L"ÀÌ¸§";
+const wchar_t* TabTitleMemory = L"ë©”ëª¨ë¦¬";
+const wchar_t* TabTitleName = L"ì´ë¦„";
 const wchar_t* TabTitleTID = L"TID";
-const wchar_t* TabTitleStart = L"½ÃÀÛ";
-const wchar_t* TabTitleModule = L"¸ğµâ";
-const wchar_t* TabTitleState = L"»óÅÂ";
-const wchar_t* SuccessAttach = L"ÇÁ·Î¼¼½º¿¡ ITH ºÎÂø¼º°ø.";
-const wchar_t* FailAttach = L"ÇÁ·Î¼¼½º¿¡ ITH ºÎÂø½ÇÆĞ.";
-const wchar_t* SuccessDetach = L"ÇÁ·Î¼¼½º¿¡¼­ ITH Å»Âø¼º°ø.";
-const wchar_t* FailDetach = L"ITH Å»Âø½ÇÆĞ.";
+const wchar_t* TabTitleStart = L"ì‹œì‘";
+const wchar_t* TabTitleModule = L"ëª¨ë“ˆ";
+const wchar_t* TabTitleState = L"ìƒíƒœ";
+const wchar_t* SuccessAttach = L"í”„ë¡œì„¸ìŠ¤ì— ITH ë¶€ì°©ì„±ê³µ.";
+const wchar_t* FailAttach = L"í”„ë¡œì„¸ìŠ¤ì— ITH ë¶€ì°©ì‹¤íŒ¨.";
+const wchar_t* SuccessDetach = L"í”„ë¡œì„¸ìŠ¤ì—ì„œ ITH íƒˆì°©ì„±ê³µ.";
+const wchar_t* FailDetach = L"ITH íƒˆì°©ì‹¤íŒ¨.";
 //Profile window
-const wchar_t* ProfileExist = L"ÇÁ·ÎÇÊÀÌ ÀÌ¹Ì Á¸ÀçÇÔ.";
-const wchar_t* SuccessAddProfile = L"ÇÁ·ÎÇÊ Ãß°¡µÊ.";
-const wchar_t* FailAddProfile = L"ÇÁ·ÎÇÊ Ãß°¡½ÇÆĞ";
+const wchar_t* ProfileExist = L"í”„ë¡œí•„ì´ ì´ë¯¸ ì¡´ì¬í•¨.";
+const wchar_t* SuccessAddProfile = L"í”„ë¡œí•„ ì¶”ê°€ë¨.";
+const wchar_t* FailAddProfile = L"í”„ë¡œí•„ ì¶”ê°€ì‹¤íŒ¨";
 const wchar_t* TabTitleNumber = L"No.";
-const wchar_t* NoFile = L"ÆÄÀÏÀ» Ã£À» ¼ö ¾øÀ½.";
-const wchar_t* PathDismatch = L"ÇÁ·Î¼¼½º ÀÌ¸§ÀÌ ÀÏÄ¡ÇÏÁö ¾Ê½À´Ï´Ù, °è¼ÓÇÏ½Ã°Ú½À´Ï±î?";
-const wchar_t* SuccessImportProfile = L"ÇÁ·ÎÇÊ °¡Á®¿À±â ¼º°ø";
+const wchar_t* NoFile = L"íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŒ.";
+const wchar_t* PathDismatch = L"í”„ë¡œì„¸ìŠ¤ ì´ë¦„ì´ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤, ê³„ì†í•˜ì‹œê² ìŠµë‹ˆê¹Œ?";
+const wchar_t* SuccessImportProfile = L"í”„ë¡œí•„ ê°€ì ¸ì˜¤ê¸° ì„±ê³µ";
 //const wchar_t* SuccessAddProfile=L"Profile added.";

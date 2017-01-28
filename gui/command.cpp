@@ -50,24 +50,24 @@ DWORD ProcessCommand(const std::wstring& cmd, DWORD pid)
 		if (Parse(m[1].str(), hp))
 			Host_InsertHook(pid, &hp);
 	}
-	else if (regex_match(cmd, m, wregex(L":l([[:xdigit:]]+)-([[:xdigit:]]+)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ㅇ|연|l|)([[:xdigit:]]+)(?:-| )([[:xdigit:]]+)", wregex::icase)))
 	{
 		DWORD from = std::stoul(m[1].str(), NULL, 16);
 		DWORD to = std::stoul(m[2].str(), NULL, 16);
 		Host_AddLink(from, to);
 	}
-	else if (regex_match(cmd, m, wregex(L":u([[:xdigit:]]+)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ㅎ|해|해제|u)([[:xdigit:]]+)", wregex::icase)))
 	{
 		DWORD from = std::stoul(m[1].str(), NULL, 16);
 		Host_UnLink(from);
 	}
-	else if (regex_match(cmd, m, wregex(L":(?:h|help)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ㄷ|도|도움|도움말|h|help)", wregex::icase)))
 	{
 		ConsoleOutput(Usage);
 	}
 	else
 	{
-		ConsoleOutput(L"Unknown command. Type :h or :help for help.");
+		ConsoleOutput(L"알 수 없는 명령어. 도움말을 보시려면, :h 나 :help를 입력하세요.");
 	}
 	return 0;
 }

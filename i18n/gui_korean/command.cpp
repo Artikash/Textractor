@@ -50,24 +50,24 @@ DWORD ProcessCommand(const std::wstring& cmd, DWORD pid)
 		if (Parse(m[1].str(), hp))
 			Host_InsertHook(pid, &hp);
 	}
-	else if (regex_match(cmd, m, wregex(L"(?::|)(?:¤·|¿¬|l|)([[:xdigit:]]+)(?:-| )([[:xdigit:]]+)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ã…‡|ì—°|l|)([[:xdigit:]]+)(?:-| )([[:xdigit:]]+)", wregex::icase)))
 	{
 		DWORD from = std::stoul(m[1].str(), NULL, 16);
 		DWORD to = std::stoul(m[2].str(), NULL, 16);
 		Host_AddLink(from, to);
 	}
-	else if (regex_match(cmd, m, wregex(L"(?::|)(?:¤¾|ÇØ|ÇØÁ¦|u)([[:xdigit:]]+)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ã…|í•´|í•´ì œ|u)([[:xdigit:]]+)", wregex::icase)))
 	{
 		DWORD from = std::stoul(m[1].str(), NULL, 16);
 		Host_UnLink(from);
 	}
-	else if (regex_match(cmd, m, wregex(L"(?::|)(?:¤§|µµ|µµ¿ò|µµ¿ò¸»|h|help)", wregex::icase)))
+	else if (regex_match(cmd, m, wregex(L"(?::|)(?:ã„·|ë„|ë„ì›€|ë„ì›€ë§|h|help)", wregex::icase)))
 	{
 		ConsoleOutput(Usage);
 	}
 	else
 	{
-		ConsoleOutput(L"¾Ë ¼ö ¾ø´Â ¸í·É¾î. µµ¿ò¸»À» º¸½Ã·Á¸é, :h ³ª :help¸¦ ÀÔ·ÂÇÏ¼¼¿ä.");
+		ConsoleOutput(L"ì•Œ ìˆ˜ ì—†ëŠ” ëª…ë ¹ì–´. ë„ì›€ë§ì„ ë³´ì‹œë ¤ë©´, :h ë‚˜ :helpë¥¼ ì…ë ¥í•˜ì„¸ìš”.");
 	}
 	return 0;
 }
