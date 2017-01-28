@@ -10385,7 +10385,29 @@ bool InsertArtemis1Hook()
 bool InsertArtemis2Hook()
 {
   const BYTE bytes[] = {
-    0x55, 0x8B, 0xEC, 0x83, 0xE4, 0xF8, 0x6A, 0xFF, 0x68, XX4, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x50, 0x83, 0xEC, 0x28, 0xA1, XX4, 0x33, 0xC4, 0x89, 0x44, 0x24, 0x20, 0x53, 0x56, 0x57, 0xA1, XX4, 0x33, 0xC4, 0x50, 0x8D, 0x44, 0x24, 0x38, 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00, 0x8B, 0xF1, 0x8B, 0x5D, 0x08, 0x8B, 0x4D, 0x0C
+                       // 0054461F | CC                       | int3                                    |
+    0x55,              // 00544620 | 55                       | push ebp                                |
+	0x8B, 0xEC,        // 00544621 | 8B EC                    | mov ebp,esp                             |
+	0x83, 0xE4, 0xF8,  // 00544623 | 83 E4 F8                 | and esp,FFFFFFF8                        |
+	0x6A, 0xFF,        // 00544626 | 6A FF                    | push FFFFFFFF                           |
+	0x68, XX4,         // 00544628 | 68 68 7C 6A 00           | push 空のつくりかた体験版_ver3.0.6A7C68           |
+	0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, // 0054462D | 64 A1 00 00 00 00        | mov eax,dword ptr fs:[0]                |
+	0x50,              // 00544633 | 50                       | push eax                                |
+	0x83, 0xEC, 0x28,  // 00544634 | 83 EC 28                 | sub esp,28                              |
+	0xA1, XX4,         // 00544637 | A1 F0 57 81 00           | mov eax,dword ptr ds:[8157F0]           |
+	0x33, 0xC4,        // 0054463C | 33 C4                    | xor eax,esp                             |
+    0x89, 0x44, 0x24, 0x20, // 0054463E | 89 44 24 20              | mov dword ptr ss:[esp+20],eax           |
+    0x53,              // 00544642 | 53                       | push ebx                                |
+	0x56,              // 00544643 | 56                       | push esi                                |
+	0x57,              // 00544644 | 57                       | push edi                                |
+	0xA1, XX4,         // 00544645 | A1 F0 57 81 00           | mov eax,dword ptr ds:[8157F0]           |
+	0x33, 0xC4,        // 0054464A | 33 C4                    | xor eax,esp                             |
+	0x50,              // 0054464C | 50                       | push eax                                |
+	0x8D, 0x44, 0x24, 0x38, // 0054464D | 8D 44 24 38              | lea eax,dword ptr ss:[esp+38]           | [esp+38]:BaseThreadInitThunk
+	0x64, 0xA3, 0x00, 0x00, 0x00, 0x00, // 00544651 | 64 A3 00 00 00 00        | mov dword ptr fs:[0],eax                |
+	0x8B, 0xF1,        // 00544657 | 8B F1                    | mov esi,ecx                             |
+	0x8B, 0x5D, 0x08,  // 00544659 | 8B 5D 08                 | mov ebx,dword ptr ss:[ebp+8]            |
+	0x8B, 0x4D, 0x0C   // 0054465C | 8B 4D 0C                 | mov ecx,dword ptr ss:[ebp+C]            | ecx:DbgUiRemoteBreakin, [ebp+C]:BaseThreadInitThunk
   };
   enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
   ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
@@ -12465,8 +12487,8 @@ static bool InsertNewPal2Hook()
     0x83,0xec, 0x7c,    // 0124E223   83ec 7c          sub esp,0x7C
     0xa1, XX4,          // 0124E226   a1 788D2901      mov eax,dword ptr ds:[0x2f008c]
     0x33,0xc5,          // 0124E22B   33c5             xor eax,ebp
-    0x89,0x45, 0xfc,     // 0124E22D   8945 FC          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
-	0xe8				// 0136e230   e8			   call 01377800
+    0x89,0x45, 0xfc,    // 0124E22D   8945 FC          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
+	0xe8                // 0136e230   e8			   call 01377800
   };
   ULONG range = min(module_limit_ - module_base_, MAX_REL_ADDR);
   ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), module_base_, module_base_ + range);
