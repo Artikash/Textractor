@@ -59,13 +59,8 @@ set(vnrhook_src
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.h
   ${PROJECT_SOURCE_DIR}/ntinspect/ntinspect.cc
   ${PROJECT_SOURCE_DIR}/ntinspect/ntinspect.h
-  ${PROJECT_SOURCE_DIR}/winkey/winkey.h
   ${PROJECT_SOURCE_DIR}/winversion/winversion.cc
   ${PROJECT_SOURCE_DIR}/winversion/winversion.h
-  ${PROJECT_SOURCE_DIR}/winseh/winseh.h
-  ${PROJECT_SOURCE_DIR}/winseh/winseh.cc
-  ${PROJECT_SOURCE_DIR}/winseh/winseh_safe.cc
-  ${PROJECT_SOURCE_DIR}/winseh/safeseh.asm
   ${PROJECT_SOURCE_DIR}/mono/monoobject.h
   ${PROJECT_SOURCE_DIR}/mono/monotype.h
 )

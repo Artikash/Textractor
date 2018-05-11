@@ -75,9 +75,8 @@ void ProcessWindow::RefreshProcess()
 void ProcessWindow::AttachProcess()
 {
 	DWORD pid = GetSelectedPID();
-	if (Host_InjectByPID(pid))
+	if (InjectProcessById(pid))
 	{
-		Host_HijackProcess(pid);
 		RefreshThreadWithPID(pid, true);
 	}
 }
@@ -85,7 +84,7 @@ void ProcessWindow::AttachProcess()
 void ProcessWindow::DetachProcess()
 {
 	DWORD pid = GetSelectedPID();
-	if (Host_ActiveDetachProcess(pid) == 0)
+	if (DetachProcessById(pid) == 0)
 		RefreshThreadWithPID(pid, false);
 }
 

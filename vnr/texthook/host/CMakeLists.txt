@@ -19,23 +19,11 @@ set(vnrhost_src
   host.cc
   pipe.cc
   textthread.cc
-  ${PROJECT_SOURCE_DIR}/winmaker/winmaker.h
-  ${PROJECT_SOURCE_DIR}/winmaker/winmaker.cc
   ${PROJECT_SOURCE_DIR}/winmutex/winmutex.h
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimer.h
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimer.cc
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimerbase.cc
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimerbase.h
-  ${PROJECT_SOURCE_DIR}/windbg/windbg.h
-  ${PROJECT_SOURCE_DIR}/windbg/windbg_p.h
-  ${PROJECT_SOURCE_DIR}/windbg/inject.h
-  ${PROJECT_SOURCE_DIR}/windbg/inject.cc
-  ${PROJECT_SOURCE_DIR}/windbg/hijack.h
-  ${PROJECT_SOURCE_DIR}/windbg/hijack.cc
-  ${PROJECT_SOURCE_DIR}/windbg/util.h
-#  ${PROJECT_SOURCE_DIR}/windbg/util.cc
-  ${PROJECT_SOURCE_DIR}/windbg/unload.h
-  ${PROJECT_SOURCE_DIR}/windbg/unload.cc
   ${PROJECT_SOURCE_DIR}/sakurakit/skdebug.h
 )
 

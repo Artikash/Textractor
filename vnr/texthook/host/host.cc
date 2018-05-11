@@ -16,8 +16,6 @@
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
 #include "ithsys/ithsys.h"
-#include "windbg/inject.h"
-#include "winmaker/winmaker.h"
 #include "ccutil/ccmacro.h"
 #include <commctrl.h>
 
@@ -28,446 +26,217 @@
 #define DEBUG "vnrhost/host.cc"
 #include "sakurakit/skdebug.h"
 
-namespace { // unnamed
+namespace 
+{ // unnamed
 
 //enum { HOOK_TIMEOUT = -50000000 }; // in nanoseconds = 5 seconds
 
-CRITICAL_SECTION cs;
-//WCHAR exist[] = ITH_PIPEEXISTS_EVENT;
-//WCHAR mutex[] = L"ITH_RUNNING";
-//WCHAR EngineName[] = ITH_ENGINE_DLL;
-//WCHAR EngineNameXp[] = ITH_ENGINE_XP_DLL;
-//WCHAR DllName[] = ITH_CLIENT_DLL;
-//WCHAR DllNameXp[] = ITH_CLIENT_XP_DLL;
-HANDLE hServerMutex; // jichi 9/28/2013: used to guard pipe
-HANDLE hHookMutex;  // jichi 9/28/2013: used to guard hook modification
+	CRITICAL_SECTION hostCs;
+	//WCHAR exist[] = ITH_PIPEEXISTS_EVENT;
+	//WCHAR mutex[] = L"ITH_RUNNING";
+	//WCHAR EngineName[] = ITH_ENGINE_DLL;
+	//WCHAR EngineNameXp[] = ITH_ENGINE_XP_DLL;
+	//WCHAR DllName[] = ITH_CLIENT_DLL;
+	//WCHAR DllNameXp[] = ITH_CLIENT_XP_DLL;
+	HANDLE preventDuplicationMutex; // jichi 9/28/2013: used to guard pipe
+	HANDLE hookMutex;  // jichi 9/28/2013: used to guard hook modification
 } // unnamed namespace
 
 //extern LPWSTR current_dir;
-extern CRITICAL_SECTION detach_cs;
+extern CRITICAL_SECTION detachCs;
 
 Settings *settings;
-HWND hMainWnd;
-HANDLE hPipeExist;
+HWND dummyWindow;
+HANDLE pipeExistsEvent;
 BOOL running;
 
-#define ITH_SYNC_HOOK   IthMutexLocker locker(::hHookMutex)
+#define ITH_SYNC_HOOK   IthMutexLocker locker(::hookMutex)
 
-namespace { // unnamed
+namespace 
+{ // unnamed
 
-void GetDebugPriv()
-{
-  HANDLE  hToken;
-  DWORD  dwRet;
-  NTSTATUS status;
+	void GetDebugPrivileges()
+	{
+		HANDLE processToken;
+		TOKEN_PRIVILEGES Privileges = { 1, {0x14, 0, SE_PRIVILEGE_ENABLED} };
 
-  TOKEN_PRIVILEGES Privileges = {1,{0x14,0,SE_PRIVILEGE_ENABLED}};
+		OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &processToken);
+		AdjustTokenPrivileges(processToken, FALSE, &Privileges, 0, nullptr, nullptr);
+		CloseHandle(processToken);
+	}
 
-  NtOpenProcessToken(NtCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
-
-  status = NtAdjustPrivilegesToken(hToken, 0, &Privileges, sizeof(Privileges), 0, &dwRet);
-  //if (STATUS_SUCCESS == status)
-  //{
-  //  admin = 1;
-  //}
-  //else
-  //{
-  //  WCHAR buffer[0x10];
-  //  swprintf(buffer, L"%.8X",status);
-  //  MessageBox(0, NotAdmin, buffer, 0);
-  //}
-  NtClose(hToken);
-}
-
-bool sendCommand(HANDLE hCmd, HostCommandType cmd)
-{
-  IO_STATUS_BLOCK ios;
-  //SendParam sp = {};
-  //sp.type = cmd;
-  DWORD data = cmd;
-  return hCmd && NT_SUCCESS(NtWriteFile(hCmd, 0,0,0, &ios, &data, sizeof(data), 0,0));
-}
-
-// jichi 9/22/2013: Change current directory to the same as main module path
-// Otherwise NtFile* would not work for files with relative paths.
-//BOOL ChangeCurrentDirectory()
-//{
-//  if (const wchar_t *path = GetMainModulePath()) // path to VNR's python exe
-//    if (const wchar_t *base = wcsrchr(path, L'\\')) {
-//      size_t len = base - path;
-//      if (len < MAX_PATH) {
-//        wchar_t buf[MAX_PATH];
-//        wcsncpy(buf, path, len);
-//        buf[len] = 0;
-//        return SetCurrentDirectoryW(buf);
-//      }
-//    }
-//  return FALSE;
-//}
-
-#if 0
-bool injectUsingWin32Api(LPCWSTR path, HANDLE hProc)
-{ return WinDbg::injectDllW(path, 0, hProc); }
-
-bool ejectUsingWin32Api(HANDLE hModule, HANDLE hProc)
-{ return WinDbg::ejectDll(hModule, hProc); }
-
-// The original inject logic in ITH
-bool injectUsingNTApi(LPCWSTR path, HANDLE hProc)
-{
-  LPVOID lpvAllocAddr = 0;
-  DWORD dwWrite = 0x1000; //, len = 0;
-  //if (IthIsWine())
-  //  lpvAllocAddr = VirtualAllocEx(hProc, nullptr, dwWrite, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-  //else
-  NtAllocateVirtualMemory(hProc, &lpvAllocAddr, 0, &dwWrite, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-  if (!lpvAllocAddr)
-    return false;
-
-  CheckThreadStart();
-
-  //Copy module path into address space of target process.
-  //if (IthIsWine())
-  //  WriteProcessMemory(hProc, lpvAllocAddr, path, MAX_PATH << 1, &dwWrite);
-  //else
-  NtWriteVirtualMemory(hProc, lpvAllocAddr, (LPVOID)path, MAX_PATH << 1, &dwWrite);
-  HANDLE hTH = IthCreateThread(LoadLibraryW, (DWORD)lpvAllocAddr, hProc);
-  if (hTH == 0 || hTH == INVALID_HANDLE_VALUE) {
-    DOUT("ERROR: failed to create remote cli thread");
-    //ConsoleOutput(ErrorRemoteThread);
-    return false;
-  }
-  // jichi 9/28/2013: no wait as it will not blocked
-  NtWaitForSingleObject(hTH, 0, nullptr);
-  THREAD_BASIC_INFORMATION info;
-  NtQueryInformationThread(hTH, ThreadBasicInformation, &info, sizeof(info), &dwWrite);
-  NtClose(hTH);
-
-  // jichi 10/19/2014: Disable inject the second dll
-  //if (info.ExitStatus) {
-  //  //IthCoolDown();
-  //  wcscpy(p, engine);
-  //  //if (IthIsWine())
-  //  //  WriteProcessMemory(hProc, lpvAllocAddr, path, MAX_PATH << 1, &dwWrite);
-  //  //else
-  //  NtWriteVirtualMemory(hProc, lpvAllocAddr, path, MAX_PATH << 1, &dwWrite);
-  //  hTH = IthCreateThread(LoadLibraryW, (DWORD)lpvAllocAddr, hProc);
-  //  if (hTH == 0 || hTH == INVALID_HANDLE_VALUE) {
-  //    //ConsoleOutput(ErrorRemoteThread);
-  //    ConsoleOutput("vnrhost:inject: ERROR: failed to create remote eng thread");
-  //    return error;
-  //  }
-  //
-  //  // jichi 9/28/2013: no wait as it will not blocked
-  //  NtWaitForSingleObject(hTH, 0, nullptr);
-  //  NtClose(hTH);
-  //}
-
-  dwWrite = 0;
-  //if (IthIsWine())
-  //  VirtualFreeEx(hProc, lpvAllocAddr, dwWrite, MEM_RELEASE);
-  //else
-  NtFreeVirtualMemory(hProc, &lpvAllocAddr, &dwWrite, MEM_RELEASE);
-  return info.ExitStatus != -1;
-}
-
-bool ejectUsingNTApi(HANDLE hModule, HANDLE hProc)
-{
-  //IthCoolDown();
-//#ifdef ITH_WINE // Nt series crash on wine
-//  hThread = IthCreateThread(FreeLibrary, engine, hProc);
-//#else
-  HANDLE hThread = IthCreateThread(LdrUnloadDll, module, hProc);
-//#endif // ITH_WINE
-  if (hThread == 0 || hThread == INVALID_HANDLE_VALUE)
-    return false;
-  // jichi 10/22/2013: Timeout might crash vnrsrv
-  //NtWaitForSingleObject(hThread, 0, (PLARGE_INTEGER)&timeout);
-  NtWaitForSingleObject(hThread, 0, nullptr);
-  //man->UnlockHookman();
-  THREAD_BASIC_INFORMATION info;
-  NtQueryInformationThread(hThread, ThreadBasicInformation, &info, sizeof(info), 0);
-  NtClose(hThread);
-  NtSetEvent(hPipeExist, 0);
-  FreeThreadStart(hProc);
-  return info.ExitStatus;
-}
-#endif // 0
-
-bool Inject(HANDLE hProc)
-{
-  //LPWSTR dllname = (IthIsWindowsXp() && !IthIsWine()) ? DllNameXp : DllName;
-  //LPCWSTR dllname = ITH_USE_XP_DLLS ? ITH_DLL_XP : ITH_DLL;
-  //LPCWSTR dllname = ITH_DLL;
-  //if (!IthCheckFile(dllname))
-  //  return error;
-  wchar_t path[MAX_PATH];
-  size_t len = IthGetCurrentModulePath(path, MAX_PATH);
-  if (!len)
-    return false;
-
-  wchar_t *p;
-  for (p = path + len; *p != L'\\'; p--);
-  p++; // ending with L"\\"
-
-  //LPCWSTR mp = GetMainModulePath();
-  //len = wcslen(mp);
-  //memcpy(path, mp, len << 1);
-  //memset(path + len, 0, (MAX_PATH - len) << 1);
-  //LPWSTR p;
-  //for (p = path + len; *p != L'\\'; p--); // Always a \ after drive letter.
-  //p++;
-  ::wcscpy(p, ITH_DLL);
-
-  return WinDbg::injectDllW(path, 0, hProc);
-  //if (IthIsWindowsXp()) // && !IthIsWine())
-  //  return injectUsingWin32Api(path, hProc);
-  //else
-  //  return injectUsingNTApi(path, hProc);
-}
+	bool sendCommand(HANDLE commandPipe, HostCommandType command)
+	{
+		DWORD unused;
+		return commandPipe && WriteFile(commandPipe, &command, sizeof(command), &unused, nullptr);
+	}
 
 } // unnamed namespace
 
 void CreateNewPipe();
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 {
-  CC_UNUSED(lpvReserved);
-  switch (fdwReason)
-  {
-  case DLL_PROCESS_ATTACH:
-    LdrDisableThreadCalloutsForDll(hinstDLL);
-    InitializeCriticalSection(&::cs);
-    IthInitSystemService();
-    GetDebugPriv();
-    // jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
-    //Used by timers.
-    InitCommonControls();
-    // jichi 8/24/2013: Create hidden window so that ITH can access timer and events
-    hMainWnd = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
-    //wm_register_hidden_class("vnrsrv.class");
-    //hMainWnd = (HWND)wm_create_hidden_window("vnrsrv", "Button", hinstDLL);
-    //ChangeCurrentDirectory();
-    break;
-  case DLL_PROCESS_DETACH:
-    if (::running)
-      Host_Close();
-    DeleteCriticalSection(&::cs);
-    IthCloseSystemService();
-    //wm_destroy_window(hMainWnd);
-	DestroyWindow(hMainWnd);
-    break;
-  default:
-    break;
-  }
-  return true;
-}
-
-HANDLE IthOpenPipe(LPWSTR name, ACCESS_MASK direction)
-{
-  UNICODE_STRING us;
-  RtlInitUnicodeString(&us, name);
-  SECURITY_DESCRIPTOR sd = {1};
-  OBJECT_ATTRIBUTES oa = {sizeof(oa), 0, &us, OBJ_CASE_INSENSITIVE, &sd, 0};
-  HANDLE hFile;
-  IO_STATUS_BLOCK isb;
-  if (NT_SUCCESS(NtCreateFile(&hFile, direction, &oa, &isb, 0, 0, FILE_SHARE_READ, FILE_OPEN, 0, 0, 0)))
-    return hFile;
-  else
-    return INVALID_HANDLE_VALUE;
+	switch (fdwReason)
+	{
+	case DLL_PROCESS_ATTACH:
+		DisableThreadLibraryCalls(hinstDLL);
+		InitializeCriticalSection(&::hostCs);
+		IthInitSystemService();
+		GetDebugPrivileges();
+		// jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
+		//Used by timers.
+		InitCommonControls();
+		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
+		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
+		break;
+	case DLL_PROCESS_DETACH:
+		if (::running)
+			CloseHost();
+		DeleteCriticalSection(&::hostCs);
+		IthCloseSystemService();
+		DestroyWindow(dummyWindow);
+		break;
+	default:
+		break;
+	}
+	return true;
 }
 
 enum { IHS_SIZE = 0x80 };
-enum { IHS_BUFF_SIZE  = IHS_SIZE - sizeof(HookParam) };
+enum { IHS_BUFF_SIZE = IHS_SIZE - sizeof(HookParam) };
 
 struct InsertHookStruct
 {
-  SendParam sp;
-  BYTE name_buffer[IHS_SIZE];
+	SendParam sp;
+	BYTE name_buffer[IHS_SIZE];
 };
 
-IHFSERVICE void IHFAPI Host_Init()
+IHFSERVICE bool IHFAPI OpenHost()
 {
-  InitializeCriticalSection(&::cs);
-  GetDebugPriv();
+	bool success;
+	EnterCriticalSection(&::hostCs);
+
+	preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
+	if (GetLastError() == ERROR_ALREADY_EXISTS || ::running)
+	{
+		GROWL_WARN(L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!");
+		success = false;
+	}
+	else
+	{
+		::running = true;
+		::settings = new Settings;
+		::man = new HookManager;
+		InitializeCriticalSection(&detachCs);
+		::hookMutex = CreateMutexW(nullptr, FALSE, ITH_SERVER_HOOK_MUTEX);
+		success = true;
+	}
+	LeaveCriticalSection(&::hostCs);
+	return success;
 }
 
-IHFSERVICE void IHFAPI Host_Destroy()
+IHFSERVICE void IHFAPI StartHost()
 {
-  InitializeCriticalSection(&::cs);
+	CreateNewPipe();
+	::pipeExistsEvent = CreateEventW(nullptr, TRUE, TRUE, ITH_PIPEEXISTS_EVENT);
 }
 
-IHFSERVICE BOOL IHFAPI Host_Open()
+IHFSERVICE void IHFAPI CloseHost()
 {
-  BOOL result = false;
-  EnterCriticalSection(&::cs);
-  DWORD present;
-  hServerMutex = IthCreateMutex(ITH_SERVER_MUTEX, 1, &present);
-  if (present)
-    //MessageBox(0,L"Already running.",0,0);
-    // jichi 8/24/2013
-    GROWL_WARN(L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!");
-  else if (!::running) {
-    ::running = true;
-    ::settings = new Settings;
-    ::man = new HookManager;
-    //cmdq = new CommandQueue;
-    InitializeCriticalSection(&detach_cs);
-
-    ::hHookMutex = IthCreateMutex(ITH_SERVER_HOOK_MUTEX, FALSE);
-    result = true;
-  }
-  LeaveCriticalSection(&::cs);
-  return result;
+	EnterCriticalSection(&::hostCs);
+	if (::running)
+	{
+		::running = FALSE;
+		ResetEvent(::pipeExistsEvent);
+		delete man;
+		delete settings;
+		CloseHandle(::hookMutex);
+		CloseHandle(preventDuplicationMutex);
+		CloseHandle(::pipeExistsEvent);
+		DeleteCriticalSection(&detachCs);
+	}
+	LeaveCriticalSection(&::hostCs);
 }
 
-IHFSERVICE DWORD IHFAPI Host_Start()
+IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 {
-  //IthBreak();
-  CreateNewPipe();
-  ::hPipeExist = IthCreateEvent(ITH_PIPEEXISTS_EVENT);
-  NtSetEvent(::hPipeExist, nullptr);
-  return 0;
-}
+	bool success = true;
 
-IHFSERVICE DWORD IHFAPI Host_Close()
-{
-  BOOL result = FALSE;
-  EnterCriticalSection(&::cs);
-  if (::running) {
-    ::running = FALSE;
-    HANDLE hRecvPipe = IthOpenPipe(recv_pipe, GENERIC_WRITE);
-    NtClose(hRecvPipe);
-    NtClearEvent(::hPipeExist);
-    //delete cmdq;
-    delete man;
-    delete settings;
-    NtClose(::hHookMutex);
-    NtClose(hServerMutex);
-    NtClose(::hPipeExist);
-    DeleteCriticalSection(&detach_cs);
-    result = TRUE;
-  }
-  LeaveCriticalSection(&::cs);
-  return result;
-}
+	if (processId == GetCurrentProcessId())
+	{
+		success = false;
+	}
 
-IHFSERVICE DWORD IHFAPI Host_GetPIDByName(LPCWSTR pwcTarget)
-{
-  DWORD dwSize = 0x20000,
-        dwExpectSize = 0;
-  LPVOID pBuffer = 0;
-  SYSTEM_PROCESS_INFORMATION *spiProcessInfo;
-  DWORD dwPid = 0;
-  DWORD dwStatus;
+	CloseHandle(CreateMutexW(nullptr, FALSE, CONCAT_STR_NUM(ITH_HOOKMAN_MUTEX_, processId)));
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		man->AddConsoleOutput(L"already locked");
+		success = false;
+	}
 
-  NtAllocateVirtualMemory(NtCurrentProcess(), &pBuffer, 0, &dwSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-  dwStatus = NtQuerySystemInformation(SystemProcessInformation, pBuffer, dwSize, &dwExpectSize);
-  if (!NT_SUCCESS(dwStatus)) {
-    NtFreeVirtualMemory(NtCurrentProcess(),&pBuffer,&dwSize,MEM_RELEASE);
-    if (dwStatus != STATUS_INFO_LENGTH_MISMATCH || dwExpectSize < dwSize)
-      return 0;
-    dwSize = (dwExpectSize | 0xFFF) + 0x4001; //
-    pBuffer = 0;
-    NtAllocateVirtualMemory(NtCurrentProcess(), &pBuffer, 0, &dwSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-    dwStatus = NtQuerySystemInformation(SystemProcessInformation, pBuffer, dwSize, &dwExpectSize);
-    if (!NT_SUCCESS(dwStatus)) goto _end;
-  }
+	HMODULE textHooker = LoadLibraryExW(L"vnrhook", nullptr, DONT_RESOLVE_DLL_REFERENCES);
+	if (textHooker == nullptr)
+	{
+		success = false;
+	}
+	wchar_t textHookerPath[MAX_PATH];
+	unsigned int textHookerPathSize = GetModuleFileNameW(textHooker, textHookerPath, MAX_PATH) * 2 + 2;
+	FreeLibrary(textHooker);
 
-  for (spiProcessInfo = (SYSTEM_PROCESS_INFORMATION *)pBuffer; spiProcessInfo->dNext;) {
-    spiProcessInfo = (SYSTEM_PROCESS_INFORMATION *)
-      ((DWORD)spiProcessInfo + spiProcessInfo -> dNext);
-    if (_wcsicmp(pwcTarget, spiProcessInfo -> usName.Buffer) == 0) {
-      dwPid = spiProcessInfo->dUniqueProcessId;
-      break;
-    }
-  }
-  if (!dwPid)
-    DOUT("pid not found");
-  //if (dwPid == 0) ConsoleOutput(ErrorNoProcess);
-_end:
-  NtFreeVirtualMemory(NtCurrentProcess(),&pBuffer,&dwSize,MEM_RELEASE);
-  return dwPid;
-}
+	HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
+	if (processHandle == INVALID_HANDLE_VALUE || processHandle == nullptr)
+	{
+		success = false;
+	}
 
-IHFSERVICE bool IHFAPI Host_InjectByPID(DWORD pid)
-{
-  WCHAR str[0x80];
-  if (!::running)
-    return 0;
-  if (pid == current_process_id) {
-    //ConsoleOutput(SelfAttach);
-    DOUT("refuse to inject myself");
-    return false;
-  }
-  if (man->GetProcessRecord(pid)) {
-    //ConsoleOutput(AlreadyAttach);
-    DOUT("already attached");
-    return false;
-  }
-  swprintf(str, ITH_HOOKMAN_MUTEX_ L"%d", pid);
-  DWORD s;
-  NtClose(IthCreateMutex(str, 0, &s));
-  if (s) {
-    DOUT("already locked");
-    return false;
-  }
-  CLIENT_ID id;
-  OBJECT_ATTRIBUTES oa = {};
-  HANDLE hProc;
-  id.UniqueProcess = pid;
-  id.UniqueThread = 0;
-  oa.uLength = sizeof(oa);
-  if (!NT_SUCCESS(NtOpenProcess(&hProc,
-      PROCESS_QUERY_INFORMATION|
-      PROCESS_CREATE_THREAD|
-      PROCESS_VM_OPERATION|
-      PROCESS_VM_READ|
-      PROCESS_VM_WRITE,
-      &oa, &id))) {
-    //ConsoleOutput(ErrorOpenProcess);
-    DOUT("failed to open process");
-    return false;
-  }
+	void* loadLibraryStartRoutine = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW");
 
-  //if (!engine)
-  //  engine = ITH_USE_XP_DLLS ? ITH_ENGINE_XP_DLL : ITH_ENGINE_DLL;
-  bool ok = Inject(hProc);
-  //NtClose(hProc); //already closed
-  if (!ok) {
-    DOUT("inject failed");
-    return false;
-  }
-  //swprintf(str, FormatInject, pid, module);
-  //ConsoleOutput(str);
-  DOUT("inject succeed");
-  return true;
+	if (success)
+	{
+		if (LPVOID remoteData = VirtualAllocEx(processHandle, nullptr, textHookerPathSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
+		{
+			if (WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr))
+			{
+				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)loadLibraryStartRoutine, remoteData, 0, nullptr))
+				{
+					WaitForSingleObject(thread, timeout);
+					CloseHandle(thread);
+				}
+				else
+				{
+					success = false;
+				}
+			}
+			else
+			{
+				success = false;
+			}
+			VirtualFreeEx(processHandle, remoteData, textHookerPathSize, MEM_RELEASE);
+		}
+		else
+		{
+			success = false;
+		}
+	}
+
+	if (!success)
+	{
+		man->AddConsoleOutput(L"error: could not inject");
+	}
+
+	CloseHandle(processHandle);
+	return success;
 }
 
 // jichi 7/16/2014: Test if process is valid before creating remote threads
 // See: http://msdn.microsoft.com/en-us/library/ms687032.aspx
-static bool isProcessTerminated(HANDLE hProc)
-{ return WAIT_OBJECT_0 == ::WaitForSingleObject(hProc, 0); }
-//static bool isProcessRunning(HANDLE hProc)
-//{ return WAIT_TIMEOUT == ::WaitForSingleObject(hProc, 0); }
+static bool isProcessTerminated(HANDLE processHandle)
+{
+	return WAIT_OBJECT_0 == ::WaitForSingleObject(processHandle, 0);
+}
 
-// jichi 7/16/2014: Test if process is valid before creating remote threads
-//static bool isProcessRunning(DWORD pid)
-//{
-//  bool ret = false;
-//  HANDLE hProc = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-//  if (hProc) {
-//   DWORD status;
-//   if (::GetExitCodeProcess(hProc, &status)) {
-//     ret = status == STILL_ACTIVE;
-//     ::CloseHandle(hProc);
-//   } else
-//     ret = true;
-//  }
-//  return ret;
-//}
-
-IHFSERVICE bool IHFAPI Host_ActiveDetachProcess(DWORD pid)
+IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid) // Todo: clean this up
 {
   ITH_SYNC_HOOK;
 
@@ -541,13 +310,6 @@ IHFSERVICE bool IHFAPI Host_GetSettings(Settings **p)
   }
   else
     return false;
-}
-
-IHFSERVICE bool IHFAPI Host_HijackProcess(DWORD pid)
-{
-  //ITH_SYNC_HOOK;
-  HANDLE hCmd = man->GetCmdHandleByPID(pid);
-  return hCmd && sendCommand(hCmd, HOST_COMMAND_HIJACK_PROCESS);
 }
 
 IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)

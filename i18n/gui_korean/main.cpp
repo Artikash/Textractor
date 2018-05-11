@@ -246,7 +246,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (!IthInitSystemService())
 		TerminateProcess(GetCurrentProcess(), 0);
 	CreateMutex(NULL, TRUE, L"ITH_MAIN_RUNNING");
-	if (Host_Open())
+	if (OpenHost())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
 		Host_GetHookManager(&man);
@@ -280,7 +280,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		FindITH();
 	}
-	Host_Close();
+	CloseHost();
 	IthCloseSystemService();
 	TerminateProcess(GetCurrentProcess(), 0);
 }

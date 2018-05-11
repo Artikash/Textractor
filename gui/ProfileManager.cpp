@@ -156,7 +156,7 @@ DWORD WINAPI InjectThread(LPVOID lpThreadParameter)
 	Sleep(inject_delay);
 	if (man == NULL)
 		return 0;
-	DWORD status = Host_InjectByPID(pid);
+	DWORD status = InjectProcessById(pid);
 	if (!auto_insert)
 		return status;
 	if (status == -1)

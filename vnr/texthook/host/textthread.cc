@@ -31,7 +31,7 @@ static DWORD MIN_REDETECT = 0x80;
 DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr,DWORD max);
 
 extern Settings *settings;
-extern HWND hMainWnd;
+extern HWND dummyWindow;
 void CALLBACK NewLineBuff(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
   KillTimer(hwnd,idEvent);
@@ -103,7 +103,7 @@ TextThread::TextThread(DWORD id, DWORD hook, DWORD retn, DWORD spl, WORD num) :
 }
 TextThread::~TextThread()
 {
-  //KillTimer(hMainWnd,timer);
+  //KillTimer(dummyWindow,timer);
   RepeatCountNode *t = head,
                   *tt;
   while (t) {
@@ -744,9 +744,9 @@ void TextThread::SetNewLineTimer()
 {
   if (thread_number == 0)
     // jichi 10/27/2013: Not used
-    timer = 0; //SetTimer(hMainWnd,(UINT_PTR)this, settings->splittingInterval, NewLineConsole);
+    timer = 0; //SetTimer(dummyWindow,(UINT_PTR)this, settings->splittingInterval, NewLineConsole);
   else
-	  timer = SetTimer(hMainWnd, (UINT_PTR)this, settings->splittingInterval, NewLineBuff);
+	  timer = SetTimer(dummyWindow, (UINT_PTR)this, settings->splittingInterval, NewLineBuff);
 }
 
 DWORD TextThread::GetThreadString(LPSTR str, DWORD max)

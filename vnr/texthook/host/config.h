@@ -9,8 +9,6 @@
 #define IHFAPI __stdcall
 #ifdef IHF
 # define IHFSERVICE __declspec(dllexport)
-#else
-# define IHFSERVICE __declspec(dllimport)
 #endif
 
 // EOF

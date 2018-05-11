@@ -69,9 +69,9 @@ const BYTE *Filter(const BYTE *str, int len)
 wchar_t recv_pipe[] = ITH_TEXT_PIPE;
 wchar_t command_pipe[] = ITH_COMMAND_PIPE;
 
-CRITICAL_SECTION detach_cs; // jichi 9/27/2013: also used in main
+CRITICAL_SECTION detachCs; // jichi 9/27/2013: also used in main
 //HANDLE hDetachEvent;
-extern HANDLE hPipeExist;
+extern HANDLE pipeExistsEvent;
 
 void CreateNewPipe()
 {
@@ -176,7 +176,7 @@ void DetachFromProcess(DWORD pid)
 
   //NtSetEvent(hDetachEvent, 0);
   if (::running)
-    NtSetEvent(hPipeExist, 0);
+    NtSetEvent(pipeExistsEvent, 0);
 }
 
 // jichi 9/27/2013: I don't need this
@@ -291,7 +291,7 @@ DWORD WINAPI RecvThread(LPVOID lpThreadParameter)
     }
   }
 
-  EnterCriticalSection(&detach_cs);
+  EnterCriticalSection(&detachCs);
 
   HANDLE hDisconnect = IthCreateEvent(nullptr);
 
@@ -310,7 +310,7 @@ DWORD WINAPI RecvThread(LPVOID lpThreadParameter)
 
   //NtClearEvent(hDetachEvent);
 
-  LeaveCriticalSection(&detach_cs);
+  LeaveCriticalSection(&detachCs);
   delete[] buff;
 
   if (::running)

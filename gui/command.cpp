@@ -32,17 +32,10 @@ DWORD ProcessCommand(const std::wstring& cmd, DWORD pid)
 	using std::regex_match;
 	std::match_results<std::wstring::const_iterator> m;
 
-	if (regex_match(cmd, m, wregex(L"/pn(.+)", wregex::icase)))
-	{
-		pid = Host_GetPIDByName(m[1].str().c_str());
-		if (pid == 0)
-			return 0;
-		Host_InjectByPID(pid);
-	}
-	else if (regex_match(cmd, m, wregex(L"/p(\\d+)", wregex::icase)))
+	if (regex_match(cmd, m, wregex(L"/p(\\d+)", wregex::icase)))
 	{
 		pid = std::stoul(m[1].str());
-		Host_InjectByPID(pid);
+		InjectProcessById(pid);
 	}
 	else if (regex_match(cmd, m, wregex(L"/h(.+)", wregex::icase)))
 	{

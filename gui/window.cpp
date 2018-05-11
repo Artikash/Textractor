@@ -753,7 +753,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
 			man->RegisterConsoleCallback(ConsoleOutput);
-			Host_Start();
+			StartHost();
 			{
 				static const WCHAR program_name[] = L"Interactive Text Hooker";
 				//static const WCHAR program_version[] = L"3.0";

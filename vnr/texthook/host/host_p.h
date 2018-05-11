@@ -3,6 +3,7 @@
 // 8/24/2013 jichi
 // Branch IHF/main.h, rev 111
 #include <windows.h>
+#include <tlhelp32.h>
 
 #define GLOBAL extern
 #define SHIFT_JIS 0x3A4
@@ -23,12 +24,12 @@ GLOBAL HookManager *man;
 GLOBAL SettingManager *setman;
 GLOBAL WCHAR recv_pipe[];
 GLOBAL WCHAR command[];
-GLOBAL HANDLE hPipeExist;
+GLOBAL HANDLE pipeExistsEvent;
 GLOBAL DWORD split_time,
              cyclic_remove,
              clipboard_flag,
              global_filter;
-GLOBAL CRITICAL_SECTION detach_cs;
+GLOBAL CRITICAL_SECTION detachCs;
 
 DWORD WINAPI RecvThread(LPVOID lpThreadParameter);
 DWORD WINAPI CmdThread(LPVOID lpThreadParameter);

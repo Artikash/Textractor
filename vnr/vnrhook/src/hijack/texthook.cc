@@ -15,7 +15,6 @@
 #include "src/main.h"
 #include "include/const.h"
 #include "ithsys/ithsys.h"
-#include "winkey/winkey.h"
 #include "disasm/disasm.h"
 //#include "winseh/winseh.h"
 

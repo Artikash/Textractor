@@ -4,6 +4,11 @@
 // ccmacro.h
 // 12/9/2011 jichi
 
+#include <string>
+
+#define CONCAT_STR_NUM(_str, _num) (std::wstring(_str) + std::to_wstring(_num)).c_str()
+#define CONCAT_STR_STR(_str1, _str2) (std::wstring(_str1) + std::wstring(_str2)).c_str()
+
 #define CC_UNUSED(_var) (void)(_var)
 #define CC_NOP          CC_UNUSED(0)
 
