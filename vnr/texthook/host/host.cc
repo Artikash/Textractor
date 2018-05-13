@@ -65,12 +65,6 @@ namespace
 		CloseHandle(processToken);
 	}
 
-	bool sendCommand(HANDLE commandPipe, HostCommandType command)
-	{
-		DWORD unused;
-		return commandPipe && WriteFile(commandPipe, &command, sizeof(command), &unused, nullptr);
-	}
-
 } // unnamed namespace
 
 void CreateNewPipe();
@@ -229,88 +223,31 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 	return success;
 }
 
-// jichi 7/16/2014: Test if process is valid before creating remote threads
-// See: http://msdn.microsoft.com/en-us/library/ms687032.aspx
-static bool isProcessTerminated(HANDLE processHandle)
+IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid)
 {
-	return WAIT_OBJECT_0 == ::WaitForSingleObject(processHandle, 0);
+	ITH_SYNC_HOOK;
+	DWORD command = HOST_COMMAND_DETACH, unused;
+	HANDLE commandPipe = man->GetCmdHandleByPID(pid);
+	return commandPipe && WriteFile(commandPipe, &command, sizeof(command), &unused, nullptr);
 }
 
-IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid) // Todo: clean this up
+IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
 {
-  ITH_SYNC_HOOK;
-
-  //man->LockHookman();
-  ProcessRecord *pr = man->GetProcessRecord(pid);
-  HANDLE hCmd = man->GetCmdHandleByPID(pid);
-  if (pr == 0 || hCmd == 0)
-    return false;
-  HANDLE hProc;
-  //hProc = pr->process_handle; //This handle may be closed(thus invalid) during the detach process.
-  NtDuplicateObject(NtCurrentProcess(), pr->process_handle,
-      NtCurrentProcess(), &hProc, 0, 0, DUPLICATE_SAME_ACCESS); // Make a copy of the process handle.
-  HANDLE hModule = (HANDLE)pr->module_register;
-  if (!hModule) {
-    DOUT("process module not found");
-    return false;
-  }
-
-  // jichi 7/15/2014: Process already closed
-  if (isProcessTerminated(hProc)) {
-    DOUT("process has terminated");
-    return false;
-  }
-
-  // jichi 10/19/2014: Disable the second dll
-  //engine = pr->engine_register;
-  //engine &= ~0xff;
-
-  DOUT("send detach command");
-  bool ret = sendCommand(hCmd, HOST_COMMAND_DETACH);
-
-  // jichi 7/15/2014: Process already closed
-  //if (isProcessTerminated(hProc)) {
-  //  DOUT("process has terminated");
-  //  return false;
-  //}
-  //WinDbg::ejectDll(hModule, 0, hProc); // eject in case module has not loaded yet
-
-  //cmdq->AddRequest(sp, pid);
-////#ifdef ITH_WINE // Nt series crash on wine
-////  hThread = IthCreateThread(FreeLibrary, engine, hProc);
-////#else
-//  hThread = IthCreateThread(LdrUnloadDll, engine, hProc);
-////#endif // ITH_WINE
-//  if (hThread == 0 || hThread == INVALID_HANDLE_VALUE)
-//    return FALSE;
-//  // jichi 10/22/2013: Timeout might crash vnrsrv
-//  //const LONGLONG timeout = HOOK_TIMEOUT;
-//  //NtWaitForSingleObject(hThread, 0, (PLARGE_INTEGER)&timeout);
-//  NtWaitForSingleObject(hThread, 0, nullptr);
-//  NtClose(hThread);
-  NtClose(hProc);
-  return ret;
+	if (::running)
+	{
+		*hookman = man;
+	}
 }
 
-IHFSERVICE DWORD IHFAPI Host_GetHookManager(HookManager** hookman)
+IHFSERVICE void IHFAPI GetHostSettings(Settings **p)
 {
-  if (::running) {
-    *hookman = man;
-    return 0;
-  }
-  else
-    return 1;
+	if (::running)
+	{
+		*p = settings;
+	}
 }
 
-IHFSERVICE bool IHFAPI Host_GetSettings(Settings **p)
-{
-  if (::running) {
-    *p = settings;
-    return true;
-  }
-  else
-    return false;
-}
+// I don't understand the following operations, so I'm making minimal changes in cleanup -Artikash 11 May 2018
 
 IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)
 {
@@ -334,31 +271,11 @@ IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)
   }
   s.name_buffer[len] = 0;
   IO_STATUS_BLOCK ios;
-  NtWriteFile(hCmd, 0,0,0, &ios, &s, IHS_SIZE, 0, 0);
+  DWORD unused;
+  WriteFile(hCmd, &s, IHS_SIZE, &unused, nullptr);
 
   //memcpy(&sp.hp,hp,sizeof(HookParam));
   //cmdq->AddRequest(sp, pid);
-  return 0;
-}
-
-IHFSERVICE DWORD IHFAPI Host_ModifyHook(DWORD pid, HookParam *hp)
-{
-  ITH_SYNC_HOOK;
-
-  HANDLE hCmd = GetCmdHandleByPID(pid);
-  if (hCmd == 0)
-    return -1;
-  HANDLE hModify = IthCreateEvent(ITH_MODIFYHOOK_EVENT);
-  SendParam sp;
-  sp.type = HOST_COMMAND_MODIFY_HOOK;
-  sp.hp = *hp;
-  IO_STATUS_BLOCK ios;
-  if (NT_SUCCESS(NtWriteFile(hCmd, 0,0,0, &ios, &sp, sizeof(SendParam), 0, 0)))
-    // jichi 9/28/2013: no wait timeout
-    //const LONGLONG timeout = HOOK_TIMEOUT;
-    NtWaitForSingleObject(hModify, 0, nullptr);
-  NtClose(hModify);
-  man->RemoveSingleHook(pid, sp.hp.address);
   return 0;
 }
 
@@ -370,18 +287,19 @@ IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr)
   hCmd = GetCmdHandleByPID(pid);
   if (hCmd == 0)
     return -1;
-  hRemoved = IthCreateEvent(ITH_REMOVEHOOK_EVENT);
+  hRemoved = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
   SendParam sp = {};
   IO_STATUS_BLOCK ios;
   sp.type = HOST_COMMAND_REMOVE_HOOK;
   sp.hp.address = addr;
   //cmdq -> AddRequest(sp, pid);
-  NtWriteFile(hCmd, 0,0,0, &ios, &sp, sizeof(SendParam),0,0);
+  DWORD unused;
+  WriteFile(hCmd, &sp, sizeof(sp), &unused, nullptr);
   // jichi 10/22/2013: Timeout might crash vnrsrv
   //const LONGLONG timeout = HOOK_TIMEOUT;
   //NtWaitForSingleObject(hRemoved, 0, (PLARGE_INTEGER)&timeout);
-  NtWaitForSingleObject(hRemoved, 0, nullptr);
-  NtClose(hRemoved);
+  WaitForSingleObject(hRemoved, MAXDWORD);
+  CloseHandle(hRemoved);
   man -> RemoveSingleHook(pid, sp.hp.address);
   return 0;
 }

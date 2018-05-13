@@ -75,61 +75,12 @@ extern HANDLE pipeExistsEvent;
 
 void CreateNewPipe()
 {
-  static DWORD acl[7] = {
-      0x1C0002,
-      1,
-      0x140000,
-      GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-      0x101,
-      0x1000000,
-      0};
-  static SECURITY_DESCRIPTOR sd = {1, 0, 4, 0, 0, 0, (PACL)acl};
+	HANDLE hTextPipe, hCmdPipe, hThread;
 
-  HANDLE hTextPipe, hCmdPipe, hThread;
-  IO_STATUS_BLOCK ios;
-  UNICODE_STRING us;
-
-  OBJECT_ATTRIBUTES oa = {sizeof(oa), 0, &us, OBJ_CASE_INSENSITIVE, &sd, 0};
-  LARGE_INTEGER time = {-500000, -1};
-
-  RtlInitUnicodeString(&us, recv_pipe);
-  if (!NT_SUCCESS(NtCreateNamedPipeFile(
-      &hTextPipe,
-      GENERIC_READ | SYNCHRONIZE,
-      &oa,
-      &ios,
-      FILE_SHARE_WRITE,
-      FILE_OPEN_IF,
-      FILE_SYNCHRONOUS_IO_NONALERT,
-      1, 1, 0, -1,
-      0x1000,
-      0x1000,
-      &time))) {
-    //ConsoleOutput(ErrorCreatePipe);
-    DOUT("failed to create recv pipe");
-    return;
-  }
-
-  RtlInitUnicodeString(&us, command_pipe);
-  if (!NT_SUCCESS(NtCreateNamedPipeFile(
-      &hCmdPipe,
-      GENERIC_WRITE | SYNCHRONIZE,
-      &oa,
-      &ios,
-      FILE_SHARE_READ,
-      FILE_OPEN_IF,
-      FILE_SYNCHRONOUS_IO_NONALERT,
-      1, 1, 0, -1,
-      0x1000,
-      0x1000,
-      &time))) {
-    //ConsoleOutput(ErrorCreatePipe);
-    DOUT("failed to create cmd pipe");
-    return;
-  }
-
-  hThread = IthCreateThread(RecvThread, (DWORD)hTextPipe);
-  man->RegisterPipe(hTextPipe, hCmdPipe, hThread);
+	hTextPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0x1000, 0x1000, MAXDWORD, NULL);
+	hCmdPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, 0x1000, 0x1000, MAXDWORD, NULL);
+	hThread = CreateThread(nullptr, 0, RecvThread, hTextPipe, 0, nullptr);
+	man->RegisterPipe(hTextPipe, hCmdPipe, hThread);
 }
 
 void DetachFromProcess(DWORD pid)

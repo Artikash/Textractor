@@ -249,8 +249,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (OpenHost())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
-		Host_GetHookManager(&man);
-		Host_GetSettings(&setman);
+		GetHostHookManager(&man);
+		GetHostSettings(&setman);
 		setman->splittingInterval = 200;
 		MonitorFlag = true;
 		pfman = new ProfileManager();
