@@ -19,11 +19,11 @@
 // - 0x8 dwSplit split value
 #define HEADER_SIZE 0xc
 
-extern int current_hook;
+extern int currentHook;
 extern WCHAR dll_mutex[];
 //extern WCHAR dll_name[];
 extern DWORD trigger;
-//extern DWORD current_process_id;
+//extern DWORD currentProcessId;
 
 // jichi 6/3/2014: Get memory range of the current module
 extern DWORD processStartAddress,
@@ -77,11 +77,12 @@ extern FilterRange *filter;
 extern bool running,
             live;
 
-extern HANDLE hPipe,
+extern HANDLE hookPipe,
               hmMutex;
 
 DWORD WINAPI WaitForPipe(LPVOID lpThreadParameter);
 DWORD WINAPI CommandPipe(LPVOID lpThreadParameter);
+DWORD WINAPI PipeManager(LPVOID unused);
 
 //void RequestRefreshProfile();
 

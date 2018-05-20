@@ -63,7 +63,7 @@ void CheckThreadStart();
 extern HANDLE hHeap; // used in ith/common/memory.h
 #endif // ITH_HAS_HEAP
 
-extern DWORD current_process_id;
+extern DWORD currentProcessId;
 extern DWORD debug;
 extern BYTE LeadByteTable[];
 extern LPVOID page;

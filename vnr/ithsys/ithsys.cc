@@ -129,7 +129,7 @@ size_t IthGetCurrentModulePath(wchar_t *buf, size_t len)
 HANDLE hHeap; // used in ith/common/memory.h
 #endif // ITH_HAS_HEAP
 
-DWORD current_process_id;
+DWORD currentProcessId;
 DWORD debug;
 BYTE launch_time[0x10];
 LPVOID page;
@@ -238,7 +238,7 @@ public:
     AcquireLock();
     DWORD pid,addr,len;
     if (hProc == NtCurrentProcess())
-      pid = ::current_process_id;
+      pid = ::currentProcessId;
     else {
       PROCESS_BASIC_INFORMATION info;
       NtQueryInformationProcess(hProc, ProcessBasicInformation, &info, sizeof(info), &len);
@@ -287,7 +287,7 @@ public:
     DWORD pid,addr,len;
     AcquireLock();
     if (hProc==NtCurrentProcess())
-      pid = ::current_process_id;
+      pid = ::currentProcessId;
     else {
       PROCESS_BASIC_INFORMATION info;
       NtQueryInformationProcess(hProc,ProcessBasicInformation,&info,sizeof(info),&len);
@@ -733,7 +733,7 @@ BOOL IthInitSystemService()
     mov ecx,[eax+0x20]
     mov eax,[eax+0x30]
     mov peb,eax
-    mov current_process_id,ecx
+    mov currentProcessId,ecx
   }
   debug = peb->BeingDebugged;
   LowFragmentHeap = 2;

@@ -12,7 +12,7 @@
 #include "src/util/util.h"
 #include "src/main.h"
 #include "include/defs.h"
-//#include "src/util/growl.h"
+#include "src/util/growl.h"
 #include "ithsys/ithsys.h"
 #include "ccutil/ccmacro.h"
 #include <cstdio> // for swprintf
@@ -34,7 +34,7 @@ LARGE_INTEGER sleep_time = {-20*10000, -1};
 DWORD engine_type;
 DWORD module_base;
 
-HANDLE hPipe,
+HANDLE hookPipe,
        hCommand,
        hDetach; //,hLose;
 //InsertHookFun InsertHook;
@@ -71,20 +71,88 @@ HANDLE IthOpenPipe(LPWSTR name, ACCESS_MASK direction)
     return INVALID_HANDLE_VALUE;
 }
 
+DWORD WINAPI PipeManager(LPVOID unused)
+{
+	enum { STANDARD_WAIT = 1000 };
+	while (::running)
+	{
+		DWORD count;
+		BYTE* buffer = new BYTE[0x1000];
+		HANDLE hostPipe = ::hookPipe = INVALID_HANDLE_VALUE,
+			pipeAcquisitionMutex = CreateMutexW(nullptr, TRUE, ITH_GRANTPIPE_MUTEX);
+
+		while (::hookPipe == INVALID_HANDLE_VALUE || hostPipe == INVALID_HANDLE_VALUE)
+		{
+			Sleep(STANDARD_WAIT);
+			if (::hookPipe == INVALID_HANDLE_VALUE)
+			{
+				::hookPipe = CreateFileW(ITH_TEXT_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+			}
+			if (hostPipe == INVALID_HANDLE_VALUE)
+			{
+				hostPipe = CreateFileW(ITH_COMMAND_PIPE, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+			}
+		}
+
+		WriteFile(::hookPipe, &::currentProcessId, sizeof(::currentProcessId), &count, nullptr);
+
+		for (int i = 0, count = 0; count < ::currentHook; i++)
+		{
+			if (hookman[i].RecoverHook()) // jichi 9/27/2013: This is the place where built-in hooks like TextOutA are inserted
+			{
+				count++;
+			}
+		}
+
+		ReleaseMutex(pipeAcquisitionMutex);
+		CloseHandle(pipeAcquisitionMutex);
+
+		::live = true;
+		Engine::hijack();
+		ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
+
+		while (::running)
+		{
+			Sleep(STANDARD_WAIT);
+			if (!ReadFile(hostPipe, buffer, 0x800, &count, nullptr))
+			{
+				break;
+			}
+			DWORD command = *(DWORD*)buffer;
+			switch (command)
+			{
+			case HOST_COMMAND_NEW_HOOK:
+				buffer[count] = 0;
+				NewHook(*(HookParam *)(buffer + 4), (LPSTR)(buffer + 4 + sizeof(HookParam)), 0);
+				break;
+			case HOST_COMMAND_DETACH:
+				::running = false;
+				break;
+			}
+		}
+
+		::live = false;
+		for (int i = 0, count = 0; count < ::currentHook; i++)
+		{
+			if (hookman[i].RemoveHook())
+			{
+				count++;
+			}
+		}
+		CloseHandle(::hookPipe);
+		CloseHandle(hostPipe);
+	}
+	Util::unloadCurrentModule();
+	return 0;
+}
+
 DWORD WINAPI WaitForPipe(LPVOID lpThreadParameter) // Dynamically detect ITH main module status.
 {
   CC_UNUSED(lpThreadParameter);
-  // jichi 7/2/2015:This must be consistent with the struct declared in vnrhost/pipe.cc
-  struct {
-    DWORD pid;
-    DWORD module;
-    TextHook *man;
-    //DWORD engine;
-  } u;
 
-  //swprintf(engine_event,L"ITH_ENGINE_%d",current_process_id);
-  swprintf(::detach_mutex, ITH_DETACH_MUTEX_ L"%d", current_process_id);
-  //swprintf(lose_event,L"ITH_LOSEPIPE_%d",current_process_id);
+  //swprintf(engine_event,L"ITH_ENGINE_%d",currentProcessId);
+  swprintf(::detach_mutex, ITH_DETACH_MUTEX_ L"%d", currentProcessId);
+  //swprintf(lose_event,L"ITH_LOSEPIPE_%d",currentProcessId);
   //hEngine=IthCreateEvent(engine_event);
   //NtWaitForSingleObject(hEngine,0,0);
   //NtClose(hEngine);
@@ -93,35 +161,33 @@ DWORD WINAPI WaitForPipe(LPVOID lpThreadParameter) // Dynamically detect ITH mai
   //  NtDelayExecution(0, &wait_time);
 
   //LoadEngine(L"ITH_Engine.dll");
-  u.module = module_base;
-  u.pid = current_process_id;
-  u.man = hookman;
   //u.engine = engine_base; // jichi 10/19/2014: disable the second dll
   HANDLE hPipeExist = IthOpenEvent(ITH_PIPEEXISTS_EVENT);
   IO_STATUS_BLOCK ios;
   //hLose=IthCreateEvent(lose_event,0,0);
   if (hPipeExist != INVALID_HANDLE_VALUE)
   while (::running) {
-    ::hPipe = INVALID_HANDLE_VALUE;
+    ::hookPipe = INVALID_HANDLE_VALUE;
     hCommand = INVALID_HANDLE_VALUE;
     while (NtWaitForSingleObject(hPipeExist, 0, &wait_time) == WAIT_TIMEOUT)
       if (!::running)
         goto _release;
+	GROWL_MSG(L"Pipe connected");
     HANDLE hMutex = IthCreateMutex(ITH_GRANTPIPE_MUTEX, 0);
     NtWaitForSingleObject(hMutex, 0, 0);
-    while (::hPipe == INVALID_HANDLE_VALUE||
+    while (::hookPipe == INVALID_HANDLE_VALUE||
       hCommand == INVALID_HANDLE_VALUE) {
       NtDelayExecution(0, &sleep_time);
-      if (::hPipe == INVALID_HANDLE_VALUE)
-        ::hPipe = IthOpenPipe(recv_pipe, GENERIC_WRITE);
+      if (::hookPipe == INVALID_HANDLE_VALUE)
+        ::hookPipe = IthOpenPipe(recv_pipe, GENERIC_WRITE);
       if (hCommand == INVALID_HANDLE_VALUE)
         hCommand = IthOpenPipe(command, GENERIC_READ);
     }
     //NtClearEvent(hLose);
     CliLockPipe();
-    NtWriteFile(::hPipe, 0, 0, 0, &ios, &u, sizeof(u), 0, 0);
+    NtWriteFile(::hookPipe, 0, 0, 0, &ios, &::currentProcessId, sizeof(::currentProcessId), 0, 0);
     CliUnlockPipe();
-    for (int i = 0, count = 0; count < ::current_hook; i++)
+    for (int i = 0, count = 0; count < ::currentHook; i++)
       if (hookman[i].RecoverHook()) // jichi 9/27/2013: This is the place where built-in hooks like TextOutA are inserted
         count++;
     //ConsoleOutput(dll_name);
@@ -141,19 +207,19 @@ DWORD WINAPI WaitForPipe(LPVOID lpThreadParameter) // Dynamically detect ITH mai
       NtDelayExecution(0, &sleep_time);
     ::live = false;
 
-    for (int i = 0, count = 0; count < ::current_hook; i++)
+    for (int i = 0, count = 0; count < ::currentHook; i++)
       if (hookman[i].RemoveHook())
         count++;
     if (!::running) {
       IthCoolDown(); // jichi 9/28/2013: Use cooldown instead of lock pipe to prevent from hanging on exit
       //CliLockPipe();
-      //NtWriteFile(::hPipe, 0, 0, 0, &ios, man, 4, 0, 0);
-      NtWriteFile(::hPipe, 0, 0, 0, &ios, hookman, 4, 0, 0);
+      //NtWriteFile(::hookPipe, 0, 0, 0, &ios, man, 4, 0, 0);
+      NtWriteFile(::hookPipe, 0, 0, 0, &ios, hookman, 4, 0, 0);
       //CliUnlockPipe();
       IthReleaseMutex(::hDetach);
     }
     NtClose(::hDetach);
-    NtClose(::hPipe);
+    NtClose(::hookPipe);
   }
 _release:
   //NtClose(hLose);
@@ -211,7 +277,7 @@ DWORD WINAPI CommandPipe(LPVOID lpThreadParameter)
             HANDLE hRemoved = IthOpenEvent(ITH_REMOVEHOOK_EVENT);
 
             TextHook *in = hookman;
-            for (int i = 0; i < current_hook; in++) {
+            for (int i = 0; i < currentHook; in++) {
               if (in->Address()) i++;
               if (in->Address() == rm_addr) break;
             }
@@ -226,7 +292,7 @@ DWORD WINAPI CommandPipe(LPVOID lpThreadParameter)
             DWORD rm_addr = *(DWORD *)(buff + 4);
             HANDLE hModify = IthOpenEvent(ITH_MODIFYHOOK_EVENT);
             TextHook *in = hookman;
-            for (int i = 0; i < current_hook; in++) {
+            for (int i = 0; i < currentHook; in++) {
               if (in->Address())
                 i++;
               if (in->Address() == rm_addr)
@@ -270,7 +336,7 @@ void ConsoleOutput(LPCSTR text)
   memcpy(data + 8, text, text_size);
 
   IO_STATUS_BLOCK ios;
-  NtWriteFile(hPipe, 0, 0, 0, &ios, data, data_size, 0, 0);
+  NtWriteFile(hookPipe, 0, 0, 0, &ios, data, data_size, 0, 0);
   if (data != buf)
     delete[] data;
 }
@@ -279,7 +345,7 @@ void ConsoleOutput(LPCSTR text)
   //  BYTE buffer[0x80];
   //  BYTE *buff;
   //  len = wcslen(str) << 1;
-  //  t = swprintf((LPWSTR)(buffer + 8),L"%d: ",current_process_id) << 1;
+  //  t = swprintf((LPWSTR)(buffer + 8),L"%d: ",currentProcessId) << 1;
   //  sum = len + t + 8;
   //  if (sum > 0x80) {
   //    buff = new BYTE[sum];
@@ -292,7 +358,7 @@ void ConsoleOutput(LPCSTR text)
   //  *(DWORD *)(buff + 4) = HOST_NOTIFICATION_TEXT; //console
   //  memcpy(buff + t + 8, str, len);
   //  IO_STATUS_BLOCK ios;
-  //  NtWriteFile(hPipe,0,0,0,&ios,buff,sum,0,0);
+  //  NtWriteFile(hookPipe,0,0,0,&ios,buff,sum,0,0);
   //  if (buff != buffer)
   //    delete[] buff;
   //  return len;
@@ -343,7 +409,7 @@ DWORD NotifyHookInsert(DWORD addr)
     *(DWORD *)(buffer + 0xc) = 0;
     IO_STATUS_BLOCK ios;
     CliLockPipe();
-    NtWriteFile(hPipe,0,0,0,&ios,buffer,0x10,0,0);
+    NtWriteFile(hookPipe,0,0,0,&ios,buffer,0x10,0,0);
     CliUnlockPipe();
   }
   return 0;

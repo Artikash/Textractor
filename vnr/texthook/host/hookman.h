@@ -71,7 +71,7 @@ public:
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterThread(TextThread*, DWORD); // private
   void RegisterPipe(HANDLE text, HANDLE cmd, HANDLE thread);
-  void RegisterProcess(DWORD pid, DWORD hookman, DWORD module);
+  void RegisterProcess(DWORD pid);
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 

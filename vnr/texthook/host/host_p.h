@@ -31,7 +31,7 @@ GLOBAL DWORD split_time,
              global_filter;
 GLOBAL CRITICAL_SECTION detachCs;
 
-DWORD WINAPI RecvThread(LPVOID lpThreadParameter);
+DWORD WINAPI TextReceiver(LPVOID lpThreadParameter);
 DWORD WINAPI CmdThread(LPVOID lpThreadParameter);
 
 DWORD  GetCurrentPID();

@@ -304,6 +304,7 @@ termin:
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 // See: http://stackoverflow.com/questions/3410130/dll-unloading-itself
+// TODO: This doesn't always work. Fix it.
 bool Util::unloadCurrentModule()
 {
   auto fun = ::FreeLibrary;

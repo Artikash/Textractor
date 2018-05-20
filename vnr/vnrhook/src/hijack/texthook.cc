@@ -234,7 +234,7 @@ DWORD GetModuleBase()
 //    *(DWORD*)buffer=-1;
 //    *(DWORD*)(buffer+4)=1;
 //    IO_STATUS_BLOCK ios;
-//    NtWriteFile(hPipe,0,0,0,&ios,buffer,0x10,0,0);
+//    NtWriteFile(hookPipe,0,0,0,&ios,buffer,0x10,0,0);
 //  }
 //}
 
@@ -488,9 +488,9 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 
       IthCoolDown(); // jichi 9/28/2013: cool down to prevent parallelization in wine
       //CliLockPipe();
-      if (STATUS_PENDING == NtWriteFile(::hPipe, 0, 0, 0, &ios, pbData, dwCount + HEADER_SIZE, 0, 0)) {
-        NtWaitForSingleObject(::hPipe, 0, 0);
-        NtFlushBuffersFile(::hPipe, &ios);
+      if (STATUS_PENDING == NtWriteFile(::hookPipe, 0, 0, 0, &ios, pbData, dwCount + HEADER_SIZE, 0, 0)) {
+        NtWaitForSingleObject(::hookPipe, 0, 0);
+        NtFlushBuffersFile(::hookPipe, &ios);
       }
       //CliUnlockPipe();
     }
@@ -550,7 +550,7 @@ int TextHook::UnsafeInsertHookCode()
         if (base)
           hp.address += base;
         else {
-          current_hook--;
+          currentHook--;
           ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: function not found in the export table");
           return no;
         }
@@ -561,7 +561,7 @@ int TextHook::UnsafeInsertHookCode()
       hp.type &= ~(MODULE_OFFSET | FUNCTION_OFFSET);
     }
     else {
-      current_hook--;
+      currentHook--;
       ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: module not present");
       return no;
     }
@@ -569,7 +569,7 @@ int TextHook::UnsafeInsertHookCode()
 
   {
     TextHook *it = hookman;
-    for (int i = 0; (i < current_hook) && it; it++) { // Check if there is a collision.
+    for (int i = 0; (i < currentHook) && it; it++) { // Check if there is a collision.
       if (it->Address())
         i++;
       //it = hookman + i;
@@ -640,7 +640,7 @@ int TextHook::UnsafeInsertHookCode()
   //Check if the new hook range conflict with existing ones. Clear older if conflict.
   {
     TextHook *it = hookman;
-    for (int i = 0; i < current_hook; it++) {
+    for (int i = 0; i < currentHook; it++) {
       if (it->Address())
         i++;
       if (it == this)
@@ -686,7 +686,7 @@ int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind,
   hp.hook_len = 0;
   hp.module = 0;
   hp.length_offset = len_off & 0xffff;
-  current_hook++;
+  currentHook++;
   if (current_available >= this)
     for (current_available = this + 1; current_available->Address(); current_available++);
   IthReleaseMutex(hmMutex);
@@ -701,7 +701,7 @@ int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
   if (name && name != hook_name) {
 	  SetHookName(name);
   }
-  current_hook++;
+  currentHook++;
   current_available = this+1;
   while (current_available->Address())
     current_available++;
@@ -742,7 +742,7 @@ int TextHook::ClearHook()
   memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
   //if (current_available>this)
   //  current_available = this;
-  current_hook--;
+  currentHook--;
   IthReleaseMutex(hmMutex);
   return err;
 }

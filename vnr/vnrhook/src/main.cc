@@ -62,14 +62,14 @@ HINSTANCE hDLL;
 HANDLE hSection;
 bool running,
      live = false;
-int current_hook = 0,
+int currentHook = 0,
     user_hook_count = 0;
 DWORD trigger = 0;
 HANDLE
     hFile,
     hMutex,
     hmMutex;
-//DWORD current_process_id;
+//DWORD currentProcessId;
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
 extern DWORD engine_type;
@@ -133,7 +133,7 @@ void RequestRefreshProfile()
     *(DWORD *)(buffer + 8) = 0;
     IO_STATUS_BLOCK ios;
     CliLockPipe();
-    NtWriteFile(hPipe, 0, 0, 0, &ios, buffer, HEADER_SIZE, 0, 0);
+    NtWriteFile(hookPipe, 0, 0, 0, &ios, buffer, HEADER_SIZE, 0, 0);
     CliUnlockPipe();
   }
 }
@@ -156,7 +156,7 @@ DWORD GetFunctionAddr(const char *name, DWORD *addr, DWORD *base, DWORD *size, L
 
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
-  static HANDLE hSendThread,
+  static HANDLE pipeThread,
                 hCmdThread;
 
   CC_UNUSED(lpReserved);
@@ -189,7 +189,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
       // No longer checking if SystemService fails, which could happen on non-Japanese OS
       IthInitSystemService();
 
-      swprintf(hm_section, ITH_SECTION_ L"%d", current_process_id);
+      swprintf(hm_section, ITH_SECTION_ L"%d", currentProcessId);
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
       hSection = IthCreateSection(hm_section, HOOK_SECTION_SIZE, PAGE_EXECUTE_READWRITE);
@@ -211,12 +211,12 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
 
       {
         wchar_t hm_mutex[0x100];
-        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", current_process_id);
+        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", currentProcessId);
         ::hmMutex = IthCreateMutex(hm_mutex, FALSE);
       }
       {
         wchar_t dll_mutex[0x100];
-        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", current_process_id);
+        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", currentProcessId);
         DWORD exists;
         ::hMutex = IthCreateMutex(dll_mutex, TRUE, &exists); // jichi 9/18/2013: own is true, make sure the injected dll is singleton
         if (exists)
@@ -231,8 +231,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
       AddAllModules();
       InitFilterTable();
 
-      hSendThread = IthCreateThread(WaitForPipe, 0);
-      hCmdThread = IthCreateThread(CommandPipe, 0);
+      pipeThread = IthCreateThread(PipeManager, 0);
     } break;
   case DLL_PROCESS_DETACH:
     {
@@ -250,9 +249,9 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
 
       Engine::terminate();
 
-      if (hSendThread) {
-        NtWaitForSingleObject(hSendThread, 0, (PLARGE_INTEGER)&timeout);
-        NtClose(hSendThread);
+      if (pipeThread) {
+        NtWaitForSingleObject(pipeThread, 0, (PLARGE_INTEGER)&timeout);
+        NtClose(pipeThread);
       }
 
       if (hCmdThread) {

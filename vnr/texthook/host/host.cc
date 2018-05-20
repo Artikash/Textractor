@@ -56,9 +56,9 @@ namespace
 { // unnamed
 
 	void GetDebugPrivileges()
-	{
+	{ // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
 		HANDLE processToken;
-		TOKEN_PRIVILEGES Privileges = { 1, {0x14, 0, SE_PRIVILEGE_ENABLED} };
+		TOKEN_PRIVILEGES Privileges = {1, {0x14, 0, SE_PRIVILEGE_ENABLED}};
 
 		OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &processToken);
 		AdjustTokenPrivileges(processToken, FALSE, &Privileges, 0, nullptr, nullptr);
@@ -79,7 +79,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 		IthInitSystemService();
 		GetDebugPrivileges();
 		// jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
-		//Used by timers.
+		// Used by timers.
 		InitCommonControls();
 		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
 		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
@@ -133,7 +133,6 @@ IHFSERVICE bool IHFAPI OpenHost()
 IHFSERVICE void IHFAPI StartHost()
 {
 	CreateNewPipe();
-	::pipeExistsEvent = CreateEventW(nullptr, TRUE, TRUE, ITH_PIPEEXISTS_EVENT);
 }
 
 IHFSERVICE void IHFAPI CloseHost()
@@ -142,12 +141,10 @@ IHFSERVICE void IHFAPI CloseHost()
 	if (::running)
 	{
 		::running = FALSE;
-		ResetEvent(::pipeExistsEvent);
 		delete man;
 		delete settings;
 		CloseHandle(::hookMutex);
 		CloseHandle(preventDuplicationMutex);
-		CloseHandle(::pipeExistsEvent);
 		DeleteCriticalSection(&detachCs);
 	}
 	LeaveCriticalSection(&::hostCs);
@@ -169,7 +166,7 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 		success = false;
 	}
 
-	HMODULE textHooker = LoadLibraryExW(L"vnrhook", nullptr, DONT_RESOLVE_DLL_REFERENCES);
+	HMODULE textHooker = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
 	if (textHooker == nullptr)
 	{
 		success = false;
@@ -184,7 +181,7 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 		success = false;
 	}
 
-	void* loadLibraryStartRoutine = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW");
+	LPTHREAD_START_ROUTINE loadLibraryStartRoutine = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW");
 
 	if (success)
 	{
@@ -192,7 +189,7 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 		{
 			if (WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr))
 			{
-				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)loadLibraryStartRoutine, remoteData, 0, nullptr))
+				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, loadLibraryStartRoutine, remoteData, 0, nullptr))
 				{
 					WaitForSingleObject(thread, timeout);
 					CloseHandle(thread);
@@ -247,7 +244,7 @@ IHFSERVICE void IHFAPI GetHostSettings(Settings **p)
 	}
 }
 
-// I don't understand the following operations, so I'm making minimal changes in cleanup -Artikash 11 May 2018
+// Artikash 5/11/2018: I don't understand the following operations, so I'm making minimal changes in cleanup
 
 IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)
 {

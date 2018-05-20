@@ -485,7 +485,7 @@ void HookManager::RegisterPipe(HANDLE text, HANDLE cmd, HANDLE thread)
   else
     NtClearEvent(destroy_event);
 }
-void HookManager::RegisterProcess(DWORD pid, DWORD hookman, DWORD module)
+void HookManager::RegisterProcess(DWORD pid)
 {
   HM_LOCK;
   wchar_t str[0x40],
@@ -494,8 +494,6 @@ void HookManager::RegisterProcess(DWORD pid, DWORD hookman, DWORD module)
   //ConsoleOutput("vnrhost:RegisterProcess: lock");
   //EnterCriticalSection(&hmcs);
   record[register_count - 1].pid_register = pid;
-  record[register_count - 1].hookman_register = hookman;
-  record[register_count - 1].module_register = module;
   //record[register_count - 1].engine_register = engine;
   swprintf(str, ITH_SECTION_ L"%d", pid);
   HANDLE hSection = IthCreateSection(str, HOOK_SECTION_SIZE, PAGE_READONLY);
