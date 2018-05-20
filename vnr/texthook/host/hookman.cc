@@ -74,20 +74,6 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
       break;
     }
 
-  // jichi 9/27/2013: The hook man should be consistent with the one defined in vnrcli
-  //Hook *h = (Hook *)hks;
-  //for (int i = 0; i < MAX_HOOK; i++)
-  //  if (!h[i].hook_name)
-  //    break;
-  //  else {
-  //    const Hook &hi = h[i];
-  //    wchar_t buffer[1000];
-  //    DWORD len = hi.NameLength();
-  //    NtReadVirtualMemory(pr->process_handle, hi.hook_name, buffer, len << 1, &len);
-  //    buffer[len] = 0;
-  //    ITH_MSG(buffer);
-  //  }
-
   NtReleaseMutant(pr->hookman_mutex, 0);
   //::man->UnlockProcessHookman(pid);
   return len;
