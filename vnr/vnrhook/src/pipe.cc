@@ -72,7 +72,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 			}
 		}
 
-		WriteFile(::hookPipe, &::currentProcessId, sizeof(::currentProcessId), nullptr, nullptr);
+		WriteFile(::hookPipe, &::current_process_id, sizeof(::current_process_id), nullptr, nullptr);
 
 		for (int i = 0, count = 0; count < ::currentHook; i++)
 		{
@@ -167,7 +167,7 @@ void ConsoleOutput(LPCSTR text)
   //  BYTE buffer[0x80];
   //  BYTE *buff;
   //  len = wcslen(str) << 1;
-  //  t = swprintf((LPWSTR)(buffer + 8),L"%d: ",currentProcessId) << 1;
+  //  t = swprintf((LPWSTR)(buffer + 8),L"%d: ",current_process_id) << 1;
   //  sum = len + t + 8;
   //  if (sum > 0x80) {
   //    buff = new BYTE[sum];

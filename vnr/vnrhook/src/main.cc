@@ -69,7 +69,7 @@ HANDLE
     hFile,
     hMutex,
     hmMutex;
-//DWORD currentProcessId;
+//DWORD current_process_id;
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
 extern DWORD engine_type;
@@ -147,12 +147,12 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
     {
-      static bool attached = false;
-	  if (attached) // already attached
+      static bool attached_ = false;
+	  if (attached_) // already attached
 	  {
 		  return TRUE;
 	  }        
-      attached = true;
+      attached_ = true;
 
       DisableThreadLibraryCalls(hModule);
 
@@ -163,7 +163,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       // No longer checking if SystemService fails, which could happen on non-Japanese OS
       IthInitSystemService();
 
-      swprintf(hm_section, ITH_SECTION_ L"%d", currentProcessId);
+      swprintf(hm_section, ITH_SECTION_ L"%d", current_process_id);
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
       hSection = IthCreateSection(hm_section, HOOK_SECTION_SIZE, PAGE_EXECUTE_READWRITE);
@@ -185,12 +185,12 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       {
         wchar_t hm_mutex[0x100];
-        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", currentProcessId);
+        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", current_process_id);
         ::hmMutex = IthCreateMutex(hm_mutex, FALSE);
       }
       {
         wchar_t dll_mutex[0x100];
-        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", currentProcessId);
+        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", current_process_id);
         DWORD exists;
         ::hMutex = IthCreateMutex(dll_mutex, TRUE, &exists); // jichi 9/18/2013: own is true, make sure the injected dll is singleton
         if (exists)

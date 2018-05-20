@@ -23,7 +23,7 @@ extern int currentHook;
 extern WCHAR dll_mutex[];
 //extern WCHAR dll_name[];
 extern DWORD trigger;
-//extern DWORD currentProcessId;
+//extern DWORD current_process_id;
 
 // jichi 6/3/2014: Get memory range of the current module
 extern DWORD processStartAddress,
