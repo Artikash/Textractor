@@ -19,36 +19,6 @@
 
 HANDLE hookPipe;
 
-// jichi 9/28/2013: protect pipe on wine
-// Put the definition in this file so that it might be inlined
-void CliUnlockPipe()
-{
-  if (IthIsWine())
-    IthReleaseMutex(::hmMutex);
-}
-
-void CliLockPipe()
-{
-  if (IthIsWine()) {
-    const LONGLONG timeout = -50000000; // in nanoseconds = 5 seconds
-    NtWaitForSingleObject(hmMutex, 0, (PLARGE_INTEGER)&timeout);
-  }
-}
-
-HANDLE IthOpenPipe(LPWSTR name, ACCESS_MASK direction)
-{
-  UNICODE_STRING us;
-  RtlInitUnicodeString(&us,name);
-  SECURITY_DESCRIPTOR sd = {1};
-  OBJECT_ATTRIBUTES oa = {sizeof(oa), 0, &us, OBJ_CASE_INSENSITIVE, &sd, 0};
-  HANDLE hFile;
-  IO_STATUS_BLOCK isb;
-  if (NT_SUCCESS(NtCreateFile(&hFile, direction, &oa, &isb, 0, 0, FILE_SHARE_READ, FILE_OPEN, 0, 0, 0)))
-    return hFile;
-  else
-    return INVALID_HANDLE_VALUE;
-}
-
 DWORD WINAPI PipeManager(LPVOID unused)
 {
 	enum { STANDARD_WAIT = 1000 };
