@@ -47,7 +47,6 @@ extern CRITICAL_SECTION detachCs;
 
 Settings *settings;
 HWND dummyWindow;
-HANDLE pipeExistsEvent;
 BOOL running;
 
 #define ITH_SYNC_HOOK   IthMutexLocker locker(::hookMutex)
@@ -140,7 +139,7 @@ IHFSERVICE void IHFAPI CloseHost()
 	EnterCriticalSection(&::hostCs);
 	if (::running)
 	{
-		::running = FALSE;
+		::running = false;
 		delete man;
 		delete settings;
 		CloseHandle(::hookMutex);
@@ -220,12 +219,11 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 	return success;
 }
 
-IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid)
+IHFSERVICE bool IHFAPI DetachProcessById(DWORD processId)
 {
 	ITH_SYNC_HOOK;
-	DWORD command = HOST_COMMAND_DETACH, unused;
-	HANDLE commandPipe = man->GetCmdHandleByPID(pid);
-	return commandPipe && WriteFile(commandPipe, &command, sizeof(command), &unused, nullptr);
+	DWORD command = HOST_COMMAND_DETACH;
+	return WriteFile(man->GetCmdHandleByPID(processId), &command, sizeof(command), nullptr, nullptr);
 }
 
 IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)

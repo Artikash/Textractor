@@ -18,6 +18,7 @@
 #include "include/defs.h"
 #include "ithsys/ithsys.h"
 #include "ccutil/ccmacro.h"
+#include "util/util.h"
 #include <cstdio> // for swprintf
 //#include "ntinspect/ntinspect.h"
 //#include "winseh/winseh.h"
@@ -58,7 +59,6 @@ namespace { FilterRange _filter[IHF_FILTER_CAPACITY]; }
 FilterRange *filter = _filter;
 
 WCHAR hm_section[0x100];
-HINSTANCE hDLL;
 HANDLE hSection;
 bool running,
      live = false;
@@ -73,7 +73,6 @@ HANDLE
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
 extern DWORD engine_type;
-extern DWORD module_base;
 AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN> *tree;
 
 namespace { // unnamed
@@ -124,20 +123,6 @@ void AddAllModules()
   }
 }
 
-void RequestRefreshProfile()
-{
-  if (::live) {
-    BYTE buffer[0x80] = {}; // 11/14/2013: reset to zero. Shouldn't it be 0x8 instead of 0x80?
-    *(DWORD *)buffer = -1;
-    *(DWORD *)(buffer + 4) = 1;
-    *(DWORD *)(buffer + 8) = 0;
-    IO_STATUS_BLOCK ios;
-    CliLockPipe();
-    NtWriteFile(hookPipe, 0, 0, 0, &ios, buffer, HEADER_SIZE, 0, 0);
-    CliUnlockPipe();
-  }
-}
-
 } // unnamed namespace
 
 DWORD GetFunctionAddr(const char *name, DWORD *addr, DWORD *base, DWORD *size, LPWSTR *base_name)
@@ -154,33 +139,22 @@ DWORD GetFunctionAddr(const char *name, DWORD *addr, DWORD *base, DWORD *size, L
     return FALSE;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
+BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 {
-  static HANDLE pipeThread,
-                hCmdThread;
+	static HANDLE pipeThread;
 
-  CC_UNUSED(lpReserved);
-
-  //static WCHAR dll_exist[] = L"ITH_DLL_RUNNING";
-  static WCHAR dll_exist[] = ITH_CLIENT_MUTEX;
-  static HANDLE hDllExist;
-
-  // jichi 9/23/2013: wine deficenciy on mapping sections
-  // Whe set to false, do not map sections.
-  //static bool ith_has_section = true;
 
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
     {
-      static bool attached_ = false;
-      if (attached_) // already attached
-        return TRUE;
-      attached_ = true;
+      static bool attached = false;
+	  if (attached) // already attached
+	  {
+		  return TRUE;
+	  }        
+      attached = true;
 
-      LdrDisableThreadCalloutsForDll(hModule);
-
-      //IthBreak();
-      ::module_base = (DWORD)hModule;
+      DisableThreadLibraryCalls(hModule);
 
       //if (!IthInitSystemService()) {
       //  GROWL_WARN(L"Initialization failed.\nAre you running game on a network drive?");
@@ -199,8 +173,8 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
           PAGE_EXECUTE_READWRITE);
           //PAGE_EXECUTE_READWRITE);
 
-      GetProcessName(::processName);
-      FillRange(::processName, &::processStartAddress, &::processStopAddress);
+	  GetProcessName(::processName);
+	  FillRange(::processName, &::processStartAddress, &::processStopAddress);
       //NtInspect::getProcessMemoryRange(&::processStartAddress, &::processStopAddress);
 
       //if (!::hookman) {
@@ -223,8 +197,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
           return FALSE;
       }
 
-      hDllExist = IthCreateMutex(dll_exist, 0);
-      hDLL = hModule;
       ::running = true;
       ::current_available = ::hookman;
       ::tree = new AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN>;
@@ -254,11 +226,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
         NtClose(pipeThread);
       }
 
-      if (hCmdThread) {
-        NtWaitForSingleObject(hCmdThread, 0, (PLARGE_INTEGER)&timeout);
-        NtClose(hCmdThread);
-      }
-
       for (TextHook *man = ::hookman; man->RemoveHook(); man++);
       //LARGE_INTEGER lint = {-10000, -1};
       while (::enter_count)
@@ -276,7 +243,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
       delete ::tree;
       IthCloseSystemService();
       NtClose(hmMutex);
-      NtClose(hDllExist);
       //} ITH_EXCEPT {}
     } break;
   }
@@ -310,7 +276,7 @@ DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
       ConsoleOutput("vnrcli:NewHook: hook inserted");
       //ConsoleOutputW(name);
       //swprintf(str,L"Insert address 0x%.8X.", hookman[current].Address());
-      RequestRefreshProfile();
+	  NotifyHookInsert(0);
     } else
       ConsoleOutput("vnrcli:NewHook:WARNING: failed to insert hook");
   }

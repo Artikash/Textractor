@@ -26,55 +26,7 @@ namespace { // unnamed
 //enum { MAX_ENTRY = 0x40 };
 
 #define HM_LOCK win_mutex_lock<HookManager::mutex_type> d_locker(hmcs) // Synchronized scope for accessing private data
-// jichi 9/23/2013: wine deficenciy on mapping sections
-// Whe set to false, do not map sections.
-//bool ith_has_section = true;
 
-// jichi 9/28/2013: Remove ConsoleOutput from available hooks
-//LPWSTR HookNameInitTable[]={ L"ConsoleOutput" , HOOK_FUN_NAME_LIST };
-//LPCWSTR HookNameInitTable[] = {HOOK_FUN_NAME_LIST};
-//LPVOID DefaultHookAddr[HOOK_FUN_COUNT];
-
-//BYTE null_buffer[4]={0,0,0,0};
-//BYTE static_small_buffer[0x100];
-//DWORD zeros[4]={0,0,0,0};
-//WCHAR user_entry[0x40];
-
-bool GetProcessPath(HANDLE hProc, __out LPWSTR path)
-{
-  PROCESS_BASIC_INFORMATION info;
-  LDR_DATA_TABLE_ENTRY entry;
-  PEB_LDR_DATA ldr;
-  PEB peb;
-  if (NT_SUCCESS(NtQueryInformationProcess(hProc, ProcessBasicInformation, &info, sizeof(info), 0)))
-  if (info.PebBaseAddress)
-  if (NT_SUCCESS(NtReadVirtualMemory(hProc, info.PebBaseAddress, &peb,sizeof(peb), 0)))
-  if (NT_SUCCESS(NtReadVirtualMemory(hProc, peb.Ldr, &ldr, sizeof(ldr), 0)))
-  if (NT_SUCCESS(NtReadVirtualMemory(hProc, (LPVOID)ldr.InLoadOrderModuleList.Flink,
-    &entry, sizeof(LDR_DATA_TABLE_ENTRY), 0)))
-  if (NT_SUCCESS(NtReadVirtualMemory(hProc, entry.FullDllName.Buffer,
-      path, MAX_PATH * 2, 0)))
-    return true;
-  path = L"";
-  return false;
-}
-
-bool GetProcessPath(DWORD pid, __out LPWSTR path)
-{
-  CLIENT_ID id;
-  OBJECT_ATTRIBUTES oa = {};
-  HANDLE hProc;
-  id.UniqueProcess = pid;
-  id.UniqueThread = 0;
-  oa.uLength = sizeof(oa);
-  if (NT_SUCCESS(NtOpenProcess(&hProc , PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, &oa, &id))) {
-    bool flag = GetProcessPath(hProc, path);
-    NtClose(hProc);
-    return flag;
-  }
-  path = L"";
-  return false;
-}
 
 } // unnamed namespace
 
@@ -141,39 +93,6 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
   return len;
 }
 
-// 7/2/2015 jichi: This function is not used and removed
-//int GetHookNameByIndex(LPSTR str, DWORD pid, DWORD index)
-//{
-//  if (!pid)
-//    return 0;
-//
-//  //if (pid == 0) {
-//  //  wcscpy(str, HookNameInitTable[0]);
-//  //  return wcslen(HookNameInitTable[0]);
-//  //}
-//  DWORD len = 0;
-//  //::man->LockProcessHookman(pid);
-//  ProcessRecord *pr = ::man->GetProcessRecord(pid);
-//  if (!pr)
-//    return 0;
-//  //NtWaitForSingleObject(pr->hookman_mutex,0,0); //already locked
-//  Hook *hks = (Hook *)pr->hookman_map;
-//  if (hks[index].Address()) {
-//    NtReadVirtualMemory(pr->process_handle, hks[index].Name(), str, hks[index].NameLength() << 1, &len);
-//    len = hks[index].NameLength();
-//  }
-//  //NtReleaseMutant(pr->hookman_mutex,0);
-//  return len;
-//}
-
-//int GetHookString(LPWSTR str, DWORD pid, DWORD hook_addr, DWORD status)
-//{
-//  LPWSTR begin=str;
-//  str+=swprintf(str,L"%4d:0x%08X:",pid,hook_addr);
-//  str+=GetHookName(str,pid,hook_addr);
-//  return str-begin;
-//}
-
 void ThreadTable::SetThread(DWORD num, TextThread *ptr)
 {
   int number = num;
@@ -220,26 +139,7 @@ static const char sse_table_eq[0x100]={
   -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 //f, equal
 };
-char original_cmp(const ThreadParameter *t1, const ThreadParameter *t2)
-{
-  //Q_ASSERT(t1 && t2);
-  int t = t1->pid - t2->pid;
-  if (t == 0) {
-    t = t1->hook - t2->hook;
-    if (t == 0) {
-      t = t1->retn - t2->retn;
-      if (t == 0) {
-        t = t1->spl-t2->spl;
-        if (t == 0) return 0;
-        return t1->spl > t2->spl ? 1 : -1;
-      }
-      else return t1->retn > t2->retn ? 1 : -1;
-    }
-    else return t1->hook > t2->hook ? 1: -1;
-  }
-  else return t1->pid > t2->pid ? 1 : -1;
-  //return t>0?1:-1;
-}
+
 char TCmp::operator()(const ThreadParameter* t1, const ThreadParameter* t2)
   //SSE speed up. Compare four integers in const time without branching.
   //The AVL tree branching operation needs 2 bit of information.
@@ -546,9 +446,6 @@ void HookManager::RegisterProcess(DWORD pid)
 
   swprintf(str, ITH_HOOKMAN_MUTEX_ L"%d", pid);
   record[register_count - 1].hookman_mutex = IthOpenMutex(str);
-  if (!GetProcessPath(pid, path))
-    path[0] = 0;
-  //swprintf(str,L"%.4d:%s", pid, wcsrchr(path, L'\\') + 1); // jichi 9/25/2013: this is useless?
   current_pid = pid;
   if (attach)
     attach(pid);
@@ -822,17 +719,6 @@ ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
   //ProcessRecord *pr = i < MAX_REGISTER ? record + i : nullptr;
   //LeaveCriticalSection(&hmcs);
   //return pr;
-}
-
-DWORD HookManager::GetProcessIDByPath(LPCWSTR str)
-{
-  WCHAR path[MAX_PATH];
-  for (int i = 0; i < 8 && record[i].process_handle; i++) {
-    ::GetProcessPath(record[i].process_handle, path);
-    if (_wcsicmp(path,str) == 0)
-      return record[i].pid_register;
-  }
-  return 0;
 }
 
 DWORD HookManager::GetCurrentPID() { return current_pid; }

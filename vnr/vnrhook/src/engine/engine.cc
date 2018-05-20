@@ -16633,8 +16633,8 @@ bool InsertPPSSPPHooks()
 
   ConsoleOutput("vnreng: PPSSPP: enter");
 
-  if (!WinVersion::queryFileVersion(process_path_, PPSSPP_VERSION))
-    ConsoleOutput("vnreng: failed to get PPSSPP version");
+  //if (!WinVersion::queryFileVersion(process_path_, PPSSPP_VERSION))
+  //  ConsoleOutput("vnreng: failed to get PPSSPP version");
 
   InsertPPSSPPHLEHooks();
 

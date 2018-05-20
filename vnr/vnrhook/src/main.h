@@ -8,7 +8,7 @@
 #include "include/types.h"
 
 void ConsoleOutput(LPCSTR text); // jichi 12/25/2013: Used to return length of sent text
-DWORD NotifyHookInsert(DWORD addr);
+void NotifyHookInsert(DWORD addr);
 DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 DWORD RemoveHook(DWORD addr);
 DWORD SwitchTrigger(DWORD on);

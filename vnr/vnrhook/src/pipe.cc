@@ -17,29 +17,7 @@
 #include "ccutil/ccmacro.h"
 #include <cstdio> // for swprintf
 
-//#include <ITH\AVL.h>
-//#include <ITH\ntdll.h>
-WCHAR detach_mutex[0x20];
-//WCHAR write_event[0x20];
-//WCHAR engine_event[0x20];
-
-//WCHAR recv_pipe[] = L"\\??\\pipe\\ITH_PIPE";
-//WCHAR command[] = L"\\??\\pipe\\ITH_COMMAND";
-wchar_t recv_pipe[] = ITH_TEXT_PIPE;
-wchar_t command[] = ITH_COMMAND_PIPE;
-
-LARGE_INTEGER wait_time = {-100*10000, -1};
-LARGE_INTEGER sleep_time = {-20*10000, -1};
-
-DWORD engine_type;
-DWORD module_base;
-
-HANDLE hookPipe,
-       hCommand,
-       hDetach; //,hLose;
-//InsertHookFun InsertHook;
-//IdentifyEngineFun IdentifyEngine;
-//InsertDynamicHookFun InsertDynamicHook;
+HANDLE hookPipe;
 
 // jichi 9/28/2013: protect pipe on wine
 // Put the definition in this file so that it might be inlined
@@ -94,7 +72,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 			}
 		}
 
-		WriteFile(::hookPipe, &::currentProcessId, sizeof(::currentProcessId), &count, nullptr);
+		WriteFile(::hookPipe, &::currentProcessId, sizeof(::currentProcessId), nullptr, nullptr);
 
 		for (int i = 0, count = 0; count < ::currentHook; i++)
 		{
@@ -125,6 +103,29 @@ DWORD WINAPI PipeManager(LPVOID unused)
 				buffer[count] = 0;
 				NewHook(*(HookParam *)(buffer + 4), (LPSTR)(buffer + 4 + sizeof(HookParam)), 0);
 				break;
+			case HOST_COMMAND_REMOVE_HOOK:
+			{
+				DWORD removalAddress = *(DWORD *)(buffer + 4);
+				HANDLE hookRemovalEvent = OpenEventW(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, ITH_REMOVEHOOK_EVENT);
+
+				TextHook *in = hookman;
+				for (int i = 0; i < currentHook; in++)
+				{
+					if (in->Address()) i++;
+					if (in->Address() == removalAddress)
+					{
+						break;
+					}
+				}
+				if (in->Address())
+				{
+					in->ClearHook();
+				}
+
+				SetEvent(hookRemovalEvent);
+				CloseHandle(hookRemovalEvent);
+			}
+			break;
 			case HOST_COMMAND_DETACH:
 				::running = false;
 				break;
@@ -146,199 +147,20 @@ DWORD WINAPI PipeManager(LPVOID unused)
 	return 0;
 }
 
-DWORD WINAPI WaitForPipe(LPVOID lpThreadParameter) // Dynamically detect ITH main module status.
-{
-  CC_UNUSED(lpThreadParameter);
-
-  //swprintf(engine_event,L"ITH_ENGINE_%d",currentProcessId);
-  swprintf(::detach_mutex, ITH_DETACH_MUTEX_ L"%d", currentProcessId);
-  //swprintf(lose_event,L"ITH_LOSEPIPE_%d",currentProcessId);
-  //hEngine=IthCreateEvent(engine_event);
-  //NtWaitForSingleObject(hEngine,0,0);
-  //NtClose(hEngine);
-
-  //while (!engine_registered)
-  //  NtDelayExecution(0, &wait_time);
-
-  //LoadEngine(L"ITH_Engine.dll");
-  //u.engine = engine_base; // jichi 10/19/2014: disable the second dll
-  HANDLE hPipeExist = IthOpenEvent(ITH_PIPEEXISTS_EVENT);
-  IO_STATUS_BLOCK ios;
-  //hLose=IthCreateEvent(lose_event,0,0);
-  if (hPipeExist != INVALID_HANDLE_VALUE)
-  while (::running) {
-    ::hookPipe = INVALID_HANDLE_VALUE;
-    hCommand = INVALID_HANDLE_VALUE;
-    while (NtWaitForSingleObject(hPipeExist, 0, &wait_time) == WAIT_TIMEOUT)
-      if (!::running)
-        goto _release;
-	GROWL_MSG(L"Pipe connected");
-    HANDLE hMutex = IthCreateMutex(ITH_GRANTPIPE_MUTEX, 0);
-    NtWaitForSingleObject(hMutex, 0, 0);
-    while (::hookPipe == INVALID_HANDLE_VALUE||
-      hCommand == INVALID_HANDLE_VALUE) {
-      NtDelayExecution(0, &sleep_time);
-      if (::hookPipe == INVALID_HANDLE_VALUE)
-        ::hookPipe = IthOpenPipe(recv_pipe, GENERIC_WRITE);
-      if (hCommand == INVALID_HANDLE_VALUE)
-        hCommand = IthOpenPipe(command, GENERIC_READ);
-    }
-    //NtClearEvent(hLose);
-    CliLockPipe();
-    NtWriteFile(::hookPipe, 0, 0, 0, &ios, &::currentProcessId, sizeof(::currentProcessId), 0, 0);
-    CliUnlockPipe();
-    for (int i = 0, count = 0; count < ::currentHook; i++)
-      if (hookman[i].RecoverHook()) // jichi 9/27/2013: This is the place where built-in hooks like TextOutA are inserted
-        count++;
-    //ConsoleOutput(dll_name);
-    //OutputDWORD(tree->Count());
-    NtReleaseMutant(hMutex,0);
-    NtClose(hMutex);
-
-
-    ::live = true;
-
-    // jichi 7/17/2014: Always hijack by default or I have to wait for it is ready
-    Engine::hijack();
-	ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
-
-    ::hDetach = IthCreateMutex(::detach_mutex,1);
-    while (::running && NtWaitForSingleObject(hPipeExist, 0, &sleep_time) == WAIT_OBJECT_0)
-      NtDelayExecution(0, &sleep_time);
-    ::live = false;
-
-    for (int i = 0, count = 0; count < ::currentHook; i++)
-      if (hookman[i].RemoveHook())
-        count++;
-    if (!::running) {
-      IthCoolDown(); // jichi 9/28/2013: Use cooldown instead of lock pipe to prevent from hanging on exit
-      //CliLockPipe();
-      //NtWriteFile(::hookPipe, 0, 0, 0, &ios, man, 4, 0, 0);
-      NtWriteFile(::hookPipe, 0, 0, 0, &ios, hookman, 4, 0, 0);
-      //CliUnlockPipe();
-      IthReleaseMutex(::hDetach);
-    }
-    NtClose(::hDetach);
-    NtClose(::hookPipe);
-  }
-_release:
-  //NtClose(hLose);
-  NtClose(hPipeExist);
-  return 0;
-}
-
-DWORD WINAPI CommandPipe(LPVOID lpThreadParameter)
-{
-  CC_UNUSED(lpThreadParameter);
-  DWORD command;
-  BYTE buff[0x400] = {};
-  HANDLE hPipeExist;
-  hPipeExist = IthOpenEvent(ITH_PIPEEXISTS_EVENT);
-  IO_STATUS_BLOCK ios={};
-
-  if (hPipeExist != INVALID_HANDLE_VALUE)
-    while (::running) {
-      while (!::live) {
-        if (!::running)
-          goto _detach;
-        NtDelayExecution(0, &sleep_time);
-      }
-      // jichi 9/27/2013: Why 0x200 not 0x400? wchar_t?
-      switch (NtReadFile(hCommand, 0, 0, 0, &ios, buff, 0x200, 0, 0)) {
-      case STATUS_PIPE_BROKEN:
-      case STATUS_PIPE_DISCONNECTED:
-        NtClearEvent(hPipeExist);
-        continue;
-      case STATUS_PENDING:
-        NtWaitForSingleObject(hCommand, 0, 0);
-        switch (ios.Status) {
-        case STATUS_PIPE_BROKEN:
-        case STATUS_PIPE_DISCONNECTED:
-          NtClearEvent(hPipeExist);
-          continue;
-        case 0: break;
-        default:
-          if (NtWaitForSingleObject(::hDetach, 0, &wait_time) == WAIT_OBJECT_0)
-            goto _detach;
-        }
-      }
-      if (ios.uInformation && ::live) {
-        command = *(DWORD *)buff;
-        switch(command) {
-        case HOST_COMMAND_NEW_HOOK:
-          //IthBreak();
-          buff[ios.uInformation] = 0;
-          //buff[ios.uInformation + 1] = 0;
-          NewHook(*(HookParam *)(buff + 4), (LPSTR)(buff + 4 + sizeof(HookParam)), 0);
-          break;
-        case HOST_COMMAND_REMOVE_HOOK:
-          {
-            DWORD rm_addr = *(DWORD *)(buff+4);
-            HANDLE hRemoved = IthOpenEvent(ITH_REMOVEHOOK_EVENT);
-
-            TextHook *in = hookman;
-            for (int i = 0; i < currentHook; in++) {
-              if (in->Address()) i++;
-              if (in->Address() == rm_addr) break;
-            }
-            if (in->Address())
-              in->ClearHook();
-            IthSetEvent(hRemoved);
-            NtClose(hRemoved);
-          } break;
-#if 0 // Temporarily disabled as these operations are not used by VNR
-        case HOST_COMMAND_MODIFY_HOOK:
-          {
-            DWORD rm_addr = *(DWORD *)(buff + 4);
-            HANDLE hModify = IthOpenEvent(ITH_MODIFYHOOK_EVENT);
-            TextHook *in = hookman;
-            for (int i = 0; i < currentHook; in++) {
-              if (in->Address())
-                i++;
-              if (in->Address() == rm_addr)
-                break;
-            }
-            if (in->Address())
-              in->ModifyHook(*(HookParam *)(buff + 4));
-            IthSetEvent(hModify);
-            NtClose(hModify);
-          } break;
-        case HOST_COMMAND_HIJACK_PROCESS:
-          Engine::hijack();
-          break;
-#endif // 0
-        case HOST_COMMAND_DETACH:
-          ::running = false;
-          ::live = false;
-          goto _detach;
-        }
-      }
-    }
-_detach:
-  NtClose(hPipeExist);
-  NtClose(hCommand);
-  Util::unloadCurrentModule(); // jichi: this is not always needed
-  return 0;
-}
-//extern "C" {
 void ConsoleOutput(LPCSTR text)
 { // jichi 12/25/2013: Rewrite the implementation
-  if (!live || !text)
-    return;
-  enum { buf_size = 0x50 };
-  BYTE buf[buf_size]; // buffer is needed to append the message header
-  size_t text_size = strlen(text) + 1;
-  size_t data_size = text_size + 8;
-
-  BYTE *data = (data_size <= buf_size) ? buf : new BYTE[data_size];
-  *(DWORD *)data = HOST_NOTIFICATION; //cmd
-  *(DWORD *)(data + 4) = HOST_NOTIFICATION_TEXT; //console
-  memcpy(data + 8, text, text_size);
-
-  IO_STATUS_BLOCK ios;
-  NtWriteFile(hookPipe, 0, 0, 0, &ios, data, data_size, 0, 0);
-  if (data != buf)
-    delete[] data;
+	if (!::live)
+	{
+		return;
+	}
+		
+	DWORD textSize = strlen(text) + 1;
+	DWORD dataSize = textSize + 8;
+	BYTE *buffer = new BYTE[dataSize];
+	*(DWORD*)buffer = HOST_NOTIFICATION; //cmd
+	*(DWORD*)(buffer + 4) = HOST_NOTIFICATION_TEXT; //console
+	memcpy(buffer + 8, text, textSize);
+	WriteFile(::hookPipe, buffer, dataSize, nullptr, nullptr);
 }
   //if (str) {
   //  int t, len, sum;
@@ -399,21 +221,18 @@ void ConsoleOutput(LPCSTR text)
 //  ::engine_registered = true;
 //  return 0;
 //}
-DWORD NotifyHookInsert(DWORD addr)
+void NotifyHookInsert(DWORD addr)
 {
-  if (live) {
-    BYTE buffer[0x10];
-    *(DWORD *)buffer = HOST_NOTIFICATION;
-    *(DWORD *)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
-    *(DWORD *)(buffer + 8) = addr;
-    *(DWORD *)(buffer + 0xc) = 0;
-    IO_STATUS_BLOCK ios;
-    CliLockPipe();
-    NtWriteFile(hookPipe,0,0,0,&ios,buffer,0x10,0,0);
-    CliUnlockPipe();
-  }
-  return 0;
+	if (!::live)
+	{
+		return;
+	}
+    BYTE buffer[0xc];
+    *(DWORD*)buffer = HOST_NOTIFICATION;
+    *(DWORD*)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
+    *(DWORD*)(buffer + 8) = addr;
+	WriteFile(::hookPipe, buffer, 0xc, nullptr, nullptr);
+	return;
 }
-//} // extern "C"
 
 // EOF

@@ -54,7 +54,6 @@ namespace
 				{
 					break;
 				}
-
 			}
 			else if (*str <= FILTER_LIMIT)
 			{ // jichi 10/27/2013: 1 byte
