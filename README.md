@@ -31,7 +31,6 @@ GPL v3
 - ITH updating by [Andys](http://www.hongfire.com/forum/member/126633-andys)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - ITHVNR updating by [mireado](http://blog.naver.com/mireado) and [Eguni](https://github.com/Eguni)
-- Korean GUI by [IJEMIN](https://github.com/IJEMIN)
 
 ## Special Thanks
 
