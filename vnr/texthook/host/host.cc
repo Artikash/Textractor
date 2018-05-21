@@ -19,25 +19,13 @@
 #include "ccutil/ccmacro.h"
 #include <commctrl.h>
 
-//#define ITH_WINE
-//#define ITH_USE_UX_DLLS  IthIsWine()
-//#define ITH_USE_XP_DLLS  (IthIsWindowsXp() && !IthIsWine())
-
 #define DEBUG "vnrhost/host.cc"
 #include "sakurakit/skdebug.h"
 
 namespace 
 { // unnamed
 
-//enum { HOOK_TIMEOUT = -50000000 }; // in nanoseconds = 5 seconds
-
 	CRITICAL_SECTION hostCs;
-	//WCHAR exist[] = ITH_PIPEEXISTS_EVENT;
-	//WCHAR mutex[] = L"ITH_RUNNING";
-	//WCHAR EngineName[] = ITH_ENGINE_DLL;
-	//WCHAR EngineNameXp[] = ITH_ENGINE_XP_DLL;
-	//WCHAR DllName[] = ITH_CLIENT_DLL;
-	//WCHAR DllNameXp[] = ITH_CLIENT_XP_DLL;
 	HANDLE preventDuplicationMutex; // jichi 9/28/2013: used to guard pipe
 	HANDLE hookMutex;  // jichi 9/28/2013: used to guard hook modification
 } // unnamed namespace

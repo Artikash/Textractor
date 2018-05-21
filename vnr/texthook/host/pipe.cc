@@ -78,8 +78,8 @@ void CreateNewPipe()
 {
 	HANDLE hookPipe, hostPipe, TextReceivingThread;
 
-	hookPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0x1000, 0x1000, MAXDWORD, NULL);
-	hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, 0x1000, 0x1000, MAXDWORD, NULL);
+	hookPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
+	hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
 	TextReceivingThread = CreateThread(nullptr, 0, TextReceiver, hookPipe, 0, nullptr);
 	man->RegisterPipe(hookPipe, hostPipe, TextReceivingThread);
 }
@@ -89,7 +89,6 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	HANDLE hookPipe = (HANDLE)lpThreadParameter;
 	ConnectNamedPipe(hookPipe, nullptr);
 
-	enum { PIPE_BUFFER_SIZE = 0x1000 };
 	BYTE* buffer = new BYTE[PIPE_BUFFER_SIZE];
 	DWORD bytesRead, processId;
 

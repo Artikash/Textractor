@@ -114,6 +114,8 @@ enum HookParamType : unsigned long {
 // Fuse all threads, and prevent floating
 enum { FIXED_SPLIT_VALUE = 0x10001 };
 
+enum { PIPE_BUFFER_SIZE = 0x1000};
+
 // jichi 12/18/2013:
 // These dlls are used to guess the range for non-NO_CONTEXT hooks.
 //

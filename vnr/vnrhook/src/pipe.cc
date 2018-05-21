@@ -25,7 +25,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 	while (::running)
 	{
 		DWORD count;
-		BYTE* buffer = new BYTE[0x1000];
+		BYTE* buffer = new BYTE[PIPE_BUFFER_SIZE];
 		HANDLE hostPipe = ::hookPipe = INVALID_HANDLE_VALUE,
 			pipeAcquisitionMutex = CreateMutexW(nullptr, TRUE, ITH_GRANTPIPE_MUTEX);
 
@@ -62,7 +62,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		while (::running)
 		{
 			Sleep(STANDARD_WAIT);
-			if (!ReadFile(hostPipe, buffer, 0x800, &count, nullptr))
+			if (!ReadFile(hostPipe, buffer, PIPE_BUFFER_SIZE / 2, &count, nullptr)) // Artikash 5/21/2018: why / 2? wchar_t?
 			{
 				break;
 			}
