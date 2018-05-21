@@ -2,15 +2,17 @@
 
 
 
-## Downloads
-
-Previous releases of *ITHVNR* can be found [here](https://github.com/mireado/ITHVNR/releases).
-
 ## Overview
 
-*ITHVNR* is an open-source x32~~/x64~~ text hooker for Windows.
+*NextHooker* is an open-source x32~~/x64~~ text hooker for Windows.
 
-Basically, ITHVNR base on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s version.
+Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s ITHVNR.
+
+## Downloads
+
+Releases of *NextHooker* can be found [here](https://github.com/Artikash/NextHooker/releases)
+
+Previous releases of *ITHVNR* can be found [here](https://github.com/mireado/ITHVNR/releases).
 
 ## Features
 
@@ -37,7 +39,7 @@ GPL v3
 
 ## Compiling
 
-Before compiling *ITHVNR*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
+Before compiling *NextHooker*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
 
 ## Project Architecture
 
