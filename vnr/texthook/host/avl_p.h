@@ -144,7 +144,7 @@ protected:
   fCopy fCpy;
   fLength fLen;
 
-public:
+//public:
   // - Construction -
   AVLTree() {}
 

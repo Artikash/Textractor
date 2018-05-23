@@ -46,10 +46,8 @@ public:
   HookManager();
   ~HookManager();
   // jichi 12/26/2013: remove virtual modifiers
-  TextThread *FindSingle(DWORD pid, DWORD hook, DWORD retn, DWORD split);
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
-  DWORD GetProcessIDByPath(LPCWSTR str); // private
   void RemoveSingleThread(DWORD number);
   //void LockHookman();
   //void UnlockHookman();
@@ -75,7 +73,6 @@ public:
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 
-  DWORD GetCurrentPID(); // private
   HANDLE GetCmdHandleByPID(DWORD pid);
 
   ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)

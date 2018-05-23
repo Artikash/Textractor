@@ -208,15 +208,6 @@ HookManager::~HookManager()
   //DeleteCriticalSection(&hmcs);
 }
 
-TextThread *HookManager::FindSingle(DWORD pid, DWORD hook, DWORD retn, DWORD split)
-{
-  if (pid == 0)
-    return thread_table->FindThread(0);
-  ThreadParameter tp = {pid, hook, retn, split};
-  TreeNode<ThreadParameter *,DWORD> *node = Search(&tp);
-  return node ? thread_table->FindThread(node->data) : nullptr;
-}
-
 TextThread *HookManager::FindSingle(DWORD number)
 { return (number & 0x80008000) ? nullptr : thread_table->FindThread(number); }
 
@@ -707,8 +698,6 @@ ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
   //return pr;
 }
 
-DWORD HookManager::GetCurrentPID() { return current_pid; }
-
 HANDLE HookManager::GetCmdHandleByPID(DWORD pid)
 {
   HM_LOCK;
@@ -733,8 +722,6 @@ MK_BASIC_TYPE(LPVOID)
 //    hash = ((hash>>7)|(hash<<25)) + *module;
 //  return hash;
 //}
-
-DWORD  GetCurrentPID() { return ::man->GetCurrentPID(); }
 
 HANDLE  GetCmdHandleByPID(DWORD pid) { return ::man->GetCmdHandleByPID(pid); }
 
