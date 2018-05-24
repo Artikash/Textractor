@@ -558,7 +558,7 @@ DWORD TextThread::GetEntryString(LPSTR str, DWORD max)
 
     } else {
       len = ::sprintf(str, "%.4X:%.4d:0x%08X:0x%08X:0x%08X:",
-          thread_number, tp.pid, tp.hook, tp.retn, tp.spl);
+          thread_number, tp. pid, tp.hook, tp.retn, tp.spl);
 
       len += GetHookName(str + len, tp.pid, tp.hook, max - len);
       thread_string = new char[len + 1];

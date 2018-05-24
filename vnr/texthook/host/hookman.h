@@ -57,12 +57,14 @@ public:
   void UnLink(WORD from);
   void UnLinkAll(WORD from);
   void SelectCurrent(DWORD num);
+  void DetachProcess(DWORD pid);
   void SetCurrent(TextThread *it);
   void AddConsoleOutput(LPCWSTR text);
 
   // jichi 10/27/2013: Add const; add space.
   void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len, bool space);
 
+  void ClearText(DWORD pid, DWORD hook, DWORD retn, DWORD split); // private
   void RemoveProcessContext(DWORD pid); // private
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterThread(TextThread*, DWORD); // private
@@ -75,6 +77,9 @@ public:
 
   ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)
   { return (ConsoleCallback)_InterlockedExchange((long*)&console,(long)cf); }
+
+  ConsoleWCallback RegisterConsoleWCallback(ConsoleWCallback cf)
+  { return (ConsoleWCallback)_InterlockedExchange((long*)&wconsole,(long)cf); }
 
   ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
   { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }
@@ -101,6 +106,13 @@ public:
   TextThread *GetCurrentThread() { return current; } // private
   ProcessRecord *Records() { return record; } // private
   ThreadTable *Table() { return thread_table; } // private
+
+  //DWORD& SplitTime() { return split_time; }
+  //DWORD& RepeatCount() { return repeat_count; }
+  //DWORD& CyclicRemove() { return cyclic_remove; }
+  //DWORD& GlobalFilter() { return global_filter; }
+  void ConsoleOutput(LPCSTR text) { if (console) console(text); } // not thread safe
+  void ConsoleOutputW(LPCWSTR text) { if (wconsole) wconsole(text); } // not thread safe
 
   void OnThreadCreate(pugi::xml_node profile_node, TextThread* thread);
   void GetProfile(DWORD pid, pugi::xml_node profile_node);

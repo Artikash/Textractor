@@ -211,6 +211,8 @@ HookManager::~HookManager()
 TextThread *HookManager::FindSingle(DWORD number)
 { return (number & 0x80008000) ? nullptr : thread_table->FindThread(number); }
 
+void HookManager::DetachProcess(DWORD pid) {}
+
 void HookManager::SetCurrent(TextThread *it)
 {
   if (current)
@@ -624,6 +626,25 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
   }
 }
 
+void HookManager::ClearText(DWORD pid, DWORD hook, DWORD retn, DWORD spl)
+{
+  HM_LOCK;
+  //bool flag=false;
+  //ConsoleOutput("vnrhost:ClearText: lock");
+  //EnterCriticalSection(&hmcs);
+  ThreadParameter tp = {pid, hook, retn, spl};
+  if (TreeNode<ThreadParameter *, DWORD> *in = Search(&tp))
+    if (TextThread *it = thread_table->FindThread(in->data)) {
+      it->Reset();
+      //SetCurrent(it);
+      if (reset)
+        reset(it);
+      //it->ResetEditText();
+    }
+
+  //LeaveCriticalSection(&hmcs);
+  //ConsoleOutput("vnrhost:ClearText: unlock");
+}
 void HookManager::ClearCurrent()
 {
   HM_LOCK;
