@@ -36,6 +36,15 @@ void ConsoleOutput(LPCWSTR text)
 	man->AddConsoleOutput(text);
 }
 
+void ConsoleOutput(LPCSTR text)
+{
+	int wc_length = MB_WC_count(text, -1);
+	LPWSTR wc = new WCHAR[wc_length];
+	MB_WC(text, wc, wc_length);
+	man->AddConsoleOutput(wc);
+	delete wc;
+}
+
 std::wstring GetProcessPath(DWORD pid)
 {
 	UniqueHandle hProc(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid));

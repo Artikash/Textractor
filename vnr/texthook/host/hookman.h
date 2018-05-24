@@ -7,7 +7,6 @@
 #include "host/avl_p.h"
 #include "host/textthread.h"
 #include "winmutex/winmutex.h"
-#include <unordered_map>
 
 namespace pugi {
 	class xml_node;
@@ -26,9 +25,6 @@ struct ProcessRecord {
   HANDLE hookman_mutex;
   HANDLE hookman_section;
   LPVOID hookman_map;
-  HANDLE hostPipe;
-  HANDLE hookPipe;
-  HANDLE processThread;
 };
 
 class ThreadTable : public MyVector<TextThread *, 0x40>
@@ -43,19 +39,6 @@ struct IHFSERVICE TCpy { void operator()(ThreadParameter *t1, const ThreadParame
 struct IHFSERVICE TLen { int operator()(const ThreadParameter *t); };
 
 typedef DWORD (*ProcessEventCallback)(DWORD pid);
-
-struct ThreadParameterHasher
-{
-	size_t operator()(const ThreadParameter& threadParam) const
-	{
-		return std::hash<DWORD>()((threadParam.pid << 4) + threadParam.hook + threadParam.retn + threadParam.spl);
-	}
-};
-
-//bool operator==(const ThreadParameter& one, const ThreadParameter& two)
-//{
-//	return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl;
-//}
 
 class IHFSERVICE HookManager : public AVLTree<ThreadParameter, DWORD, TCmp, TCpy, TLen>
 {
@@ -90,6 +73,9 @@ public:
 
   HANDLE GetCmdHandleByPID(DWORD pid);
 
+  ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)
+  { return (ConsoleCallback)_InterlockedExchange((long*)&console,(long)cf); }
+
   ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
   { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }
 
@@ -120,10 +106,6 @@ public:
   void GetProfile(DWORD pid, pugi::xml_node profile_node);
 
 private:
-	std::unordered_map<DWORD, ProcessRecord*> processRecords;
-	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> threadTable;
-
-
   typedef win_mutex<CRITICAL_SECTION> mutex_type;
   mutex_type hmcs;
 

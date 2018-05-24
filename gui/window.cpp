@@ -752,6 +752,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			man->RegisterProcessDetachCallback(RemoveProcessList);
 			man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
+			man->RegisterConsoleCallback(ConsoleOutput);
 			StartHost();
 			{
 				static const WCHAR program_name[] = L"Interactive Text Hooker";
