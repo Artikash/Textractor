@@ -62,7 +62,7 @@ public:
   //void ResetEditText();
   void ComboSelectCurrent();
   void UnLinkAll();
-  void CopyLastToClipboard();
+  void DispatchLastSentence();
 
   //void AdjustPrevRepeat(DWORD len);
   //void PrevRepeatLength(DWORD &len);

@@ -13,6 +13,7 @@
 #include "vnrhook/include/const.h"
 #include "ithsys/ithsys.h"
 #include <stdio.h>
+#include "extensions/Extensions.h"
 
 MK_BASIC_TYPE(BYTE)
 MK_BASIC_TYPE(ThreadParameter)
@@ -36,10 +37,9 @@ void CALLBACK NewLineBuff(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
   KillTimer(hwnd,idEvent);
   TextThread *id=(TextThread*)idEvent;
-
-  if (id->Status()&CURRENT_SELECT)
-    //texts->SetLine();
-    id->CopyLastToClipboard();
+    id->DispatchLastSentence();
+  
+  //id->SendLastToExtension();
   id->SetNewLineFlag();
 }
 
@@ -649,43 +649,32 @@ DWORD TextThread::GetEntryString(LPSTR str, DWORD max)
 //  }
 //}
 
-static char clipboard_buffer[0x400];
 // jichi 8/25/2013: clipboard removed
-void CopyToClipboard(void* str,bool unicode, int len)
+void DispatchSentence(void* str,DWORD status, int len)
 {
-  if (settings->clipboardFlag && str && len > 0)
+	char sentenceBuffer[0x400];
+  if (str && len > 0)
   {
     int size=(len*2|0xF)+1;
     if (len>=1022) return;
-    memcpy(clipboard_buffer,str,len);
-    *(WORD*)(clipboard_buffer+len)=0;
+    memcpy(sentenceBuffer,str,len);
+    *(WORD*)(sentenceBuffer+len)=0;
     HGLOBAL hCopy;
-    LPWSTR copy;
-    if (OpenClipboard(0))
-    {
-      if (hCopy=GlobalAlloc(GMEM_MOVEABLE,size))
-      {
-        if (copy=(LPWSTR)GlobalLock(hCopy))
-        {
-          if (unicode)
-          {
-            memcpy(copy,clipboard_buffer,len+2);
-          }
-          else
-            copy[MB_WC(clipboard_buffer,copy)]=0;
-          GlobalUnlock(hCopy);
-          EmptyClipboard();
-          SetClipboardData(CF_UNICODETEXT,hCopy);
-        }
-      }
-      CloseClipboard();
-    }
+    wchar_t copy[0x200];
+	if (status&USING_UNICODE)
+	{
+		memcpy(copy, sentenceBuffer, len + 2);
+	}
+	else
+		copy[MB_WC(sentenceBuffer, copy)] = 0;
+	DispatchSentenceToExtensions(copy, status);
   }
 }
-void TextThread::CopyLastToClipboard()
+void TextThread::DispatchLastSentence()
 {
   // jichi 8/25/2013: clipboard removed
-  CopyToClipboard(storage+last_sentence,(status&USING_UNICODE)>0,used-last_sentence);
+  DispatchSentence(storage+last_sentence,status,used-last_sentence);
+
 }
 
 //void TextThread::ResetEditText()

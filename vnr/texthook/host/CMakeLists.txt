@@ -25,6 +25,8 @@ set(vnrhost_src
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimerbase.cc
 #  ${PROJECT_SOURCE_DIR}/wintimer/wintimerbase.h
   ${PROJECT_SOURCE_DIR}/sakurakit/skdebug.h
+  ${PROJECT_SOURCE_DIR}/extensions/Extensions.cpp
+  ${PROJECT_SOURCE_DIR}/extensions/Extensions.h
 )
 
 add_library(vnrhost SHARED ${vnrhost_src})

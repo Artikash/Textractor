@@ -18,6 +18,7 @@
 #include "ithsys/ithsys.h"
 #include "ccutil/ccmacro.h"
 #include <commctrl.h>
+#include "extensions/Extensions.h"
 
 #define DEBUG "vnrhost/host.cc"
 #include "sakurakit/skdebug.h"
@@ -106,6 +107,7 @@ IHFSERVICE bool IHFAPI OpenHost()
 	}
 	else
 	{
+		LoadExtensions();
 		::running = true;
 		::settings = new Settings;
 		::man = new HookManager;
