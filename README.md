@@ -8,6 +8,14 @@
 
 Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s ITHVNR.
 
+## Extensions
+
+See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.
+
+To use an extension, simply rename the extension dll file to ```{NUMBER}_nextvnr_extension.dll``` and copy into the NextVNR folder. 
+
+Extensions are called in order by the number they are prefixed with.
+
 ## Downloads
 
 Releases of *NextHooker* can be found [here](https://github.com/Artikash/NextHooker/releases)
@@ -18,7 +26,7 @@ Previous releases of *ITHVNR* can be found [here](https://github.com/mireado/ITH
 
 - Open-source
 - Hook text (AGTH hook codes supported)
-- Extensions (WIP)
+- Extensions (New!)
 
 ## License
 
@@ -43,7 +51,7 @@ Before compiling *NextHooker*, You should get CMake, [Windows Driver Kit 7.1](ht
 
 ## Project Architecture
 
-The GUI links to vnrhost.dll (created from the texthook folder) which injects vnrhook.dll (created from the vnrhook folder) and connects to it via 2 pipe files.<br>
+The GUI links to vnrhost.dll (created from the texthook folder) which injects vnrhook.dll (created from the vnrhook folder) into the target process and connects to it via 2 pipe files.<br>
 vnrhost writes to hostPipe, vnrhook writes to hookPipe (duh?)<br>
 vnrhook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
 Additional information about hooks is shared through a section object that is mapped to a reference to the Hook class.<br>
