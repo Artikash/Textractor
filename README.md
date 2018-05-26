@@ -1,4 +1,4 @@
-# ITHVNR
+# NextHooker
 
 
 
@@ -12,7 +12,7 @@ Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showth
 
 See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.
 
-To use an extension, simply rename the extension dll file to ```{NUMBER}_nextvnr_extension.dll``` and copy into the NextVNR folder. 
+To use an extension, simply rename the extension dll file to ```{NUMBER}_nexthooker_extension.dll``` and copy into the NextVNR folder. 
 
 Extensions are called in order by the number they are prefixed with.
 

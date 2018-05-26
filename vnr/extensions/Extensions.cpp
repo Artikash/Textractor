@@ -21,7 +21,7 @@ void LoadExtensions()
 		}
 		else
 		{
-			if (wcsstr(fileData.cFileName, L"_nextvnr_extension.dll"))
+			if (wcsstr(fileData.cFileName, L"_nexthooker_extension.dll"))
 			{ 
 				extensionFunctions[wcstoul(fileData.cFileName, nullptr, 10)] = (ExtensionFunction)GetProcAddress(LoadLibraryW(fileData.cFileName), "OnSentence");
 			}
