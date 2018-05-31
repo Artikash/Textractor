@@ -131,14 +131,8 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 		{
 			switch (commandType) 
 			{
-			case HOST_NOTIFICATION_NEWHOOK:
-			{
-				static long lock;
-				while (InterlockedExchange(&lock, 1) == 1);
-				man->ProcessNewHook()(processId);
-				lock = 0;
-			}
-			break;
+			case HOST_NOTIFICATION_NEWHOOK: // Artikash 5/30/2018: Useless for now, but could be handy to implement something later
+				break;
 			case HOST_NOTIFICATION_TEXT:
 				USES_CONVERSION;
 				man->AddConsoleOutput(A2W((LPCSTR)(buffer + 8)));

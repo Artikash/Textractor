@@ -7,6 +7,7 @@
 #include "host/avl_p.h"
 #include "host/textthread.h"
 #include "winmutex/winmutex.h"
+#include <unordered_map>
 
 namespace pugi {
 	class xml_node;
@@ -40,16 +41,22 @@ struct IHFSERVICE TLen { int operator()(const ThreadParameter *t); };
 
 typedef DWORD (*ProcessEventCallback)(DWORD pid);
 
+struct ThreadParameterHasher
+{
+	size_t operator()(const ThreadParameter& tp)
+	{
+		return std::hash<DWORD>()(tp.pid << 6) + std::hash<DWORD>()(tp.hook) + std::hash<DWORD>()(tp.retn) + std::hash<DWORD>()(tp.spl);
+	}
+};
+
 class IHFSERVICE HookManager : public AVLTree<ThreadParameter, DWORD, TCmp, TCpy, TLen>
 {
 public:
   HookManager();
   ~HookManager();
   // jichi 12/26/2013: remove virtual modifiers
-  TextThread *FindSingle(DWORD pid, DWORD hook, DWORD retn, DWORD split);
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
-  DWORD GetProcessIDByPath(LPCWSTR str); // private
   void RemoveSingleThread(DWORD number);
   //void LockHookman();
   //void UnlockHookman();
@@ -59,7 +66,6 @@ public:
   void UnLink(WORD from);
   void UnLinkAll(WORD from);
   void SelectCurrent(DWORD num);
-  void DetachProcess(DWORD pid);
   void SetCurrent(TextThread *it);
   void AddConsoleOutput(LPCWSTR text);
 
@@ -75,7 +81,6 @@ public:
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 
-  DWORD GetCurrentPID(); // private
   HANDLE GetCmdHandleByPID(DWORD pid);
 
   ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)
@@ -102,25 +107,15 @@ public:
   ProcessEventCallback RegisterProcessDetachCallback(ProcessEventCallback cf)
   { return (ProcessEventCallback)_InterlockedExchange((long*)&detach,(long)cf); }
 
-  ProcessEventCallback RegisterProcessNewHookCallback(ProcessEventCallback cf)
-  { return (ProcessEventCallback)_InterlockedExchange((long*)&hook,(long)cf); }
-
-  ProcessEventCallback ProcessNewHook() { return hook; }
-  TextThread *GetCurrentThread() { return current; } // private
-  ProcessRecord *Records() { return record; } // private
   ThreadTable *Table() { return thread_table; } // private
-
-  //DWORD& SplitTime() { return split_time; }
-  //DWORD& RepeatCount() { return repeat_count; }
-  //DWORD& CyclicRemove() { return cyclic_remove; }
-  //DWORD& GlobalFilter() { return global_filter; }
-  void ConsoleOutput(LPCSTR text) { if (console) console(text); } // not thread safe
-  void ConsoleOutputW(LPCWSTR text) { if (wconsole) wconsole(text); } // not thread safe
 
   void OnThreadCreate(pugi::xml_node profile_node, TextThread* thread);
   void GetProfile(DWORD pid, pugi::xml_node profile_node);
 
 private:
+	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> threadTable;
+	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
+
   typedef win_mutex<CRITICAL_SECTION> mutex_type;
   mutex_type hmcs;
 

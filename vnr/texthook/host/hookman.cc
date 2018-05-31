@@ -208,19 +208,8 @@ HookManager::~HookManager()
   //DeleteCriticalSection(&hmcs);
 }
 
-TextThread *HookManager::FindSingle(DWORD pid, DWORD hook, DWORD retn, DWORD split)
-{
-  if (pid == 0)
-    return thread_table->FindThread(0);
-  ThreadParameter tp = {pid, hook, retn, split};
-  TreeNode<ThreadParameter *,DWORD> *node = Search(&tp);
-  return node ? thread_table->FindThread(node->data) : nullptr;
-}
-
 TextThread *HookManager::FindSingle(DWORD number)
 { return (number & 0x80008000) ? nullptr : thread_table->FindThread(number); }
-
-void HookManager::DetachProcess(DWORD pid) {}
 
 void HookManager::SetCurrent(TextThread *it)
 {
@@ -707,8 +696,6 @@ ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
   //return pr;
 }
 
-DWORD HookManager::GetCurrentPID() { return current_pid; }
-
 HANDLE HookManager::GetCmdHandleByPID(DWORD pid)
 {
   HM_LOCK;
@@ -733,8 +720,6 @@ MK_BASIC_TYPE(LPVOID)
 //    hash = ((hash>>7)|(hash<<25)) + *module;
 //  return hash;
 //}
-
-DWORD  GetCurrentPID() { return ::man->GetCurrentPID(); }
 
 HANDLE  GetCmdHandleByPID(DWORD pid) { return ::man->GetCmdHandleByPID(pid); }
 
@@ -869,10 +854,9 @@ void MakeHookRelative(const ProcessRecord& pr, HookParam& hp)
 void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid)
 {
 	HM_LOCK;
-	ThreadTable* table = Table();
-	for (int i = 0; i < table->Used(); ++i)
+	for (int i = 0; i < thread_table->Used(); ++i)
 	{
-		TextThread* tt = table->FindThread(i);
+		TextThread* tt = thread_table->FindThread(i);
 		if (tt == NULL || tt->GetThreadParameter()->pid != pid)
 			continue;
 		//if (tt->Status() & CURRENT_SELECT || tt->Link() || tt->GetComment())

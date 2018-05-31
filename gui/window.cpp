@@ -709,11 +709,6 @@ DWORD RemoveProcessList(DWORD pid)
 	return 0;
 }
 
-DWORD RefreshProfileOnNewHook(DWORD pid)
-{
-	return 0;
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -750,7 +745,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			AddToCombo(*console, false);
 			man->RegisterProcessAttachCallback(RegisterProcessList);
 			man->RegisterProcessDetachCallback(RemoveProcessList);
-			man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
+			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
 			man->RegisterConsoleCallback(ConsoleOutput);
 			StartHost();
