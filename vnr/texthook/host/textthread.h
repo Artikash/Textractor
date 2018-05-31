@@ -83,7 +83,6 @@ public:
   WORD &LinkNumber() { return link_number; }
   UINT_PTR &Timer() { return timer; }
   ThreadParameter *GetThreadParameter() { return &tp; }
-  TextThread *&Link() { return link; }
   //LPCWSTR GetComment() { return comment; }
 
   ThreadOutputFilterCallback RegisterOutputCallBack(ThreadOutputFilterCallback cb, PVOID data)

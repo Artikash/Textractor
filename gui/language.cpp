@@ -20,11 +20,6 @@ const wchar_t* ErrorSyntax=L"Syntax error";
 const wchar_t* Usage = L"Syntax:\r\n\
 \r\n\
 :H[ELP] - print help\r\n\
-:Lfrom-to - link from thread 'from' to thread 'to'\r\n\
-:Ufrom - unlink link from thread 'from'\r\n\
-\r\n\
-'from' and 'to' and hexadecimal thread numbers. The thread number is the first number in the combo box.\r\n\
-\r\n\
 Loader options:\r\n\
 /P[{process_id|Nprocess_name}] - attach to process\r\n\
 \r\n\

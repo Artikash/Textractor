@@ -62,9 +62,6 @@ public:
   //void UnlockHookman();
   void ResetRepeatStatus();
   void ClearCurrent();
-  void AddLink(WORD from, WORD to);
-  void UnLink(WORD from);
-  void UnLinkAll(WORD from);
   void SelectCurrent(DWORD num);
   void SetCurrent(TextThread *it);
   void AddConsoleOutput(LPCWSTR text);
@@ -106,8 +103,6 @@ public:
 
   ProcessEventCallback RegisterProcessDetachCallback(ProcessEventCallback cf)
   { return (ProcessEventCallback)_InterlockedExchange((long*)&detach,(long)cf); }
-
-  ThreadTable *Table() { return thread_table; } // private
 
   void OnThreadCreate(pugi::xml_node profile_node, TextThread* thread);
   void GetProfile(DWORD pid, pugi::xml_node profile_node);

@@ -266,120 +266,43 @@ void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 	  }
   }
   SetCurrent(0);
-  //ConsoleOutput("vnrhost:RemoveSingleHook: lock");
-  //EnterCriticalSection(&hmcs);
-  DWORD max = thread_table->Used();
-  bool flag = false;
-  for (DWORD i = 1; i <= max; i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->PID() == pid && it->Addr() == addr) {
-        flag |= (it == current);
-        //flag|=it->RemoveFromCombo();
-        thread_table->SetThread(i, 0);
-        if (it->Number() < new_thread_number)
-          new_thread_number = it->Number();
-        Delete(it->GetThreadParameter());
-        if (remove)
-          remove(it);
-        delete it;
-      }
-
-  for (DWORD i = 0; i <= max; i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->Link() && thread_table->FindThread(it->LinkNumber()) == nullptr) {
-        it->LinkNumber() = -1;
-        it->Link() = nullptr;
-      }
-
-  if (flag) {
-    current = nullptr;
-    DWORD number = head.Left ? head.Left->data : 0;
-    SetCurrent(thread_table->FindThread(number));
-    if (reset && current)
-      reset(current);
-    //it->ResetEditText();
-  }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveSingleHook: unlock");
 }
 void HookManager::RemoveSingleThread(DWORD number)
 {
   if (number == 0)
     return;
   HM_LOCK;
-  //ConsoleOutput("vnrhost:RemoveSingleThread: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *it = thread_table->FindThread(number)) {
-    thread_table->SetThread(number, 0);
-    Delete(it->GetThreadParameter());
-    if (remove)
-      remove(it);
-    bool flag = (it == current);
-    if (it->Number() < new_thread_number)
-      new_thread_number = it->Number();
-    delete it;
-    for (int i = 0; i <= thread_table->Used(); i++)
-      if (TextThread *t = thread_table->FindThread(i))
-        if (t->LinkNumber() == number) {
-          t->Link() = 0;
-          t->LinkNumber() = -1;
-        }
-
-    if (flag) {
-      current = nullptr;
-      number = head.Left ? head.Left->data : 0;
-      SetCurrent(thread_table->FindThread(number));
-      if (reset && current)
-        reset(current);
-      //it->ResetEditText();
-    }
+  for (auto i : threadTable)
+  {
+	  if (i.second->Number() == number)
+	  {
+		  if (remove)
+		  {
+			  remove(i.second);
+		  }
+		  delete i.second;
+		  threadTable[i.first] = nullptr;
+	  }
   }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveSingleThread: unlock");
+  SetCurrent(0);
 }
 
 void HookManager::RemoveProcessContext(DWORD pid)
 {
   HM_LOCK;
-  bool flag = false;
-  //ConsoleOutput("vnrhost:RemoveProcessContext: lock");
-  //EnterCriticalSection(&hmcs);
-  for (int i = 1; i < thread_table->Used(); i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->PID() == pid) {
-        Delete(it->GetThreadParameter());
-        //if (false == Delete(it->GetThreadParameter())) {
-        //  // jichi 11/26/2013: Remove debugging instructions
-        //  //if (debug)
-        //  //  __asm int 3
-        //}
-        flag |= (it == current);
-        //flag|=it->RemoveFromCombo();
-        if (it->Number() <new_thread_number)
-          new_thread_number = it->Number();
-        thread_table->SetThread(i,0);
-        if (remove)
-          remove(it);
-        delete it;
-      }
-
-  for (int i = 0; i < thread_table->Used(); i++)
-    if (TextThread *it=thread_table->FindThread(i))
-      if (it->Link() && thread_table->FindThread(it->LinkNumber()) == nullptr) {
-        it->LinkNumber()=-1;
-        it->Link() = nullptr;
-      }
-
-  if (flag) {
-    current = nullptr;
-    DWORD number = head.Left ? head.Left->data : 0;
-    SetCurrent(thread_table->FindThread(number));
-    if (reset && current)
-      reset(current);
-    //if (it) it->ResetEditText();
+  for (auto i : threadTable)
+  {
+	  if (i.second->PID() == pid)
+	  {
+		  if (remove)
+		  {
+			  remove(i.second);
+		  }
+		  delete i.second;
+		  threadTable[i.first] = nullptr;
+	  }
   }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveProcessContext: unlock");
+  SetCurrent(0);
 }
 void HookManager::RegisterThread(TextThread* it, DWORD num)
 { thread_table->SetThread(num, it); }
@@ -534,75 +457,6 @@ void HookManager::UnRegisterProcess(DWORD pid)
 //  }
 //  //swprintf(user_entry,L"UserHook%c",c);
 //}
-
-void HookManager::AddLink(WORD from, WORD to)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:AddLink: lock");
-  //EnterCriticalSection(&hmcs);
-  TextThread *from_thread = thread_table->FindThread(from),
-             *to_thread = thread_table->FindThread(to);
-  if (to_thread && from_thread) {
-    if (from_thread->GetThreadParameter()->pid != to_thread->GetThreadParameter()->pid)
-      DOUT("link to different process");
-    else if (from_thread->Link()==to_thread)
-      DOUT("link already exists");
-    else if (to_thread->CheckCycle(from_thread))
-      DOUT("cyclic link");
-    else {
-      from_thread->Link()=to_thread;
-      from_thread->LinkNumber()=to;
-      DOUT("thread linked");
-	  if (addRemoveLink)
-		  addRemoveLink(from_thread);
-      //WCHAR str[0x40];
-      //swprintf(str,FormatLink,from,to);
-      //AddConsoleOutput(str);
-    }
-  } else
-    DOUT("error link");
-  //else
-  //  AddConsoleOutput(ErrorLink);
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:AddLink: unlock");
-}
-void HookManager::UnLink(WORD from)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:UnLink: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *from_thread = thread_table->FindThread(from)) {
-    from_thread->Link() = nullptr;
-    from_thread->LinkNumber() = 0xffff;
-    DOUT("link deleted");
-	if (addRemoveLink)
-		addRemoveLink(from_thread);
-  }
-  //else // jichi 12/25/2013: This could happen when the game exist
-  //  ConsoleOutput("vnrhost:UnLink: thread does not exist");
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:UnLink: unlock");
-}
-void HookManager::UnLinkAll(WORD from)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:UnLinkAll: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *from_thread = thread_table->FindThread(from)) {
-    from_thread->UnLinkAll();
-    DOUT("link deleted");
-  }
-  //else // jichi 12/25/2013: This could happen after the process exists
-  //  ConsoleOutput("vnrhost:UnLinkAll: thread not exist");
-    //AddConsoleOutput(L"Link deleted.");
-  //} else
-  //  AddConsoleOutput(L"Thread not exist.");
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:UnLinkAll: unlock");
-}
 
 void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len, bool space)
 {

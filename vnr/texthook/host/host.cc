@@ -289,23 +289,4 @@ IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr)
   return 0;
 }
 
-// 4/30/2015: Removed as not needed. Going to change to json
-IHFSERVICE DWORD IHFAPI Host_AddLink(DWORD from, DWORD to)
-{
-  man->AddLink(from & 0xffff, to & 0xffff);
-  return 0;
-}
-
-IHFSERVICE DWORD IHFAPI Host_UnLink(DWORD from)
-{
-  man->UnLink(from & 0xffff);
-  return 0;
-}
-
-IHFSERVICE DWORD IHFAPI Host_UnLinkAll(DWORD from)
-{
-  man->UnLinkAll(from & 0xffff);
-  return 0;
-}
-
 // EOF
