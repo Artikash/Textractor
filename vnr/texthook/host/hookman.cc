@@ -149,6 +149,12 @@ void TCpy::operator()(ThreadParameter* t1, const ThreadParameter* t2)
 
 int TLen::operator()(const ThreadParameter* t) { return 0; }
 
+// Artikash 5/31/2018: required for unordered_map to work with struct key
+bool operator==(const ThreadParameter& one, const ThreadParameter& two)
+{
+	return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl;
+}
+
 #define NAMED_PIPE_DISCONNECT 1
 //Class member of HookManger
 HookManager::HookManager() :
@@ -166,6 +172,8 @@ HookManager::HookManager() :
   , destroy_event(nullptr)
   , register_count(0)
   , new_thread_number(0)
+	, threadTable()
+	, processRecordsByIds()
 {
   // jichi 9/21/2013: zero memory
   ::memset(record, 0, sizeof(record));
@@ -180,6 +188,10 @@ HookManager::HookManager() :
   head.key->spl = -1;
   head.data = 0;
   thread_table = new ThreadTable; // jichi 9/26/2013: zero memory in ThreadTable
+
+  TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread(0, -1, -1, -1, threadTable.size());
+  consoleTextThread->Status() |= USING_UNICODE;
+  SetCurrent(consoleTextThread);
 
   TextThread *entry = new TextThread(0, -1,-1,-1, new_thread_number++);  // jichi 9/26/2013: zero memory in TextThread
   thread_table->SetThread(0, entry);
@@ -197,19 +209,29 @@ HookManager::HookManager() :
 
 HookManager::~HookManager()
 {
+	// Artikash 5/31/2018: This is called when the program terminates, so Windows should automatically free all these resources.....right?
   //LARGE_INTEGER timeout={-1000*1000,-1};
   //IthBreak();
-  NtWaitForSingleObject(destroy_event, 0, 0);
-  NtClose(destroy_event);
-  NtClose(cmd_pipes[0]);
-  NtClose(recv_threads[0]);
-  delete thread_table;
-  delete head.key;
+  //NtWaitForSingleObject(destroy_event, 0, 0);
+  //NtClose(destroy_event);
+  //NtClose(cmd_pipes[0]);
+  //NtClose(recv_threads[0]);
+  //delete thread_table;
+  //delete head.key;
   //DeleteCriticalSection(&hmcs);
 }
 
 TextThread *HookManager::FindSingle(DWORD number)
-{ return (number & 0x80008000) ? nullptr : thread_table->FindThread(number); }
+{ 
+	for (auto i : threadTable)
+	{
+		if (i.second->Number() == number)
+		{
+			return i.second;
+		}
+	}
+	return nullptr;
+}
 
 void HookManager::SetCurrent(TextThread *it)
 {
@@ -231,6 +253,19 @@ void HookManager::SelectCurrent(DWORD num)
 void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 {
   HM_LOCK;
+  for (auto i : threadTable)
+  {
+	  if (i.second->PID() == pid && i.second->Addr() == addr)
+	  {
+		  if (remove)
+		  {
+			  remove(i.second);
+		  }
+		  delete i.second;
+		  threadTable[i.first] = nullptr;
+	  }
+  }
+  SetCurrent(0);
   //ConsoleOutput("vnrhost:RemoveSingleHook: lock");
   //EnterCriticalSection(&hmcs);
   DWORD max = thread_table->Used();

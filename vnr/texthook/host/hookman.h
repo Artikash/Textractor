@@ -43,7 +43,7 @@ typedef DWORD (*ProcessEventCallback)(DWORD pid);
 
 struct ThreadParameterHasher
 {
-	size_t operator()(const ThreadParameter& tp)
+	size_t operator()(const ThreadParameter& tp) const
 	{
 		return std::hash<DWORD>()(tp.pid << 6) + std::hash<DWORD>()(tp.hook) + std::hash<DWORD>()(tp.retn) + std::hash<DWORD>()(tp.spl);
 	}
