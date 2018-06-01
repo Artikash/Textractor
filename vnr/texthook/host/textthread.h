@@ -48,7 +48,6 @@ public:
   //virtual void SetComment(LPWSTR);
   //virtual void ExportTextToFile(LPWSTR filename);
 
-  virtual bool CheckCycle(TextThread *start);
   virtual DWORD GetThreadString(LPSTR str, DWORD max);
   virtual DWORD GetEntryString(LPSTR str, DWORD max = 0x200);
 

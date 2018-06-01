@@ -26,6 +26,7 @@ struct ProcessRecord {
   HANDLE hookman_mutex;
   HANDLE hookman_section;
   LPVOID hookman_map;
+  HANDLE hostPipe;
 };
 
 class ThreadTable : public MyVector<TextThread *, 0x40>
@@ -68,17 +69,14 @@ public:
 
   // jichi 10/27/2013: Add const; add space.
   void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len, bool space);
-
-  void ClearText(DWORD pid, DWORD hook, DWORD retn, DWORD split); // private
   void RemoveProcessContext(DWORD pid); // private
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterThread(TextThread*, DWORD); // private
-  void RegisterPipe(HANDLE text, HANDLE cmd, HANDLE thread);
-  void RegisterProcess(DWORD pid);
+  void RegisterProcess(DWORD pid, HANDLE hostPipe);
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 
-  HANDLE GetCmdHandleByPID(DWORD pid);
+  HANDLE GetHostPipeByPID(DWORD pid);
 
   ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)
   { return (ConsoleCallback)_InterlockedExchange((long*)&console,(long)cf); }

@@ -213,7 +213,7 @@ IHFSERVICE bool IHFAPI DetachProcessById(DWORD processId)
 {
 	ITH_SYNC_HOOK;
 	DWORD command = HOST_COMMAND_DETACH;
-	return WriteFile(man->GetCmdHandleByPID(processId), &command, sizeof(command), nullptr, nullptr);
+	return WriteFile(man->GetHostPipeByPID(processId), &command, sizeof(command), nullptr, nullptr);
 }
 
 IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
@@ -238,7 +238,7 @@ IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)
 {
   ITH_SYNC_HOOK;
 
-  HANDLE hCmd = man->GetCmdHandleByPID(pid);
+  HANDLE hCmd = man->GetHostPipeByPID(pid);
   if (hCmd == 0)
     return -1;
 
@@ -269,7 +269,7 @@ IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr)
   ITH_SYNC_HOOK;
 
   HANDLE hRemoved,hCmd;
-  hCmd = GetCmdHandleByPID(pid);
+  hCmd = man->GetHostPipeByPID(pid);
   if (hCmd == 0)
     return -1;
   hRemoved = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
