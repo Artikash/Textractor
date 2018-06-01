@@ -54,5 +54,5 @@ Before compiling *NextHooker*, You should get CMake, [Windows Driver Kit 7.1](ht
 The GUI links to vnrhost.dll (created from the texthook folder) which injects vnrhook.dll (created from the vnrhook folder) into the target process and connects to it via 2 pipe files.<br>
 vnrhost writes to hostPipe, vnrhook writes to hookPipe (duh?)<br>
 vnrhook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
-Additional information about hooks is shared through a section object that is mapped to a reference to the Hook class.<br>
+Additional information about hooks is shared through a file view (a.k.a. section object) that is mapped to a reference to the Hook class.<br>
 The text that vnrhost receives through the pipe is then processed a little before being dispatched back to the GUI and displayed.
