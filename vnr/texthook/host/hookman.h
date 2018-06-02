@@ -4,7 +4,7 @@
 // 8/23/2013 jichi
 // Branch: ITH/HookManager.h, rev 133
 
-#include "host/avl_p.h"
+#include "config.h"
 #include "host/textthread.h"
 #include "winmutex/winmutex.h"
 #include <unordered_map>
@@ -29,17 +29,6 @@ struct ProcessRecord {
   HANDLE hostPipe;
 };
 
-class ThreadTable : public MyVector<TextThread *, 0x40>
-{
-public:
-  virtual void SetThread(DWORD number, TextThread *ptr);
-  virtual TextThread *FindThread(DWORD number);
-};
-
-struct IHFSERVICE TCmp { char operator()(const ThreadParameter *t1, const ThreadParameter *t2); };
-struct IHFSERVICE TCpy { void operator()(ThreadParameter *t1, const ThreadParameter *t2); };
-struct IHFSERVICE TLen { int operator()(const ThreadParameter *t); };
-
 typedef DWORD (*ProcessEventCallback)(DWORD pid);
 
 struct ThreadParameterHasher
@@ -50,7 +39,7 @@ struct ThreadParameterHasher
 	}
 };
 
-class IHFSERVICE HookManager : public AVLTree<ThreadParameter, DWORD, TCmp, TCpy, TLen>
+class IHFSERVICE HookManager
 {
 public:
   HookManager();
@@ -58,7 +47,6 @@ public:
   // jichi 12/26/2013: remove virtual modifiers
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
-  void RemoveSingleThread(DWORD number);
   //void LockHookman();
   //void UnlockHookman();
   void ResetRepeatStatus();
@@ -71,7 +59,6 @@ public:
   void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len, bool space);
   void RemoveProcessContext(DWORD pid); // private
   void RemoveSingleHook(DWORD pid, DWORD addr);
-  void RegisterThread(TextThread*, DWORD); // private
   void RegisterProcess(DWORD pid, HANDLE hostPipe);
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
@@ -123,7 +110,6 @@ private:
                        detach,
                        hook;
   DWORD current_pid;
-  ThreadTable *thread_table;
   HANDLE destroy_event;
   ProcessRecord record[MAX_REGISTER + 1];
   HANDLE text_pipes[MAX_REGISTER + 1],
@@ -132,9 +118,6 @@ private:
   WORD register_count,
        new_thread_number;
 
-  // jichi 1/16/2014: Stop adding new threads when full
-  bool IsFull() const; // { return new_thread_number >= MAX_HOOK; }
-  bool IsEmpty() const { return !new_thread_number; }
   void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid);
 };
 

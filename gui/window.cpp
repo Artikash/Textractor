@@ -325,14 +325,7 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 	else if (h == hwndClear)
 	{
-		WCHAR pwcEntry[128] = {};
-		DWORD dwId = ComboBox_GetCurSel(hwndCombo);
-		int len = ComboBox_GetLBText(hwndCombo, dwId, pwcEntry);
-		dwId = std::stoul(pwcEntry, NULL, 16);
-		if (dwId == 0)
-			man->ClearCurrent();
-		else
-			man->RemoveSingleThread(dwId);
+		man->ClearCurrent();
 	}
 	else if (h == hwndTop)
 	{

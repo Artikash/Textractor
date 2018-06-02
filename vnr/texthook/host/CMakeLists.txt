@@ -7,7 +7,6 @@
 # DEFINES += _CRT_NON_CONFORMING_SWPRINTFS
 
 set(vnrhost_src
-  avl_p.h
   config.h
   hookman.h
   host.h
