@@ -325,14 +325,7 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 	else if (h == hwndClear)
 	{
-		WCHAR pwcEntry[128] = {};
-		DWORD dwId = ComboBox_GetCurSel(hwndCombo);
-		int len = ComboBox_GetLBText(hwndCombo, dwId, pwcEntry);
-		dwId = std::stoul(pwcEntry, NULL, 16);
-		if (dwId == 0)
-			man->ClearCurrent();
-		else
-			man->RemoveSingleThread(dwId);
+		man->ClearCurrent();
 	}
 	else if (h == hwndTop)
 	{
@@ -364,16 +357,6 @@ void ClickButton(HWND hWnd, HWND h)
 			SaveProcessProfile(pid);
 		}
 		pfman->SaveProfiles();
-	}
-	else if (h == hwndRemoveLink)
-	{
-		WCHAR str[32];
-		if (GetWindowText(hwndCombo, str, 32))
-		{
-			DWORD from = std::stoul(str, NULL, 16);
-			if (from != 0)
-				Host_UnLink(from);
-		}
 	}
 	else if (h == hwndRemoveHook)
 	{
@@ -508,8 +491,6 @@ std::wstring GetEntryString(TextThread& thread)
 std::wstring CreateEntryWithLink(TextThread& thread, std::wstring& entry)
 {
 	std::wstring entryWithLink = entry;
-	if (thread.Link())
-		entryWithLink += L"->" + ToHexString(thread.LinkNumber());
 	if (thread.PID() == 0)
 		entryWithLink += L"ConsoleOutput";
 	HookParam hp = {};
@@ -609,7 +590,6 @@ DWORD AddRemoveLink(TextThread* thread)
 }
 
 bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
-void AddLinksToHookManager(const Profile* pf, size_t thread_index, const TextThread* thread);
 
 DWORD ThreadCreate(TextThread* thread)
 {
@@ -631,7 +611,6 @@ DWORD ThreadCreate(TextThread* thread)
 	{
 		(*thread_profile)->HookManagerIndex() = thread->Number();
 		auto thread_index = thread_profile - pf->Threads().begin();
-		AddLinksToHookManager(pf, thread_index, thread);
 		if (pf->IsThreadSelected(thread_profile))
 			ThreadReset(thread);
 	}
@@ -653,25 +632,6 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 	}
 	ReleaseMutex(pr.hookman_mutex);
 	return res;
-}
-
-void AddLinksToHookManager(const Profile* pf, size_t thread_index, const TextThread* thread)
-{
-	for (auto lp = pf->Links().begin(); lp != pf->Links().end(); ++lp)
-	{
-		if ((*lp)->FromIndex() == thread_index)
-		{
-			WORD to_index = pf->Threads()[(*lp)->ToIndex()]->HookManagerIndex();
-			if (to_index != 0)
-				man->AddLink(thread->Number(), to_index);
-		}
-		if ((*lp)->ToIndex() == thread_index)
-		{
-			WORD from_index = pf->Threads()[(*lp)->FromIndex()]->HookManagerIndex();
-			if (from_index != 0)
-				man->AddLink(from_index, thread->Number());
-		}
-	}
 }
 
 DWORD ThreadRemove(TextThread* thread)
@@ -706,11 +666,6 @@ DWORD RemoveProcessList(DWORD pid)
 		if (i == j)
 			ComboBox_SetCurSel(hwndProcessComboBox, 0);
 	}
-	return 0;
-}
-
-DWORD RefreshProfileOnNewHook(DWORD pid)
-{
 	return 0;
 }
 
@@ -750,7 +705,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			AddToCombo(*console, false);
 			man->RegisterProcessAttachCallback(RegisterProcessList);
 			man->RegisterProcessDetachCallback(RemoveProcessList);
-			man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook);
+			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
 			man->RegisterConsoleCallback(ConsoleOutput);
 			StartHost();

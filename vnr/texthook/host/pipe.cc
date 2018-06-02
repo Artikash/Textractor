@@ -74,20 +74,26 @@ CRITICAL_SECTION detachCs; // jichi 9/27/2013: also used in main
 //HANDLE hDetachEvent;
 extern HANDLE pipeExistsEvent;
 
+struct Pipes
+{
+	HANDLE hookPipe;
+	HANDLE hostPipe;
+};
+
 void CreateNewPipe()
 {
-	HANDLE hookPipe, hostPipe, TextReceivingThread;
-
-	hookPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
-	hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
-	TextReceivingThread = CreateThread(nullptr, 0, TextReceiver, hookPipe, 0, nullptr);
-	man->RegisterPipe(hookPipe, hostPipe, TextReceivingThread);
+	CreateThread(nullptr, 0, TextReceiver, new Pipes
+		{
+			CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL),
+			CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL)
+		},
+	0, nullptr);
 }
 
 DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 {
-	HANDLE hookPipe = (HANDLE)lpThreadParameter;
-	ConnectNamedPipe(hookPipe, nullptr);
+	Pipes* pipes = (Pipes*)lpThreadParameter;
+	ConnectNamedPipe(pipes->hookPipe, nullptr);
 
 	BYTE* buffer = new BYTE[PIPE_BUFFER_SIZE];
 	DWORD bytesRead, processId;
@@ -98,8 +104,8 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	//  return 0;
 	//}
 
-	ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-	man->RegisterProcess(processId);
+	ReadFile(pipes->hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
+	man->RegisterProcess(processId, pipes->hostPipe);
 
 	// jichi 9/27/2013: why recursion?
 	// Artikash 5/20/2018: To create a new pipe for another process
@@ -107,7 +113,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 	while (::running)
 	{
-		if (!ReadFile(hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
+		if (!ReadFile(pipes->hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
 		{
 			break;
 		}
@@ -131,14 +137,8 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 		{
 			switch (commandType) 
 			{
-			case HOST_NOTIFICATION_NEWHOOK:
-			{
-				static long lock;
-				while (InterlockedExchange(&lock, 1) == 1);
-				man->ProcessNewHook()(processId);
-				lock = 0;
-			}
-			break;
+			case HOST_NOTIFICATION_NEWHOOK: // Artikash 5/30/2018: Useless for now, but could be handy to implement something later
+				break;
 			case HOST_NOTIFICATION_TEXT:
 				USES_CONVERSION;
 				man->AddConsoleOutput(A2W((LPCSTR)(buffer + 8)));
@@ -167,12 +167,13 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 	EnterCriticalSection(&detachCs);
 
-	DisconnectNamedPipe(hookPipe);
-	DisconnectNamedPipe(man->GetCmdHandleByPID(processId));
+	DisconnectNamedPipe(pipes->hookPipe);
+	DisconnectNamedPipe(pipes->hostPipe);
 	man->UnRegisterProcess(processId);
 
 	LeaveCriticalSection(&detachCs);
 	delete[] buffer;
+	delete pipes;
 
 	return 0;
 }

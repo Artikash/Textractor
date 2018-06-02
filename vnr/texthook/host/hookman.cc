@@ -60,7 +60,7 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
   if (!pr)
     return 0;
   NtWaitForSingleObject(pr->hookman_mutex, 0, 0);
-  Hook *hks = (Hook *)pr->hookman_map;
+  const Hook *hks = (const Hook *)pr->hookman_map;
   for (int i = 0; i < MAX_HOOK; i++)
     if (hks[i].Address() == hook_addr) {
       len = hks[i].NameLength();
@@ -79,75 +79,11 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
   return len;
 }
 
-void ThreadTable::SetThread(DWORD num, TextThread *ptr)
+// Artikash 5/31/2018: required for unordered_map to work with struct key
+bool operator==(const ThreadParameter& one, const ThreadParameter& two)
 {
-  int number = num;
-  if (number >= size) {
-    while (number >= size)
-      size <<= 1;
-    TextThread **temp;
-    //if (size < 0x10000) {
-      temp = new TextThread*[size];
-      if (size > used)
-        ::memset(temp, 0, (size - used) * sizeof(TextThread *)); // jichi 9/21/2013: zero memory
-      memcpy(temp, storage, used * sizeof(TextThread *));
-    //}
-    delete[] storage;
-    storage = temp;
-  }
-  storage[number] = ptr;
-  if (ptr == nullptr) {
-    if (number == used - 1)
-      while (storage[used - 1] == 0)
-        used--;
-  } else if (number >= used)
-    used = number + 1;
+	return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl;
 }
-
-TextThread *ThreadTable::FindThread(DWORD number)
-{ return number <= (DWORD)used ? storage[number] : nullptr; }
-
-static const char sse_table_eq[0x100]={
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, //1, compare 2
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,-1,-1, 1,1,1,1, -1,-1,-1,-1, 1,1,1,1, //3, compare 3
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, //1, compare 2
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,-1,-1, -1,-1,-1,-1, 1,1,1,1, 1,1,1,1, //7, compare 4
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, //1, compare 2
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,-1,-1, 1,1,1,1, -1,-1,-1,-1, 1,1,1,1, //3, compare 3
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, -1,-1,1,1, //1, compare 2
-  -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, -1,1,-1,1, //0, compare 1
-  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 //f, equal
-};
-
-char TCmp::operator()(const ThreadParameter* t1, const ThreadParameter* t2)
-  //SSE speed up. Compare four integers in const time without branching.
-  //The AVL tree branching operation needs 2 bit of information.
-  //One bit for equality and one bit for "less than" or "greater than".
-
-{
-  union{__m128 m0;__m128i i0;};
-  union{__m128 m1;__m128i i1;};
-  union{__m128 m2;__m128i i2;};
-  int k0,k1;
-  i1 = _mm_loadu_si128((const __m128i*)t1);
-  i2 = _mm_loadu_si128((const __m128i*)t2);
-  i0 = _mm_cmpgt_epi32(i1,i2);
-  k0 = _mm_movemask_ps(m0);
-  i1 = _mm_cmpeq_epi32(i1,i2);
-  k1 = _mm_movemask_ps(m1);
-  return sse_table_eq[k1*16+k0];
-}
-void TCpy::operator()(ThreadParameter* t1, const ThreadParameter* t2)
-{ memcpy(t1,t2,sizeof(ThreadParameter)); }
-
-int TLen::operator()(const ThreadParameter* t) { return 0; }
 
 #define NAMED_PIPE_DISCONNECT 1
 //Class member of HookManger
@@ -162,65 +98,40 @@ HookManager::HookManager() :
   , detach(nullptr)
   , hook(nullptr)
   , current_pid(0)
-  , thread_table(nullptr)
-  , destroy_event(nullptr)
-  , register_count(0)
   , new_thread_number(0)
+	, threadTable()
+	, processRecordsByIds()
 {
-  // jichi 9/21/2013: zero memory
-  ::memset(record, 0, sizeof(record));
-  ::memset(text_pipes, 0, sizeof(text_pipes));
-  ::memset(cmd_pipes, 0, sizeof(cmd_pipes));
-  ::memset(recv_threads, 0, sizeof(recv_threads));
-
-  head.key = new ThreadParameter;
-  head.key->pid = 0;
-  head.key->hook = -1;
-  head.key->retn = -1;
-  head.key->spl = -1;
-  head.data = 0;
-  thread_table = new ThreadTable; // jichi 9/26/2013: zero memory in ThreadTable
-
-  TextThread *entry = new TextThread(0, -1,-1,-1, new_thread_number++);  // jichi 9/26/2013: zero memory in TextThread
-  thread_table->SetThread(0, entry);
-  SetCurrent(entry);
-  entry->Status() |= USING_UNICODE;
-  //texts->SetUnicode(true);
-  //entry->AddToCombo();
-  //entry->ComboSelectCurrent();
-
-  //if (background==0) entry->AddToStore((BYTE*)BackgroundMsg,wcslen(BackgroundMsg)<<1,0,1);
-
-  //InitializeCriticalSection(&hmcs);
-  destroy_event = IthCreateEvent(0, 0, 0);
+  TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread(0, -1, -1, -1, new_thread_number++);
+  consoleTextThread->Status() |= USING_UNICODE;
+  SetCurrent(consoleTextThread);
 }
 
 HookManager::~HookManager()
 {
+	// Artikash 5/31/2018: This is called when the program terminates, so Windows should automatically free all these resources.....right?
   //LARGE_INTEGER timeout={-1000*1000,-1};
   //IthBreak();
-  NtWaitForSingleObject(destroy_event, 0, 0);
-  NtClose(destroy_event);
-  NtClose(cmd_pipes[0]);
-  NtClose(recv_threads[0]);
-  delete thread_table;
-  delete head.key;
+  //NtWaitForSingleObject(destroy_event, 0, 0);
+  //NtClose(destroy_event);
+  //NtClose(cmd_pipes[0]);
+  //NtClose(recv_threads[0]);
+  //delete thread_table;
+  //delete head.key;
   //DeleteCriticalSection(&hmcs);
 }
 
-TextThread *HookManager::FindSingle(DWORD pid, DWORD hook, DWORD retn, DWORD split)
-{
-  if (pid == 0)
-    return thread_table->FindThread(0);
-  ThreadParameter tp = {pid, hook, retn, split};
-  TreeNode<ThreadParameter *,DWORD> *node = Search(&tp);
-  return node ? thread_table->FindThread(node->data) : nullptr;
-}
-
 TextThread *HookManager::FindSingle(DWORD number)
-{ return (number & 0x80008000) ? nullptr : thread_table->FindThread(number); }
-
-void HookManager::DetachProcess(DWORD pid) {}
+{ 
+	for (auto i : threadTable)
+	{
+		if (i.second->Number() == number)
+		{
+			return i.second;
+		}
+	}
+	return nullptr;
+}
 
 void HookManager::SetCurrent(TextThread *it)
 {
@@ -242,201 +153,70 @@ void HookManager::SelectCurrent(DWORD num)
 void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 {
   HM_LOCK;
-  //ConsoleOutput("vnrhost:RemoveSingleHook: lock");
-  //EnterCriticalSection(&hmcs);
-  DWORD max = thread_table->Used();
-  bool flag = false;
-  for (DWORD i = 1; i <= max; i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->PID() == pid && it->Addr() == addr) {
-        flag |= (it == current);
-        //flag|=it->RemoveFromCombo();
-        thread_table->SetThread(i, 0);
-        if (it->Number() < new_thread_number)
-          new_thread_number = it->Number();
-        Delete(it->GetThreadParameter());
-        if (remove)
-          remove(it);
-        delete it;
-      }
-
-  for (DWORD i = 0; i <= max; i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->Link() && thread_table->FindThread(it->LinkNumber()) == nullptr) {
-        it->LinkNumber() = -1;
-        it->Link() = nullptr;
-      }
-
-  if (flag) {
-    current = nullptr;
-    DWORD number = head.Left ? head.Left->data : 0;
-    SetCurrent(thread_table->FindThread(number));
-    if (reset && current)
-      reset(current);
-    //it->ResetEditText();
+  std::vector<ThreadParameter> removedThreads;
+  for (auto i : threadTable)
+  {
+	  if (i.second->PID() == pid && i.second->Addr() == addr)
+	  {
+		  if (remove)
+		  {
+			  remove(i.second);
+		  }
+		  delete i.second;
+		  removedThreads.push_back(i.first);
+	  }
   }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveSingleHook: unlock");
-}
-void HookManager::RemoveSingleThread(DWORD number)
-{
-  if (number == 0)
-    return;
-  HM_LOCK;
-  //ConsoleOutput("vnrhost:RemoveSingleThread: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *it = thread_table->FindThread(number)) {
-    thread_table->SetThread(number, 0);
-    Delete(it->GetThreadParameter());
-    if (remove)
-      remove(it);
-    bool flag = (it == current);
-    if (it->Number() < new_thread_number)
-      new_thread_number = it->Number();
-    delete it;
-    for (int i = 0; i <= thread_table->Used(); i++)
-      if (TextThread *t = thread_table->FindThread(i))
-        if (t->LinkNumber() == number) {
-          t->Link() = 0;
-          t->LinkNumber() = -1;
-        }
-
-    if (flag) {
-      current = nullptr;
-      number = head.Left ? head.Left->data : 0;
-      SetCurrent(thread_table->FindThread(number));
-      if (reset && current)
-        reset(current);
-      //it->ResetEditText();
-    }
+  for (auto i : removedThreads)
+  {
+	  threadTable.erase(i);
   }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveSingleThread: unlock");
+  SelectCurrent(0);
 }
 
 void HookManager::RemoveProcessContext(DWORD pid)
 {
-  HM_LOCK;
-  bool flag = false;
-  //ConsoleOutput("vnrhost:RemoveProcessContext: lock");
-  //EnterCriticalSection(&hmcs);
-  for (int i = 1; i < thread_table->Used(); i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      if (it->PID() == pid) {
-        Delete(it->GetThreadParameter());
-        //if (false == Delete(it->GetThreadParameter())) {
-        //  // jichi 11/26/2013: Remove debugging instructions
-        //  //if (debug)
-        //  //  __asm int 3
-        //}
-        flag |= (it == current);
-        //flag|=it->RemoveFromCombo();
-        if (it->Number() <new_thread_number)
-          new_thread_number = it->Number();
-        thread_table->SetThread(i,0);
-        if (remove)
-          remove(it);
-        delete it;
-      }
-
-  for (int i = 0; i < thread_table->Used(); i++)
-    if (TextThread *it=thread_table->FindThread(i))
-      if (it->Link() && thread_table->FindThread(it->LinkNumber()) == nullptr) {
-        it->LinkNumber()=-1;
-        it->Link() = nullptr;
-      }
-
-  if (flag) {
-    current = nullptr;
-    DWORD number = head.Left ? head.Left->data : 0;
-    SetCurrent(thread_table->FindThread(number));
-    if (reset && current)
-      reset(current);
-    //if (it) it->ResetEditText();
-  }
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RemoveProcessContext: unlock");
+	HM_LOCK;
+	std::vector<ThreadParameter> removedThreads;
+	for (auto i : threadTable)
+	{
+		if (i.second->PID() == pid)
+		{
+			if (remove)
+			{
+				remove(i.second);
+			}
+			delete i.second;
+			removedThreads.push_back(i.first);
+		}
+	}
+	for (auto i : removedThreads)
+	{
+		threadTable.erase(i);
+	}
+	SelectCurrent(0);
 }
-void HookManager::RegisterThread(TextThread* it, DWORD num)
-{ thread_table->SetThread(num, it); }
 
-void HookManager::RegisterPipe(HANDLE text, HANDLE cmd, HANDLE thread)
-{
-  text_pipes[register_count] = text;
-  cmd_pipes[register_count] = cmd;
-  recv_threads[register_count] = thread;
-  register_count++;
-  if (register_count == 1)
-    NtSetEvent(destroy_event, 0);
-  else
-    NtClearEvent(destroy_event);
-}
-void HookManager::RegisterProcess(DWORD pid)
+void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
 {
   HM_LOCK;
-  wchar_t str[0x40],
-          path[MAX_PATH];
-  //pid_map->Set(pid>>2);
-  //ConsoleOutput("vnrhost:RegisterProcess: lock");
-  //EnterCriticalSection(&hmcs);
-  record[register_count - 1].pid_register = pid;
-  //record[register_count - 1].engine_register = engine;
-  swprintf(str, ITH_SECTION_ L"%d", pid);
-  HANDLE hSection = IthCreateSection(str, HOOK_SECTION_SIZE, PAGE_READONLY);
-  LPVOID map = nullptr;
-  //DWORD map_size = 0x1000;
-  DWORD map_size = HOOK_SECTION_SIZE / 2; // jichi 1/16/2015: Changed to half to hook section size
-  //if (::ith_has_section)
-  NtMapViewOfSection(hSection, NtCurrentProcess(),
-      &map, 0, map_size, 0, &map_size, ViewUnmap, 0,
-      PAGE_READONLY);
 
-  record[register_count - 1].hookman_section = hSection;
-  record[register_count - 1].hookman_map = map;
+  ProcessRecord* record = processRecordsByIds[pid] = new ProcessRecord;
+  record->hostPipe = hostPipe;
+  record->hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (std::wstring(ITH_SECTION_) + std::to_wstring(pid)).c_str());
+  record->hookman_map = MapViewOfFile(record->hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
+  record->process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+  record->hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (std::wstring(ITH_HOOKMAN_MUTEX_) + std::to_wstring(pid)).c_str());
+  //if (NT_SUCCESS(NtOpenProcess(&hProc,
+  //    PROCESS_QUERY_INFORMATION|
+  //    PROCESS_CREATE_THREAD|
+  //    PROCESS_VM_READ|
+  //    PROCESS_VM_WRITE|
+  //    PROCESS_VM_OPERATION,
+  //    &oa,&id)))
 
-  HANDLE hProc;
-  CLIENT_ID id;
-  id.UniqueProcess = pid;
-  id.UniqueThread = 0;
-  OBJECT_ATTRIBUTES oa = {};
-  oa.uLength = sizeof(oa);
-  if (NT_SUCCESS(NtOpenProcess(&hProc,
-      PROCESS_QUERY_INFORMATION|
-      PROCESS_CREATE_THREAD|
-      PROCESS_VM_READ|
-      PROCESS_VM_WRITE|
-      PROCESS_VM_OPERATION,
-      &oa,&id)))
-    record[register_count - 1].process_handle = hProc;
-  else {
-    DOUT("failed to open process");
-    //::man->AddConsoleOutput(ErrorOpenProcess);
-    //LeaveCriticalSection(&hmcs);
-    //ConsoleOutput("vnrhost:RegisterProcess: unlock");
-    return;
-  }
-
-  // jichi 9/27/2013: The hook man should be consistent with the one defined in vnrcli
-  //Hook *h = (Hook *)map;
-  //for (int i = 0; i < MAX_HOOK; i++)
-  //  if (!h[i].hook_name)
-  //    break;
-  //  else {
-  //    const Hook &hi = h[i];
-  //    wchar_t buffer[1000];
-  //    DWORD len = hi.NameLength();
-  //    NtReadVirtualMemory(hProc, hi.hook_name, buffer, len << 1, &len);
-  //    buffer[len] = 0;
-  //    ITH_MSG(buffer);
-  //  }
-
-  swprintf(str, ITH_HOOKMAN_MUTEX_ L"%d", pid);
-  record[register_count - 1].hookman_mutex = IthOpenMutex(str);
-  current_pid = pid;
   if (attach)
     attach(pid);
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:RegisterProcess: unlock");
+
 }
 
 void HookManager::UnRegisterProcess(DWORD pid)
@@ -445,42 +225,41 @@ void HookManager::UnRegisterProcess(DWORD pid)
   //ConsoleOutput("vnrhost:UnRegisterProcess: lock");
   //EnterCriticalSection(&hmcs);
 
-  int i;
-  for (i = 0; i < MAX_REGISTER; i++)
-    if(record[i].pid_register == pid)
-      break;
+  ProcessRecord pr = *processRecordsByIds[pid];
+  CloseHandle(pr.hookman_mutex);
+  UnmapViewOfFile(pr.hookman_map);
+  CloseHandle(pr.process_handle);
+  CloseHandle(pr.hookman_section);
+    //NtClose(text_pipes[i]);
+    //NtClose(cmd_pipes[i]);
+    //NtClose(recv_threads[i]);
+    //NtClose(record[i].hookman_mutex);
 
-  if (i < MAX_REGISTER) {
-    NtClose(text_pipes[i]);
-    NtClose(cmd_pipes[i]);
-    NtClose(recv_threads[i]);
-    NtClose(record[i].hookman_mutex);
+    ////if (::ith_has_section)
+    //NtUnmapViewOfSection(NtCurrentProcess(), record[i].hookman_map);
+    ////else
+    ////  delete[] record[i].hookman_map;
 
-    //if (::ith_has_section)
-    NtUnmapViewOfSection(NtCurrentProcess(), record[i].hookman_map);
-    //else
-    //  delete[] record[i].hookman_map;
+    //NtClose(record[i].process_handle);
+    //NtClose(record[i].hookman_section);
 
-    NtClose(record[i].process_handle);
-    NtClose(record[i].hookman_section);
-
-    for (; i < MAX_REGISTER; i++) {
-      record[i] = record[i+1];
-      text_pipes[i] = text_pipes[i+1];
-      cmd_pipes[i] = cmd_pipes[i+1];
-      recv_threads[i] = recv_threads[i+1];
-      if (text_pipes[i] == 0)
-        break;
-    }
-    register_count--;
-    if (current_pid == pid)
-      current_pid = register_count ? record[0].pid_register : 0;
+    //for (; i < MAX_REGISTER; i++) {
+    //  record[i] = record[i+1];
+    //  text_pipes[i] = text_pipes[i+1];
+    //  cmd_pipes[i] = cmd_pipes[i+1];
+    //  recv_threads[i] = recv_threads[i+1];
+    //  if (text_pipes[i] == 0)
+    //    break;
+    //}
+    //register_count--;
+    //if (current_pid == pid)
+    //  current_pid = register_count ? record[0].pid_register : 0;
     RemoveProcessContext(pid);
-  }
+  
   //pid_map->Clear(pid>>2);
 
-  if (register_count == 1)
-    NtSetEvent(destroy_event, 0);
+  //if (register_count == 1)
+  //  NtSetEvent(destroy_event, 0);
   //LeaveCriticalSection(&hmcs);
   //ConsoleOutput("vnrhost:UnRegisterProcess: unlock");
   if (detach)
@@ -511,75 +290,6 @@ void HookManager::UnRegisterProcess(DWORD pid)
 //  //swprintf(user_entry,L"UserHook%c",c);
 //}
 
-void HookManager::AddLink(WORD from, WORD to)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:AddLink: lock");
-  //EnterCriticalSection(&hmcs);
-  TextThread *from_thread = thread_table->FindThread(from),
-             *to_thread = thread_table->FindThread(to);
-  if (to_thread && from_thread) {
-    if (from_thread->GetThreadParameter()->pid != to_thread->GetThreadParameter()->pid)
-      DOUT("link to different process");
-    else if (from_thread->Link()==to_thread)
-      DOUT("link already exists");
-    else if (to_thread->CheckCycle(from_thread))
-      DOUT("cyclic link");
-    else {
-      from_thread->Link()=to_thread;
-      from_thread->LinkNumber()=to;
-      DOUT("thread linked");
-	  if (addRemoveLink)
-		  addRemoveLink(from_thread);
-      //WCHAR str[0x40];
-      //swprintf(str,FormatLink,from,to);
-      //AddConsoleOutput(str);
-    }
-  } else
-    DOUT("error link");
-  //else
-  //  AddConsoleOutput(ErrorLink);
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:AddLink: unlock");
-}
-void HookManager::UnLink(WORD from)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:UnLink: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *from_thread = thread_table->FindThread(from)) {
-    from_thread->Link() = nullptr;
-    from_thread->LinkNumber() = 0xffff;
-    DOUT("link deleted");
-	if (addRemoveLink)
-		addRemoveLink(from_thread);
-  }
-  //else // jichi 12/25/2013: This could happen when the game exist
-  //  ConsoleOutput("vnrhost:UnLink: thread does not exist");
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:UnLink: unlock");
-}
-void HookManager::UnLinkAll(WORD from)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:UnLinkAll: lock");
-  //EnterCriticalSection(&hmcs);
-  if (TextThread *from_thread = thread_table->FindThread(from)) {
-    from_thread->UnLinkAll();
-    DOUT("link deleted");
-  }
-  //else // jichi 12/25/2013: This could happen after the process exists
-  //  ConsoleOutput("vnrhost:UnLinkAll: thread not exist");
-    //AddConsoleOutput(L"Link deleted.");
-  //} else
-  //  AddConsoleOutput(L"Thread not exist.");
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:UnLinkAll: unlock");
-}
-
 void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len, bool space)
 {
   // jichi 20/27/2013: When PID is zero, the text comes from console, which I don't need
@@ -591,43 +301,23 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   //ConsoleOutput("vnrhost:DispatchText: lock");
   //EnterCriticalSection(&hmcs);
   TextThread *it;
-  //`try {
-    if (TreeNode<ThreadParameter *,DWORD> *in = Search(&tp)) {
-      DWORD number = in->data;
-      it = thread_table->FindThread(number);
-    } else if (IsFull()) { // jichi 1/16/2015: Skip adding threads when full
-      static bool once = true; // output only once
-      if (once) {
-        once = false;
-        DOUT("so many new threads, skip");
-      }
-      return;
-    } else { // New thread
-      Insert(&tp, new_thread_number);
-      it = new TextThread(pid, hook, retn, spl, new_thread_number);
-      RegisterThread(it, new_thread_number);
-      DOUT("found new thread");
-      char entstr[0x200];
-      it->GetEntryString(entstr);
-      DOUT(entstr);
-      while (thread_table->FindThread(++new_thread_number));
-      if (create)
-        create(it);
-    }
-    if (it)
-      it->AddText(text, len, false, space); // jichi 10/27/2013: new line is false
-    //LeaveCriticalSection(&hmcs);
-    //ConsoleOutput("vnrhost:DispatchText: unlock");
-  //} catch (...) {
-  //  // ignored
-  //}
+  if (!(it = threadTable[tp]))
+  {
+	  it = threadTable[tp] = new TextThread(pid, hook, retn, spl, new_thread_number++);
+	  if (create)
+	  {
+		  create(it);
+	  }
+  }
+  it->AddText(text, len, false, space);
 }
 
 void HookManager::AddConsoleOutput(LPCWSTR text)
 {
-  if (text) {
-    int len = wcslen(text) << 1;
-    TextThread *console = thread_table->FindThread(0);
+  if (text) 
+  {
+    int len = wcslen(text) * 2;
+	TextThread *console = threadTable[{0, -1UL, -1UL, -1UL}];
     //EnterCriticalSection(&hmcs);
     console->AddText((BYTE*)text,len,false,true);
     console->AddText((BYTE*)L"\r\n",4,false,true);
@@ -635,25 +325,6 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
   }
 }
 
-void HookManager::ClearText(DWORD pid, DWORD hook, DWORD retn, DWORD spl)
-{
-  HM_LOCK;
-  //bool flag=false;
-  //ConsoleOutput("vnrhost:ClearText: lock");
-  //EnterCriticalSection(&hmcs);
-  ThreadParameter tp = {pid, hook, retn, spl};
-  if (TreeNode<ThreadParameter *, DWORD> *in = Search(&tp))
-    if (TextThread *it = thread_table->FindThread(in->data)) {
-      it->Reset();
-      //SetCurrent(it);
-      if (reset)
-        reset(it);
-      //it->ResetEditText();
-    }
-
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:ClearText: unlock");
-}
 void HookManager::ClearCurrent()
 {
   HM_LOCK;
@@ -673,9 +344,10 @@ void HookManager::ResetRepeatStatus()
   HM_LOCK;
   //ConsoleOutput("vnrhost:ResetRepeatStatus: lock");
   //EnterCriticalSection(&hmcs);
-  for (int i = 1; i < thread_table->Used(); i++)
-    if (TextThread *it = thread_table->FindThread(i))
-      it->ResetRepeatStatus();
+  for (auto i : threadTable)
+  {
+	  i.second->ResetRepeatStatus();
+  }
 
   //LeaveCriticalSection(&hmcs);
   //ConsoleOutput("vnrhost:ResetRepeatStatus: unlock");
@@ -698,25 +370,17 @@ ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
 {
   HM_LOCK;
   //EnterCriticalSection(&hmcs);
-  for (int i = 0; i < MAX_REGISTER; i++)
-    if (record[i].pid_register == pid)
-      return record + i;
-  return nullptr;
+  return processRecordsByIds[pid];
   //ProcessRecord *pr = i < MAX_REGISTER ? record + i : nullptr;
   //LeaveCriticalSection(&hmcs);
   //return pr;
 }
 
-DWORD HookManager::GetCurrentPID() { return current_pid; }
-
-HANDLE HookManager::GetCmdHandleByPID(DWORD pid)
+HANDLE HookManager::GetHostPipeByPID(DWORD pid)
 {
   HM_LOCK;
   //EnterCriticalSection(&hmcs);
-  for (int i = 0; i < MAX_REGISTER; i++)
-    if (record[i].pid_register == pid)
-      return cmd_pipes[i];
-  return nullptr;
+  return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
   //HANDLE h = i < MAX_REGISTER ? cmd_pipes[i] : 0;
   //LeaveCriticalSection(&hmcs);
   //return h;
@@ -733,10 +397,6 @@ MK_BASIC_TYPE(LPVOID)
 //    hash = ((hash>>7)|(hash<<25)) + *module;
 //  return hash;
 //}
-
-DWORD  GetCurrentPID() { return ::man->GetCurrentPID(); }
-
-HANDLE  GetCmdHandleByPID(DWORD pid) { return ::man->GetCmdHandleByPID(pid); }
 
 //void AddLink(WORD from, WORD to) { ::man->AddLink(from, to); }
 
@@ -811,9 +471,6 @@ void GetCode(const HookParam &hp, LPWSTR buffer, DWORD pid)
     ptr += swprintf(ptr, L"@%X", hp.address);
 }
 
-// jichi 1/16/2015
-bool HookManager::IsFull() const { return new_thread_number >= MAX_HOOK; }
-
 void AddHooksToProfile(Profile& pf, const ProcessRecord& pr);
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread);
 void MakeHookRelative(const ProcessRecord& pr, HookParam& hp);
@@ -869,16 +526,7 @@ void MakeHookRelative(const ProcessRecord& pr, HookParam& hp)
 void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid)
 {
 	HM_LOCK;
-	ThreadTable* table = Table();
-	for (int i = 0; i < table->Used(); ++i)
-	{
-		TextThread* tt = table->FindThread(i);
-		if (tt == NULL || tt->GetThreadParameter()->pid != pid)
-			continue;
-		//if (tt->Status() & CURRENT_SELECT || tt->Link() || tt->GetComment())
-		if (tt->Status() & CURRENT_SELECT || tt->Link())
-			AddThreadToProfile(pf, pr, tt);
-	}
+	AddThreadToProfile(pf, pr, current);
 }
 
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread)
@@ -896,12 +544,6 @@ DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* threa
 		WORD iw = thread_profile_index & 0xFFFF;
 		if (thread->Status() & CURRENT_SELECT)
 			pf.SelectedIndex() = iw;
-		if (thread->Link())
-		{
-			WORD to_index = AddThreadToProfile(pf, pr, thread->Link()) & 0xFFFF;
-			if (iw >= 0)
-				pf.AddLink(link_ptr(new LinkProfile(iw, to_index)));
-		}
 	}
 	return thread_profile_index; // in case more than one thread links to the same thread
 }

@@ -468,29 +468,6 @@ void TextThread::AddText(const BYTE *con, int len, bool new_line, bool space)
       sentence_length = 0;
     } else {
       SetNewLineTimer();
-      if (link) {
-        const BYTE *send = con;
-        int l = len;
-        if (status & USING_UNICODE) { // Although unlikely, a thread and its link may have different encoding.
-          if ((link->Status() & USING_UNICODE) == 0) {
-            send = new BYTE[l];
-            //::memset(send, 0, l); // jichi 9/26/2013: zero memory
-            l = WC_MB((LPWSTR)con, (char *)send);
-          }
-          link->AddTextDirect(send, l, space);
-        } else {
-          if (link->Status() & USING_UNICODE) {
-            size_t sz = len * 2 + 2;
-            send = new BYTE[sz];
-            //::memset(send, 0, sz); // jichi 9/26/2013: zero memory
-            l = MB_WC((char *)con, (LPWSTR)send) << 1;
-          }
-          link->AddTextDirect(send, l, space);
-        }
-        link->SetNewLineTimer();
-        if (send != con)
-          delete[] send;
-      }
       sentence_length += len;
     }
 
@@ -514,29 +491,6 @@ void TextThread::AddTextDirect(const BYTE* con, int len, bool space) // Add to s
   if (status & BUFF_NEWLINE)
     AddLineBreak();
   //SetNewLineTimer();
-  if (link) {
-    const BYTE *send = con;
-    int l = len;
-    if (status & USING_UNICODE) {
-      if ((link->Status()&USING_UNICODE) == 0) {
-        send = new BYTE[l];
-        //::memset(send, 0, l); // jichi 9/26/2013: zero memory
-        l = WC_MB((LPWSTR)con,(char*)send);
-      }
-      link->AddText(send, l, false, space); // new_line is false
-    } else {
-      if (link->Status()&USING_UNICODE) {
-        size_t sz = len * 2 + 2;
-        send = new BYTE[sz];
-        //::memset(send, 0, sz); // jichi 9/26/2013: zero memory
-        l = MB_WC((char *)con, (LPWSTR)send) << 1;
-      }
-      link->AddText(send, l, false, space); // new_line is false
-    }
-    link->SetNewLineTimer();
-    if (send != con)
-      delete[] send;
-  }
   sentence_length += len;
 
   BYTE *data = const_cast<BYTE *>(con); // jichi 10/27/2013: TODO: Figure out where con is modified
@@ -723,12 +677,6 @@ void TextThread::DispatchLastSentence()
 
 void TextThread::SetNewLineFlag() { status |= BUFF_NEWLINE; }
 
-bool TextThread::CheckCycle(TextThread* start)
-{
-  if (link==start||this==start) return true;
-  if (link==0) return false;
-  return link->CheckCycle(start);
-}
 void TextThread::SetNewLineTimer()
 {
   if (thread_number == 0)
@@ -764,12 +712,6 @@ DWORD TextThread::GetThreadString(LPSTR str, DWORD max)
   }
 
   return len;
-}
-void TextThread::UnLinkAll()
-{
-  if (link) link->UnLinkAll();
-  link = 0;
-  link_number = -1;
 }
 
 // EOF
