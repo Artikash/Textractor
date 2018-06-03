@@ -230,6 +230,7 @@ void HookManager::UnRegisterProcess(DWORD pid)
   UnmapViewOfFile(pr.hookman_map);
   CloseHandle(pr.process_handle);
   CloseHandle(pr.hookman_section);
+  processRecordsByIds.erase(pid);
     //NtClose(text_pipes[i]);
     //NtClose(cmd_pipes[i]);
     //NtClose(recv_threads[i]);
