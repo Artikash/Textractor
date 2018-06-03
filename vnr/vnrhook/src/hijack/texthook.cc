@@ -357,7 +357,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
     hp.filter_fun = NoAsciiFilter;
 
   // jichi 10/24/2014: Skip GDI functions 
-  // Artikash 6/3/2018: why??
+  // Artikash 6/3/2018: ^ why??
   // Artikash 6/3/2018: Reenable GDI functions
   //if (!::gdi_hook_enabled_ && ::IsGDIFunction((LPCVOID)hp.address))
   //  return 0;
