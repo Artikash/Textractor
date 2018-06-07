@@ -44,30 +44,15 @@ class TextThread : public MyVector<BYTE, 0x200>
 public:
   TextThread(DWORD pid, DWORD hook, DWORD retn, DWORD spl, WORD num);
   ~TextThread();
-  //virtual void CopyLastSentence(LPWSTR str);
-  //virtual void SetComment(LPWSTR);
-  //virtual void ExportTextToFile(LPWSTR filename);
 
-  virtual DWORD GetThreadString(LPSTR str, DWORD max);
   virtual DWORD GetEntryString(LPSTR str, DWORD max = 0x200);
 
   void Reset();
   void AddText(const BYTE *con,int len, bool new_line, bool space); // jichi 10/27/2013: add const; remove console; add space
   void RemoveSingleRepeatAuto(const BYTE *con, int &len); // jichi 10/27/2013: add const
-  void RemoveSingleRepeatForce(BYTE *con, int &len);
-  void RemoveCyclicRepeat(BYTE *&con, int &len);
   void ResetRepeatStatus();
   void AddLineBreak();
-  //void ResetEditText();
-  void ComboSelectCurrent();
-  void UnLinkAll();
   void DispatchLastSentence();
-
-  //void AdjustPrevRepeat(DWORD len);
-  //void PrevRepeatLength(DWORD &len);
-
-  //bool AddToCombo();
-  bool RemoveFromCombo();
 
   void SetNewLineFlag();
   void SetNewLineTimer();
@@ -78,9 +63,6 @@ public:
   DWORD Addr() const {return tp.hook; }
   DWORD &Status() { return status; }
   WORD Number() const { return thread_number; }
-  WORD &Last() { return last; }
-  WORD &LinkNumber() { return link_number; }
-  UINT_PTR &Timer() { return timer; }
   ThreadParameter *GetThreadParameter() { return &tp; }
   //LPCWSTR GetComment() { return comment; }
 
@@ -99,9 +81,6 @@ public:
   void SetRepeatFlag() { status |= CYCLIC_REPEAT; }
   void ClearNewLineFlag() { status &= ~BUFF_NEWLINE; }
   void ClearRepeatFlag() { status &= ~CYCLIC_REPEAT; }
-
-protected:
-  void AddTextDirect(const BYTE *con, int len, bool space); // jichi 10/27/2013: add const; add space; change to protected
 
 private:
   ThreadParameter tp;
