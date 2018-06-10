@@ -88,21 +88,21 @@ bool operator==(const ThreadParameter& one, const ThreadParameter& two)
 #define NAMED_PIPE_DISCONNECT 1
 //Class member of HookManger
 HookManager::HookManager() :
-  // jichi 9/21/2013: Zero memory
-  //CRITICAL_SECTION hmcs;
-  current(nullptr)
-  , create(nullptr)
-  , remove(nullptr)
-  , reset(nullptr)
-  , attach(nullptr)
-  , detach(nullptr)
-  , hook(nullptr)
-  , current_pid(0)
-  , new_thread_number(0)
+	// jichi 9/21/2013: Zero memory
+	//CRITICAL_SECTION hmcs;
+	current(nullptr)
+	, create(nullptr)
+	, remove(nullptr)
+	, reset(nullptr)
+	, attach(nullptr)
+	, detach(nullptr)
+	, hook(nullptr)
+	, current_pid(0)
+	, new_thread_number(0)
 	, threadTable()
 	, processRecordsByIds()
 {
-  TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread(0, -1, -1, -1, new_thread_number++);
+	TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
 }
@@ -304,7 +304,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   TextThread *it;
   if (!(it = threadTable[tp]))
   {
-	  it = threadTable[tp] = new TextThread(pid, hook, retn, spl, new_thread_number++);
+	  it = threadTable[tp] = new TextThread(tp, new_thread_number++);
 	  if (create)
 	  {
 		  create(it);
@@ -340,32 +340,6 @@ void HookManager::ClearCurrent()
   //LeaveCriticalSection(&hmcs);
   //ConsoleOutput("vnrhost:ClearCurrent: unlock");
 }
-void HookManager::ResetRepeatStatus()
-{
-  HM_LOCK;
-  //ConsoleOutput("vnrhost:ResetRepeatStatus: lock");
-  //EnterCriticalSection(&hmcs);
-  for (auto i : threadTable)
-  {
-	  i.second->ResetRepeatStatus();
-  }
-
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:ResetRepeatStatus: unlock");
-}
-//void HookManager::LockHookman(){ EnterCriticalSection(&hmcs); }
-//void HookManager::UnlockHookman(){ LeaveCriticalSection(&hmcs); }
-
-/*void HookManager::SetProcessEngineType(DWORD pid, DWORD type)
-{
-  int i;
-  for (i=0;i<MAX_REGISTER;i++)
-    if (record[i].pid_register==pid) break;
-  if (i<MAX_REGISTER)
-  {
-    record[i].engine_register|=type;
-  }
-}*/
 
 ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
 {
