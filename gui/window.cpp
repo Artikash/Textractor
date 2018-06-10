@@ -424,7 +424,7 @@ void ClickButton(HWND hWnd, HWND h)
 //	return len;
 //}
 
-DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
+DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, bool space)
 {
 	if (len == 0)
 		return len;
