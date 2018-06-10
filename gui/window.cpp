@@ -128,10 +128,6 @@ BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetWindowText(GetDlgItem(hDlg, IDC_EDIT4), str, 0x80);
 			DWORD sd = std::stoul(str);
 			insert_delay = sd > 200 ? sd : 200;
-			if (IsDlgButtonChecked(hDlg, IDC_CHECK6))
-			{
-				man->ResetRepeatStatus();
-			}
 			auto_inject = IsDlgButtonChecked(hDlg, IDC_CHECK1);
 			auto_insert = IsDlgButtonChecked(hDlg, IDC_CHECK2);
 			clipboard_flag = IsDlgButtonChecked(hDlg, IDC_CHECK3);
@@ -376,56 +372,57 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 }
 
-DWORD ThreadFilter(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
-{
-	DWORD status = thread->Status();
-	if (global_filter && !new_line && thread->Number() != 0)
-	{
-		if (status & USING_UNICODE)
-		{
-			DWORD i, j;
-			len /= 2;
-			LPWSTR str = (LPWSTR)out;
-			for (i = 0, j = 0; i < len; i++)
-			{
-				WCHAR c = str[i];
-				if (!uni_filter->Find(c))
-					str[j++] = c;
-			}
-			memset(str + j, 0, (len - j) * 2);
-			len = j * 2;
-		}
-		else
-		{
-			DWORD i, j;
-			for (i = 0, j = 0; i < len; i++)
-			{
-				WORD c = out[i];
-				if (!IsDBCSLeadByte(c & 0xFF))
-				{
-					if (!mb_filter->Find(c))
-						out[j++] = c & 0xFF;
-				}
-				else if (i + 1 < len)
-				{
-
-					c = out[i + 1];
-					c <<= 8;
-					c |= out[i];
-					if (!mb_filter->Find(c))
-					{
-						out[j++] = c & 0xFF;
-						out[j++] = c >> 8;
-					}
-					i++;
-				}
-			}
-			memset(out + j, 0, len - j);
-			len = j;
-		}
-	}
-	return len;
-}
+// Artikash 6/10/2018: Removed because unused. Left commented to make cleaning up gui code easier later.
+//DWORD ThreadFilter(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
+//{
+//	DWORD status = thread->Status();
+//	if (global_filter && !new_line && thread->Number() != 0)
+//	{
+//		if (status & USING_UNICODE)
+//		{
+//			DWORD i, j;
+//			len /= 2;
+//			LPWSTR str = (LPWSTR)out;
+//			for (i = 0, j = 0; i < len; i++)
+//			{
+//				WCHAR c = str[i];
+//				if (!uni_filter->Find(c))
+//					str[j++] = c;
+//			}
+//			memset(str + j, 0, (len - j) * 2);
+//			len = j * 2;
+//		}
+//		else
+//		{
+//			DWORD i, j;
+//			for (i = 0, j = 0; i < len; i++)
+//			{
+//				WORD c = out[i];
+//				if (!IsDBCSLeadByte(c & 0xFF))
+//				{
+//					if (!mb_filter->Find(c))
+//						out[j++] = c & 0xFF;
+//				}
+//				else if (i + 1 < len)
+//				{
+//
+//					c = out[i + 1];
+//					c <<= 8;
+//					c |= out[i];
+//					if (!mb_filter->Find(c))
+//					{
+//						out[j++] = c & 0xFF;
+//						out[j++] = c >> 8;
+//					}
+//					i++;
+//				}
+//			}
+//			memset(out + j, 0, len - j);
+//			len = j;
+//		}
+//	}
+//	return len;
+//}
 
 DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
 {
@@ -594,7 +591,7 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
 DWORD ThreadCreate(TextThread* thread)
 {
 	thread->RegisterOutputCallBack(ThreadOutput, 0);
-	thread->RegisterFilterCallBack(ThreadFilter, 0);
+	//thread->RegisterFilterCallBack(ThreadFilter, 0);
 	AddToCombo(*thread, false);
 	const auto& tp = thread->GetThreadParameter();
 	auto pr = man->GetProcessRecord(tp->pid);

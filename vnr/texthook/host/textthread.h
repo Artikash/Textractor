@@ -50,7 +50,6 @@ public:
   void Reset();
   void AddText(const BYTE *con,int len, bool new_line, bool space); // jichi 10/27/2013: add const; remove console; add space
   void RemoveSingleRepeatAuto(const BYTE *con, int &len); // jichi 10/27/2013: add const
-  void ResetRepeatStatus();
   void AddLineBreak();
   void DispatchLastSentence();
 
@@ -71,16 +70,6 @@ public:
     app_data = data;
     return (ThreadOutputFilterCallback)_InterlockedExchange((long*)&output,(long)cb);
   }
-
-  ThreadOutputFilterCallback RegisterFilterCallBack(ThreadOutputFilterCallback cb, PVOID data)
-  {
-    app_data = data;
-    return (ThreadOutputFilterCallback)_InterlockedExchange((long*)&filter,(long)cb);
-  }
-
-  void SetRepeatFlag() { status |= CYCLIC_REPEAT; }
-  void ClearNewLineFlag() { status &= ~BUFF_NEWLINE; }
-  void ClearRepeatFlag() { status &= ~CYCLIC_REPEAT; }
 
 private:
   ThreadParameter tp;

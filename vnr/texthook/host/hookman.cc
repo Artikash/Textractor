@@ -340,32 +340,6 @@ void HookManager::ClearCurrent()
   //LeaveCriticalSection(&hmcs);
   //ConsoleOutput("vnrhost:ClearCurrent: unlock");
 }
-void HookManager::ResetRepeatStatus()
-{
-  HM_LOCK;
-  //ConsoleOutput("vnrhost:ResetRepeatStatus: lock");
-  //EnterCriticalSection(&hmcs);
-  for (auto i : threadTable)
-  {
-	  i.second->ResetRepeatStatus();
-  }
-
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:ResetRepeatStatus: unlock");
-}
-//void HookManager::LockHookman(){ EnterCriticalSection(&hmcs); }
-//void HookManager::UnlockHookman(){ LeaveCriticalSection(&hmcs); }
-
-/*void HookManager::SetProcessEngineType(DWORD pid, DWORD type)
-{
-  int i;
-  for (i=0;i<MAX_REGISTER;i++)
-    if (record[i].pid_register==pid) break;
-  if (i<MAX_REGISTER)
-  {
-    record[i].engine_register|=type;
-  }
-}*/
 
 ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
 {

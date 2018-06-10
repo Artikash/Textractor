@@ -220,24 +220,6 @@ void TextThread::RemoveSingleRepeatAuto(const BYTE *con, int &len)
   }
 }
 
-void TextThread::ResetRepeatStatus()
-{
-  last=0;
-  repeat_single=0;
-  repeat_single_current=0;
-  repeat_single_count=0;
-  repeat_detect_count=0;
-  RepeatCountNode *t = head->next,
-                  *tt;
-  while (t) {
-    tt = t;
-    t = tt->next;
-    delete tt;
-  }
-  //head=new RepeatCountNode;
-  head->count = head->repeat = 0;
-  status &= ~REPEAT_NUMBER_DECIDED;
-}
 void TextThread::AddLineBreak()
 {
   if (sentence_length == 0) return;
