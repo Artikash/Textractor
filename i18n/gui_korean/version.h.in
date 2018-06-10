@@ -1,2 +1,0 @@
-const wchar_t* build_date=L"27.01.2013";
-const WCHAR program_version[] = L"@CPACK_PACKAGE_VERSION_MAJOR@.@CPACK_PACKAGE_VERSION_MINOR@.@CPACK_PACKAGE_VERSION_PATCH@";
