@@ -49,7 +49,6 @@ public:
   ProcessRecord *GetProcessRecord(DWORD pid);
   //void LockHookman();
   //void UnlockHookman();
-  void ResetRepeatStatus();
   void ClearCurrent();
   void SelectCurrent(DWORD num);
   void SetCurrent(TextThread *it);
