@@ -806,13 +806,3 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-DWORD WINAPI FlushThread(LPVOID lParam)
-{
-	TextBuffer* t = (TextBuffer*)lParam;
-	while (t->Running())
-	{
-		t->Flush();
-		Sleep(10);
-	}
-	return 0;
-}

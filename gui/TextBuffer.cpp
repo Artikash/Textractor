@@ -1,6 +1,15 @@
 #include "TextBuffer.h"
 
-DWORD WINAPI FlushThread(LPVOID lParam); // window.cpp
+DWORD WINAPI FlushThread(LPVOID lParam)
+{
+	TextBuffer* t = (TextBuffer*)lParam;
+	while (t->Running())
+	{
+		t->Flush();
+		Sleep(10);
+	}
+	return 0;
+}
 
 TextBuffer::TextBuffer(HWND edit) : hThread(IthCreateThread(FlushThread, (DWORD)this)),
 hEdit(edit),
