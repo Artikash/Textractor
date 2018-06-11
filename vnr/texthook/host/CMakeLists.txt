@@ -41,7 +41,7 @@ target_compile_options(vnrhost PRIVATE
 #STRING(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 target_link_libraries(vnrhost
-  ithsys
+  #ithsys
   profile
   ${WDK_HOME}/lib/wxp/i386/ntdll.lib
 )

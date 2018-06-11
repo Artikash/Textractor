@@ -79,88 +79,15 @@ template <>
     bool try_lock() { return ::TryEnterCriticalSection(&_M_mutex); }
   };
 
-// Conditional variable
-
-template <typename _Cond>
-  class win_mutex_cond
+  class MutexLocker
   {
-    typedef win_mutex_cond<_Cond> _Self;
-    typedef _Cond __native_type;
-    win_mutex_cond(const _Self&);
-    _Self &operator=(const _Self&);
-
-    __native_type _M_cond;
+	  HANDLE m;
   public:
-    enum wait_status { no_timeout = 0, timeout };
-    typedef __native_type *native_handle_type;
-
-    win_mutex_cond() {}
-    native_handle_type native_handle() { return &_M_cond; }
-
-    void notify_one() {}
-    void notify_all() {}
-
-    template <typename _Mutex>
-    void wait(_Mutex &mutex) {}
-
-    template <typename _Mutex, typename _Pred>
-    void wait(_Mutex &mutex, _Pred pred) {}
-
-    template <typename _Mutex>
-    wait_status wait_for(_Mutex &mutex, int msecs) {}
-
-    template <typename _Mutex, typename _Pred>
-    wait_status wait_for(_Mutex &mutex, int msecs, _Pred pred) {}
-  };
-
-// Note: Conditional variables are NOT availabe on Windows XP/2003
-// See: http://en.cppreference.com/w/cpp/thread/condition_variable
-// See: http://msdn.microsoft.com/en-us/library/windows/desktop/ms686903%28v=vs.85%29.aspx
-template <>
-  class win_mutex_cond<CONDITION_VARIABLE>
-  {
-    typedef win_mutex_cond<CONDITION_VARIABLE> _Self;
-    typedef CONDITION_VARIABLE __native_type;
-    win_mutex_cond(const _Self&);
-    _Self &operator=(const _Self&);
-
-    __native_type _M_cond;
-  public:
-    enum wait_status { no_timeout = 0, timeout };
-    typedef __native_type *native_handle_type;
-    native_handle_type native_handle() { return &_M_cond; }
-
-    win_mutex_cond() { ::InitializeConditionVariable(&_M_cond); }
-
-    void notify_one() { ::WakeConditionVariable(&_M_cond); }
-    void notify_all() { ::WakeAllConditionVariable(&_M_cond); }
-
-    template <typename _Mutex>
-    void wait(_Mutex &mutex)
-    { ::SleepConditionVariableCS(&_M_cond, mutex.native_handle(), INFINITE); }
-
-    template <typename _Mutex, typename _Pred>
-    void wait(_Mutex &mutex, _Pred pred)
-    { while (!pred()) wait(mutex); }
-
-    template <typename _Mutex>
-    wait_status wait_for(_Mutex &mutex, int msecs)
-    { return ::SleepConditionVariableCS(&_M_cond, mutex.native_handle(), msecs) ? no_timeout : timeout; }
-
-    template <typename _Mutex, typename _Pred>
-    wait_status wait_for(_Mutex &mutex, int msecs, _Pred pred)
-    {
-      auto start = ::GetTickCount();
-      while (!pred()) {
-        auto now = ::GetTickCount();
-        msecs -= now - start;
-        if (msecs <= 0)
-          return timeout;
-        start = now;
-        wait_for(mutex, msecs);
-      }
-      return no_timeout;
-    }
+	  explicit MutexLocker(HANDLE mutex) : m(mutex)
+	  {
+		  WaitForSingleObject(m, 0);
+	  }
+	  ~MutexLocker() { if (m != INVALID_HANDLE_VALUE && m != nullptr) ReleaseMutex(m); }
   };
 
 // EOF

@@ -38,7 +38,7 @@ Settings *settings;
 HWND dummyWindow;
 BOOL running;
 
-#define ITH_SYNC_HOOK   IthMutexLocker locker(::hookMutex)
+#define ITH_SYNC_HOOK MutexLocker locker(::hookMutex)
 
 namespace 
 { // unnamed
@@ -64,11 +64,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hinstDLL);
 		InitializeCriticalSection(&::hostCs);
-		IthInitSystemService();
 		GetDebugPrivileges();
 		// jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
 		// Used by timers.
-		InitCommonControls();
+		// InitCommonControls();
 		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
 		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
 		break;
@@ -76,7 +75,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 		if (::running)
 			CloseHost();
 		DeleteCriticalSection(&::hostCs);
-		IthCloseSystemService();
 		DestroyWindow(dummyWindow);
 		break;
 	default:

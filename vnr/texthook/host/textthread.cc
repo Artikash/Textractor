@@ -201,13 +201,15 @@ void DispatchSentence(void* str,DWORD status, int len)
     memcpy(sentenceBuffer,str,len);
     *(WORD*)(sentenceBuffer+len)=0;
     HGLOBAL hCopy;
-    wchar_t copy[0x200];
+    wchar_t copy[0x400];
 	if (status&USING_UNICODE)
 	{
 		memcpy(copy, sentenceBuffer, len + 2);
 	}
 	else
-		copy[MB_WC(sentenceBuffer, copy)] = 0;
+	{
+		MultiByteToWideChar(932, 0, sentenceBuffer, -1, copy, 0x400);
+	}
 	DispatchSentenceToExtensions(copy, status);
   }
 }
