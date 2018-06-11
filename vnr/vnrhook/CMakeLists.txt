@@ -52,8 +52,6 @@ set(vnrhook_src
   ${PROJECT_SOURCE_DIR}/cpputil/cpptype.h
   ${PROJECT_SOURCE_DIR}/cpputil/cppunicode.h
   ${PROJECT_SOURCE_DIR}/disasm/disasm.cc
-  ${PROJECT_SOURCE_DIR}/hashutil/hashstr.h
-  ${PROJECT_SOURCE_DIR}/hashutil/hashutil.h
   ${PROJECT_SOURCE_DIR}/memdbg/memdbg.h
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.cc
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.h

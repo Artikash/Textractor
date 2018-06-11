@@ -19,7 +19,6 @@
 #include "memdbg/memsearch.h"
 #include "ntinspect/ntinspect.h"
 #include "disasm/disasm.h"
-#include "hashutil/hashstr.h"
 #include "cpputil/cppcstring.h"
 #include "ccutil/ccmacro.h"
 #include "mono/monoobject.h"
@@ -27,7 +26,6 @@
 #include <cstdio>
 #include <string>
 
-#define hashstr hashutil::djb2
 
 // jichi 7/6/2014: read esp_base
 #define retof(esp_base)         *(DWORD *)(esp_base) // return address
