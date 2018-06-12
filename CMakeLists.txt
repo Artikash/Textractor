@@ -56,8 +56,6 @@ set(resource_src
 
 set(ithvnr_src
   gui/command.cpp
-  gui/CustomFilter.cpp
-  gui/CustomFilter.h
   gui/ITH.h
   gui/language.cpp
   gui/language.h

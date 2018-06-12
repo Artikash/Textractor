@@ -24,7 +24,6 @@
 #include "version.h"
 #include "ProfileManager.h"
 #include "host/settings.h"
-#include "CustomFilter.h"
 #include "profile/Profile.h"
 #include "TextBuffer.h"
 #include "profile/misc.h"
@@ -45,8 +44,6 @@ ProcessWindow* pswnd;
 TextBuffer* texts;
 extern ProfileManager* pfman; // ProfileManager.cpp
 extern HookManager* man; // main.cpp
-extern CustomFilter* mb_filter; // main.cpp
-extern CustomFilter* uni_filter; // main.cpp
 extern Settings* setman; // main.cpp
 #define COMMENT_BUFFER_LENGTH 512
 static WCHAR comment_buffer[COMMENT_BUFFER_LENGTH];

@@ -19,7 +19,6 @@
 #include "host/host.h"
 #include "host/hookman.h"
 #include "host/settings.h"
-#include "CustomFilter.h"
 #include "profile/Profile.h"
 #include "ProfileManager.h"
 
@@ -36,8 +35,6 @@ extern "C" {
 	void IthCloseSystemService();
 }
 
-CustomFilter* uni_filter;
-CustomFilter* mb_filter;
 HookManager* man;
 Settings* setman;
 LONG split_time, cyclic_remove, global_filter;
@@ -94,10 +91,6 @@ void SaveSettings()
 		auto root = doc.root().append_child(L"ITH_Setting");
 		for (auto it = setting.begin(); it != setting.end(); ++it)
 			root.append_attribute(it->first.c_str()).set_value(it->second);
-		auto filter = root.append_child(L"SingleCharFilter");
-		filter.append_child(pugi::xml_node_type::node_pcdata);
-		mb_filter->Traverse(RecordMBChar, &filter);
-		uni_filter->Traverse(RecordUniChar, &filter);
 		doc.save(fw);
 	}
 }
@@ -169,32 +162,6 @@ void LoadSettings()
 			if (it != setting.end())
 				it->second = std::stoul(attr->value());
 		}
-		auto filter = root.child(L"SingleCharFilter");
-		if (filter)
-		{
-			for (auto attr = filter.attributes_begin(); attr != filter.attributes_end(); ++attr)
-			{
-				if (attr->name()[0] == L'm')
-				{
-					DWORD c = std::stoul(attr->name() + 1, NULL, 16);
-					mb_filter->Insert(c & 0xFFFF);
-				}
-				else if (attr->name()[0] == L'u')
-				{
-					DWORD c = std::stoul(attr->name() + 1, NULL, 16);
-					uni_filter->Insert(c & 0xFFFF);
-				}
-			}
-			std::wstring filter_value = filter.text().get();
-			for (auto it = filter_value.begin(); it != filter_value.end(); ++it)
-			{
-				WCHAR filter_unichar[2] = { *it, L'\0' };
-				char filter_mbchar[4];
-				WC_MB(filter_unichar, filter_mbchar, 4);
-				mb_filter->Insert(*(WORD*)filter_mbchar);
-				uni_filter->Insert(*it);
-			}
-		}
 	}
 }
 
@@ -254,8 +221,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		setman->splittingInterval = 200;
 		MonitorFlag = true;
 		pfman = new ProfileManager();
-		mb_filter = new CustomFilter();
-		uni_filter = new CustomFilter();
 		DefaultSettings();
 		LoadSettings();
 		InitializeSettings();
