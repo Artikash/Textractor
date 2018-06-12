@@ -15,7 +15,6 @@
 //#include <QtCore/QDebug>
 
 #define DEBUG "vnrhost/pipe.cc"
-#include "sakurakit/skdebug.h"
 
 //DWORD WINAPI UpdateWindows(LPVOID lpThreadParameter);
 

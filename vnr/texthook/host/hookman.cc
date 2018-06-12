@@ -20,7 +20,6 @@
 #include "profile/misc.h"
 
 #define DEBUG "vnrhost/hookman.cc"
-#include "sakurakit/skdebug.h"
 
 namespace { // unnamed
 //enum { MAX_ENTRY = 0x40 };

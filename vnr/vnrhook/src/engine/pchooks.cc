@@ -6,7 +6,6 @@
 //#include <gdiplus.h>
 
 #define DEBUG "vnrcli"
-#define DPRINT(cstr) ConsoleOutput(DEBUG ":" __FUNCTION__ ":" cstr) // defined in vnrcli
 
 // 8/1/2014 jichi: Split is not used.
 // Although split is specified, USING_SPLIT is not assigned.
@@ -41,7 +40,7 @@
 // jichi 7/17/2014: Renamed from InitDefaultHook
 void PcHooks::hookGDIFunctions()
 {
-  DPRINT("enter");
+  ConsoleOutput("enter");
   // int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind, DWORD split_off, DWORD split_ind, WORD type, DWORD len_off)
   //
   // jichi 9/8/2013: Guessed meaning
@@ -116,7 +115,7 @@ void PcHooks::hookGDIFunctions()
   NEW_HOOK(DrawTextW,              s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, 3)
   NEW_HOOK(DrawTextExW,            s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, 3)
 
-  DPRINT("leave");
+  ConsoleOutput("leave");
 }
 
 // jichi 6/18/2015: GDI+ functions
@@ -124,11 +123,11 @@ void PcHooks::hookGDIPlusFunctions()
 {
   HMODULE hModule = ::GetModuleHandleA("gdiplus.dll");
   if (!hModule) {
-    DPRINT("not loaded");
+    ConsoleOutput("not loaded");
     return;
   }
 
-  DPRINT("enter");
+  ConsoleOutput("enter");
   enum stack {
     s_retaddr = 0
     , s_arg1 = 4 * 1 // 0x4
@@ -152,14 +151,14 @@ void PcHooks::hookGDIPlusFunctions()
   NEW_MODULE_HOOK(hModule, GdipDrawString,              s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, 3) // GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font, GDIPCONST RectF *layoutRect, GDIPCONST GpStringFormat *stringFormat, GDIPCONST GpBrush *brush);
   NEW_MODULE_HOOK(hModule, GdipMeasureString,           s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, 3) // GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics, GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font, GDIPCONST RectF *layoutRect, GDIPCONST GpStringFormat *stringFormat, RectF *boundingBox, INT *codepointsFitted, INT *linesFilled )
 
-  DPRINT("leave");
+  ConsoleOutput("leave");
 }
 
 // jichi 10/2/2013
 // Note: All functions does not have NO_CONTEXT attribute and will be filtered.
 void PcHooks::hookLstrFunctions()
 {
-  DPRINT("enter");
+  ConsoleOutput("enter");
   // int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind, DWORD split_off, DWORD split_ind, WORD type, DWORD len_off)
 
   enum stack {
@@ -200,12 +199,12 @@ void PcHooks::hookLstrFunctions()
   // unsigned char *_mbsinc_l(const unsigned char *current, _locale_t locale);
   //_(L"_strinc", _strinc, 4,  0,4,0, USING_STRING, 0) // 12/13/2013 jichi
   //_(L"_wcsinc", _wcsinc, 4,  0,4,0, USING_UNICODE|USING_STRING, 0)
-  DPRINT("leave");
+  ConsoleOutput("leave");
 }
 
 void PcHooks::hookWcharFunctions()
 {
-  DPRINT("enter");
+  ConsoleOutput("enter");
   // 12/1/2013 jichi:
   // AlterEgo
   // http://tieba.baidu.com/p/2736475133
@@ -250,7 +249,7 @@ void PcHooks::hookWcharFunctions()
   // http://sakuradite.com/topic/159
   NEW_HOOK(MultiByteToWideChar, s_arg3, 0,4,0, USING_STRING, 4)
   NEW_HOOK(WideCharToMultiByte, s_arg3, 0,4,0, USING_UNICODE|USING_STRING, 4)
-  DPRINT("leave");
+  ConsoleOutput("leave");
 }
 
 void PcHooks::hookCharNextFunctions()
@@ -265,14 +264,14 @@ void PcHooks::hookCharNextFunctions()
     //, s_arg6 = 4 * 6 // 0x18
   };
 
-  DPRINT("enter");
+  ConsoleOutput("enter");
   NEW_HOOK(CharNextA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharNext(_In_ LPCTSTR lpsz);
   NEW_HOOK(CharNextW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
   NEW_HOOK(CharPrevA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharPrev(_In_ LPCTSTR lpszStart, _In_ LPCTSTR lpszCurrent);
   NEW_HOOK(CharPrevW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
   //NEW_HOOK(CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
   //NEW_HOOK(CharNextExW, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
-  DPRINT("leave");
+  ConsoleOutput("leave");
 }
 
 // EOF

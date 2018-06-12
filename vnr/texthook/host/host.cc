@@ -21,7 +21,6 @@
 #include "extensions/Extensions.h"
 
 #define DEBUG "vnrhost/host.cc"
-#include "sakurakit/skdebug.h"
 
 namespace 
 { // unnamed
