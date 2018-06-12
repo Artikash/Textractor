@@ -25,7 +25,7 @@
 namespace { // unnamed
 //enum { MAX_ENTRY = 0x40 };
 
-#define HM_LOCK win_mutex_lock<HookManager::mutex_type> d_locker(hmcs) // Synchronized scope for accessing private data
+#define HM_LOCK CriticalSectionLocker d_locker(hmcs) // Synchronized scope for accessing private data
 
 
 } // unnamed namespace
@@ -59,14 +59,14 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
   ProcessRecord *pr = ::man->GetProcessRecord(pid);
   if (!pr)
     return 0;
-  NtWaitForSingleObject(pr->hookman_mutex, 0, 0);
+  WaitForSingleObject(pr->hookman_mutex, 0);
   const Hook *hks = (const Hook *)pr->hookman_map;
   for (int i = 0; i < MAX_HOOK; i++)
     if (hks[i].Address() == hook_addr) {
       len = hks[i].NameLength();
       if (len >= max)
         len = max;
-      NtReadVirtualMemory(pr->process_handle, hks[i].Name(), str, len, &len);
+      ReadProcessMemory(pr->process_handle, hks[i].Name(), str, len, &len);
       if (str[len - 1] == 0)
         len--;
       else
@@ -74,18 +74,11 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
       break;
     }
 
-  NtReleaseMutant(pr->hookman_mutex, 0);
+  ReleaseMutex(pr->hookman_mutex);
   //::man->UnlockProcessHookman(pid);
   return len;
 }
 
-// Artikash 5/31/2018: required for unordered_map to work with struct key
-bool operator==(const ThreadParameter& one, const ThreadParameter& two)
-{
-	return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl;
-}
-
-#define NAMED_PIPE_DISCONNECT 1
 //Class member of HookManger
 HookManager::HookManager() :
 	// jichi 9/21/2013: Zero memory
@@ -105,11 +98,14 @@ HookManager::HookManager() :
 	TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
+
+  InitializeCriticalSection(&hmcs);
 }
 
 HookManager::~HookManager()
 {
 	// Artikash 5/31/2018: This is called when the program terminates, so Windows should automatically free all these resources.....right?
+  //LeaveCriticalSection(&hmcs);
   //LARGE_INTEGER timeout={-1000*1000,-1};
   //IthBreak();
   //NtWaitForSingleObject(destroy_event, 0, 0);
@@ -363,88 +359,6 @@ HANDLE HookManager::GetHostPipeByPID(DWORD pid)
 
 MK_BASIC_TYPE(DWORD)
 MK_BASIC_TYPE(LPVOID)
-
-//DWORD Hash(LPCWSTR module, int length)
-//{
-//  bool flag = (length==-1);
-//  DWORD hash = 0;
-//  for (;*module && (flag || length--); module++)
-//    hash = ((hash>>7)|(hash<<25)) + *module;
-//  return hash;
-//}
-
-//void AddLink(WORD from, WORD to) { ::man->AddLink(from, to); }
-
-// jichi 9/27/2013: Unparse to hook parameters /H code
-void GetCode(const HookParam &hp, LPWSTR buffer, DWORD pid)
-{
-  WCHAR c;
-  LPWSTR ptr = buffer;
-  // jichi 12/7/2014: disabled
-  //if (hp.type&PRINT_DWORD)
-  //  c = L'H';
-  if (hp.type&USING_UNICODE) {
-    if (hp.type&USING_STRING)
-      c = L'Q';
-    else if (hp.type&STRING_LAST_CHAR)
-      c = L'L';
-    else
-      c = L'W';
-  } else {
-    if (hp.type&USING_STRING)
-      c = L'S';
-    else if (hp.type&BIG_ENDIAN)
-      c = L'A';
-    else if (hp.type&STRING_LAST_CHAR)
-      c = L'E';
-    else
-      c = L'B';
-  }
-  ptr += swprintf(ptr, L"/H%c",c);
-  if (hp.type & NO_CONTEXT)
-    *ptr++ = L'N';
-  if (hp.offset>>31)
-    ptr += swprintf(ptr, L"-%X",-(hp.offset+4));
-  else
-    ptr += swprintf(ptr, L"%X",hp.offset);
-  if (hp.type & DATA_INDIRECT) {
-    if (hp.index>>31)
-      ptr += swprintf(ptr, L"*-%X",-hp.index);
-    else
-      ptr += swprintf(ptr,L"*%X",hp.index);
-  }
-  if (hp.type & USING_SPLIT) {
-    if (hp.split >> 31)
-      ptr += swprintf(ptr, L":-%X", -(4 + hp.split));
-    else
-      ptr += swprintf(ptr, L":%X", hp.split);
-  }
-  if (hp.type & SPLIT_INDIRECT) {
-    if (hp.split_index >> 31)
-      ptr += swprintf(ptr, L"*-%X", -hp.split_index);
-    else
-      ptr += swprintf(ptr, L"*%X", hp.split_index);
-  }
-  if (hp.module) {
-    if (pid) {
-      WCHAR path[MAX_PATH];
-      MEMORY_BASIC_INFORMATION info;
-      ProcessRecord* pr = ::man->GetProcessRecord(pid);
-      if (pr) {
-        HANDLE hProc = pr->process_handle;
-        if (NT_SUCCESS(NtQueryVirtualMemory(hProc,(PVOID)hp.address, MemorySectionName, path, MAX_PATH*2, 0)) &&
-            NT_SUCCESS(NtQueryVirtualMemory(hProc,(PVOID)hp.address, MemoryBasicInformation, &info, sizeof(info), 0)))
-          ptr += swprintf(ptr, L"@%X:%s", hp.address - (DWORD)info. AllocationBase, wcsrchr(path,L'\\') + 1);
-      }
-    } else {
-      ptr += swprintf(ptr, L"@%X!%X", hp.address, hp.module);
-      if (hp.function)
-        ptr += swprintf(ptr, L"!%X", hp.function);
-    }
-  }
-  else
-    ptr += swprintf(ptr, L"@%X", hp.address);
-}
 
 void AddHooksToProfile(Profile& pf, const ProcessRecord& pr);
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread);

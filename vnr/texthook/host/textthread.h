@@ -19,7 +19,13 @@ struct ThreadParameter {
   DWORD pid; // jichi: 5/11/2014: The process ID
   DWORD hook; // Artikash 6/6/2018: The start address of the hook
   DWORD retn; // jichi 5/11/2014: The return address of the hook
-  DWORD spl;  // jichi 5/11/2014: the processed split value of the hook parameter
+  DWORD spl;  // jichi 5/11/2014: the processed split value of the hook paramete
+			  
+  // Artikash 5/31/2018: required for unordered_map to work with struct key
+  friend bool operator==(const ThreadParameter& one, const ThreadParameter& two)
+  {
+	  return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl;
+  }
 };
 
 #define CURRENT_SELECT 0x1000

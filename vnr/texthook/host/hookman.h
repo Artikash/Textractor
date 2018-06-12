@@ -95,8 +95,7 @@ private:
 	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> threadTable;
 	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
 
-  typedef win_mutex<CRITICAL_SECTION> mutex_type;
-  mutex_type hmcs;
+  CRITICAL_SECTION hmcs;
 
   TextThread *current;
   ConsoleCallback console; // jichi 12/25/2013: add console output callback
