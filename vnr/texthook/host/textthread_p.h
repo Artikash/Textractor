@@ -14,12 +14,7 @@ void Release(const T &p) { delete p; }
   template<> \
   void Release<T>(const T &p) {}
 
-template<class T>
-struct BinaryEqual {
-  bool operator ()(const T &a, const T &b, DWORD) { return a == b; }
-};
-
-template<class T, int default_size, class fComp=BinaryEqual<T> >
+template<class T, int default_size>
 class MyVector
 {
 public:
@@ -104,54 +99,11 @@ protected:
     LeaveCriticalSection(&cs_store);
     return status;
   }
-  int Find(const T &item, int start = 0, DWORD control = 0)
-  {
-    int c = -1;
-    for (int i=start; i < used; i++)
-      if (fCmp(storage[i],item,control)) {
-        c=i;
-        break;
-      }
-      //if (storage[i]==item) {c=i;break;}
-    return c;
-  }
-
 
   CRITICAL_SECTION cs_store;
   int size,
       used;
   T *storage;
-  fComp fCmp;
 };
 
 // EOF
-
-/*
-#ifndef ITH_STACK
-#define ITH_STACK
-template<class T, int default_size>
-class MyStack
-{
-public:
-  MyStack(): index(0) {}
-  void push_back(const T& e)
-  {
-    if (index<default_size)
-    s[index++]=e;
-  }
-  void pop_back()
-  {
-    index--;
-  }
-  T& back()
-  {
-    return s[index-1];
-  }
-  T& operator[](int i) {return s[i];}
-  int size() {return index;}
-private:
-  int index;
-  T s[default_size];
-};
-#endif
-*/
