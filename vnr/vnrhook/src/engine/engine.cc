@@ -20,7 +20,6 @@
 #include "ntinspect/ntinspect.h"
 #include "disasm/disasm.h"
 #include "cpputil/cppcstring.h"
-#include "ccutil/ccmacro.h"
 #include "mono/monoobject.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
@@ -4345,7 +4344,7 @@ rUGP hook:
 ********************************************************************************************/
 void SpecialHookRUGP1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
-  CC_UNUSED(split);
+  //CC_UNUSED(split);
   DWORD *stack = (DWORD *)esp_base;
   DWORD i, val;
   for (i = 0; i < 4; i++) {
@@ -6735,7 +6734,7 @@ bool InsertMalieHook2() // jichi 8/20/2013: Change return type to boolean
  */
 void SpecialHookMalie2(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
-  CC_UNUSED(data);
+  //CC_UNUSED(data);
   //*len = GetHookDataLength(*hp, esp_base, (DWORD)data);
   *len = 2;
 
@@ -6909,7 +6908,7 @@ LPCWSTR _Malie3GetEOL(LPCWSTR p)
 
 void SpecialHookMalie3(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
-  CC_UNUSED(split);
+  //CC_UNUSED(split);
   DWORD ecx = regof(ecx, esp_base), // *(DWORD *)(esp_base + pusha_ecx_off - 4),
         edx = regof(edx, esp_base); // *(DWORD *)(esp_base + pusha_edx_off - 4);
   //*data = ecx + edx*2; // [ecx+edx*2];
@@ -7171,7 +7170,7 @@ bool InsertEMEHook()
 }
 static void SpecialRunrunEngine(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
-  CC_UNUSED(split);
+  //CC_UNUSED(split);
   DWORD eax = regof(eax, esp_base), // *(DWORD *)(esp_base - 0x8),
         edx = regof(edx, esp_base); // *(DWORD *)(esp_base - 0x10);
   DWORD addr = eax + edx; // eax + edx

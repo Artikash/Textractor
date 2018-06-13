@@ -7,7 +7,6 @@
 #include <cstddef> // for size_t
 #include <cstring>
 //#include <algorithm> // for std::min
-#include "ccutil/ccmacro.h"
 
 // strlen
 
@@ -60,7 +59,7 @@ inline const wchar_t *cpp_wcsnchr(const wchar_t *s, wchar_t c, size_t n) { retur
 #define cpp_basic_strnstr_(s, slen, r, rlen, ncmp) \
   { \
     while (*s && slen >= rlen) { \
-      if (ncmp(s, r, CC_MIN(slen, rlen)) == 0) \
+      if (ncmp(s, r, slen < rlen ? slen : rlen) == 0) \
         return s; \
       s++, slen--; \
     } \

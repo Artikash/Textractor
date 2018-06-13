@@ -14,7 +14,6 @@
 #include "include/defs.h"
 #include "src/util/growl.h"
 #include "ithsys/ithsys.h"
-#include "ccutil/ccmacro.h"
 #include <cstdio> // for swprintf
 
 HANDLE hookPipe;

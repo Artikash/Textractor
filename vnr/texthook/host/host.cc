@@ -16,8 +16,8 @@
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
 #include "ithsys/ithsys.h"
-#include "ccutil/ccmacro.h"
 #include <commctrl.h>
+#include <string>
 #include "extensions/Extensions.h"
 
 #define DEBUG "vnrhost/host.cc"
@@ -145,7 +145,7 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 		success = false;
 	}
 
-	CloseHandle(CreateMutexW(nullptr, FALSE, CONCAT_STR_NUM(ITH_HOOKMAN_MUTEX_, processId)));
+	CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		man->AddConsoleOutput(L"already locked");

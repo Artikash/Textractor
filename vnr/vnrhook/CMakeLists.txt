@@ -43,14 +43,6 @@ set(vnrhook_src
   src/util/growl.h
   src/util/util.cc
   src/util/util.h
-  ${PROJECT_SOURCE_DIR}/ccutil/ccmacro.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cpplocale.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cppmarshal.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cppmath.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cpppath.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cppstring.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cpptype.h
-  ${PROJECT_SOURCE_DIR}/cpputil/cppunicode.h
   ${PROJECT_SOURCE_DIR}/disasm/disasm.cc
   ${PROJECT_SOURCE_DIR}/memdbg/memdbg.h
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.cc

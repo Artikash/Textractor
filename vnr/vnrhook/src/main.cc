@@ -17,7 +17,6 @@
 #include "include/const.h"
 #include "include/defs.h"
 #include "ithsys/ithsys.h"
-#include "ccutil/ccmacro.h"
 #include "util/util.h"
 #include <cstdio> // for swprintf
 //#include "ntinspect/ntinspect.h"

@@ -15,7 +15,6 @@
 #include "src/main.h"
 #include "src/except.h"
 #include "ithsys/ithsys.h"
-#include "ccutil/ccmacro.h"
 
 //#define ConsoleOutput(...)  (void)0     // jichi 8/18/2013: I don't need ConsoleOutput
 
@@ -886,9 +885,9 @@ bool DetermineEngineType()
 //
 
 HANDLE hijackThread;
-void hijackThreadProc(LPVOID lpThreadParameter)
+void hijackThreadProc(LPVOID unused)
 {
-  CC_UNUSED(lpThreadParameter);
+  //CC_UNUSED(lpThreadParameter);
 
   //static bool done = false;
   //if (done)
