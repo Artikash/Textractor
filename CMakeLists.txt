@@ -96,8 +96,8 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   profile
   vnrhost
-  ithsys
-  ${WDK_HOME}/lib/wxp/i386/ntdll.lib
+  #ithsys
+  #${WDK_HOME}/lib/wxp/i386/ntdll.lib
   comctl32.lib
   psapi.lib
 )

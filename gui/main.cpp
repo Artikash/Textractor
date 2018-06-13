@@ -210,8 +210,6 @@ LONG WINAPI UnhandledExcept(_EXCEPTION_POINTERS *ExceptionInfo)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	InitCommonControls();
-	if (!IthInitSystemService())
-		TerminateProcess(GetCurrentProcess(), 0);
 	CreateMutex(NULL, TRUE, L"ITH_MAIN_RUNNING");
 	if (OpenHost())
 	{
@@ -246,6 +244,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		FindITH();
 	}
 	CloseHost();
-	IthCloseSystemService();
 	TerminateProcess(GetCurrentProcess(), 0);
 }
