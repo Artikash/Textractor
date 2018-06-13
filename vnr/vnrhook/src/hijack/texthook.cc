@@ -490,10 +490,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 
       IthCoolDown(); // jichi 9/28/2013: cool down to prevent parallelization in wine
       //CliLockPipe();
-      if (STATUS_PENDING == NtWriteFile(::hookPipe, 0, 0, 0, &ios, pbData, dwCount + HEADER_SIZE, 0, 0)) {
-        NtWaitForSingleObject(::hookPipe, 0, 0);
-        NtFlushBuffersFile(::hookPipe, &ios);
-      }
+	  WriteFile(::hookPipe, pbData, dwCount + HEADER_SIZE, nullptr, nullptr);
       //CliUnlockPipe();
     }
     if (pbData != pbSmallBuff)
@@ -506,7 +503,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 int TextHook::InsertHook()
 {
   //ConsoleOutput("vnrcli:InsertHook: enter");
-  NtWaitForSingleObject(hmMutex, 0, 0);
+  WaitForSingleObject(hmMutex, 0);
   int ok = InsertHookCode();
   IthReleaseMutex(hmMutex);
   if (hp.type & HOOK_ADDITIONAL) {
@@ -678,7 +675,7 @@ int TextHook::UnsafeInsertHookCode()
 int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind,
     DWORD split_off, DWORD split_ind, WORD type, DWORD len_off)
 {
-  NtWaitForSingleObject(hmMutex, 0, 0);
+  WaitForSingleObject(hmMutex, 0);
   hp.address = (DWORD)addr;
   hp.offset = data;
   hp.index = data_ind;
@@ -697,7 +694,7 @@ int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind,
 
 int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 {
-  NtWaitForSingleObject(hmMutex, 0, 0);
+  WaitForSingleObject(hmMutex, 0);
   hp = h;
   hp.type |= set_flag;
   if (name && name != hook_name) {
@@ -717,8 +714,7 @@ int TextHook::RemoveHook()
   if (!hp.address)
     return no;
   ConsoleOutput("vnrcli:RemoveHook: enter");
-  const LONGLONG timeout = -50000000; // jichi 9/28/2012: in 100ns, wait at most for 5 seconds
-  NtWaitForSingleObject(hmMutex, 0, (PLARGE_INTEGER)&timeout);
+  WaitForSingleObject(hmMutex, TIMEOUT); // jichi 9/28/2012: wait at most for 5 seconds
   DWORD l = hp.hook_len;
   //with_seh({ // jichi 9/17/2013: might crash ><
   // jichi 12/25/2013: Actually, __try cannot catch such kind of exception
@@ -735,7 +731,7 @@ int TextHook::RemoveHook()
 
 int TextHook::ClearHook()
 {
-  NtWaitForSingleObject(hmMutex, 0, 0);
+  WaitForSingleObject(hmMutex, 0);
   int err = RemoveHook();
   if (hook_name) {
     delete[] hook_name;

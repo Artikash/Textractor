@@ -108,9 +108,9 @@ HookManager::~HookManager()
   //LARGE_INTEGER timeout={-1000*1000,-1};
   //IthBreak();
   //NtWaitForSingleObject(destroy_event, 0, 0);
-  //NtClose(destroy_event);
-  //NtClose(cmd_pipes[0]);
-  //NtClose(recv_threads[0]);
+  //CloseHandle(destroy_event);
+  //CloseHandle(cmd_pipes[0]);
+  //CloseHandle(recv_threads[0]);
   //delete thread_table;
   //delete head.key;
   //DeleteCriticalSection(&hmcs);
@@ -197,10 +197,10 @@ void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
 
   ProcessRecord* record = processRecordsByIds[pid] = new ProcessRecord;
   record->hostPipe = hostPipe;
-  record->hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (std::wstring(ITH_SECTION_) + std::to_wstring(pid)).c_str());
+  record->hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
   record->hookman_map = MapViewOfFile(record->hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
   record->process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-  record->hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (std::wstring(ITH_HOOKMAN_MUTEX_) + std::to_wstring(pid)).c_str());
+  record->hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
   //if (NT_SUCCESS(NtOpenProcess(&hProc,
   //    PROCESS_QUERY_INFORMATION|
   //    PROCESS_CREATE_THREAD|
@@ -226,18 +226,18 @@ void HookManager::UnRegisterProcess(DWORD pid)
   CloseHandle(pr.process_handle);
   CloseHandle(pr.hookman_section);
   processRecordsByIds.erase(pid);
-    //NtClose(text_pipes[i]);
-    //NtClose(cmd_pipes[i]);
-    //NtClose(recv_threads[i]);
-    //NtClose(record[i].hookman_mutex);
+    //CloseHandle(text_pipes[i]);
+    //CloseHandle(cmd_pipes[i]);
+    //CloseHandle(recv_threads[i]);
+    //CloseHandle(record[i].hookman_mutex);
 
     ////if (::ith_has_section)
     //NtUnmapViewOfSection(NtCurrentProcess(), record[i].hookman_map);
     ////else
     ////  delete[] record[i].hookman_map;
 
-    //NtClose(record[i].process_handle);
-    //NtClose(record[i].hookman_section);
+    //CloseHandle(record[i].process_handle);
+    //CloseHandle(record[i].hookman_section);
 
     //for (; i < MAX_REGISTER; i++) {
     //  record[i] = record[i+1];

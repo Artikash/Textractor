@@ -5796,7 +5796,7 @@ int GetShinaRioVersion()
     enum { BufferSize = 0x40 };
     char buffer[BufferSize];
     NtReadFile(hFile, 0, 0, 0, &ios, buffer, BufferSize, 0, 0);
-    NtClose(hFile);
+    CloseHandle(hFile);
     if (buffer[0] == '[') {
       buffer[0x3f] = 0; // jichi 8/24/2013: prevent strstr from overflow
       if (char *version = ::strstr(buffer, "v2."))
@@ -8191,7 +8191,7 @@ bool IsPensilSetup()
   NtAllocateVirtualMemory(NtCurrentProcess(), &buffer, 0,
       &info.AllocationSize.LowPart, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
   NtReadFile(hFile, 0,0,0, &ios, buffer, info.EndOfFile.LowPart, 0, 0);
-  NtClose(hFile);
+  CloseHandle(hFile);
   BYTE *b = (BYTE *)buffer;
   DWORD len = info.EndOfFile.LowPart & ~1;
   if (len == info.AllocationSize.LowPart)

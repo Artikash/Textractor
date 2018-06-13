@@ -155,32 +155,17 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       DisableThreadLibraryCalls(hModule);
 
-      //if (!IthInitSystemService()) {
-      //  GROWL_WARN(L"Initialization failed.\nAre you running game on a network drive?");
-      //  return FALSE;
-      //}
-      // No longer checking if SystemService fails, which could happen on non-Japanese OS
-      IthInitSystemService();
+	  IthInitSystemService();
 
       swprintf(hm_section, ITH_SECTION_ L"%d", current_process_id);
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
-      hSection = IthCreateSection(hm_section, HOOK_SECTION_SIZE, PAGE_EXECUTE_READWRITE);
-      ::hookman = nullptr;
-      NtMapViewOfSection(hSection, NtCurrentProcess(),
-          (LPVOID *)&::hookman, 0, hook_buff_len, 0, &hook_buff_len, ViewUnmap, 0,
-          PAGE_EXECUTE_READWRITE);
-          //PAGE_EXECUTE_READWRITE);
+	  hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, hm_section);
+      ::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, HOOK_SECTION_SIZE / 2);
 
 	  GetProcessName(::processName);
 	  FillRange(::processName, &::processStartAddress, &::processStopAddress);
       //NtInspect::getProcessMemoryRange(&::processStartAddress, &::processStopAddress);
-
-      //if (!::hookman) {
-      //  ith_has_section = false;
-      //  ::hookman = new TextHook[MAX_HOOK];
-      //  memset(::hookman, 0, MAX_HOOK * sizeof(TextHook));
-      //}
 
       {
         wchar_t hm_mutex[0x100];
@@ -216,13 +201,11 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       ::running = false;
       ::live = false;
 
-      const LONGLONG timeout = -50000000; // in nanoseconds = 5 seconds
-
       Engine::terminate();
 
       if (pipeThread) {
-        NtWaitForSingleObject(pipeThread, 0, (PLARGE_INTEGER)&timeout);
-        NtClose(pipeThread);
+		  WaitForSingleObject(pipeThread, TIMEOUT);
+        CloseHandle(pipeThread);
       }
 
       for (TextHook *man = ::hookman; man->RemoveHook(); man++);
@@ -233,15 +216,14 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++)
         man->ClearHook();
       //if (ith_has_section)
-      NtUnmapViewOfSection(NtCurrentProcess(), ::hookman);
-      //else
-      //  delete[] ::hookman;
-      NtClose(hSection);
-      NtClose(hMutex);
+	  UnmapViewOfFile(::hookman);
+
+      CloseHandle(hSection);
+      CloseHandle(hMutex);
+	  IthCloseSystemService();
 
       delete ::tree;
-      IthCloseSystemService();
-      NtClose(hmMutex);
+      CloseHandle(hmMutex);
       //} ITH_EXCEPT {}
     } break;
   }

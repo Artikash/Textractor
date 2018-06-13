@@ -921,9 +921,8 @@ void Engine::hijack()
 void Engine::terminate()
 {
   if (hijackThread) {
-    const LONGLONG timeout = -50000000; // in nanoseconds = 5 seconds
-    NtWaitForSingleObject(hijackThread, 0, (PLARGE_INTEGER)&timeout);
-    NtClose(hijackThread);
+	  WaitForSingleObject(hijackThread, TIMEOUT);
+    CloseHandle(hijackThread);
     hijackThread = 0;
   }
 }

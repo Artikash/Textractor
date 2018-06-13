@@ -331,7 +331,7 @@ public:
         if (NT_SUCCESS(NtReadVirtualMemory(hProc, (PVOID)addr, buffer, 8, &len)))
           if (::memcmp(buffer, normal_routine, 4) == 0)
             flag = 1;
-        NtClose(hProc);
+        CloseHandle(hProc);
       }
       if (flag == 0) {
         for (j = i; j < count; j++)
@@ -885,7 +885,7 @@ BOOL IthInitSystemService()
     if (!NT_SUCCESS(NtCreateSection(&codepage_section, SECTION_MAP_READ,
         &oa,0, PAGE_READONLY, SEC_COMMIT, codepage_file)))
       return FALSE;
-    NtClose(codepage_file);
+    CloseHandle(codepage_file);
     size = 0;
     ::page = nullptr;
     if (!NT_SUCCESS(NtMapViewOfSection(::codepage_section, NtCurrentProcess(),
@@ -917,13 +917,13 @@ void IthCloseSystemService()
 {
   if (::page_locale != 0x3a4) {
     NtUnmapViewOfSection(NtCurrentProcess(), ::page);
-    NtClose(::codepage_section);
+    CloseHandle(::codepage_section);
   }
   if (ITH_ENABLE_THREADMAN) {
     NtUnmapViewOfSection(NtCurrentProcess(), ::thread_man_);
-    NtClose(::thread_man_section);
+    CloseHandle(::thread_man_section);
   }
-  NtClose(::root_obj);
+  CloseHandle(::root_obj);
 #ifdef ITH_HAS_HEAP
   RtlDestroyHeap(::hHeap);
 #endif // ITH_HAS_HEAP
@@ -974,7 +974,7 @@ BOOL IthCheckFile(LPCWSTR file)
     OBJECT_ATTRIBUTES oa = { sizeof(oa), dir_obj, &us, 0, 0, 0};
     // jichi 9/22/2013: Following code does not work in Wine
     if (NT_SUCCESS(NtCreateFile(&hFile, FILE_READ_DATA, &oa, &isb, 0, 0, FILE_SHARE_READ, FILE_OPEN, 0, 0, 0))) {
-      NtClose(hFile);
+      CloseHandle(hFile);
       return TRUE;
     }
   }
@@ -1009,7 +1009,7 @@ BOOL IthFindFile(LPCWSTR file)
     else
       RtlInitUnicodeString(&us, file);
     status = NtQueryDirectoryFile(h,0,0,0,&ios,info,0x400,FileBothDirectoryInformation,TRUE,&us,TRUE);
-    NtClose(h);
+    CloseHandle(h);
     return NT_SUCCESS(status);
   }
   return FALSE;
@@ -1037,7 +1037,7 @@ BOOL IthGetFileInfo(LPCWSTR file, LPVOID info, DWORD size)
     RtlInitUnicodeString(&us,file);
     status = NtQueryDirectoryFile(h,0,0,0,&ios,info,size,FileBothDirectoryInformation,0,&us,0);
     status = NT_SUCCESS(status);
-    NtClose(h);
+    CloseHandle(h);
   } else
     status = FALSE;
   return status;
@@ -1052,7 +1052,7 @@ BOOL IthCheckFileFullPath(LPCWSTR file)
   HANDLE hFile;
   IO_STATUS_BLOCK isb;
   if (NT_SUCCESS(NtCreateFile(&hFile,FILE_READ_DATA,&oa,&isb,0,0,FILE_SHARE_READ,FILE_OPEN,0,0,0))) {
-    NtClose(hFile);
+    CloseHandle(hFile);
     return TRUE;
   } else
     return FALSE;
