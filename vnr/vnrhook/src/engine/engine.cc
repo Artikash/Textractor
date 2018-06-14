@@ -5932,7 +5932,7 @@ bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 //    str = *(DWORD*)stack;
 //    if ((str >> 16) != (stack >> 16))
 //    {
-//      status = NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)str,MemoryBasicInformation,&info,sizeof(info),0);
+//      status = NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)str,MemoryBasicInformation,&info,sizeof(info),0);
 //      if (!NT_SUCCESS(status) || info.Protect & PAGE_NOACCESS) continue; //Accessible
 //    }
 //    if (*(WORD*)(str + 4) == ch) break;
@@ -8188,7 +8188,7 @@ bool IsPensilSetup()
   IO_STATUS_BLOCK ios;
   LPVOID buffer = nullptr;
   NtQueryInformationFile(hFile, &ios, &info, sizeof(info), FileStandardInformation);
-  NtAllocateVirtualMemory(NtCurrentProcess(), &buffer, 0,
+  NtAllocateVirtualMemory(GetCurrentProcess(), &buffer, 0,
       &info.AllocationSize.LowPart, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
   NtReadFile(hFile, 0,0,0, &ios, buffer, info.EndOfFile.LowPart, 0, 0);
   CloseHandle(hFile);
@@ -8199,7 +8199,7 @@ bool IsPensilSetup()
   b[len] = 0;
   b[len + 1] = 0;
   bool ret = wcsstr((LPWSTR)buffer, L"PENSIL") || wcsstr((LPWSTR)buffer, L"Pensil");
-  NtFreeVirtualMemory(NtCurrentProcess(), &buffer, &info.AllocationSize.LowPart, MEM_RELEASE);
+  NtFreeVirtualMemory(GetCurrentProcess(), &buffer, &info.AllocationSize.LowPart, MEM_RELEASE);
   return ret;
 }
 #endif // if 0
@@ -8853,23 +8853,23 @@ MEMORY_WORKING_SET_LIST *GetWorkingSet()
   NTSTATUS status;
   LPVOID buffer = 0;
   len = 0x4000;
-  status = NtAllocateVirtualMemory(NtCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+  status = NtAllocateVirtualMemory(GetCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
   if (!NT_SUCCESS(status)) return 0;
-  status = NtQueryVirtualMemory(NtCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
+  status = NtQueryVirtualMemory(GetCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
   if (status == STATUS_INFO_LENGTH_MISMATCH) {
     len = *(DWORD*)buffer;
     len = ((len << 2) & 0xfffff000) + 0x4000;
     retl = 0;
-    NtFreeVirtualMemory(NtCurrentProcess(), &buffer, &retl, MEM_RELEASE);
+    NtFreeVirtualMemory(GetCurrentProcess(), &buffer, &retl, MEM_RELEASE);
     buffer = 0;
-    status = NtAllocateVirtualMemory(NtCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+    status = NtAllocateVirtualMemory(GetCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
     if (!NT_SUCCESS(status)) return 0;
-    status = NtQueryVirtualMemory(NtCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
+    status = NtQueryVirtualMemory(GetCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
     if (!NT_SUCCESS(status)) return 0;
     return (MEMORY_WORKING_SET_LIST*)buffer;
   } else {
     retl = 0;
-    NtFreeVirtualMemory(NtCurrentProcess(), &buffer, &retl, MEM_RELEASE);
+    NtFreeVirtualMemory(GetCurrentProcess(), &buffer, &retl, MEM_RELEASE);
     return 0;
   }
 
@@ -8920,7 +8920,7 @@ BOOL FindCharacteristInstruction(MEMORY_WORKING_SET_LIST *list)
     else {
       if (size > 0x2000) {
         addr = base & ~0xfff;
-        status = NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)addr,
+        status = NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)addr,
             MemorySectionName,text_buffer_prev,0x1000,&retl);
         if (!NT_SUCCESS(status)) {
           k = addr + size - 4;
@@ -8962,7 +8962,7 @@ bool InsertAB2TryHook()
     ConsoleOutput("vnreng:AB2Try: cannot find characteristic sequence");
   //L"Make sure you have start the game and have seen some text on the screen.");
   DWORD size = 0;
-  NtFreeVirtualMemory(NtCurrentProcess(), (PVOID *)&list, &size, MEM_RELEASE);
+  NtFreeVirtualMemory(GetCurrentProcess(), (PVOID *)&list, &size, MEM_RELEASE);
   return ret;
 }
 

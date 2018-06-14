@@ -584,7 +584,7 @@ int TextHook::UnsafeInsertHookCode()
 
   // Verify hp.address.
   MEMORY_BASIC_INFORMATION info = {};
-  NtQueryVirtualMemory(NtCurrentProcess(), (LPVOID)hp.address, MemoryBasicInformation, &info, sizeof(info), nullptr);
+  NtQueryVirtualMemory(GetCurrentProcess(), (LPVOID)hp.address, MemoryBasicInformation, &info, sizeof(info), nullptr);
   if (info.Type & PAGE_NOACCESS) {
     ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: page no access");
     return no;
@@ -661,13 +661,13 @@ int TextHook::UnsafeInsertHookCode()
   // See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Memory%20Management/Virtual%20Memory/NtProtectVirtualMemory.html
   // See: http://doxygen.reactos.org/d8/d6b/ndk_2mmfuncs_8h_af942709e0c57981d84586e74621912cd.html
   DWORD addr = hp.address;
-  NtProtectVirtualMemory(NtCurrentProcess(), (PVOID *)&addr, &t, PAGE_EXECUTE_READWRITE, &old);
-  NtWriteVirtualMemory(NtCurrentProcess(), (BYTE *)hp.address, inst, 5, &t);
+  NtProtectVirtualMemory(GetCurrentProcess(), (PVOID *)&addr, &t, PAGE_EXECUTE_READWRITE, &old);
+  NtWriteVirtualMemory(GetCurrentProcess(), (BYTE *)hp.address, inst, 5, &t);
   len = hp.recover_len - 5;
   if (len)
-    NtWriteVirtualMemory(NtCurrentProcess(), (BYTE *)hp.address + 5, int3, len, &t);
-  NtFlushInstructionCache(NtCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
-  NtFlushInstructionCache(NtCurrentProcess(), (LPVOID)::hookman, 0x1000);
+    NtWriteVirtualMemory(GetCurrentProcess(), (BYTE *)hp.address + 5, int3, len, &t);
+  NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
+  NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)::hookman, 0x1000);
   //ConsoleOutput("vnrcli:UnsafeInsertHookCode: leave: succeed");
   return 0;
 }
@@ -719,8 +719,8 @@ int TextHook::RemoveHook()
   //with_seh({ // jichi 9/17/2013: might crash ><
   // jichi 12/25/2013: Actually, __try cannot catch such kind of exception
   ITH_TRY {
-    NtWriteVirtualMemory(NtCurrentProcess(), (LPVOID)hp.address, original, hp.recover_len, &l);
-    NtFlushInstructionCache(NtCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
+    NtWriteVirtualMemory(GetCurrentProcess(), (LPVOID)hp.address, original, hp.recover_len, &l);
+    NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
   } ITH_EXCEPT {}
   //});
   hp.hook_len = 0;
@@ -839,9 +839,9 @@ EXCEPTION_DISPOSITION ExceptHandler(EXCEPTION_RECORD *ExceptionRecord,
   //swprintf(str, L"Exception code: 0x%.8X", ExceptionRecord->ExceptionCode);
   //ConsoleOutput(str);
   //MEMORY_BASIC_INFORMATION info;
-  //if (NT_SUCCESS(NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)ContextRecord->Eip,
+  //if (NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
   //    MemoryBasicInformation,&info,sizeof(info),0)) &&
-  //    NT_SUCCESS(NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)ContextRecord->Eip,
+  //    NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
   //    MemorySectionName,name,0x200,0))) {
   //  swprintf(str, L"Exception offset: 0x%.8X:%s",
   //      ContextRecord->Eip-(DWORD)info.AllocationBase,
@@ -866,9 +866,9 @@ EXCEPTION_DISPOSITION ExceptHandler(EXCEPTION_RECORD *ExceptionRecord,
   //swprintf(str, L"Exception code: 0x%.8X", ExceptionRecord->ExceptionCode);
   //ConsoleOutput(str);
   //MEMORY_BASIC_INFORMATION info;
-  //if (NT_SUCCESS(NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)ContextRecord->Eip,
+  //if (NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
   //    MemoryBasicInformation,&info,sizeof(info),0)) &&
-  //    NT_SUCCESS(NtQueryVirtualMemory(NtCurrentProcess(),(PVOID)ContextRecord->Eip,
+  //    NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
   //    MemorySectionName,name,0x200,0))) {
   //  swprintf(str, L"Exception offset: 0x%.8X:%s",
   //      ContextRecord->Eip-(DWORD)info.AllocationBase,

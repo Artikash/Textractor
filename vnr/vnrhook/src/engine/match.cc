@@ -885,7 +885,7 @@ bool DetermineEngineType()
 //
 
 HANDLE hijackThread;
-void hijackThreadProc(LPVOID unused)
+DWORD WINAPI hijackThreadProc(LPVOID unused)
 {
   //CC_UNUSED(lpThreadParameter);
 
@@ -901,6 +901,7 @@ void hijackThreadProc(LPVOID unused)
 
   FillRange(process_name_, &module_base_, &module_limit_);
   DetermineEngineType();
+  return 0;
 }
 
 }} // namespace Engine unnamed
@@ -914,7 +915,7 @@ void Engine::hijack()
 {
   if (!hijackThread) {
     ConsoleOutput("vnreng: hijack process");
-    hijackThread = IthCreateThread(hijackThreadProc, 0);
+    hijackThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, hijackThreadProc, 0, 0, nullptr);
   }
 }
 

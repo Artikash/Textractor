@@ -76,7 +76,7 @@ BOOL getModuleMemoryRange(LPCWSTR moduleName, DWORD *lowerBound, DWORD *upperBou
         do {
           DWORD len;
           // Nt function is needed instead of VirtualQuery, which only works for the current process
-          ::NtQueryVirtualMemory(NtCurrentProcess(), (LPVOID)upper, MemoryBasicInformation, &mbi, sizeof(mbi), &len);
+          ::NtQueryVirtualMemory(GetCurrentProcess(), (LPVOID)upper, MemoryBasicInformation, &mbi, sizeof(mbi), &len);
           if (mbi.Protect & PAGE_NOACCESS) {
             it->SizeOfImage = size;
             break;

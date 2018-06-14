@@ -17,6 +17,7 @@
 #include <cstdio> // for swprintf
 
 HANDLE hookPipe;
+extern HMODULE currentModule;
 
 DWORD WINAPI PipeManager(LPVOID unused)
 {
@@ -41,7 +42,8 @@ DWORD WINAPI PipeManager(LPVOID unused)
 			}
 		}
 
-		WriteFile(::hookPipe, &::current_process_id, sizeof(::current_process_id), nullptr, nullptr);
+		*(DWORD*)buffer = GetCurrentProcessId();
+		WriteFile(::hookPipe, buffer, sizeof(DWORD), nullptr, nullptr);
 
 		for (int i = 0, count = 0; count < ::currentHook; i++)
 		{
@@ -112,7 +114,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		CloseHandle(::hookPipe);
 		CloseHandle(hostPipe);
 	}
-	Util::unloadCurrentModule();
+	FreeLibraryAndExitThread(::currentModule, 0);
 	return 0;
 }
 

@@ -68,6 +68,7 @@ HANDLE
     hFile,
     hMutex,
     hmMutex;
+HMODULE currentModule;
 //DWORD current_process_id;
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
@@ -157,27 +158,26 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
 	  IthInitSystemService();
 
-      swprintf(hm_section, ITH_SECTION_ L"%d", current_process_id);
+      swprintf(hm_section, ITH_SECTION_ L"%d", GetCurrentProcessId());
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
 	  hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, hm_section);
       ::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, HOOK_SECTION_SIZE / 2);
 
 	  GetProcessName(::processName);
-	  FillRange(::processName, &::processStartAddress, &::processStopAddress);
-      //NtInspect::getProcessMemoryRange(&::processStartAddress, &::processStopAddress);
+	  ::processStartAddress = (DWORD)GetModuleHandleW(nullptr);
 
       {
         wchar_t hm_mutex[0x100];
-        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", current_process_id);
-        ::hmMutex = IthCreateMutex(hm_mutex, FALSE);
+        swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", GetCurrentProcessId());
+		::hmMutex = CreateMutexW(nullptr, FALSE, hm_mutex);
       }
       {
         wchar_t dll_mutex[0x100];
-        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", current_process_id);
+        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", GetCurrentProcessId());
         DWORD exists;
-        ::hMutex = IthCreateMutex(dll_mutex, TRUE, &exists); // jichi 9/18/2013: own is true, make sure the injected dll is singleton
-        if (exists)
+		::hMutex = CreateMutexW(nullptr, TRUE, dll_mutex); // jichi 9/18/2013: own is true, make sure the injected dll is singleton
+        if (GetLastError() == ERROR_ALREADY_EXISTS)
           return FALSE;
       }
 
@@ -186,8 +186,9 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       ::tree = new AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN>;
       AddAllModules();
       InitFilterTable();
+	  ::currentModule = hModule;
 
-      pipeThread = IthCreateThread(PipeManager, 0);
+      pipeThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, PipeManager, 0, 0, nullptr);
     } break;
   case DLL_PROCESS_DETACH:
     {
@@ -211,7 +212,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       for (TextHook *man = ::hookman; man->RemoveHook(); man++);
       //LARGE_INTEGER lint = {-10000, -1};
       while (::enter_count)
-        IthSleep(1); // jichi 9/28/2013: sleep for 1 ms
+        Sleep(1); // jichi 9/28/2013: sleep for 1 ms
         //NtDelayExecution(0, &lint);
       for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++)
         man->ClearHook();

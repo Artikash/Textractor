@@ -302,26 +302,4 @@ termin:
   }
 }
 
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-// See: http://stackoverflow.com/questions/3410130/dll-unloading-itself
-// TODO: This doesn't always work. Fix it.
-bool Util::unloadCurrentModule()
-{
-  auto fun = ::FreeLibrary;
-  //auto fun = ::LdrUnloadDll;
-  if (HANDLE h = ::IthCreateThread(fun, (DWORD)&__ImageBase)) {
-    //const LONGLONG timeout = -50000000; // in nanoseconds = 5 seconds
-    //NtWaitForSingleObject(h, 0, (PLARGE_INTEGER)&timeout);
-    CloseHandle(h);
-    return true;
-  }
-
-  // CreateThread does not always work on Windows XP. Use IthCreateThread (i.e. CreateRemoteThread under the water) instead.
-  //if (HANDLE h = ::CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fun, &__ImageBase, 0, NULL)) {
-  //  ::CloseHandle(h);
-  //  return true;
-  //}
-  return false;
-}
-
 // EOF
