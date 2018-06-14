@@ -3,7 +3,7 @@
 // util.h
 // 8/23/2013 jichi
 
-#include "ntdll/ntdll.h"
+#include <Windows.h>
 
 namespace Util {
 
@@ -23,40 +23,6 @@ DWORD FindImportEntry(DWORD hModule, DWORD fun);
 DWORD FindModuleBase(DWORD hash);
 
 bool SearchResourceString(LPCWSTR str);
-
-/**
- *  @param  name  process name without path deliminator
- */
-inline void GetProcessName(wchar_t *name)
-{
-  //assert(name);
-  PLDR_DATA_TABLE_ENTRY it;
-  __asm
-  {
-    mov eax,fs:[0x30]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0xc]
-    mov it,eax
-  }
-  ::wcscpy(name, it->BaseDllName.Buffer);
-}
-
-/**
- *  @param  path with process name and directy name
- */
-inline void GetProcessPath(wchar_t *path)
-{
-  //assert(path);
-  PLDR_DATA_TABLE_ENTRY it;
-  __asm
-  {
-    mov eax,fs:[0x30]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0xc]
-    mov it,eax
-  }
-  ::wcscpy(path, it->FullDllName.Buffer);
-}
 
 /**
  *  @return  HANDLE  module handle

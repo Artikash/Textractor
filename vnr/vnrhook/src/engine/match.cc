@@ -24,7 +24,7 @@ enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
 
 namespace Engine {
 
-WCHAR process_name_[MAX_PATH], // cached
+WCHAR *process_name_, // cached
       process_path_[MAX_PATH]; // cached
 
 DWORD module_base_,
@@ -896,8 +896,11 @@ DWORD WINAPI hijackThreadProc(LPVOID unused)
 
   // jichi 12/18/2013: Though FillRange could raise, it should never raise for he current process
   // So, SEH is not used here.
-  Util::GetProcessName(process_name_); // Initialize shared process name
-  Util::GetProcessPath(process_path_); // Initialize shared process path
+
+  // Initialize shared process name and path
+  wchar_t* p = GetModuleFileNameW(nullptr, process_path_, MAX_PATH) + process_path_;
+  while (*(--p) != L'\\');
+  process_name_ = p + 1;
 
   FillRange(process_name_, &module_base_, &module_limit_);
   DetermineEngineType();

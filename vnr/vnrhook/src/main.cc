@@ -32,24 +32,6 @@
 DWORD processStartAddress,
       processStopAddress;
 
-namespace { // unnamed
-wchar_t processName[MAX_PATH];
-
-inline void GetProcessName(wchar_t *name)
-{
-  //assert(name);
-  PLDR_DATA_TABLE_ENTRY it;
-  __asm
-  {
-    mov eax,fs:[0x30]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0xc]
-    mov it,eax
-  }
-  wcscpy(name, it->BaseDllName.Buffer);
-}
-} // unmaed namespace
-
 enum { HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook) };
 //#define MAX_HOOK (HOOK_BUFFER_SIZE/sizeof(TextHook))
 DWORD hook_buff_len = HOOK_BUFFER_SIZE;
@@ -164,7 +146,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 	  hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, hm_section);
       ::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, HOOK_SECTION_SIZE / 2);
 
-	  GetProcessName(::processName);
 	  ::processStartAddress = (DWORD)GetModuleHandleW(nullptr);
 
       {

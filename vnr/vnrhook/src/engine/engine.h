@@ -11,7 +11,7 @@ struct HookParam; // defined in ith types.h
 namespace Engine {
 
 // Global variables
-extern wchar_t process_name_[MAX_PATH], // cached
+extern wchar_t *process_name_, // cached
                process_path_[MAX_PATH]; // cached
 extern DWORD module_base_,
              module_limit_;
