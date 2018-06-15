@@ -81,13 +81,14 @@ BOOL IthIsWine()
 // jichi 9/28/2013: prevent parallelization in wine
 void IthCoolDown()
 {
+	return;
   // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/NT%20Objects/Thread/NtDelayExecution.html
   //const LONGLONG timeout = -10000; // in 100ns, i.e. 1ms
   //NtDelayExecution(FALSE, (PLARGE_INTEGER)&timeout);
   //NtFlushInstructionCache(NtCurrentProcess(), (LPVOID)hp.addr, hp.recover_len);
   // Flush the instruction cache line, and prevent wine from rending things in parallel
-  if (IthIsWine())
-    IthSleep(1); // sleep for 1 ms
+  //if (IthIsWine())
+  //  IthSleep(1); // sleep for 1 ms
   //__asm
   //{
   //  //mov eax,0x2710    // = 10000

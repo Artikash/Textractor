@@ -17,7 +17,6 @@ int FillRange(LPCWSTR name,DWORD *lower, DWORD *upper);
 DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length); // KMP
 
 DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size);
-BOOL IthGetFileInfo(LPCWSTR file, LPVOID info, DWORD size = 0x1000);
 DWORD GetExportAddress(DWORD hModule,DWORD hash);
 } // extern "C"
 
