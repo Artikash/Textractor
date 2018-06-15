@@ -20,15 +20,7 @@ DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size);
 DWORD GetExportAddress(DWORD hModule,DWORD hash);
 } // extern "C"
 
-#ifdef ITH_HAS_HEAP
-extern HANDLE hHeap; // used in ith/common/memory.h
-#endif // ITH_HAS_HEAP
-
-extern DWORD current_process_id;
-extern DWORD debug;
 extern BYTE LeadByteTable[];
-extern LPVOID page;
-extern BYTE launch_time[];
 
 inline DWORD GetHash(LPSTR str)
 {
@@ -38,7 +30,5 @@ inline DWORD GetHash(LPSTR str)
     hash = ((hash>>7) | (hash<<25)) + *str++;
   return hash;
 }
-
-BOOL IthIsWine();
 
 // EOF
