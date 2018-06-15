@@ -138,8 +138,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       DisableThreadLibraryCalls(hModule);
 
-	  IthInitSystemService();
-
       swprintf(hm_section, ITH_SECTION_ L"%d", GetCurrentProcessId());
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
@@ -202,7 +200,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       CloseHandle(hSection);
       CloseHandle(hMutex);
-	  IthCloseSystemService();
 
       delete ::tree;
       CloseHandle(hmMutex);

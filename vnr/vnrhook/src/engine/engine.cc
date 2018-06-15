@@ -4368,7 +4368,7 @@ void SpecialHookRUGP1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *s
 bool InsertRUGP1Hook()
 {
   DWORD low, high;
-  if (!IthCheckFile(L"rvmm.dll") || !SafeFillRange(L"rvmm.dll", &low, &high)) {
+  if (!Util::CheckFile(L"rvmm.dll") || !SafeFillRange(L"rvmm.dll", &low, &high)) {
     ConsoleOutput("vnreng:rUGP: rvmm.dll does not exist");
     return false;
   }
@@ -4511,7 +4511,7 @@ bool InsertRUGP1Hook()
 bool InsertRUGP2Hook()
 {
   DWORD low, high;
-  if (!IthCheckFile(L"vm60.dll") || !SafeFillRange(L"vm60.dll", &low, &high)) {
+  if (!Util::CheckFile(L"vm60.dll") || !SafeFillRange(L"vm60.dll", &low, &high)) {
     ConsoleOutput("vnreng:rUGP2: vm60.dll does not exist");
     return false;
   }
@@ -5546,7 +5546,7 @@ static bool InsertSystem43NewHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
 
 bool InsertSystem43Hook()
 {
-  //bool patched = IthCheckFile(L"AliceRunPatch.dll");
+  //bool patched = Util::CheckFile(L"AliceRunPatch.dll");
   bool patched = ::GetModuleHandleA("AliceRunPatch.dll");
   ULONG startAddress, stopAddress;
   if (patched ?
@@ -5777,7 +5777,7 @@ void SpecialHookShina1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *
 int GetShinaRioVersion()
 {
   int ret = 0;
-  HANDLE hFile = IthCreateFile(L"RIO.INI", FILE_READ_DATA, FILE_SHARE_READ, FILE_OPEN);
+  HANDLE hFile = CreateFileW(L"RIO.INI", FILE_READ_DATA, FILE_SHARE_READ, nullptr, FILE_OPEN, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (hFile == INVALID_HANDLE_VALUE)  {
     size_t len = ::wcslen(process_name_);
     if (len > 3) {
@@ -5786,7 +5786,7 @@ int GetShinaRioVersion()
       fname[len -1] = 'i';
       fname[len -2] = 'n';
       fname[len -3] = 'i';
-      hFile = IthCreateFile(fname, FILE_READ_DATA, FILE_SHARE_READ, FILE_OPEN);
+      hFile = CreateFileW(fname, FILE_READ_DATA, FILE_SHARE_READ, nullptr, FILE_OPEN, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
   }
 
@@ -5795,7 +5795,7 @@ int GetShinaRioVersion()
     //char *buffer,*version;//,*ptr;
     enum { BufferSize = 0x40 };
     char buffer[BufferSize];
-    NtReadFile(hFile, 0, 0, 0, &ios, buffer, BufferSize, 0, 0);
+    ReadFile(hFile, buffer, BufferSize, nullptr, nullptr);
     CloseHandle(hFile);
     if (buffer[0] == '[') {
       buffer[0x3f] = 0; // jichi 8/24/2013: prevent strstr from overflow
@@ -6515,7 +6515,7 @@ bool InsertCatSystemHook()
   hp.length_offset = 1; // only 1 character
 
   // jichi 12/23/2014: Modify split for new catsystem
-  bool newEngine = IthCheckFile(L"cs2conf.dll");
+  bool newEngine = Util::CheckFile(L"cs2conf.dll");
   if (newEngine) {
     hp.text_fun = SpecialHookCatSystem3; // type not needed
     NewHook(hp, "CatSystem3");
@@ -7106,7 +7106,7 @@ bool InsertMalie4Hook()
 
 bool InsertMalieHook()
 {
-  if (IthCheckFile(L"tools.dll"))
+  if (Util::CheckFile(L"tools.dll"))
     return InsertMalieHook1(); // jichi 3/5/2015: For old light games such as Dies irae.
 
   else { // For old Malie games before 2015
@@ -7115,8 +7115,8 @@ bool InsertMalieHook()
     bool ok = false;
 
     // jichi 3/12/2015: Disable MalieHook2 which will crash シルヴァリオ ヴェンッ�タ
-    //if (!IthCheckFile(L"gdiplus.dll"))
-    if (IthFindFile(L"System\\*")) { // Insert old Malie hook. There are usually System/cursor.cur
+    //if (!Util::CheckFile(L"gdiplus.dll"))
+    if (Util::CheckFile(L"System\\*")) { // Insert old Malie hook. There are usually System/cursor.cur
       ok = InsertMalieHook2() || ok;
       ok = InsertMalie2Hook() || ok; // jichi 8/20/2013
     }
@@ -7694,7 +7694,7 @@ bool InsertLiveHook()
 
 void InsertBrunsHook()
 {
-  if (IthCheckFile(L"libscr.dll")) {
+  if (Util::CheckFile(L"libscr.dll")) {
     HookParam hp = {};
     hp.offset = 4;
     hp.length_offset = 1;
@@ -7702,13 +7702,13 @@ void InsertBrunsHook()
     // jichi 12/27/2013: This function does not work for the latest bruns games anymore
     hp.function = 0x8b24c7bc;
     //?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z
-    if (IthCheckFile(L"msvcp90.dll"))
+    if (Util::CheckFile(L"msvcp90.dll"))
       hp.module = 0xc9c36a5b; // 3385027163
-    else if (IthCheckFile(L"msvcp80.dll"))
+    else if (Util::CheckFile(L"msvcp80.dll"))
       hp.module = 0xa9c36a5b; // 2848156251
-    else if (IthCheckFile(L"msvcp100.dll")) // jichi 8/17/2013: MSVCRT 10.0 and 11.0
+    else if (Util::CheckFile(L"msvcp100.dll")) // jichi 8/17/2013: MSVCRT 10.0 and 11.0
       hp.module = 0xb571d760; // 3044136800;
-    else if (IthCheckFile(L"msvcp110.dll"))
+    else if (Util::CheckFile(L"msvcp110.dll"))
       hp.module = 0xd571d760; // 3581007712;
     if (hp.module) {
       ConsoleOutput("vnreng: INSERT Brus#1");
@@ -7974,7 +7974,7 @@ bool InsertCandyHook2()
 bool InsertCandyHook()
 {
   //if (0 == _wcsicmp(process_name_, L"systemc.exe"))
-  if (IthCheckFile(L"SystemC.exe"))
+  if (Util::CheckFile(L"SystemC.exe"))
     return InsertCandyHook1();
   else
     return InsertCandyHook2();
@@ -8432,13 +8432,13 @@ int GetSystemAoiVersion() // return result is cached
 {
   static int ret = 0;
   if (!ret) {
-    if (IthCheckFile(L"Aoi4.dll"))
+    if (Util::CheckFile(L"Aoi4.dll"))
       ret = 4;
-    else if (IthCheckFile(L"Aoi5.dll"))
+    else if (Util::CheckFile(L"Aoi5.dll"))
       ret = 5;
-    else if (IthCheckFile(L"Aoi6.dll")) // not exist yet, for future version
+    else if (Util::CheckFile(L"Aoi6.dll")) // not exist yet, for future version
       ret = 6;
-    else if (IthCheckFile(L"Aoi7.dll")) // not exist yet, for future version
+    else if (Util::CheckFile(L"Aoi7.dll")) // not exist yet, for future version
       ret = 7;
     else // AoiLib.dll, etc
       ret = 3;

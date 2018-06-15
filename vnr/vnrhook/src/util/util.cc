@@ -186,6 +186,19 @@ DWORD Util::FindCallAndEntryRel(DWORD fun, DWORD size, DWORD pt, DWORD sig)
   }
   return 0;
 }
+
+bool Util::CheckFile(LPCWSTR name)
+{
+	WIN32_FIND_DATAW unused;
+	HANDLE file = FindFirstFileW(name, &unused);
+	if (file != INVALID_HANDLE_VALUE)
+	{
+		FindClose(file);
+		return true;
+	}
+	return false;
+}
+
 DWORD Util::FindEntryAligned(DWORD start, DWORD back_range)
 {
   start &= ~0xf;

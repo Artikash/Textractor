@@ -952,19 +952,6 @@ BOOL IthCheckFile(LPCWSTR file)
     if (hFile != INVALID_HANDLE_VALUE) {
       CloseHandle(hFile);
       return TRUE;
-    } else if (!wcschr(file, L':')) { // jichi: this is relative path
-      // jichi 9/22/2013: Change current directory to the same as main module path
-      // Otherwise NtFile* would not work for files with relative paths.
-      if (const wchar_t *path = GetMainModulePath()) // path to VNR's python exe
-        if (const wchar_t *base = wcsrchr(path, L'\\')) {
-          size_t dirlen = base - path + 1;
-          if (dirlen + wcslen(file) < MAX_PATH) {
-            wchar_t buf[MAX_PATH];
-            wcsncpy(buf, path, dirlen);
-            wcscpy(buf + dirlen, file);
-            return IthCheckFile(buf);
-          }
-        }
     }
   } else { // not wine
     HANDLE hFile;
