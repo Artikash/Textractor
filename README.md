@@ -4,7 +4,7 @@
 
 ## Overview
 
-*NextHooker* is an open-source x32~~/x64~~ text hooker for Windows.
+*NextHooker* is an open-source x86~~ text hooker for Windows.
 
 Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s ITHVNR.
 
