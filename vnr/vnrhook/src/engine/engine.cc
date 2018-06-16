@@ -17,7 +17,6 @@
 #include "src/except.h"
 #include "ithsys/ithsys.h"
 #include "memdbg/memsearch.h"
-#include "ntinspect/ntinspect.h"
 #include "disasm/disasm.h"
 #include "cpputil/cppcstring.h"
 #include "mono/monoobject.h"
