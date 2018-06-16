@@ -47,8 +47,6 @@ set(vnrhook_src
   ${PROJECT_SOURCE_DIR}/memdbg/memdbg.h
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.cc
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.h
-  ${PROJECT_SOURCE_DIR}/ntinspect/ntinspect.cc
-  ${PROJECT_SOURCE_DIR}/ntinspect/ntinspect.h
   ${PROJECT_SOURCE_DIR}/mono/monoobject.h
   ${PROJECT_SOURCE_DIR}/mono/monotype.h
 )
