@@ -25,5 +25,4 @@ include_directories(
 
 add_subdirectory(vnrhook)
 add_subdirectory(texthook/host)
-add_subdirectory(ithsys)
 add_subdirectory(profile)

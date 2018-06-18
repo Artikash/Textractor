@@ -43,6 +43,7 @@ set(vnrhook_src
   src/util/growl.h
   src/util/util.cc
   src/util/util.h
+  ${PROJECT_SOURCE_DIR}/ithsys/ithsys.cc
   ${PROJECT_SOURCE_DIR}/disasm/disasm.cc
   ${PROJECT_SOURCE_DIR}/memdbg/memdbg.h
   ${PROJECT_SOURCE_DIR}/memdbg/memsearch.cc
@@ -73,7 +74,6 @@ target_compile_options(vnrhook PRIVATE
 )
 
 set(vnrhook_libs
-  ithsys
   ${WDK_HOME}/lib/wxp/i386/ntdll.lib
   Version.lib
 )
