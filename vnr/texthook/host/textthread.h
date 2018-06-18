@@ -40,7 +40,7 @@ struct ThreadParameter {
 class TextThread;
 typedef void (* ConsoleCallback)(LPCSTR text);
 typedef void (* ConsoleWCallback)(LPCWSTR text);
-typedef DWORD (* ThreadOutputFilterCallback)(TextThread *, BYTE *, DWORD, DWORD, bool space); // jichi 10/27/2013: Add space
+typedef DWORD (* ThreadOutputFilterCallback)(TextThread *, BYTE *, DWORD, DWORD);
 typedef DWORD (* ThreadEventCallback)(TextThread *);
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
@@ -53,7 +53,7 @@ public:
   virtual void GetEntryString(LPSTR buffer, DWORD max);
 
   void Reset();
-  void AddText(const BYTE *con,int len, bool new_line, bool space); // jichi 10/27/2013: add const; remove console; add space
+  void AddText(const BYTE *con,int len, bool new_line); // jichi 10/27/2013: add const; remove console
   void AddLineBreak();
   void DispatchLastSentence();
 

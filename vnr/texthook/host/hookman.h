@@ -55,7 +55,7 @@ public:
   void AddConsoleOutput(LPCWSTR text);
 
   // jichi 10/27/2013: Add const; add space.
-  void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len, bool space);
+  void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len);
   void RemoveProcessContext(DWORD pid); // private
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterProcess(DWORD pid, HANDLE hostPipe);

@@ -16,59 +16,6 @@
 
 #define DEBUG "vnrhost/pipe.cc"
 
-//DWORD WINAPI UpdateWindows(LPVOID lpThreadParameter);
-
-namespace
-{ // unnamed
-
-	// jichi 10/27/2013
-	// Check if text has leading space
-	enum { FILTER_LIMIT = 0x20 }; // The same as the orignal ITH filter. So, I don't have to check \u3000
-	//enum { FILTER_LIMIT = 0x19 };
-	inline bool HasLeadingSpace(const BYTE *text, int len)
-	{
-		return len == 1 ? *text <= FILTER_LIMIT : // 1 byte
-			*(WORD*)text <= FILTER_LIMIT; // 2 bytes
-	}
-
-	// jichi 9/28/2013: Skip leading garbage
-	// Note:
-	// - Modifying limit will break manual translation. The orignal one is 0x20
-	// - Eliminating 0x20 will break English-translated games
-	const BYTE* Filter(const BYTE *str, int len)
-	{
-#ifdef ITH_DISABLE_FILTER // jichi 9/28/2013: only for debugging purpose
-		return str;
-#endif
-		while (true)
-		{
-			if (len >= 2)
-			{
-				if (*(WORD*)str <= FILTER_LIMIT)
-				{ // jichi 10/27/2013: two bytes
-					str += 2;
-					len -= 2;
-				}
-				else
-				{
-					break;
-				}
-			}
-			else if (*str <= FILTER_LIMIT)
-			{ // jichi 10/27/2013: 1 byte
-				str++;
-				len--;
-			}
-			else
-			{
-				break;
-			}
-		}
-		return str;
-	}
-
-} // unnamed namespace
-
 CRITICAL_SECTION detachCs; // jichi 9/27/2013: also used in main
 //HANDLE hDetachEvent;
 extern HANDLE pipeExistsEvent;
@@ -153,14 +100,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 			const BYTE *data = buffer + DATA_OFFSET; // th
 			int dataLength = bytesRead - DATA_OFFSET;
-			bool space = ::HasLeadingSpace(data, dataLength);
-			if (space)
-			{
-				const BYTE *it = ::Filter(data, dataLength);
-				dataLength -= it - data;
-				data = it;
-			}
-			man->DispatchText(processId, data, hook, retn, split, dataLength, space);
+			man->DispatchText(processId, data, hook, retn, split, dataLength);
 		}
 	}
 

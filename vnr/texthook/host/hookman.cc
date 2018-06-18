@@ -286,10 +286,10 @@ void HookManager::UnRegisterProcess(DWORD pid)
 //  //swprintf(user_entry,L"UserHook%c",c);
 //}
 
-void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len, bool space)
+void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len)
 {
   // jichi 20/27/2013: When PID is zero, the text comes from console, which I don't need
-  if (!text || !pid || (len <= 0 && !space))
+  if (!text || !pid || len <= 0)
     return;
   HM_LOCK;
   //bool flag=false;
@@ -305,7 +305,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
 		  create(it);
 	  }
   }
-  it->AddText(text, len, false, space);
+  it->AddText(text, len, false);
 }
 
 void HookManager::AddConsoleOutput(LPCWSTR text)
@@ -315,8 +315,8 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
     int len = wcslen(text) * 2;
 	TextThread *console = threadTable[{0, -1UL, -1UL, -1UL}];
     //EnterCriticalSection(&hmcs);
-    console->AddText((BYTE*)text,len,false,true);
-    console->AddText((BYTE*)L"\r\n",4,false,true);
+    console->AddText((BYTE*)text,len,false);
+    console->AddText((BYTE*)L"\r\n",4,false);
     //LeaveCriticalSection(&hmcs);
   }
 }

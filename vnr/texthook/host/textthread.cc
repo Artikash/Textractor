@@ -78,12 +78,12 @@ void TextThread::AddLineBreak()
     else
       AddToStore((BYTE *)"\r\n\r\n", 4);
     if (output)
-      output(this, 0, 8, TRUE, false); // jichi 10/27/2013: space is false
+      output(this, 0, 8, TRUE); // jichi 10/27/2013: space is false
     last_sentence = used;
     status &= ~BUFF_NEWLINE;
   }
 }
-void TextThread::AddText(const BYTE *con, int len, bool new_line, bool space)
+void TextThread::AddText(const BYTE *con, int len, bool new_line)
 {
 
   if (status & BUFF_NEWLINE)
@@ -103,7 +103,7 @@ void TextThread::AddText(const BYTE *con, int len, bool new_line, bool space)
   if (len <= 0) return;
   BYTE *data = const_cast<BYTE *>(con); // jichi 10/27/2013: TODO: Figure out where con is modified
   if (output)
-    len = output(this, data, len, new_line, space);
+    len = output(this, data, len, new_line);
   if (AddToStore(data, len)) {
     //sentence_length += len;
     /*ResetRepeatStatus();
