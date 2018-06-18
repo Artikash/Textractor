@@ -16,7 +16,7 @@
 #include <stdio.h>
 //#include <emmintrin.h>
 #include "profile/Profile.h"
-#include "profile/pugixml.hpp"
+#include "profile/pugixml.h"
 #include "profile/misc.h"
 
 #define DEBUG "vnrhost/hookman.cc"

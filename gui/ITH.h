@@ -33,5 +33,5 @@
 #include <sstream>
 #include <regex>
 #include <set>
-#include "profile/pugixml.hpp"
+#include "profile/pugixml.h"
 #pragma warning(disable: 4146)
