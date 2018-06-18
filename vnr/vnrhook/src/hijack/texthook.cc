@@ -350,8 +350,8 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
   DWORD dwType = hp.type;
   if (!::live) // the pipe thread is busy
     return 0;
-  if ((dwType & NO_CONTEXT) == 0 && HookFilter(dwRetn))
-    return 0;
+  //if ((dwType & NO_CONTEXT) == 0 && HookFilter(dwRetn))
+  //  return 0;
 
   if ((dwType & NO_ASCII) && !hp.filter_fun)
     hp.filter_fun = NoAsciiFilter;
