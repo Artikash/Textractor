@@ -1,9 +1,9 @@
 set(profile_src
   Profile.h
   Profile.cpp
-  pugiconfig.hpp
+  pugiconfig.h
   pugixml.cpp
-  pugixml.hpp
+  pugixml.h
   misc.h
   misc.cpp
 )
