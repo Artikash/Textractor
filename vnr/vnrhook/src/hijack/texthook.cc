@@ -292,15 +292,6 @@ int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to en
 }
 #endif // 1
 
- // jichi 12/13/2013: return if the retn address is within the filter dlls
-inline bool HookFilter(DWORD retn)
-{
-  for (DWORD i = 0; ::filter[i].lower; i++)
-    if (retn > ::filter[i].lower && retn < ::filter[i].upper)
-      return true;
-  return false;
-}
-
 // Return false if all text are ascii
 bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {

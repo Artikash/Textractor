@@ -64,12 +64,6 @@ public:
 
   HANDLE GetHostPipeByPID(DWORD pid);
 
-  ConsoleCallback RegisterConsoleCallback(ConsoleCallback cf)
-  { return (ConsoleCallback)_InterlockedExchange((long*)&console,(long)cf); }
-
-  ConsoleWCallback RegisterConsoleWCallback(ConsoleWCallback cf)
-  { return (ConsoleWCallback)_InterlockedExchange((long*)&wconsole,(long)cf); }
-
   ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
   { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }
 
@@ -98,8 +92,6 @@ private:
   CRITICAL_SECTION hmcs;
 
   TextThread *current;
-  ConsoleCallback console; // jichi 12/25/2013: add console output callback
-  ConsoleWCallback wconsole;
   ThreadEventCallback create,
                       remove,
                       reset,
@@ -107,12 +99,6 @@ private:
   ProcessEventCallback attach,
                        detach,
                        hook;
-  DWORD current_pid;
-  HANDLE destroy_event;
-  ProcessRecord record[MAX_REGISTER + 1];
-  HANDLE text_pipes[MAX_REGISTER + 1],
-         cmd_pipes[MAX_REGISTER + 1],
-         recv_threads[MAX_REGISTER + 1];
   WORD register_count,
        new_thread_number;
 

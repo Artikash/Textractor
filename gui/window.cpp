@@ -369,58 +369,6 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 }
 
-// Artikash 6/10/2018: Removed because unused. Left commented to make cleaning up gui code easier later.
-//DWORD ThreadFilter(TextThread* thread, BYTE* out, DWORD len, DWORD new_line, PVOID data, bool space)
-//{
-//	DWORD status = thread->Status();
-//	if (global_filter && !new_line && thread->Number() != 0)
-//	{
-//		if (status & USING_UNICODE)
-//		{
-//			DWORD i, j;
-//			len /= 2;
-//			LPWSTR str = (LPWSTR)out;
-//			for (i = 0, j = 0; i < len; i++)
-//			{
-//				WCHAR c = str[i];
-//				if (!uni_filter->Find(c))
-//					str[j++] = c;
-//			}
-//			memset(str + j, 0, (len - j) * 2);
-//			len = j * 2;
-//		}
-//		else
-//		{
-//			DWORD i, j;
-//			for (i = 0, j = 0; i < len; i++)
-//			{
-//				WORD c = out[i];
-//				if (!IsDBCSLeadByte(c & 0xFF))
-//				{
-//					if (!mb_filter->Find(c))
-//						out[j++] = c & 0xFF;
-//				}
-//				else if (i + 1 < len)
-//				{
-//
-//					c = out[i + 1];
-//					c <<= 8;
-//					c |= out[i];
-//					if (!mb_filter->Find(c))
-//					{
-//						out[j++] = c & 0xFF;
-//						out[j++] = c >> 8;
-//					}
-//					i++;
-//				}
-//			}
-//			memset(out + j, 0, len - j);
-//			len = j;
-//		}
-//	}
-//	return len;
-//}
-
 DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line)
 {
 	if (len == 0)
@@ -701,7 +649,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			man->RegisterProcessDetachCallback(RemoveProcessList);
 			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
-			man->RegisterConsoleCallback(ConsoleOutput);
 			StartHost();
 			{
 				static const WCHAR program_name[] = L"Interactive Text Hooker";

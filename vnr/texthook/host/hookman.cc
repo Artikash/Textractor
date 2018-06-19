@@ -89,7 +89,6 @@ HookManager::HookManager() :
 	, attach(nullptr)
 	, detach(nullptr)
 	, hook(nullptr)
-	, current_pid(0)
 	, new_thread_number(0)
 	, threadTable()
 	, processRecordsByIds()
