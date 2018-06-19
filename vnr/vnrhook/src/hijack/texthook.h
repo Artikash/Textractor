@@ -7,8 +7,8 @@
 // 8/24/2013 TODO:
 // - Clean up this file
 // - Reduce global variables. Use namespaces or singleton classes instead.
-
-#include "src/tree/avl.h"
+#include <string>
+#include <unordered_map>
 #include "include/types.h"
 #include <windows.h>
 
@@ -29,18 +29,13 @@ extern DWORD trigger;
 extern DWORD processStartAddress,
              processStopAddress;
 
-template <class T, class D, class fComp, class fCopy, class fLength>
-class AVLTree;
 struct FunctionInfo {
   DWORD addr;
   DWORD module;
   DWORD size;
   LPWSTR name;
 };
-struct SCMP;
-struct SCPY;
-struct SLEN;
-extern AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN> *tree;
+extern std::unordered_map<std::string, FunctionInfo> functionInfoByName;
 
 void InitFilterTable();
 

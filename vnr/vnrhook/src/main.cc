@@ -9,7 +9,6 @@
 #endif // _MSC_VER
 
 #include "src/main.h"
-#include "src/tree/avl.h"
 #include "src/engine/match.h"
 #include "src/hijack/texthook.h"
 #include "src/util/growl.h"
@@ -55,7 +54,7 @@ HMODULE currentModule;
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
 extern DWORD engine_type;
-AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN> *tree;
+std::unordered_map<std::string, FunctionInfo> functionInfoByName;
 
 namespace { // unnamed
 
@@ -80,7 +79,7 @@ void AddModule(DWORD hModule, DWORD size, LPWSTR name)
         WORD word = *(WORD *)pcFuncPtr;
         pcFuncPtr = (char *)(hModule + (DWORD)ExtDir->AddressOfFunctions+(word * sizeof(DWORD)));
         info.addr = hModule + *(DWORD *)pcFuncPtr;
-        ::tree->Insert(pcBuffer, info);
+		::functionInfoByName[std::string(pcBuffer)] = info;
         dwExportAddr += sizeof(DWORD);
       }
     }
@@ -109,16 +108,13 @@ void AddAllModules()
 
 DWORD GetFunctionAddr(const char *name, DWORD *addr, DWORD *base, DWORD *size, LPWSTR *base_name)
 {
-  TreeNode<char *,FunctionInfo> *node = ::tree->Search(name);
-  if (node) {
-    if (addr) *addr = node->data.addr;
-    if (base) *base = node->data.module;
-    if (size) *size = node->data.size;
-    if (base_name) *base_name = node->data.name;
-    return TRUE;
-  }
-  else
-    return FALSE;
+	if (::functionInfoByName.find(std::string(name)) == ::functionInfoByName.end())
+		return FALSE;
+	FunctionInfo functionInfo = ::functionInfoByName[std::string(name)];
+	if (addr) *addr = functionInfo.addr;
+	if (base) *base = functionInfo.module;
+	if (size) *size = functionInfo.size;
+	return TRUE;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
@@ -162,9 +158,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       ::running = true;
       ::current_available = ::hookman;
-      ::tree = new AVLTree<char, FunctionInfo, SCMP, SCPY, SLEN>;
       AddAllModules();
-      InitFilterTable();
 	  ::currentModule = hModule;
 
       pipeThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, PipeManager, 0, 0, nullptr);
@@ -200,8 +194,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       CloseHandle(hSection);
       CloseHandle(hMutex);
-
-      delete ::tree;
       CloseHandle(hmMutex);
       //} ITH_EXCEPT {}
     } break;

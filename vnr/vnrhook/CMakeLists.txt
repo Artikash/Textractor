@@ -39,7 +39,6 @@ set(vnrhook_src
   src/engine/ppsspp/funcinfo.h
   src/hijack/texthook.cc
   src/hijack/texthook.h
-  src/tree/avl.h
   src/util/growl.h
   src/util/util.cc
   src/util/util.h
