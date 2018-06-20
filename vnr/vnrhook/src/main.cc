@@ -138,7 +138,12 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
 	  hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, hm_section);
-      ::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, HOOK_SECTION_SIZE / 2);
+	  ::hookman = nullptr;
+	  NtMapViewOfSection(hSection, NtCurrentProcess(),
+		  (LPVOID *)&::hookman, 0, hook_buff_len, 0, &hook_buff_len, ViewUnmap, 0,
+		  PAGE_EXECUTE_READWRITE);
+	  // Artikash 6/20/2018: This crashes certain games (https://vndb.org/v7738). No idea why.
+      //::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, HOOK_SECTION_SIZE / 2);
 
 	  ::processStartAddress = (DWORD)GetModuleHandleW(nullptr);
 
