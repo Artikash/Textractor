@@ -188,10 +188,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       }
 
       for (TextHook *man = ::hookman; man->RemoveHook(); man++);
-      //LARGE_INTEGER lint = {-10000, -1};
-      while (::enter_count)
-        Sleep(1); // jichi 9/28/2013: sleep for 1 ms
-        //NtDelayExecution(0, &lint);
       for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++)
         man->ClearHook();
       //if (ith_has_section)
@@ -224,16 +220,15 @@ DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
 		strcpy(str, name);
 	}
 
-    ConsoleOutput("vnrcli:NewHook: try inserting hook");
+    ConsoleOutput("vnrcli:NewHook: try inserting hook:");
+	ConsoleOutput(name);
 
     // jichi 7/13/2014: This function would raise when too many hooks added
     ::hookman[current].InitHook(hp, str, flag & 0xffff);
 
     if (::hookman[current].InsertHook() == 0) {
       ConsoleOutput("vnrcli:NewHook: hook inserted");
-      //ConsoleOutputW(name);
-      //swprintf(str,L"Insert address 0x%.8X.", hookman[current].Address());
-	  NotifyHookInsert(0);
+	  NotifyHookInsert(hp.address);
     } else
       ConsoleOutput("vnrcli:NewHook:WARNING: failed to insert hook");
   }
