@@ -27,8 +27,8 @@ namespace Engine {
 WCHAR *process_name_, // cached
       process_path_[MAX_PATH]; // cached
 
-DWORD module_base_,
-      module_limit_;
+DWORD process_base,
+      process_limit;
 
 //LPVOID trigger_addr;
 trigger_fun_t trigger_fun_;
@@ -791,15 +791,15 @@ bool DetermineNoEngine()
 EXCEPTION_DISPOSITION ExceptHandler(PEXCEPTION_RECORD ExceptionRecord, LPVOID, PCONTEXT, LPVOID)
 {
   if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
-    module_limit_ = ExceptionRecord->ExceptionInformation[1];
-    //OutputDWORD(module_limit_);
+    process_limit = ExceptionRecord->ExceptionInformation[1];
+    //OutputDWORD(process_limit);
     __asm
     {
       mov eax,fs:[0x30] // jichi 12/13/2013: get PEB
       mov eax,[eax+0xc]
       mov eax,[eax+0xc]
-      mov ecx,module_limit_
-      sub ecx,module_base_
+      mov ecx,process_limit
+      sub ecx,process_base
       mov [eax+0x20],ecx
     }
   }
@@ -899,7 +899,7 @@ DWORD WINAPI hijackThreadProc(LPVOID unused)
   while (*(--p) != L'\\');
   process_name_ = p + 1;
 
-  FillRange(process_name_, &module_base_, &module_limit_);
+  FillRange(process_name_, &process_base, &process_limit);
   DetermineEngineType();
   return 0;
 }
@@ -915,7 +915,7 @@ void Engine::hijack()
 {
   if (!hijackThread) {
     ConsoleOutput("vnreng: hijack process");
-    hijackThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, hijackThreadProc, 0, 0, nullptr);
+    hijackThread = CreateThread(nullptr, 0, hijackThreadProc, 0, 0, nullptr);
   }
 }
 

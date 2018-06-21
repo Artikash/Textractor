@@ -166,7 +166,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       AddAllModules();
 	  ::currentModule = hModule;
 
-      pipeThread = CreateRemoteThread(GetCurrentProcess(), nullptr, 0, PipeManager, 0, 0, nullptr);
+      pipeThread = CreateThread(nullptr, 0, PipeManager, 0, 0, nullptr);
     } break;
   case DLL_PROCESS_DETACH:
     {

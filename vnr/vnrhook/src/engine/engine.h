@@ -13,8 +13,8 @@ namespace Engine {
 // Global variables
 extern wchar_t *process_name_, // cached
                process_path_[MAX_PATH]; // cached
-extern DWORD module_base_,
-             module_limit_;
+extern DWORD process_base,
+             process_limit;
 
 //extern LPVOID trigger_addr;
 typedef bool (* trigger_fun_t)(LPVOID addr, DWORD frame, DWORD stack);
