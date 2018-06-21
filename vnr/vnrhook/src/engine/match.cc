@@ -80,11 +80,6 @@ bool DeterminePCEngine()
   }
   if (::GetModuleHandleA("mono.dll")) {
     InsertMonoHooks();
-
-    // 3/20/2015 jichi
-    // Always insert GDI hooks even for Mono games
-    // For example: 新世黙示録 need GetGlyphOutlineA
-    PcHooks::hookGDIFunctions();
     return true;
   }
 
@@ -853,8 +848,8 @@ bool DetermineEngineType()
   if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
     PcHooks::hookLstrFunctions();
     PcHooks::hookCharNextFunctions();
-  } else
-    ConsoleOutput("vnreng: found game engine, IGNORE non gui hooks");
+  } //else
+  //  ConsoleOutput("vnreng: found game engine, IGNORE non gui hooks");
   return found;
 #endif // ITH_DISABLE_ENGINE
 }
