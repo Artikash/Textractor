@@ -54,68 +54,6 @@ HMODULE currentModule;
 extern DWORD enter_count;
 //extern LPWSTR current_dir;
 extern DWORD engine_type;
-std::unordered_map<std::string, FunctionInfo> functionInfoByName;
-
-namespace { // unnamed
-
-void AddModule(DWORD hModule, DWORD size, LPWSTR name)
-{
-  FunctionInfo info = {0, hModule, size, name};
-  IMAGE_DOS_HEADER *DosHdr = (IMAGE_DOS_HEADER *)hModule;
-  if (IMAGE_DOS_SIGNATURE == DosHdr->e_magic) {
-    DWORD dwReadAddr = hModule + DosHdr->e_lfanew;
-    IMAGE_NT_HEADERS *NtHdr = (IMAGE_NT_HEADERS *)dwReadAddr;
-    if (IMAGE_NT_SIGNATURE == NtHdr->Signature) {
-      DWORD dwExportAddr = NtHdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-      if (dwExportAddr == 0)
-        return;
-      dwExportAddr += hModule;
-      IMAGE_EXPORT_DIRECTORY *ExtDir = (IMAGE_EXPORT_DIRECTORY*)dwExportAddr;
-      dwExportAddr = hModule+ExtDir->AddressOfNames;
-      for (UINT uj = 0; uj < ExtDir->NumberOfNames; uj++) {
-        DWORD dwFuncName = *(DWORD *)dwExportAddr;
-        char *pcBuffer = (char *)(hModule + dwFuncName);
-        char *pcFuncPtr = (char *)(hModule + (DWORD)ExtDir->AddressOfNameOrdinals+(uj * sizeof(WORD)));
-        WORD word = *(WORD *)pcFuncPtr;
-        pcFuncPtr = (char *)(hModule + (DWORD)ExtDir->AddressOfFunctions+(word * sizeof(DWORD)));
-        info.addr = hModule + *(DWORD *)pcFuncPtr;
-		::functionInfoByName[std::string(pcBuffer)] = info;
-        dwExportAddr += sizeof(DWORD);
-      }
-    }
-  }
-}
-
-void AddAllModules()
-{
-  // jichi 9/26/2013: AVLTree is already zero
-  PPEB ppeb;
-  __asm {
-    mov eax, fs:[0x30]
-    mov ppeb, eax
-  }
-  DWORD temp = *(DWORD *)(&ppeb->Ldr->InLoadOrderModuleList);
-  PLDR_DATA_TABLE_ENTRY it = (PLDR_DATA_TABLE_ENTRY)temp;
-  while (it->SizeOfImage) {
-    AddModule((DWORD)it->DllBase, it->SizeOfImage, it->BaseDllName.Buffer);
-    it = (PLDR_DATA_TABLE_ENTRY)it->InLoadOrderModuleList.Flink;
-    if (*(DWORD *)it == temp)
-      break;
-  }
-}
-
-} // unnamed namespace
-
-DWORD GetFunctionAddr(const char *name, DWORD *addr, DWORD *base, DWORD *size, LPWSTR *base_name)
-{
-	if (::functionInfoByName.find(std::string(name)) == ::functionInfoByName.end())
-		return FALSE;
-	FunctionInfo functionInfo = ::functionInfoByName[std::string(name)];
-	if (addr) *addr = functionInfo.addr;
-	if (base) *base = functionInfo.module;
-	if (size) *size = functionInfo.size;
-	return TRUE;
-}
 
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 {
@@ -163,7 +101,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       ::running = true;
       ::current_available = ::hookman;
-      AddAllModules();
 	  ::currentModule = hModule;
 
       pipeThread = CreateThread(nullptr, 0, PipeManager, 0, 0, nullptr);

@@ -4366,15 +4366,16 @@ void SpecialHookRUGP1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *s
 // jichi 10/1/2013: Change return type to bool
 bool InsertRUGP1Hook()
 {
-  DWORD low, high;
-  if (!Util::CheckFile(L"rvmm.dll") || !SafeFillRange(L"rvmm.dll", &low, &high)) {
+  DWORD low;
+  if (!Util::CheckFile(L"rvmm.dll")) {
     ConsoleOutput("vnreng:rUGP: rvmm.dll does not exist");
     return false;
   }
   //WCHAR str[0x40];
   LPVOID ch = (LPVOID)0x8140;
   enum { range = 0x20000 };
-  DWORD t = SearchPattern(low + range, high - low - range, &ch, 4) + range;
+  low = (DWORD)GetModuleHandleW(L"rvmm.dll");
+  DWORD t = SearchPattern(low + range, process_limit, &ch, 4) + range;
   BYTE *s = (BYTE *)(low + t);
   //if (t) {
   if (t != range) { // jichi 10/1/2013: Changed to compare with 0x20000
@@ -4510,7 +4511,7 @@ bool InsertRUGP1Hook()
 bool InsertRUGP2Hook()
 {
   DWORD low, high;
-  if (!Util::CheckFile(L"vm60.dll") || !SafeFillRange(L"vm60.dll", &low, &high)) {
+  if (!Util::CheckFile(L"vm60.dll") /*|| !SafeFillRange(L"vm60.dll", &low, &high)*/) {
     ConsoleOutput("vnreng:rUGP2: vm60.dll does not exist");
     return false;
   }
@@ -4524,7 +4525,7 @@ bool InsertRUGP2Hook()
     0x89,0x75, 0x0c             // 1001e527   8975 0c          mov dword ptr ss:[ebp+0xc],esi
   };
   enum { addr_offset = 0x1001e51d - 0x1001e515 };
-  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), low, high);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), process_base, process_limit);
   //GROWL_DWORD(addr);
   if (!addr) {
     ConsoleOutput("vnreng:rUGP2: pattern not found");
@@ -4596,7 +4597,7 @@ System40 hook:
   data offset dynamically.
 ********************************************************************************************/
 
-static void InsertAliceHook1(DWORD addr, DWORD module, DWORD limit)
+static void InsertAliceHook1(DWORD addr)
 {
   if (!addr) {
     ConsoleOutput("vnreng:AliceHook1: failed");
@@ -4605,7 +4606,6 @@ static void InsertAliceHook1(DWORD addr, DWORD module, DWORD limit)
   for (DWORD i = addr, s = addr; i < s + 0x100; i++)
     if (*(BYTE *)i == 0xe8) { // Find the first relative call.
       DWORD j = i + 5 + *(DWORD *)(i + 1);
-      if (j > module && j < limit) {
         while (true) { // Find the first register push onto stack.
           DWORD c = ::disasm((BYTE *)s);
           if (c == 1)
@@ -4624,7 +4624,6 @@ static void InsertAliceHook1(DWORD addr, DWORD module, DWORD limit)
         //RegisterEngineType(ENGINE_SYS40);
         return;
       }
-    }
   ConsoleOutput("vnreng:AliceHook1: failed");
 }
 static void InsertAliceHook2(DWORD addr)
@@ -4649,12 +4648,20 @@ static void InsertAliceHook2(DWORD addr)
 // jichi 5/13/2015: Looking for function entries in StoatSpriteEngine.dll
 bool InsertAliceHook()
 {
-  DWORD low, high, addr;
-  if (GetFunctionAddr("SP_TextDraw", &addr, &low, &high, 0) && addr) {
-    InsertAliceHook1(addr, low, low + high);
+  DWORD addr;
+  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"SACT2.dll"), "SP_TextDraw")) {
+    InsertAliceHook1(addr);
     return true;
   }
-  if (GetFunctionAddr("SP_SetTextSprite", &addr, &low, &high, 0) && addr) {
+  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"SACTDX.dll"), "SP_TextDraw")) {
+	  InsertAliceHook1(addr);
+	  return true;
+  }
+  //if (GetFunctionAddr("SP_SetTextSprite", &addr, &low, &high, 0) && addr) {
+	 // InsertAliceHook2(addr);
+	 // return true;
+  //}
+  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"StoatSpriteEngine.dll"), "SP_SetTextSprite")) { // Artikash 6/27/2018 not sure if this works
     InsertAliceHook2(addr);
     return true;
   }
@@ -8216,12 +8223,7 @@ void SpecialHookDebonosuScenario(DWORD esp_base, HookParam *hp, BYTE, DWORD *dat
 }
 bool InsertDebonosuScenarioHook()
 {
-  DWORD fun;
-  if (!GetFunctionAddr("lstrcatA", &fun, 0, 0, 0)) {
-    ConsoleOutput("vnreng:Debonosu: failed to find lstrcatA");
-    return false;
-  }
-  DWORD addr = Util::FindImportEntry(process_base, fun);
+  DWORD addr = Util::FindImportEntry(process_base, (DWORD)lstrcatA);
   if (!addr) {
     ConsoleOutput("vnreng:Debonosu: lstrcatA is not called");
     return false;
@@ -8796,11 +8798,11 @@ bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
   i = *(DWORD *)frame;
   i = *(DWORD *)(i+4);
   DWORD j, k;
-  if (SafeFillRange(L"mscorlib.ni.dll", &j, &k)) {
+  //if (SafeFillRange(L"mscorlib.ni.dll", &j, &k)) { // Artikash 6/30/2018: Dunno why addresses are needed
     while (*(BYTE *)i != 0xe8)
       i++;
     DWORD t = *(DWORD *)(i + 1) + i + 5;
-    if (t>j && t<k) {
+    //if (t>j && t<k) {
       HookParam hp = {};
       hp.address = t;
       hp.offset = -0x10;
@@ -8812,8 +8814,8 @@ bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
       //ConsoleOutput("IGS - Please set text(ヂ�ス� display speed(表示速度) to fastest(瞬�");
       //RegisterEngineType(ENGINE_IGS);
       return true;
-    }
-  }
+    //}
+  //}
   ConsoleOutput("vnreng:IGS: failed");
   return true; // jichi 12/25/2013: return true
 }
