@@ -11,7 +11,6 @@
 
 // jichi 8/24/2013: Why extern "C"? Any specific reason to use C instead of C++ naming?
 extern "C" {
-int FillRange(LPCWSTR name,DWORD *lower, DWORD *upper);
 
 // jichi 10/1/2013: Return 0 if failed. So, it is ambiguous if the search pattern starts at 0
 DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length); // KMP

@@ -8,13 +8,13 @@
 
 struct HookParam; // defined in ith types.h
 
+extern DWORD processStartAddress, processStopAddress;
+
 namespace Engine {
 
 // Global variables
-extern wchar_t *process_name_, // cached
-               process_path_[MAX_PATH]; // cached
-extern DWORD process_base,
-             process_limit;
+extern wchar_t *processName, // cached
+               processPath[MAX_PATH]; // cached
 
 //extern LPVOID trigger_addr;
 typedef bool (* trigger_fun_t)(LPVOID addr, DWORD frame, DWORD stack);

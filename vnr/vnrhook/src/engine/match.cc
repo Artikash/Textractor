@@ -24,8 +24,8 @@ enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
 
 namespace Engine {
 
-WCHAR *process_name_, // cached
-      process_path_[MAX_PATH]; // cached
+WCHAR *processName, // cached
+      processPath[MAX_PATH]; // cached
 
 DWORD process_base,
       process_limit;
@@ -419,7 +419,7 @@ bool DetermineEngineByFile4()
 bool DetermineEngineByProcessName()
 {
   WCHAR str[MAX_PATH];
-  wcscpy(str, process_name_);
+  wcscpy(str, processName);
   _wcslwr(str); // lower case
 
   if (wcsstr(str,L"reallive") || Util::CheckFile(L"Reallive.exe") || Util::CheckFile(L"REALLIVEDATA\\Start.ini")) {
@@ -478,7 +478,7 @@ bool DetermineEngineByProcessName()
   //  return true;
   //}
 
-  if (wcsstr(process_name_, L"SAISYS") || Util::CheckFile(L"SaiSys.exe")) { // jichi 4/19/2014: Marine Heart
+  if (wcsstr(processName, L"SAISYS") || Util::CheckFile(L"SaiSys.exe")) { // jichi 4/19/2014: Marine Heart
     InsertMarineHeartHook();
     return true;
   }
@@ -766,16 +766,16 @@ bool DetermineNoEngine()
     return true;
   }
 
-  if (wcsstr(process_name_, L"lcsebody") || !wcsncmp(process_name_, L"lcsebo~", 7) || Util::CheckFile(L"lcsebody*")) { // jichi 3/19/2014: LC-ScriptEngine, GetGlyphOutlineA
+  if (wcsstr(processName, L"lcsebody") || !wcsncmp(processName, L"lcsebo~", 7) || Util::CheckFile(L"lcsebody*")) { // jichi 3/19/2014: LC-ScriptEngine, GetGlyphOutlineA
     ConsoleOutput("vnreng: IGNORE lcsebody");
     return true;
   }
 
   wchar_t str[MAX_PATH];
   DWORD i;
-  for (i = 0; process_name_[i]; i++) {
-    str[i] = process_name_[i];
-    if (process_name_[i] == L'.')
+  for (i = 0; processName[i]; i++) {
+    str[i] = processName[i];
+    if (processName[i] == L'.')
       break;
   }
   *(DWORD *)(str + i + 1) = 0x630068; //.hcb
@@ -791,15 +791,15 @@ bool DetermineNoEngine()
 EXCEPTION_DISPOSITION ExceptHandler(PEXCEPTION_RECORD ExceptionRecord, LPVOID, PCONTEXT, LPVOID)
 {
   if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
-    process_limit = ExceptionRecord->ExceptionInformation[1];
+    processStopAddress = ExceptionRecord->ExceptionInformation[1];
     //OutputDWORD(process_limit);
     __asm
     {
       mov eax,fs:[0x30] // jichi 12/13/2013: get PEB
       mov eax,[eax+0xc]
       mov eax,[eax+0xc]
-      mov ecx,process_limit
-      sub ecx,process_base
+      mov ecx,processStopAddress
+      sub ecx,processStartAddress
       mov [eax+0x20],ecx
     }
   }
@@ -884,22 +884,10 @@ bool DetermineEngineType()
 HANDLE hijackThread;
 DWORD WINAPI hijackThreadProc(LPVOID unused)
 {
-  //CC_UNUSED(lpThreadParameter);
-
-  //static bool done = false;
-  //if (done)
-  //  return;
-  //done = true;
-
-  // jichi 12/18/2013: Though FillRange could raise, it should never raise for he current process
-  // So, SEH is not used here.
-
   // Initialize shared process name and path
-  wchar_t* p = GetModuleFileNameW(nullptr, process_path_, MAX_PATH) + process_path_;
-  while (*(--p) != L'\\');
-  process_name_ = p + 1;
+  GetModuleFileNameW(nullptr, processPath, MAX_PATH);
+  processName = wcsrchr(processPath, L'\\') + 1;
 
-  FillRange(process_name_, &process_base, &process_limit);
   DetermineEngineType();
   return 0;
 }
@@ -929,22 +917,3 @@ void Engine::terminate()
 }
 
 // EOF
-
-/*
-extern "C" {
-  // http://gmogre3d.googlecode.com/svn-history/r815/trunk/OgreMain/src/WIN32/OgreMinGWSupport.cpp
-  // http://forum.osdev.org/viewtopic.php?f=8&t=22352
-  //#pragma data_seg()
-  //#pragma comment(linker, "/merge:.CRT=.data") // works fine in visual c++ 6
-  //#pragma data_seg()
-  //#pragma comment(linker, "/merge:.CRT=.rdata")
-    // MSVC libs use _chkstk for stack-probing. MinGW equivalent is _alloca.
-  //void _alloca();
-  //void _chkstk() { _alloca(); }
-
-  // MSVC uses security cookies to prevent some buffer overflow attacks.
-  // provide dummy implementations.
-  //void _fastcall __security_check_cookie(intptr_t i) {}
-  void __declspec(naked) __fastcall __security_check_cookie(UINT_PTR cookie) {}
-}
-*/

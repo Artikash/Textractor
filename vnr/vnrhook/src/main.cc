@@ -9,6 +9,7 @@
 #endif // _MSC_VER
 
 #include "src/main.h"
+#include "src/engine/engine.h"
 #include "src/engine/match.h"
 #include "src/hijack/texthook.h"
 #include "src/util/growl.h"
@@ -84,6 +85,11 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       //::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, HOOK_SECTION_SIZE / 2);
 
 	  ::processStartAddress = (DWORD)GetModuleHandleW(nullptr);
+
+	  // Artikash 7/1/2018: No idea how the everliving fuck this works, but it finds the process stop address.
+	  PROCESS_BASIC_INFORMATION info;
+	  NtQueryInformationProcess(GetCurrentProcess(), ProcessBasicInformation, &info, sizeof(PROCESS_BASIC_INFORMATION), 0);
+	  ::processStopAddress = ::processStartAddress + ((LDR_DATA_TABLE_ENTRY*)&info.PebBaseAddress->Ldr->InLoadOrderModuleList.Flink->Flink)->SizeOfImage;
 
       {
         wchar_t hm_mutex[0x100];

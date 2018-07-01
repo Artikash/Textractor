@@ -29,14 +29,6 @@ extern DWORD trigger;
 extern DWORD processStartAddress,
              processStopAddress;
 
-struct FunctionInfo {
-  DWORD addr;
-  DWORD module;
-  DWORD size;
-  LPWSTR name;
-};
-extern std::unordered_map<std::string, FunctionInfo> functionInfoByName;
-
 void InitFilterTable();
 
 // jichi 9/25/2013: This class will be used by NtMapViewOfSectionfor

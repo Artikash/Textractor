@@ -34,43 +34,6 @@ BYTE LeadByteTable[0x100] = {
 // - API functions -
 
 extern "C" {
-int FillRange(LPCWSTR name, DWORD *lower, DWORD *upper)
-{
-  PLDR_DATA_TABLE_ENTRY it;
-  LIST_ENTRY *begin;
-  __asm
-  {
-    mov eax,fs:[0x30]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0xc]
-    mov it,eax
-    mov begin,eax
-  }
-
-  while (it->SizeOfImage) {
-    if (::_wcsicmp(it->BaseDllName.Buffer, name) == 0) {
-      *lower = *upper = (DWORD)it->DllBase;
-      MEMORY_BASIC_INFORMATION info = {};
-      DWORD l,size;
-      size = 0;
-      do {
-        NtQueryVirtualMemory(NtCurrentProcess(), (LPVOID)(*upper), MemoryBasicInformation, &info, sizeof(info), &l);
-        if (info.Protect&PAGE_NOACCESS) {
-          it->SizeOfImage=size;
-          break;
-        }
-        size += info.RegionSize;
-        *upper += info.RegionSize;
-      } while (size < it->SizeOfImage);
-      return 1;
-    }
-    it = (PLDR_DATA_TABLE_ENTRY)it->InLoadOrderModuleList.Flink;
-    if (it->InLoadOrderModuleList.Flink == begin)
-      break;
-  }
-  return 0;
-}
-
 DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length) // KMP
 {
   __asm
