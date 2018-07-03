@@ -496,11 +496,6 @@ int TextHook::InsertHook()
   WaitForSingleObject(hmMutex, 0);
   int ok = InsertHookCode();
   ReleaseMutex(hmMutex);
-  if (hp.type & HOOK_ADDITIONAL) {
-    NotifyHookInsert(hp.address);
-    //ConsoleOutput(hook_name);
-    //RegisterHookName(hook_name,hp.address);
-  }
   //ConsoleOutput("vnrcli:InsertHook: leave");
   return ok;
 }

@@ -133,76 +133,20 @@ void ConsoleOutput(LPCSTR text)
 	memcpy(buffer + 8, text, textSize);
 	WriteFile(::hookPipe, buffer, dataSize, nullptr, nullptr);
 }
-  //if (str) {
-  //  int t, len, sum;
-  //  BYTE buffer[0x80];
-  //  BYTE *buff;
-  //  len = wcslen(str) << 1;
-  //  t = swprintf((LPWSTR)(buffer + 8),L"%d: ",current_process_id) << 1;
-  //  sum = len + t + 8;
-  //  if (sum > 0x80) {
-  //    buff = new BYTE[sum];
-  //    memset(buff, 0, sum); // jichi 9/25/2013: zero memory
-  //    memcpy(buff + 8, buffer + 8, t);
-  //  }
-  //  else
-  //    buff = buffer;
-  //  *(DWORD *)buff = HOST_NOTIFICATION; //cmd
-  //  *(DWORD *)(buff + 4) = HOST_NOTIFICATION_TEXT; //console
-  //  memcpy(buff + t + 8, str, len);
-  //  IO_STATUS_BLOCK ios;
-  //  NtWriteFile(hookPipe,0,0,0,&ios,buff,sum,0,0);
-  //  if (buff != buffer)
-  //    delete[] buff;
-  //  return len;
-  //}
 
-//DWORD IOutputDWORD(DWORD d)
-//{
-//  WCHAR str[0x10];
-//  swprintf(str,L"%.8X",d);
-//  ConsoleOutput(str);
-//  return 0;
-//}
-//DWORD IOutputRegister(DWORD *base)
-//{
-//  WCHAR str[0x40];
-//  swprintf(str,L"EAX:%.8X",base[0]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"ECX:%.8X",base[-1]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"EDX:%.8X",base[-2]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"EBX:%.8X",base[-3]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"ESP:%.8X",base[-4]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"EBP:%.8X",base[-5]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"ESI:%.8X",base[-6]);
-//  ConsoleOutput(str);
-//  swprintf(str,L"EDI:%.8X",base[-7]);
-//  ConsoleOutput(str);
-//  return 0;
-//}
-//DWORD IRegisterEngineModule(DWORD idEngine, DWORD dnHook)
-//{
-//  ::IdentifyEngine = (IdentifyEngineFun)idEngine;
-//  ::InsertDynamicHook = (InsertDynamicHookFun)dnHook;
-//  ::engine_registered = true;
-//  return 0;
-//}
-void NotifyHookInsert(DWORD addr)
+// Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook name
+void NotifyHookInsert(DWORD addr, LPCSTR name)
 {
 	if (!::live)
 	{
 		return;
 	}
-    BYTE buffer[0xc];
+    BYTE buffer[PIPE_BUFFER_SIZE];
     *(DWORD*)buffer = HOST_NOTIFICATION;
     *(DWORD*)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
     *(DWORD*)(buffer + 8) = addr;
-	WriteFile(::hookPipe, buffer, 0xc, nullptr, nullptr);
+	strcpy((char*)buffer + 12, name);
+	WriteFile(::hookPipe, buffer, strlen(name) + 12, nullptr, nullptr);
 	return;
 }
 
