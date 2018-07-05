@@ -171,7 +171,7 @@ DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
 
     if (::hookman[current].InsertHook() == 0) {
       ConsoleOutput("vnrcli:NewHook: hook inserted");
-	  NotifyHookInsert(hp.address);
+	  NotifyHookInsert(hp, name);
     } else
       ConsoleOutput("vnrcli:NewHook:WARNING: failed to insert hook");
   }

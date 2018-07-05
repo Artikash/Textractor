@@ -479,11 +479,6 @@ void RemoveFromCombo(TextThread* thread)
 	}
 }
 
-void ComboSelectCurrent(TextThread* thread)
-{
-	ComboBox_SetCurSel(hwndCombo, thread->Number());
-}
-
 DWORD SetEditText(LPWSTR wc)
 {
 	DWORD line;

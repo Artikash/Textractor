@@ -135,7 +135,7 @@ void ConsoleOutput(LPCSTR text)
 }
 
 // Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook name
-void NotifyHookInsert(DWORD addr, LPCSTR name)
+void NotifyHookInsert(HookParam hp, LPCSTR name)
 {
 	if (!::live)
 	{
@@ -144,9 +144,9 @@ void NotifyHookInsert(DWORD addr, LPCSTR name)
     BYTE buffer[PIPE_BUFFER_SIZE];
     *(DWORD*)buffer = HOST_NOTIFICATION;
     *(DWORD*)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
-    *(DWORD*)(buffer + 8) = addr;
-	strcpy((char*)buffer + 12, name);
-	WriteFile(::hookPipe, buffer, strlen(name) + 12, nullptr, nullptr);
+    *(HookParam*)(buffer + 8) = hp;
+	strcpy((char*)buffer + 8 + sizeof(HookParam), name);
+	WriteFile(::hookPipe, buffer, strlen(name) + 8 + sizeof(HookParam), nullptr, nullptr);
 	return;
 }
 
