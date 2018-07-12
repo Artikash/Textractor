@@ -62,7 +62,7 @@ public:
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 
-  HANDLE GetHostPipeByPID(DWORD pid);
+  HANDLE GetCommandPipe(DWORD pid);
 
   ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
   { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }

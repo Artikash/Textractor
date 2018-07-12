@@ -9,14 +9,6 @@
 #include <string>
 #include <vector>
 
-struct RepeatCountNode {
-  short repeat;
-  short count;
-  RepeatCountNode *next;
-
-  //RepeatCountNode() : repeat(0), count(0), next(nullptr) {}
-};
-
 struct ThreadParameter {
   DWORD pid; // jichi: 5/11/2014: The process ID
   DWORD hook; // Artikash 6/6/2018: The start address of the hook
@@ -40,8 +32,6 @@ struct ThreadParameter {
 #define REPEAT_NEWLINE 0x40000
 
 class TextThread;
-typedef void (* ConsoleCallback)(LPCSTR text);
-typedef void (* ConsoleWCallback)(LPCWSTR text);
 typedef DWORD (* ThreadOutputFilterCallback)(TextThread *,const BYTE *, DWORD, DWORD);
 typedef DWORD (* ThreadEventCallback)(TextThread *);
 
@@ -76,7 +66,7 @@ private:
   ThreadParameter tp;
 
   std::vector<char> sentenceBuffer;
-  WORD thread_number;
+  unsigned int thread_number;
   ThreadOutputFilterCallback output;
   DWORD status;
 };

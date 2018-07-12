@@ -200,13 +200,6 @@ void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
   record->hookman_map = MapViewOfFile(record->hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
   record->process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
   record->hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
-  //if (NT_SUCCESS(NtOpenProcess(&hProc,
-  //    PROCESS_QUERY_INFORMATION|
-  //    PROCESS_CREATE_THREAD|
-  //    PROCESS_VM_READ|
-  //    PROCESS_VM_WRITE|
-  //    PROCESS_VM_OPERATION,
-  //    &oa,&id)))
 
   if (attach)
     attach(pid);
@@ -216,8 +209,6 @@ void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
 void HookManager::UnRegisterProcess(DWORD pid)
 {
   HM_LOCK;
-  //ConsoleOutput("vnrhost:UnRegisterProcess: lock");
-  //EnterCriticalSection(&hmcs);
 
   ProcessRecord pr = *processRecordsByIds[pid];
   CloseHandle(pr.hookman_mutex);
@@ -225,65 +216,11 @@ void HookManager::UnRegisterProcess(DWORD pid)
   CloseHandle(pr.process_handle);
   CloseHandle(pr.hookman_section);
   processRecordsByIds.erase(pid);
-    //CloseHandle(text_pipes[i]);
-    //CloseHandle(cmd_pipes[i]);
-    //CloseHandle(recv_threads[i]);
-    //CloseHandle(record[i].hookman_mutex);
-
-    ////if (::ith_has_section)
-    //NtUnmapViewOfSection(NtCurrentProcess(), record[i].hookman_map);
-    ////else
-    ////  delete[] record[i].hookman_map;
-
-    //CloseHandle(record[i].process_handle);
-    //CloseHandle(record[i].hookman_section);
-
-    //for (; i < MAX_REGISTER; i++) {
-    //  record[i] = record[i+1];
-    //  text_pipes[i] = text_pipes[i+1];
-    //  cmd_pipes[i] = cmd_pipes[i+1];
-    //  recv_threads[i] = recv_threads[i+1];
-    //  if (text_pipes[i] == 0)
-    //    break;
-    //}
-    //register_count--;
-    //if (current_pid == pid)
-    //  current_pid = register_count ? record[0].pid_register : 0;
     RemoveProcessContext(pid);
   
-  //pid_map->Clear(pid>>2);
-
-  //if (register_count == 1)
-  //  NtSetEvent(destroy_event, 0);
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:UnRegisterProcess: unlock");
   if (detach)
     detach(pid);
 }
-
-// jichi 9/28/2013: I do not need this
-//void HookManager::SetName(DWORD type)
-//{
-//  WCHAR c;
-//  if (type & PRINT_DWORD)
-//    c = L'H';
-//  else if (type & USING_UNICODE) {
-//    if (type & STRING_LAST_CHAR)
-//      c = L'L';
-//    else if (type & USING_STRING)
-//      c = L'Q';
-//    else
-//      c = L'W';
-//  } else {
-//    if (type & USING_STRING)
-//      c = L'S';
-//    else if (type & BIG_ENDIAN)
-//      c = L'A';
-//    else
-//      c = L'B';
-//  }
-//  //swprintf(user_entry,L"UserHook%c",c);
-//}
 
 void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len)
 {
@@ -291,10 +228,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   if (!text || !pid || len <= 0)
     return;
   HM_LOCK;
-  //bool flag=false;
   ThreadParameter tp = {pid, hook, retn, spl};
-  //ConsoleOutput("vnrhost:DispatchText: lock");
-  //EnterCriticalSection(&hmcs);
   TextThread *it;
   if (!(it = threadTable[tp]))
   {
@@ -313,45 +247,30 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
   {
     int len = wcslen(text) * 2;
 	TextThread *console = threadTable[{0, -1UL, -1UL, -1UL}];
-    //EnterCriticalSection(&hmcs);
     console->AddSentence(std::wstring(text));
-    //LeaveCriticalSection(&hmcs);
   }
 }
 
 void HookManager::ClearCurrent()
 {
   HM_LOCK;
-  //ConsoleOutput("vnrhost:ClearCurrent: lock");
-  //EnterCriticalSection(&hmcs);
   if (current) {
     current->Reset();
     if (reset)
       reset(current);
   }
-  //current->ResetEditText();
-  //LeaveCriticalSection(&hmcs);
-  //ConsoleOutput("vnrhost:ClearCurrent: unlock");
 }
 
 ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
 {
   HM_LOCK;
-  //EnterCriticalSection(&hmcs);
   return processRecordsByIds[pid];
-  //ProcessRecord *pr = i < MAX_REGISTER ? record + i : nullptr;
-  //LeaveCriticalSection(&hmcs);
-  //return pr;
 }
 
-HANDLE HookManager::GetHostPipeByPID(DWORD pid)
+HANDLE HookManager::GetCommandPipe(DWORD pid)
 {
   HM_LOCK;
-  //EnterCriticalSection(&hmcs);
   return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
-  //HANDLE h = i < MAX_REGISTER ? cmd_pipes[i] : 0;
-  //LeaveCriticalSection(&hmcs);
-  //return h;
 }
 
 MK_BASIC_TYPE(DWORD)

@@ -41,7 +41,7 @@ DWORD ProcessCommand(const std::wstring& cmd, DWORD pid)
 	{
 		HookParam hp = {};
 		if (Parse(m[1].str(), hp))
-			Host_InsertHook(pid, &hp);
+			InsertHook(pid, &hp);
 	}
 	else if (regex_match(cmd, m, wregex(L":(?:h|help)", wregex::icase)))
 	{

@@ -82,15 +82,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	return true;
 }
 
-enum { IHS_SIZE = 0x80 };
-enum { IHS_BUFF_SIZE = IHS_SIZE - sizeof(HookParam) };
-
-struct InsertHookStruct
-{
-	SendParam sp;
-	BYTE name_buffer[IHS_SIZE];
-};
-
 IHFSERVICE bool IHFAPI OpenHost()
 {
 	bool success;
@@ -208,9 +199,8 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 
 IHFSERVICE bool IHFAPI DetachProcessById(DWORD processId)
 {
-	ITH_SYNC_HOOK;
 	DWORD command = HOST_COMMAND_DETACH;
-	return WriteFile(man->GetHostPipeByPID(processId), &command, sizeof(command), nullptr, nullptr);
+	return WriteFile(man->GetCommandPipe(processId), &command, sizeof(command), nullptr, nullptr);
 }
 
 IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
@@ -229,60 +219,36 @@ IHFSERVICE void IHFAPI GetHostSettings(Settings **p)
 	}
 }
 
-// Artikash 5/11/2018: I don't understand the following operations, so I'm making minimal changes in cleanup
-
-IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name)
+IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, HookParam *hp, std::string name)
 {
-  ITH_SYNC_HOOK;
-
-  HANDLE hCmd = man->GetHostPipeByPID(pid);
-  if (hCmd == 0)
+  HANDLE commandPipe = man->GetCommandPipe(pid);
+  if (commandPipe == nullptr)
     return -1;
 
-  InsertHookStruct s;
-  s.sp.type = HOST_COMMAND_NEW_HOOK;
-  s.sp.hp = *hp;
-  size_t len;
-  if (name)
-    len = ::strlen(name);
-  else
-    len = 0;
-  if (len) {
-    if (len >= IHS_BUFF_SIZE) len = IHS_BUFF_SIZE - 1;
-    memcpy(s.name_buffer, name, len);
-  }
-  s.name_buffer[len] = 0;
-  IO_STATUS_BLOCK ios;
-  DWORD unused;
-  WriteFile(hCmd, &s, IHS_SIZE, &unused, nullptr);
+  BYTE buffer[PIPE_BUFFER_SIZE] = {};
+  *(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
+  memcpy(buffer + 4, hp, sizeof(HookParam));
+  if (name.size()) strcpy((char*)buffer + 4 + sizeof(HookParam), name.c_str());
 
-  //memcpy(&sp.hp,hp,sizeof(HookParam));
-  //cmdq->AddRequest(sp, pid);
+  WriteFile(commandPipe, buffer, 4 + sizeof(HookParam) + name.size(), nullptr, nullptr);
   return 0;
 }
 
 IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr)
 {
-  ITH_SYNC_HOOK;
-
-  HANDLE hRemoved,hCmd;
-  hCmd = man->GetHostPipeByPID(pid);
-  if (hCmd == 0)
-    return -1;
-  hRemoved = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
-  SendParam sp = {};
-  IO_STATUS_BLOCK ios;
-  sp.type = HOST_COMMAND_REMOVE_HOOK;
-  sp.hp.address = addr;
-  //cmdq -> AddRequest(sp, pid);
-  DWORD unused;
-  WriteFile(hCmd, &sp, sizeof(sp), &unused, nullptr);
-  // jichi 10/22/2013: Timeout might crash vnrsrv
-  //const LONGLONG timeout = HOOK_TIMEOUT;
-  //NtWaitForSingleObject(hRemoved, 0, (PLARGE_INTEGER)&timeout);
-  WaitForSingleObject(hRemoved, MAXDWORD);
-  CloseHandle(hRemoved);
-  man -> RemoveSingleHook(pid, sp.hp.address);
+	HANDLE commandPipe = man->GetCommandPipe(pid);
+	if (commandPipe == nullptr)
+		return -1;
+    
+	HANDLE hookRemovalEvent = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
+	BYTE buffer[8];
+	*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
+	*(DWORD*)(buffer + 4) = addr;
+  
+  WriteFile(commandPipe, buffer, 8, nullptr, nullptr);
+  WaitForSingleObject(hookRemovalEvent, 1000);
+  CloseHandle(hookRemovalEvent);
+  man->RemoveSingleHook(pid, addr);
   return 0;
 }
 

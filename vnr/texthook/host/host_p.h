@@ -36,7 +36,7 @@ DWORD WINAPI CmdThread(LPVOID lpThreadParameter);
 
 DWORD  GetCurrentPID();
 //DWORD  GetProcessIDByPath(LPWSTR str);
-HANDLE  GetHostPipeByPID(DWORD pid);
+HANDLE  GetCommandPipe(DWORD pid);
 //DWORD  Inject(HANDLE hProc);
 //DWORD  InjectByPID(DWORD pid);
 //DWORD  PIDByName(LPWSTR target);

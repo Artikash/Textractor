@@ -7,6 +7,7 @@
 //#include "host/settings.h"
 #include "config.h"
 #include "host/hookman.h"
+#include <string>
 
 struct Settings;
 struct HookParam;
@@ -23,7 +24,7 @@ IHFSERVICE DWORD IHFAPI Host_GetPIDByName(LPCWSTR pwcTarget);
 IHFSERVICE bool IHFAPI InjectProcessById(DWORD pid, DWORD timeout = 5000);
 IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid);
 IHFSERVICE bool IHFAPI Host_HijackProcess(DWORD pid);
-IHFSERVICE DWORD IHFAPI Host_InsertHook(DWORD pid, HookParam *hp, LPCSTR name = nullptr);
+IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, HookParam *hp, std::string name = "");
 IHFSERVICE DWORD IHFAPI Host_ModifyHook(DWORD pid, HookParam *hp);
 IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr);
 IHFSERVICE DWORD IHFAPI Host_AddLink(DWORD from, DWORD to);

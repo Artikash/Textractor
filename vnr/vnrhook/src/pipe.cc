@@ -25,7 +25,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 	while (::running)
 	{
 		DWORD count;
-		BYTE* buffer = new BYTE[PIPE_BUFFER_SIZE];
+		BYTE buffer[PIPE_BUFFER_SIZE];
 		HANDLE hostPipe = ::hookPipe = INVALID_HANDLE_VALUE,
 			pipeAcquisitionMutex = CreateMutexW(nullptr, TRUE, ITH_GRANTPIPE_MUTEX);
 

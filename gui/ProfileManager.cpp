@@ -170,7 +170,7 @@ DWORD WINAPI InjectThread(LPVOID lpThreadParameter)
 		for (auto hp = pf->Hooks().begin(); hp != pf->Hooks().end(); ++hp)
 		{
 			std::string name = toMultiByteString((*hp)->Name());
-			Host_InsertHook(pid, const_cast<HookParam*>(&(*hp)->HP()), name.c_str());
+			InsertHook(pid, const_cast<HookParam*>(&(*hp)->HP()), name);
 		}
 	}
 	return status;

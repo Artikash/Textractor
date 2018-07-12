@@ -18,8 +18,6 @@ template<class T, int default_size>
 class MyVector
 {
 public:
-	int Used() const { return used; }
-	T *Storage() const { return storage; }
 	void LockVector() { EnterCriticalSection(&cs_store); }
 	void UnlockVector() { LeaveCriticalSection(&cs_store); }
   MyVector() : size(default_size), used(0)

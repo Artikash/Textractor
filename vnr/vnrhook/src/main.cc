@@ -164,7 +164,7 @@ DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
 	}
 
     ConsoleOutput("vnrcli:NewHook: try inserting hook:");
-	ConsoleOutput(name);
+	ConsoleOutput(str);
 
     // jichi 7/13/2014: This function would raise when too many hooks added
     ::hookman[current].InitHook(hp, str, flag & 0xffff);
