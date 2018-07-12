@@ -304,7 +304,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
 		  create(it);
 	  }
   }
-  it->AddText(text, len, false);
+  it->AddText(text, len);
 }
 
 void HookManager::AddConsoleOutput(LPCWSTR text)
@@ -314,8 +314,7 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
     int len = wcslen(text) * 2;
 	TextThread *console = threadTable[{0, -1UL, -1UL, -1UL}];
     //EnterCriticalSection(&hmcs);
-    console->AddText((BYTE*)text,len,false);
-    console->AddText((BYTE*)L"\r\n",4,false);
+    console->AddSentence(std::wstring(text));
     //LeaveCriticalSection(&hmcs);
   }
 }

@@ -30,11 +30,6 @@ extern HWND hMainWnd; // windows.cpp
 extern bool MonitorFlag; // ProfileManager.cpp
 extern ProfileManager* pfman; // ProfileManager.cpp
 
-extern "C" {
-	BOOL IthInitSystemService();
-	void IthCloseSystemService();
-}
-
 HookManager* man;
 Settings* setman;
 LONG split_time, cyclic_remove, global_filter;
@@ -42,27 +37,6 @@ LONG process_time, inject_delay, insert_delay,
 auto_inject, auto_insert, clipboard_flag;
 
 std::map<std::wstring, long> setting;
-
-void RecordMBChar(WORD mb, PVOID f)
-{
-	auto filter = (pugi::xml_node*)f;
-	DWORD m = mb;
-	WCHAR buffer[16];
-	std::swprintf(buffer, L"m%04X", m);
-	filter->append_attribute(buffer) = L"0";
-}
-
-void RecordUniChar(WORD uni, PVOID f)
-{
-	auto filter = (pugi::xml_node*)f;
-	DWORD m = uni;
-	WCHAR buffer[16];
-	std::swprintf(buffer, L"u%04X", m);
-	filter->append_attribute(buffer) = L"0";
-	std::wstring text = filter->text().get();
-	text += (wchar_t)m;
-	filter->text().set(text.c_str());
-}
 
 void SaveSettings()
 {

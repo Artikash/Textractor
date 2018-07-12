@@ -41,7 +41,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	Pipes* pipes = (Pipes*)lpThreadParameter;
 	ConnectNamedPipe(pipes->hookPipe, nullptr);
 
-	BYTE* buffer = new BYTE[PIPE_BUFFER_SIZE];
+	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	DWORD bytesRead, processId;
 
 	// Artikash 5/20/2018: Shouldn't Windows automatically close the handles when the host process stops running?
@@ -111,7 +111,6 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	man->UnRegisterProcess(processId);
 
 	LeaveCriticalSection(&detachCs);
-	delete[] buffer;
 	delete pipes;
 
 	return 0;

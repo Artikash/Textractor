@@ -6,6 +6,8 @@
 
 #include "host/textthread_p.h"
 #include <intrin.h> // require _InterlockedExchange
+#include <string>
+#include <vector>
 
 struct RepeatCountNode {
   short repeat;
@@ -40,7 +42,7 @@ struct ThreadParameter {
 class TextThread;
 typedef void (* ConsoleCallback)(LPCSTR text);
 typedef void (* ConsoleWCallback)(LPCWSTR text);
-typedef DWORD (* ThreadOutputFilterCallback)(TextThread *, BYTE *, DWORD, DWORD);
+typedef DWORD (* ThreadOutputFilterCallback)(TextThread *,const BYTE *, DWORD, DWORD);
 typedef DWORD (* ThreadEventCallback)(TextThread *);
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
@@ -53,15 +55,11 @@ public:
   virtual void GetEntryString(LPSTR buffer, DWORD max);
 
   void Reset();
-  void AddText(const BYTE *con,int len, bool new_line); // jichi 10/27/2013: add const; remove console
-  void AddLineBreak();
-  void DispatchLastSentence();
-
-  void SetNewLineFlag();
-  void SetNewLineTimer();
+  void AddText(const BYTE *con,int len);
+  void AddSentence();
+  void AddSentence(std::wstring sentence);
 
   BYTE *GetStore(DWORD *len) { if (len) *len = used; return storage; }
-  DWORD LastSentenceLen() { return used - last_sentence; }
   DWORD PID() const { return tp.pid; }
   DWORD Addr() const {return tp.hook; }
   DWORD &Status() { return status; }
@@ -77,12 +75,10 @@ public:
 private:
   ThreadParameter tp;
 
+  std::vector<char> sentenceBuffer;
   WORD thread_number;
   ThreadOutputFilterCallback output;
-  UINT_PTR timer;
   DWORD status;
-  DWORD last_sentence,
-        sentence_length;
 };
 
 // EOF

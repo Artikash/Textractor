@@ -1,5 +1,6 @@
 #include <Windows.h>
+#include <string>
 
-typedef void(*ExtensionFunction)(LPCWSTR, DWORD64);
+typedef std::wstring (*ExtensionFunction)(std::wstring, DWORD64);
 void LoadExtensions();
-void DispatchSentenceToExtensions(LPCWSTR sentence, DWORD64 info);
+std::wstring DispatchSentenceToExtensions(std::wstring sentence, DWORD64 info);

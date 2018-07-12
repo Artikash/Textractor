@@ -69,7 +69,7 @@ protected:
     LeaveCriticalSection(&cs_store);
     //else __asm int 3
   }
-  int AddToStore(T *con,int amount)
+  int AddToStore(const T *con,int amount)
   {
     if (amount <= 0 || con == 0)
       return 0;

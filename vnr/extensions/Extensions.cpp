@@ -1,7 +1,7 @@
+#include "Extensions.h"
 #include <Windows.h>
 #include <map>
-
-typedef void(*ExtensionFunction)(LPCWSTR, DWORD64);
+#include <vector>
 
 std::map<DWORD, ExtensionFunction> extensionFunctions;
 
@@ -16,23 +16,21 @@ void LoadExtensions()
 	HANDLE file = FindFirstFileW(path, &fileData);
 	do
 	{
-		if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-		}
-		else
+		if (!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			if (wcsstr(fileData.cFileName, L"_nexthooker_extension.dll"))
 			{ 
-				extensionFunctions[wcstoul(fileData.cFileName, nullptr, 10)] = (ExtensionFunction)GetProcAddress(LoadLibraryW(fileData.cFileName), "OnSentence");
+				extensionFunctions[wcstoul(fileData.cFileName, nullptr, 10)] = (ExtensionFunction)GetProcAddress(LoadLibraryW(fileData.cFileName), "NewSentence");
 			}
 		}
 	} while (FindNextFileW(file, &fileData) != 0);
 }
 
-void DispatchSentenceToExtensions(LPCWSTR sentence, DWORD64 info)
+std::wstring DispatchSentenceToExtensions(std::wstring sentence, DWORD64 info)
 {
 	for (auto extension : extensionFunctions)
 	{
-		extension.second(sentence, info);
+		sentence = extension.second(sentence, info);
 	}
+	return sentence;
 }

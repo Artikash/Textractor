@@ -369,33 +369,14 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 }
 
-DWORD ThreadOutput(TextThread* thread, BYTE* out, DWORD len, DWORD new_line)
+DWORD ThreadOutput(TextThread* thread, const BYTE* out, DWORD len, DWORD new_line)
 {
 	if (len == 0)
 		return len;
 	DWORD status = thread->Status();
 	if (status & CURRENT_SELECT)
 	{
-		if (new_line)
-		{
-			if (thread->Number() == 0)
-				texts->AddText(L"\r\n", 2, true);
-			else
-				texts->AddText(L"\r\n\r\n", 4, true);
-		}
-		else if (status & USING_UNICODE)
-		{
-			texts->AddText((LPWSTR)out, len / 2, false);
-		}
-		else
-		{
-			int uni_len = MB_WC_count((char*)out, len);
-			LPWSTR str = new WCHAR[uni_len + 1];
-			MB_WC((char*)out, str, uni_len + 1);
-			str[uni_len] = L'\0';
-			texts->AddText(str, uni_len, false);
-			delete str;
-		}
+		texts->AddText((LPWSTR)out, len / 2, false);
 	}
 	return len;
 }
@@ -493,24 +474,13 @@ DWORD ThreadReset(TextThread* thread)
 	texts->ClearBuffer();
 	man->SetCurrent(thread);
 	thread->LockVector();
-	DWORD uni = thread->Status() & USING_UNICODE;
-	if (uni)
-	{
-		DWORD len = 0;
-		LPWSTR wc = (LPWSTR)thread->GetStore(&len);
-		len /= 2;
-		wc[len] = L'\0';
-		SetEditText(wc);
-	}
-	else
-	{
-		DWORD len = MB_WC_count((char*)thread->Storage(), thread->Used());
-		LPWSTR wc = new WCHAR[len + 1];
-		MB_WC((char*)thread->Storage(), wc, len + 1);
-		wc[len] = L'\0';
-		SetEditText(wc);
-		delete wc;
-	}
+
+	DWORD len = 0;
+	LPWSTR wc = (LPWSTR)thread->GetStore(&len);
+	len /= 2;
+	wc[len] = L'\0';
+	SetEditText(wc);
+
 	WCHAR buffer[16];
 	std::swprintf(buffer, L"%04X", thread->Number());
 	DWORD tmp = ComboBox_FindString(hwndCombo, 0, buffer);
