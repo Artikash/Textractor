@@ -77,10 +77,9 @@ const wchar_t* ErrorNoAttach=L"No process attached.";
 //profile.cpp
 const wchar_t* ErrorMonitor=L"Can't monitor process.";
 //utility.cpp
-const wchar_t* InitMessage=L"Copyright (C) 2010-2012  kaosu <qiupf2000@gmail.com>\r\n\
-Copyright (C) 2015 zorkzero <zorkzero@hotmail.com>\r\n\
-Source code <https://code.google.com/p/interactive-text-hooker/>\r\n\
-General discussion <https://groups.google.com/forum/?fromgroups#!forum/interactive-text-hooker>";
+const wchar_t* InitMessage=L"Copyright (C) 2010-2012  kaosu\r\n\
+Copyright(C) 2018 Artikash (akashmozumdar@gmail.com)\r\n\
+Source code available at github.com/Artikash/NextHooker";
 const wchar_t* BackgroundMsg=L"Type \":h\" or \":help\" for help.";
 const wchar_t* ErrorLinkExist=L"Link exist.";
 const wchar_t* ErrorCylicLink=L"Link failed. No cyclic link allowed.";
@@ -89,8 +88,8 @@ const wchar_t* ErrorLink=L"Link failed. Source or/and destination thread not fou
 const wchar_t* ErrorDeleteCombo=L"Error delete from combo.";
 
 //window.cpp
-const wchar_t* ClassName=L"ITH";
-const wchar_t* ClassNameAdmin=L"ITH (Administrator)";
+const wchar_t* ClassName=L"NextHooker";
+const wchar_t* ClassNameAdmin=L"NextHooker (Administrator)";
 const wchar_t* ErrorNotSplit=L"Need to enable split first!";
 const wchar_t* ErrorNotModule=L"Need to enable module first!";
 //Main window buttons

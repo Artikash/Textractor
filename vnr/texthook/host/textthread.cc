@@ -69,7 +69,7 @@ void TextThread::AddSentence()
 
 void TextThread::AddSentence(std::wstring sentence)
 {
-	sentence.append(L"\r\n\r\n");
+	sentence.append(L"\r\n");
 	if (output) output(this, (const BYTE*)sentence.c_str(), sentence.length() * 2, false);
 	AddToStore((const BYTE*)sentence.c_str(), sentence.length() * 2);
 }
