@@ -12,7 +12,7 @@ Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showth
 
 See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.
 
-To use an extension, simply rename the extension dll file to ```{NUMBER}_nexthooker_extension.dll``` and copy into the NextVNR folder. 
+To use an extension, simply rename the extension dll file to ```{NUMBER}_{NAME}_nexthooker_extension.dll``` and copy into the NextHooker folder. 
 
 Extensions are called in order by the number they are prefixed with.
 
@@ -36,7 +36,7 @@ GPL v3
 
 - Copyright (C) 2010-2012  [kaosu](qiupf2000@gmail.com)
 - VNR engine making by [jichi](http://sakuradite.com/topic)
-- ITH updating by [Andys](http://www.hongfire.com/forum/member/126633-andys)
+- ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - ITHVNR updating by [mireado](http://blog.naver.com/mireado) and [Eguni](https://github.com/Eguni)
 
