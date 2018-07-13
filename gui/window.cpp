@@ -36,7 +36,7 @@ extern HINSTANCE hIns; // main.cpp
 
 HWND hMainWnd, hwndCombo, hwndProcessComboBox, hwndEdit, hwndCmd;
 HWND hwndProcess;
-HWND hwndOption, hwndTop, hwndClear, hwndSave, hwndRemoveLink, hwndRemoveHook;
+HWND hwndOption, hwndTop, hwndClear, hwndSave, hwndExtensions, hwndRemoveHook;
 HWND hProcDlg, hOptionDlg;
 HBRUSH hWhiteBrush;
 DWORD background;
@@ -94,14 +94,6 @@ BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_INITDIALOG:
 	{
 		SetWindowText(GetDlgItem(hDlg, IDC_EDIT1), std::to_wstring((long long)split_time).c_str());
-		SetWindowText(GetDlgItem(hDlg, IDC_EDIT2), std::to_wstring((long long)process_time).c_str());
-		SetWindowText(GetDlgItem(hDlg, IDC_EDIT3), std::to_wstring((long long)inject_delay).c_str());
-		SetWindowText(GetDlgItem(hDlg, IDC_EDIT4), std::to_wstring((long long)insert_delay).c_str());
-		CheckDlgButton(hDlg, IDC_CHECK1, auto_inject);
-		CheckDlgButton(hDlg, IDC_CHECK2, auto_insert);
-		CheckDlgButton(hDlg, IDC_CHECK3, clipboard_flag);
-		CheckDlgButton(hDlg, IDC_CHECK4, cyclic_remove);
-		CheckDlgButton(hDlg, IDC_CHECK5, global_filter);
 	}
 	return TRUE;
 	case WM_COMMAND:
@@ -116,23 +108,7 @@ BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetWindowText(GetDlgItem(hDlg, IDC_EDIT1), str, 0x80);
 			DWORD st = std::stoul(str);
 			split_time = st > 100 ? st : 100;
-			GetWindowText(GetDlgItem(hDlg, IDC_EDIT2), str, 0x80);
-			DWORD pt = std::stoul(str);
-			process_time = pt > 50 ? pt : 50;
-			GetWindowText(GetDlgItem(hDlg, IDC_EDIT3), str, 0x80);
-			DWORD jd = std::stoul(str);
-			inject_delay = jd > 1000 ? jd : 1000;
-			GetWindowText(GetDlgItem(hDlg, IDC_EDIT4), str, 0x80);
-			DWORD sd = std::stoul(str);
-			insert_delay = sd > 200 ? sd : 200;
-			auto_inject = IsDlgButtonChecked(hDlg, IDC_CHECK1);
-			auto_insert = IsDlgButtonChecked(hDlg, IDC_CHECK2);
-			clipboard_flag = IsDlgButtonChecked(hDlg, IDC_CHECK3);
-			cyclic_remove = IsDlgButtonChecked(hDlg, IDC_CHECK4);
-			global_filter = IsDlgButtonChecked(hDlg, IDC_CHECK5);
-			setman->clipboardFlag = clipboard_flag;
 			setman->splittingInterval = split_time;
-			if (auto_inject == 0) auto_insert = 0;
 		}
 		case IDCANCEL:
 			EndDialog(hDlg, 0);
@@ -281,7 +257,7 @@ void CreateButtons(HWND hWnd)
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndSave = CreateWindow(L"Button", L"Save", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
-	hwndRemoveLink = CreateWindow(L"Button", L"Unlink", WS_CHILD | WS_VISIBLE,
+	hwndExtensions = CreateWindow(L"Button", L"Extensions", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
 	hwndRemoveHook = CreateWindow(L"Button", L"Unhook", WS_CHILD | WS_VISIBLE,
 		0, 0, 0, 0, hWnd, 0, hIns, NULL);
@@ -351,6 +327,10 @@ void ClickButton(HWND hWnd, HWND h)
 		}
 		pfman->SaveProfiles();
 	}
+	else if (h == hwndExtensions)
+	{
+		man->AddConsoleOutput(L"GUI for managing your extensions coming soon. Please do it manually for now.");
+	}
 	else if (h == hwndRemoveHook)
 	{
 		WCHAR str[32];
@@ -364,7 +344,7 @@ void ClickButton(HWND hWnd, HWND h)
 			entry = entry.substr(i + 1);
 			DWORD addr = std::stoul(entry, NULL, 16);
 			if (threadNumber != 0)
-				Host_RemoveHook(pid, addr);
+				RemoveHook(pid, addr);
 		}
 	}
 }
@@ -547,7 +527,7 @@ DWORD ThreadRemove(TextThread* thread)
 	return 0;
 }
 
-DWORD RegisterProcessList(DWORD pid)
+DWORD RegisterProcess(DWORD pid)
 {
 	auto path = GetProcessPath(pid);
 	if (!path.empty())
@@ -557,6 +537,14 @@ DWORD RegisterProcessList(DWORD pid)
 		ComboBox_AddString(hwndProcessComboBox, str);
 		if (ComboBox_GetCount(hwndProcessComboBox) == 1)
 			ComboBox_SetCurSel(hwndProcessComboBox, 0);
+	}
+	Profile* pf = pfman->GetProfile(pid);
+	if (pf)
+	{
+		for (auto i = pf->Hooks().begin(); i != pf->Hooks().end(); ++i)
+		{
+			InsertHook(pid, &i->get()->HP(), toMultiByteString(i->get()->Name()));
+		}
 	}
 	return 0;
 }
@@ -610,16 +598,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			TextThread* console = man->FindSingle(0);
 			console->RegisterOutputCallBack(ThreadOutput, NULL);
 			AddToCombo(*console, false);
-			man->RegisterProcessAttachCallback(RegisterProcessList);
+			man->RegisterProcessAttachCallback(RegisterProcess);
 			man->RegisterProcessDetachCallback(RemoveProcessList);
 			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
 			StartHost();
 			{
-				static const WCHAR program_name[] = L"Interactive Text Hooker";
+				static const WCHAR program_name[] = L"NextHooker beta v";
 				//static const WCHAR program_version[] = L"3.0";
 				static WCHAR version_info[256];
-				std::swprintf(version_info, L"%s %s (%s)", program_name, program_version, build_date);
+				std::swprintf(version_info, L"%s%s (%s)", program_name, program_version, build_date);
 				man->AddConsoleOutput(version_info);
 				man->AddConsoleOutput(InitMessage);
 			}
@@ -688,7 +676,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		MoveWindow(hwndOption, l * 1, 0, l, h, TRUE);
 		MoveWindow(hwndTop, l * 2, 0, l, h, TRUE);
 		MoveWindow(hwndClear, l * 3, 0, l, h, TRUE);
-		MoveWindow(hwndRemoveLink, l * 4, 0, l, h, TRUE);
+		MoveWindow(hwndExtensions, l * 4, 0, l, h, TRUE);
 		MoveWindow(hwndRemoveHook, l * 5, 0, l, h, TRUE);
 		MoveWindow(hwndSave, l * 6, 0, width - 6 * l, h, TRUE);
 		l *= 2;

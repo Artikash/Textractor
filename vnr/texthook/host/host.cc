@@ -219,7 +219,7 @@ IHFSERVICE void IHFAPI GetHostSettings(Settings **p)
 	}
 }
 
-IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, HookParam *hp, std::string name)
+IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, const HookParam *hp, std::string name)
 {
   HANDLE commandPipe = man->GetCommandPipe(pid);
   if (commandPipe == nullptr)
@@ -234,7 +234,7 @@ IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, HookParam *hp, std::string name)
   return 0;
 }
 
-IHFSERVICE DWORD IHFAPI Host_RemoveHook(DWORD pid, DWORD addr)
+IHFSERVICE DWORD IHFAPI RemoveHook(DWORD pid, DWORD addr)
 {
 	HANDLE commandPipe = man->GetCommandPipe(pid);
 	if (commandPipe == nullptr)

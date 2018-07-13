@@ -4,6 +4,10 @@
 
 // ntdll.h  10/14/2011
 
+/* Artikash 7/13/2018: WHERE THE FUCK DID THIS FILE COME FROM?
+Redefines a bunch of stuff in the standard windows headers (especially winnt.h) but has additional information that isn't documented anywhere else I can find.
+It's like someone stole this file from Microsoft's internal database of windows source code?? */
+
 #include <windows.h>
 
 #ifdef _MSC_VER

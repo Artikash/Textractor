@@ -84,8 +84,8 @@ void ProcessWindow::AttachProcess()
 void ProcessWindow::DetachProcess()
 {
 	DWORD pid = GetSelectedPID();
-	if (DetachProcessById(pid) == 0)
-		RefreshThreadWithPID(pid, false);
+	DetachProcessById(pid);
+	RefreshThreadWithPID(pid, false);
 }
 
 void ProcessWindow::CreateProfileForSelectedProcess()

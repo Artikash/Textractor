@@ -8,15 +8,9 @@
 #include "profile/misc.h"
 
 extern HookManager* man; // main.cpp
-extern LONG auto_inject, auto_insert, inject_delay; // main.cpp
-extern LONG insert_delay, process_time; // main.cpp
-bool MonitorFlag;
 ProfileManager* pfman;
 
-DWORD WINAPI MonitorThread(LPVOID lpThreadParameter);
-
-ProfileManager::ProfileManager() :
-hMonitorThread(IthCreateThread(MonitorThread, 0))
+ProfileManager::ProfileManager()
 {
 	LoadProfiles();
 }
@@ -24,7 +18,6 @@ hMonitorThread(IthCreateThread(MonitorThread, 0))
 ProfileManager::~ProfileManager()
 {
 	SaveProfiles();
-	WaitForSingleObject(hMonitorThread.get(), 0);
 }
 
 Profile* ProfileManager::GetProfile(DWORD pid)
@@ -91,7 +84,7 @@ void ProfileManager::WriteProfileXml(const std::wstring& path, Profile& pf, pugi
 void ProfileManager::LoadProfiles()
 {
 	pugi::xml_document doc;
-	UniqueHandle hFile(IthCreateFile(L"ITH_Profile.xml", GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING));
+	UniqueHandle hFile(IthCreateFile(L"NextHooker_Profile.xml", GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING));
 	if (hFile.get() == INVALID_HANDLE_VALUE)
 		return;
 	DWORD size = GetFileSize(hFile.get(), NULL);
@@ -100,7 +93,7 @@ void ProfileManager::LoadProfiles()
 	auto result = doc.load_buffer(buffer.get(), size);
 	if (!result)
 		return;
-	auto root = doc.root().child(L"ITH_Profile");
+	auto root = doc.root().child(L"NextHookerProfile");
 	if (!root)
 		return;
 	for (auto game = root.begin(); game != root.end(); ++game)
@@ -110,13 +103,13 @@ void ProfileManager::LoadProfiles()
 void ProfileManager::SaveProfiles()
 {
 	pugi::xml_document doc;
-	auto root = doc.append_child(L"ITH_Profile");
+	auto root = doc.append_child(L"NextHookerProfile");
 	for (auto it = profile_tree.begin(); it != profile_tree.end(); ++it) {
 		auto& path = it->first;
 		auto& profile = it->second;
 		WriteProfileXml(path, *profile, root);
 	}
-	UniqueHandle hFile(IthCreateFile(L"ITH_Profile.xml", GENERIC_WRITE, 0, CREATE_ALWAYS));
+	UniqueHandle hFile(IthCreateFile(L"NextHooker_Profile.xml", GENERIC_WRITE, 0, CREATE_ALWAYS));
 	if (hFile.get() != INVALID_HANDLE_VALUE)
 	{
 		FileWriter fw(hFile.get());
@@ -148,56 +141,6 @@ bool ProfileManager::HasProfile(const std::wstring& path)
 DWORD ProfileManager::CountProfiles()
 {
 	return profile_tree.size();
-}
-
-DWORD WINAPI InjectThread(LPVOID lpThreadParameter)
-{
-	DWORD pid = (DWORD)lpThreadParameter;
-	Sleep(inject_delay);
-	if (man == NULL)
-		return 0;
-	DWORD status = InjectProcessById(pid);
-	if (!auto_insert)
-		return status;
-	if (status == -1)
-		return status;
-	Sleep(insert_delay);
-	const Profile* pf = pfman->GetProfile(pid);
-	if (pf)
-	{
-		SendParam sp;
-		sp.type = 0;
-		for (auto hp = pf->Hooks().begin(); hp != pf->Hooks().end(); ++hp)
-		{
-			std::string name = toMultiByteString((*hp)->Name());
-			InsertHook(pid, const_cast<HookParam*>(&(*hp)->HP()), name);
-		}
-	}
-	return status;
-}
-
-DWORD WINAPI MonitorThread(LPVOID lpThreadParameter)
-{
-	while (MonitorFlag)
-	{
-		DWORD aProcesses[1024], cbNeeded, cProcesses;
-		if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
-			break;
-		cProcesses = cbNeeded / sizeof(DWORD);
-		for (size_t i = 0; i < cProcesses; ++i)
-		{
-			Sleep(process_time);
-			if (!auto_inject || man == NULL || man->GetProcessRecord(aProcesses[i]))
-				continue;
-			std::wstring process_path = GetProcessPath(aProcesses[i]);
-			if (!process_path.empty() && pfman->HasProfile(process_path))
-			{
-				UniqueHandle hThread(IthCreateThread(InjectThread, aProcesses[i]));
-				WaitForSingleObject(hThread.get(), 0);
-			}
-		}
-	}
-	return 0;
 }
 
 DWORD SaveProcessProfile(DWORD pid)

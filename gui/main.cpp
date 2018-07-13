@@ -27,14 +27,11 @@ ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE hInstance, DWORD nCmdShow, RECT *rc);
 RECT window;
 extern HWND hMainWnd; // windows.cpp
-extern bool MonitorFlag; // ProfileManager.cpp
 extern ProfileManager* pfman; // ProfileManager.cpp
 
 HookManager* man;
 Settings* setman;
-LONG split_time, cyclic_remove, global_filter;
-LONG process_time, inject_delay, insert_delay,
-auto_inject, auto_insert, clipboard_flag;
+LONG split_time;
 
 std::map<std::wstring, long> setting;
 
@@ -48,21 +45,13 @@ void SaveSettings()
 	setting[L"window_top"] = wndpl.rcNormalPosition.top;
 	setting[L"window_bottom"] = wndpl.rcNormalPosition.bottom;
 	setting[L"split_time"] = split_time;
-	setting[L"process_time"] = process_time;
-	setting[L"inject_delay"] = inject_delay;
-	setting[L"insert_delay"] = insert_delay;
-	setting[L"auto_inject"] = auto_inject;
-	setting[L"auto_insert"] = auto_insert;
-	setting[L"auto_copy"] = clipboard_flag;
-	setting[L"auto_suppress"] = cyclic_remove;
-	setting[L"global_filter"] = global_filter;
 
-	UniqueHandle hFile(IthCreateFile(L"ITH.xml", GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS));
+	UniqueHandle hFile(IthCreateFile(L"NextHooker.xml", GENERIC_WRITE, FILE_SHARE_READ, CREATE_ALWAYS));
 	if (hFile.get() != INVALID_HANDLE_VALUE)
 	{
 		FileWriter fw(hFile.get());
 		pugi::xml_document doc;
-		auto root = doc.root().append_child(L"ITH_Setting");
+		auto root = doc.root().append_child(L"NextHookerSetting");
 		for (auto it = setting.begin(); it != setting.end(); ++it)
 			root.append_attribute(it->first.c_str()).set_value(it->second);
 		doc.save(fw);
@@ -72,14 +61,6 @@ void SaveSettings()
 void DefaultSettings()
 {
 	setting[L"split_time"] = 200;
-	setting[L"process_time"] = 50;
-	setting[L"inject_delay"] = 3000;
-	setting[L"insert_delay"] = 500;
-	setting[L"auto_inject"] = 1;
-	setting[L"auto_insert"] = 1;
-	setting[L"auto_copy"] = 0;
-	setting[L"auto_suppress"] = 0;
-	setting[L"global_filter"] = 0;
 	setting[L"window_left"] = 100;
 	setting[L"window_right"] = 800;
 	setting[L"window_top"] = 100;
@@ -89,27 +70,10 @@ void DefaultSettings()
 void InitializeSettings()
 {
 	split_time = setting[L"split_time"];
-	process_time = setting[L"process_time"];
-	inject_delay = setting[L"inject_delay"];
-	insert_delay = setting[L"insert_delay"];
-	auto_inject = setting[L"auto_inject"];
-	auto_insert = setting[L"auto_insert"];
-	clipboard_flag = setting[L"auto_copy"];
-	cyclic_remove = setting[L"auto_suppress"];
-	global_filter = setting[L"global_filter"];
 	window.left = setting[L"window_left"];
 	window.right = setting[L"window_right"];
 	window.top = setting[L"window_top"];
 	window.bottom = setting[L"window_bottom"];
-
-	if (auto_inject > 1)
-		auto_inject = 1;
-	if (auto_insert > 1)
-		auto_insert = 1;
-	if (clipboard_flag > 1)
-		clipboard_flag = 1;
-	if (cyclic_remove > 1)
-		cyclic_remove = 1;
 
 	if (window.right < window.left || window.right - window.left < 600)
 		window.right = window.left + 600;
@@ -119,7 +83,7 @@ void InitializeSettings()
 
 void LoadSettings()
 {
-	UniqueHandle hFile(IthCreateFile(L"ITH.xml", GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING));
+	UniqueHandle hFile(IthCreateFile(L"NextHooker.xml", GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING));
 	if (hFile.get() != INVALID_HANDLE_VALUE)
 	{
 		DWORD size = GetFileSize(hFile.get(), NULL);
@@ -129,7 +93,7 @@ void LoadSettings()
 		auto result = doc.load_buffer_inplace(buffer.get(), size);
 		if (!result)
 			return;
-		auto root = doc.root().child(L"ITH_Setting");
+		auto root = doc.root().child(L"NextHookerSetting");
 		for (auto attr = root.attributes_begin(); attr != root.attributes_end(); ++attr)
 		{
 			auto it = setting.find(attr->name());
@@ -184,20 +148,17 @@ LONG WINAPI UnhandledExcept(_EXCEPTION_POINTERS *ExceptionInfo)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	InitCommonControls();
-	CreateMutex(NULL, TRUE, L"ITH_MAIN_RUNNING");
 	if (OpenHost())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
 		GetHostHookManager(&man);
 		GetHostSettings(&setman);
 		setman->splittingInterval = 200;
-		MonitorFlag = true;
 		pfman = new ProfileManager();
 		DefaultSettings();
 		LoadSettings();
 		InitializeSettings();
 		setman->splittingInterval = split_time;
-		setman->clipboardFlag = clipboard_flag > 0;
 		hIns = hInstance;
 		MyRegisterClass(hIns);
 		InitInstance(hIns, FALSE, &window);
@@ -207,10 +168,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		//delete mb_filter;
-		//delete uni_filter;
 		delete pfman;
-		MonitorFlag = false;
 		man = NULL;
 	}
 	else

@@ -31,5 +31,4 @@ private:
 	// locate profile with executable path
 	profile_map profile_tree;
 	CriticalSection cs;
-	UniqueHandle hMonitorThread;
 };
