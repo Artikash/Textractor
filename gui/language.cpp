@@ -77,8 +77,10 @@ const wchar_t* ErrorNoAttach=L"No process attached.";
 //profile.cpp
 const wchar_t* ErrorMonitor=L"Can't monitor process.";
 //utility.cpp
-const wchar_t* InitMessage=L"Copyright (C) 2010-2012  kaosu\r\n\
-Copyright(C) 2018 Artikash (akashmozumdar@gmail.com)\r\n\
+const wchar_t* InitMessage=L"Copyright (C) 2010-2012  kaosu (qiupf2000@gmail.com)\r\n\
+Copyright (C) 2015 Stomp (zorkzero@hotmail.com)\r\n\
+Copyright (C) 2016-2017 mireado (mireado@daum.net)\r\n\
+Copyright (C) 2018 Artikash (akashmozumdar@gmail.com)\r\n\
 Source code available at github.com/Artikash/NextHooker";
 const wchar_t* BackgroundMsg=L"Type \":h\" or \":help\" for help.";
 const wchar_t* ErrorLinkExist=L"Link exist.";
