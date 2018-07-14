@@ -200,7 +200,8 @@ IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
 IHFSERVICE bool IHFAPI DetachProcessById(DWORD processId)
 {
 	DWORD command = HOST_COMMAND_DETACH;
-	return WriteFile(man->GetCommandPipe(processId), &command, sizeof(command), nullptr, nullptr);
+	DWORD unused;
+	return WriteFile(man->GetCommandPipe(processId), &command, sizeof(command), &unused, nullptr);
 }
 
 IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
@@ -230,7 +231,8 @@ IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, const HookParam *hp, std::string n
   memcpy(buffer + 4, hp, sizeof(HookParam));
   if (name.size()) strcpy((char*)buffer + 4 + sizeof(HookParam), name.c_str());
 
-  WriteFile(commandPipe, buffer, 4 + sizeof(HookParam) + name.size(), nullptr, nullptr);
+  DWORD unused;
+  WriteFile(commandPipe, buffer, 4 + sizeof(HookParam) + name.size(), &unused, nullptr);
   return 0;
 }
 
@@ -245,7 +247,8 @@ IHFSERVICE DWORD IHFAPI RemoveHook(DWORD pid, DWORD addr)
 	*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
 	*(DWORD*)(buffer + 4) = addr;
   
-  WriteFile(commandPipe, buffer, 8, nullptr, nullptr);
+	DWORD unused;
+  WriteFile(commandPipe, buffer, 8, &unused, nullptr);
   WaitForSingleObject(hookRemovalEvent, 1000);
   CloseHandle(hookRemovalEvent);
   man->RemoveSingleHook(pid, addr);

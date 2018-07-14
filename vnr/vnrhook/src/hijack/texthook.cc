@@ -477,10 +477,10 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
     *((DWORD *)pbData + 1) = dwRetn;
     *((DWORD *)pbData + 2) = dwSplit;
     if (dwCount) {
-      IO_STATUS_BLOCK ios = {};
+		DWORD unused;
 
       //CliLockPipe();
-	  WriteFile(::hookPipe, pbData, dwCount + HEADER_SIZE, nullptr, nullptr);
+	  WriteFile(::hookPipe, pbData, dwCount + HEADER_SIZE, &unused, nullptr);
       //CliUnlockPipe();
     }
     if (pbData != pbSmallBuff)

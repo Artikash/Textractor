@@ -43,7 +43,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		}
 
 		*(DWORD*)buffer = GetCurrentProcessId();
-		WriteFile(::hookPipe, buffer, sizeof(DWORD), nullptr, nullptr);
+		WriteFile(::hookPipe, buffer, sizeof(DWORD), &count, nullptr);
 
 		for (int i = 0, count = 0; count < ::currentHook; i++)
 		{
@@ -131,7 +131,8 @@ void ConsoleOutput(LPCSTR text)
 	*(DWORD*)buffer = HOST_NOTIFICATION; //cmd
 	*(DWORD*)(buffer + 4) = HOST_NOTIFICATION_TEXT; //console
 	memcpy(buffer + 8, text, textSize);
-	WriteFile(::hookPipe, buffer, dataSize, nullptr, nullptr);
+	DWORD unused;
+	WriteFile(::hookPipe, buffer, dataSize, &unused, nullptr);
 }
 
 // Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook name
@@ -146,7 +147,8 @@ void NotifyHookInsert(HookParam hp, LPCSTR name)
     *(DWORD*)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
     *(HookParam*)(buffer + 8) = hp;
 	strcpy((char*)buffer + 8 + sizeof(HookParam), name);
-	WriteFile(::hookPipe, buffer, strlen(name) + 8 + sizeof(HookParam), nullptr, nullptr);
+	DWORD unused;
+	WriteFile(::hookPipe, buffer, strlen(name) + 8 + sizeof(HookParam), &unused, nullptr);
 	return;
 }
 
