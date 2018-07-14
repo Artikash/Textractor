@@ -9,6 +9,7 @@
 #include "vnrhook/include/const.h"
 #include "ithsys/ithsys.h"
 #include <stdio.h>
+#include <atlbase.h>
 //#include "CommandQueue.h"
 //#include <QtCore/QDebug>
 
@@ -267,7 +268,8 @@ DWORD WINAPI RecvThread(LPVOID lpThreadParameter)
           lock = 0;
         } break;
       case HOST_NOTIFICATION_TEXT:
-        //qDebug() << ((LPCSTR)(buff + 8));
+		USES_CONVERSION;
+		man->AddConsoleOutput(A2W((LPCSTR)(buff + 8)));
         break;
       }
     } else {
