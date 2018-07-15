@@ -91,6 +91,14 @@ bool DeterminePCEngine()
 
 bool DetermineEngineByFile1()
 {
+  // Artikash 7/14/2018: AIRNovel - sample game https://vndb.org/v18814
+  if (Util::CheckFile(L"*.swf") && Util::CheckFile(L"RIO.INI"))
+  {
+	  //InsertAdobeAirHook();
+	InsertAIRNovelHook();
+	return true;
+  }
+
   if (Util::CheckFile(L"*.xp3") || Util::SearchResourceString(L"TVP(KIRIKIRI)")) {
     if (Util::SearchResourceString(L"TVP(KIRIKIRI) Z ")) { // TVP(KIRIKIRI) Z CORE
       // jichi 11/24/2014: Disabled that might crash VBH
@@ -413,6 +421,7 @@ bool DetermineEngineByFile4()
     InsertPensilHook();
     return true;
   }
+
   return false;
 }
 

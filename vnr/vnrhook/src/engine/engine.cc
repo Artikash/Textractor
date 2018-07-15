@@ -92,7 +92,7 @@ enum : DWORD {
   //, step = 0x00010000 // crash otoboku PSP on 0.9.9 since 5pb is wrongly inserted
 };
 
-enum : BYTE { XX = MemDbg::WidecardByte }; // 0x11
+enum : BYTE { XX = 0x11 }; // 0x11
 #define XX2 XX,XX       // WORD
 #define XX4 XX2,XX2     // DWORD
 #define XX8 XX4,XX4     // QWORD
@@ -139,19 +139,12 @@ ULONG SafeFindBytes(LPCVOID pattern, DWORD patternSize, DWORD lowerBound, DWORD 
   return r;
 }
 
-ULONG SafeMatchBytes(LPCVOID pattern, DWORD patternSize, DWORD lowerBound, DWORD upperBound, BYTE wildcard = XX)
-{
-  ULONG r = 0;
-  ITH_WITH_SEH(r = MemDbg::matchBytes(pattern, patternSize, lowerBound, upperBound, wildcard));
-  return r;
-}
-
 // jichi 7/17/2014: Search mapped memory for emulators
 ULONG _SafeMatchBytesInMappedMemory(LPCVOID pattern, DWORD patternSize, BYTE wildcard,
                                    ULONG start, ULONG stop, ULONG step)
 {
   for (ULONG i = start; i < stop; i += step) // + patternSize to avoid overlap
-    if (ULONG r = SafeMatchBytes(pattern, patternSize, i, i + step + patternSize + 1, wildcard))
+    if (ULONG r = SafeFindBytes(pattern, patternSize, i, i + step + patternSize + 1))
       return r;
   return 0;
 }
@@ -1995,7 +1988,7 @@ bool InsertBGI2Hook()
   };
 
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   //GROWL_DWORD(reladdr);
   if (!addr) {
     ConsoleOutput("vnreng:BGI2: pattern not found");
@@ -4767,7 +4760,7 @@ static bool InsertSystem43OldHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
     0xcc, 0xcc // patching a few int3 to make sure that this is at the end of the code block
   };
   enum { addr_offset = 0 };
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   //GROWL_DWORD(addr);
   if (!addr) {
     ConsoleOutput("vnreng:System43: pattern not found");
@@ -5499,7 +5492,7 @@ static bool InsertSystem43NewHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
     0xe8 //, XX4,           // 004eeb44   e8 42dc1900      call .0068c78b
   };
   enum { addr_offset = 0 };
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   //GROWL_DWORD(addr);
   if (!addr) {
     ConsoleOutput("vnreng:System43+: pattern not found");
@@ -5853,6 +5846,7 @@ bool InsertShinaHook()
 
 bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 {
+	ConsoleOutput("WaffleDynamic:triggered");
   if (addr != ::GetTextExtentPoint32A)
     return false;
 
@@ -7030,7 +7024,7 @@ bool InsertMalie4Hook()
     0x83,0xC4,0x10			// 659066 | 83 C4 10                 | add esp,10                              |
   };
   enum {addr_offset = 0x65905E - 0x65904E};
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:Malie4: pattern not found");
     return false;
@@ -8244,7 +8238,7 @@ bool InsertDebonosuNameHook()
     0x0f,0x45,0xc8,  // 0032f675   0f45c8           cmovne ecx,eax
     0x57             // 0032f678   57               push edi
   };
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:DebonosuName: pattern NOT FOUND");
     return false;
@@ -9886,7 +9880,7 @@ bool InsertNextonHook()
     0x0f,0x84 //c2feffff    // 0044d6a4  ^0f84 c2feffff    je .0044d56c
   };
   enum { addr_offset = 0x0044d69e - 0x0044d696 }; // = 8
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:NEXTON: pattern not exist");
     return false;
@@ -10341,7 +10335,7 @@ bool InsertArtemis2Hook()
   };
   enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
     ConsoleOutput("vnreng:Artemis2: pattern not found");
     return false;
@@ -12381,7 +12375,7 @@ static bool InsertNewPal1Hook()
     0x89,0x45, 0xf8     // 002c6abd   8945 f8          mov dword ptr ss:[ebp-0x8],eax ; mireado : small update
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
     ConsoleOutput("vnreng:Pal1: pattern not found");
     return false;
@@ -12410,7 +12404,7 @@ static bool InsertNewPal2Hook()
 	0xe8                // 0136e230   e8			   call 01377800
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
     ConsoleOutput("vnreng:Pal2: pattern not found");
     return false;
@@ -13341,7 +13335,7 @@ bool InsertExpHook()
   };
   enum { addr_offset = 0 };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   //GROWL_DWORD(addr);
   if (!addr) {
     ConsoleOutput("vnreng:EXP: pattern not found");
@@ -13634,7 +13628,7 @@ bool Insert5pbHook1()
   };
   enum { addr_offset = 0x0016d916 - 0x0016d90e };
 
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   //GROWL_DWORD3(addr+addr_offset, processStartAddress,processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:5pb1: pattern not found");
@@ -14467,7 +14461,7 @@ bool InsertLeafHook()
     //0x6a, 0x00,         // 00451678   6a 00            push 0x0
     //0xff,0x15           // 0045167a   ff15 74104a00    call dword ptr ds:[0x4a1074]             ; kernel32.getprocessheap
   };
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   enum { addr_offset = 0x0045166f - 0x00451658 };
   //GROWL_DWORD(addr);
   if (!addr) {
@@ -14515,7 +14509,7 @@ bool InsertNekopackHook()
     0x8b,0x5d, 0x08       // 0069638D  |.  8B5D 08       MOV EBX,DWORD PTR SS:[ARG.1]
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr = MemDbg::matchBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
   //GROWL(reladdr);
   if (!addr) {
@@ -15971,6 +15965,110 @@ bool InsertAdobeAirHook()
   ConsoleOutput("vnreng: INSERT Adobe AIR");
   NewHook(hp, "Adobe AIR");
   return true;
+}
+
+/**
+*  Artikash 7/15/2018: Insert AIRNovel hook
+*  Sample game:
+*  https://vndb.org/v22252: /HQ-C@130380:Adobe AIR.dll <- produces a lot of garbage along with text, should be filtered
+
+Adobe AIR.dll+130300 - 55                    - push ebp
+Adobe AIR.dll+130301 - 8B EC                 - mov ebp,esp
+Adobe AIR.dll+130303 - F2 0F10 05 5069C610   - movsd xmm0,["Adobe AIR.dll"+EE6950] { [-1.00] }
+Adobe AIR.dll+13030B - 83 EC 0C              - sub esp,0C { 12 }
+Adobe AIR.dll+13030E - F2 0F10 4D 08         - movsd xmm1,[ebp+08]
+Adobe AIR.dll+130313 - 66 0F2F C1            - comisd xmm0,xmm1
+Adobe AIR.dll+130317 - 72 05                 - jb "Adobe AIR.dll"+13031E { ->Adobe AIR.dll+13031E }
+Adobe AIR.dll+130319 - 83 CA FF              - or edx,-01 { 255 }
+Adobe AIR.dll+13031C - EB 32                 - jmp "Adobe AIR.dll"+130350 { ->Adobe AIR.dll+130350 }
+Adobe AIR.dll+13031E - 8B 51 10              - mov edx,[ecx+10]
+Adobe AIR.dll+130321 - 66 0F6E C2            - movd xmm0,edx
+Adobe AIR.dll+130325 - F3 0FE6 C0            - cvtdq2pd xmm0,xmm0
+Adobe AIR.dll+130329 - 66 0F2F C8            - comisd xmm1,xmm0
+Adobe AIR.dll+13032D - 73 21                 - jae "Adobe AIR.dll"+130350 { ->Adobe AIR.dll+130350 }
+Adobe AIR.dll+13032F - F2 0F11 4D F4         - movsd [ebp-0C],xmm1
+Adobe AIR.dll+130334 - 33 D2                 - xor edx,edx
+Adobe AIR.dll+130336 - 8B 45 F8              - mov eax,[ebp-08]
+Adobe AIR.dll+130339 - 25 FFFFFF7F           - and eax,7FFFFFFF { 2147483647 }
+Adobe AIR.dll+13033E - 3D 0000F07F           - cmp eax,7FF00000 { 2146435072 }
+Adobe AIR.dll+130343 - 77 0B                 - ja "Adobe AIR.dll"+130350 { ->Adobe AIR.dll+130350 }
+Adobe AIR.dll+130345 - 72 05                 - jb "Adobe AIR.dll"+13034C { ->Adobe AIR.dll+13034C }
+Adobe AIR.dll+130347 - 39 55 F4              - cmp [ebp-0C],edx
+Adobe AIR.dll+13034A - 77 04                 - ja "Adobe AIR.dll"+130350 { ->Adobe AIR.dll+130350 }
+Adobe AIR.dll+13034C - F2 0F2C D1            - cvttsd2si edx,xmm1
+Adobe AIR.dll+130350 - 8B 41 10              - mov eax,[ecx+10]
+Adobe AIR.dll+130353 - 89 45 F8              - mov [ebp-08],eax
+Adobe AIR.dll+130356 - 3B D0                 - cmp edx,eax
+Adobe AIR.dll+130358 - 73 51                 - jae "Adobe AIR.dll"+1303AB { ->Adobe AIR.dll+1303AB }
+Adobe AIR.dll+13035A - 89 55 FC              - mov [ebp-04],edx
+Adobe AIR.dll+13035D - 8B 45 F8              - mov eax,[ebp-08]
+Adobe AIR.dll+130360 - 39 45 FC              - cmp [ebp-04],eax
+Adobe AIR.dll+130363 - 1B C0                 - sbb eax,eax
+Adobe AIR.dll+130365 - 21 45 FC              - and [ebp-04],eax
+Adobe AIR.dll+130368 - 8B 41 14              - mov eax,[ecx+14]
+Adobe AIR.dll+13036B - C1 E8 02              - shr eax,02 { 2 }
+Adobe AIR.dll+13036E - A8 01                 - test al,01 { 1 }
+Adobe AIR.dll+130370 - 75 05                 - jne "Adobe AIR.dll"+130377 { ->Adobe AIR.dll+130377 }
+Adobe AIR.dll+130372 - 8B 51 08              - mov edx,[ecx+08] // Address of text moved into edx here
+Adobe AIR.dll+130375 - EB 09                 - jmp "Adobe AIR.dll"+130380 { ->Adobe AIR.dll+130380 } // Unconditional jump to hook location
+Adobe AIR.dll+130377 - 8B 41 0C              - mov eax,[ecx+0C]
+Adobe AIR.dll+13037A - 8B 50 08              - mov edx,[eax+08]
+Adobe AIR.dll+13037D - 03 51 08              - add edx,[ecx+08]
+Adobe AIR.dll+130380 - F6 41 14 01           - test byte ptr [ecx+14],01 { 1 } // Hook here!
+Adobe AIR.dll+130384 - 8B 45 FC              - mov eax,[ebp-04]
+Adobe AIR.dll+130387 - 75 06                 - jne "Adobe AIR.dll"+13038F { ->Adobe AIR.dll+13038F }
+Adobe AIR.dll+130389 - 0FB6 04 10            - movzx eax,byte ptr [eax+edx]
+Adobe AIR.dll+13038D - EB 04                 - jmp "Adobe AIR.dll"+130393 { ->Adobe AIR.dll+130393 }
+Adobe AIR.dll+13038F - 0FB7 04 42            - movzx eax,word ptr [edx+eax*2]
+Adobe AIR.dll+130393 - 66 0F6E C0            - movd xmm0,eax
+Adobe AIR.dll+130397 - F3 0FE6 C0            - cvtdq2pd xmm0,xmm0
+Adobe AIR.dll+13039B - 89 0D 90F71311        - mov ["Adobe AIR.dll"+13BF790],ecx { [07EBDB80] }
+Adobe AIR.dll+1303A1 - F2 0F11 45 F4         - movsd [ebp-0C],xmm0
+Adobe AIR.dll+1303A6 - DD 45 F4              - fld qword ptr [ebp-0C]
+Adobe AIR.dll+1303A9 - EB 06                 - jmp "Adobe AIR.dll"+1303B1 { ->Adobe AIR.dll+1303B1 }
+Adobe AIR.dll+1303AB - DD 05 B8071411        - fld qword ptr ["Adobe AIR.dll"+13C07B8] { [Nan] }
+Adobe AIR.dll+1303B1 - 8B E5                 - mov esp,ebp
+Adobe AIR.dll+1303B3 - 5D                    - pop ebp
+Adobe AIR.dll+1303B4 - C2 0800               - ret 0008 { 8 }
+*/
+
+bool InsertAIRNovelHook()
+{
+	if (DWORD base = (DWORD)GetModuleHandleW(L"Adobe Air.dll"))
+	{
+		const BYTE bytes[] =
+		{
+			0xf6, 0x41, 0x14, 0x01 // test byte ptr [ecx+14], 01
+		};
+		DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), base, base + 0x200000); // Artikash 7/14/2018: Probably big enough
+		if (!addr)
+		{
+			ConsoleOutput("NextHooker: AIRNovel: pattern not found");
+			return false;
+		}
+		HookParam hp = {};
+		hp.address = addr;
+		hp.length_offset = 0;
+		hp.type = USING_UNICODE|USING_STRING;
+		hp.offset = pusha_edx_off - 4;
+		hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index) 
+		{ 
+			return *len > 4 &&
+				*(char*)str != '[' &&
+				*(char*)str != ';' &&
+				*(char*)str != '&' &&
+				*(char*)str != '*' &&
+				*(char*)str != '\n' &&
+				*(char*)str != '\t' &&
+				memcmp((char*)str, "app:/", 5); 
+		};
+
+		ConsoleOutput("NextHooker: INSERT AIRNovel");
+		NewHook(hp, "AIRNovel");
+		return true;
+	}
+	ConsoleOutput("Adobe Air.dll not found");
+	return false;
 }
 
 /** jichi 10/31/2014 Adobe Flash Player v10
@@ -19156,7 +19254,7 @@ bool InsertOtomatePPSSPPHook()
   enum { addr_offset = 0x006db4b7 - 0x006db4b0 };
   enum { ds_offset = 0x006db4bf - 0x006db4b0 + 2 };
 
-  DWORD addr = SafeMatchBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  DWORD addr = SafeFindBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
   //GROWL_DWORD(addr);
   if (!addr)
     ConsoleOutput("vnreng: Otomate PPSSPP: pattern not found");

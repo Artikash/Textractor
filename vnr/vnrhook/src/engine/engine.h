@@ -81,6 +81,7 @@ bool Insert5pbHook();           // 5pb.jp, PSP/PS3 games ported to PC
 bool InsertAB2TryHook();        // Yane@AkabeiSoft2Try: YaneSDK.dll.
 bool InsertAbelHook();          // Abel
 bool InsertAdobeAirHook();      // Adobe AIR
+bool InsertAIRNovelHook();
 bool InsertAdobeFlash10Hook();  // Adobe Flash Player 10
 bool InsertAliceHook();         // System40@AliceSoft; do not work for latest alice games
 //bool InsertAmuseCraftHook();    // AMUSE CRAFT: *.pac

@@ -87,7 +87,7 @@ void TextThread::AddText(const BYTE *con, int len)
 
 void TextThread::GetEntryString(LPSTR buffer, DWORD max)
 {
-    int len = sprintf(buffer, "%.5d:%.4d:0x%08X:0x%08X:0x%08X:",
+    int len = sprintf(buffer, "%.4X:%.4d:0x%08X:0x%08X:0x%08X:",
           thread_number, tp. pid, tp.hook, tp.retn, tp.spl);
     GetHookName(buffer + len, tp.pid, tp.hook, max - len);
 }
