@@ -1,6 +1,7 @@
 // memsearch.cc
 // 4/20/2014 jichi
 #include "memdbg/memsearch.h"
+#include "ithsys/ithsys.h"
 #include <windows.h>
 
 // Helpers
@@ -28,173 +29,6 @@ _mask:
     or eax,-1
     shl ecx,3
     shr eax,cl
-  }
-}
-
-/**
- *  Return the address of the first matched pattern.
- *  The same as ITH SearchPattern(). KMP is used.
- *  Return 0 if failed. The return result is ambiguous if the pattern address is 0.
- *
- *  @param  startAddress  search start address
- *  @param  range  search range
- *  @param  pattern  array of bytes to match
- *  @param  patternSize  size of the pattern array
- *  @return  relative offset from the startAddress
- */
-DWORD searchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length) // KMP
-{
-  __asm
-  {
-    mov eax,search_length
-alloc:
-    push 0
-    sub eax,1
-    jnz alloc
-
-    mov edi,search
-    mov edx,search_length
-    mov ecx,1
-    xor esi,esi
-build_table:
-    mov al,byte ptr [edi+esi]
-    cmp al,byte ptr [edi+ecx]
-    sete al
-    test esi,esi
-    jz pre
-    test al,al
-    jnz pre
-    mov esi,[esp+esi*4-4]
-    jmp build_table
-pre:
-    test al,al
-    jz write_table
-    inc esi
-write_table:
-    mov [esp+ecx*4],esi
-
-    inc ecx
-    cmp ecx,edx
-    jb build_table
-
-    mov esi,base
-    xor edx,edx
-    mov ecx,edx
-matcher:
-    mov al,byte ptr [edi+ecx]
-    cmp al,byte ptr [esi+edx]
-    sete al
-    test ecx,ecx
-    jz match
-    test al,al
-    jnz match
-    mov ecx, [esp+ecx*4-4]
-    jmp matcher
-match:
-    test al,al
-    jz pre2
-    inc ecx
-    cmp ecx,search_length
-    je finish
-pre2:
-    inc edx
-    cmp edx,base_length // search_length
-    jb matcher
-    mov edx,search_length
-    dec edx
-finish:
-    mov ecx,search_length
-    sub edx,ecx
-    lea eax,[edx+1]
-    lea ecx,[ecx*4]
-    add esp,ecx
-  }
-}
-
-/**
- * jichi 2/5/2014: The same as SearchPattern except it uses 0xff to match everything
- * According to @Andys, 0xff seldom appears in the source code: http://sakuradite.com/topic/124
- */
-DWORD searchPatternEx(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length, BYTE wildcard) // KMP
-{
-  __asm
-  {
-    // jichi 2/5/2014 BEGIN
-    mov bl,wildcard
-    // jichi 2/5/2014 END
-    mov eax,search_length
-alloc:
-    push 0
-    sub eax,1
-    jnz alloc // jichi 2/5/2014: this will also set %eax to zero
-
-    mov edi,search
-    mov edx,search_length
-    mov ecx,1
-    xor esi,esi
-build_table:
-    mov al,byte ptr [edi+esi]
-    cmp al,byte ptr [edi+ecx]
-    sete al
-    test esi,esi
-    jz pre
-    test al,al
-    jnz pre
-    mov esi,[esp+esi*4-4]
-    jmp build_table
-pre:
-    test al,al
-    jz write_table
-    inc esi
-write_table:
-    mov [esp+ecx*4],esi
-
-    inc ecx
-    cmp ecx,edx
-    jb build_table
-
-    mov esi,base
-    xor edx,edx
-    mov ecx,edx
-matcher:
-    mov al,byte ptr [edi+ecx] // search
-    // jichi 2/5/2014 BEGIN
-    mov bh,al // save loaded byte to reduce cache access. %ah is not used and always zero
-    cmp al,bl // %bl is the wildcard byte
-    sete al
-    test al,al
-    jnz wildcard_matched
-    mov al,bh // restore the loaded byte
-    // jichi 2/5/2014 END
-    cmp al,byte ptr [esi+edx] // base
-    sete al
-    // jichi 2/5/2014 BEGIN
-wildcard_matched:
-    // jichi 2/5/2014 END
-    test ecx,ecx
-    jz match
-    test al,al
-    jnz match
-    mov ecx, [esp+ecx*4-4]
-    jmp matcher
-match:
-    test al,al
-    jz pre2
-    inc ecx
-    cmp ecx,search_length
-    je finish
-pre2:
-    inc edx
-    cmp edx,base_length // search_length
-    jb matcher
-    mov edx,search_length
-    dec edx
-finish:
-    mov ecx,search_length
-    sub edx,ecx
-    lea eax,[edx+1]
-    lea ecx,[ecx*4]
-    add esp,ecx
   }
 }
 
@@ -494,7 +328,7 @@ bool iterFindBytes(const address_fun_t &fun, const void *pattern, DWORD patternS
 bool iterMatchBytes(const address_fun_t &fun, const void *pattern, DWORD patternSize, DWORD lowerBound, DWORD upperBound)
 {
   for (DWORD addr = lowerBound; addr < upperBound - patternSize; addr += patternSize) { ;
-    addr = matchBytes(pattern, patternSize, addr, upperBound);
+    addr = findBytes(pattern, patternSize, addr, upperBound);
     if (!addr || !fun(addr))
       return false;
   }
@@ -780,13 +614,7 @@ DWORD findEnclosingFunctionAfterNop(DWORD start, DWORD back_range, DWORD step)
 
 DWORD findBytes(const void *pattern, DWORD patternSize, DWORD lowerBound, DWORD upperBound)
 {
-  DWORD reladdr = searchPattern(lowerBound, upperBound - lowerBound, pattern, patternSize);
-  return reladdr ? lowerBound + reladdr : 0;
-}
-
-DWORD matchBytes(const void *pattern, DWORD patternSize, DWORD lowerBound, DWORD upperBound, BYTE wildcard)
-{
-  DWORD reladdr = searchPatternEx(lowerBound, upperBound - lowerBound, pattern, patternSize, wildcard);
+  DWORD reladdr = SearchPattern(lowerBound, upperBound - lowerBound, pattern, patternSize);
   return reladdr ? lowerBound + reladdr : 0;
 }
 
@@ -809,7 +637,7 @@ DWORD findBytesInPages(const void *pattern, DWORD patternSize, DWORD lowerBound,
   //upperBound = 0x14000000;
   //SIZE_T ok = ::VirtualQuery((LPCVOID)lowerBound, &mbi, sizeof(mbi));
   //ITH_GROWL_DWORD7(1, start, stop, mbi.RegionSize, mbi.Protect, mbi.Type, mbi.State);
-  //return matchBytes(pattern, patternSize, lowerBound, upperBound, wildcard);
+  //return findBytes(pattern, patternSize, lowerBound, upperBound, wildcard);
   while (stop < upperBound) {
     SIZE_T ok = ::VirtualQuery((LPCVOID)start, &mbi, sizeof(mbi));
     if (!mbi.RegionSize)
@@ -843,7 +671,7 @@ DWORD matchBytesInPages(const void *pattern, DWORD patternSize, DWORD lowerBound
   //upperBound = 0x14000000;
   //SIZE_T ok = ::VirtualQuery((LPCVOID)lowerBound, &mbi, sizeof(mbi));
   //ITH_GROWL_DWORD7(1, start, stop, mbi.RegionSize, mbi.Protect, mbi.Type, mbi.State);
-  //return matchBytes(pattern, patternSize, lowerBound, upperBound, wildcard);
+  //return findBytes(pattern, patternSize, lowerBound, upperBound, wildcard);
   while (stop < upperBound) {
     SIZE_T ok = ::VirtualQuery((LPCVOID)start, &mbi, sizeof(mbi));
     if (!mbi.RegionSize)
@@ -851,7 +679,7 @@ DWORD matchBytesInPages(const void *pattern, DWORD patternSize, DWORD lowerBound
     // Only visit readable and committed region
     // Protect could be zero if not allowed to query
     if (!ok || !mbi.Protect || mbi.Protect&PAGE_NOACCESS) {
-      if (stop > start && (ret = matchBytes(pattern, patternSize, lowerBound, upperBound, wildcard)))
+      if (stop > start && (ret = findBytes(pattern, patternSize, lowerBound, upperBound, wildcard)))
         return ret;
       if (search != SearchAll)
         return 0;
@@ -861,7 +689,7 @@ DWORD matchBytesInPages(const void *pattern, DWORD patternSize, DWORD lowerBound
       stop += mbi.RegionSize;
   }
   if (stop > start)
-    ret = matchBytes(pattern, patternSize, start, min(upperBound, stop), wildcard);
+    ret = findBytes(pattern, patternSize, start, min(upperBound, stop), wildcard);
   return ret;
 }
 

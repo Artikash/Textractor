@@ -34,73 +34,25 @@ BYTE LeadByteTable[0x100] = {
 // - API functions -
 
 extern "C" {
-DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length) // KMP
+/**
+*  Return the address of the first matched pattern.
+*  Artikash 7/14/2018: changed implementation, hopefully it behaves the same
+*  Return 0 if failed. The return result is ambiguous if the pattern address is 0.
+*
+*  @param  startAddress  search start address
+*  @param  range  search range
+*  @param  pattern  array of bytes to match
+*  @param  patternSize  size of the pattern array
+*  @return  relative offset from the startAddress
+*/
+DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length)
 {
-  __asm
-  {
-    mov eax,search_length
-alloc:
-    push 0
-    sub eax,1
-    jnz alloc
+	// Artikash 7/14/2018: not sure, but I think this could throw read access violation if I dont subtract search_length
+	for (int i = 0; i < base_length - search_length; ++i)
+		if (memcmp((void*)(base + i), search, search_length) == 0)
+			return i;
 
-    mov edi,search
-    mov edx,search_length
-    mov ecx,1
-    xor esi,esi
-build_table:
-    mov al,byte ptr [edi+esi]
-    cmp al,byte ptr [edi+ecx]
-    sete al
-    test esi,esi
-    jz pre
-    test al,al
-    jnz pre
-    mov esi,[esp+esi*4-4]
-    jmp build_table
-pre:
-    test al,al
-    jz write_table
-    inc esi
-write_table:
-    mov [esp+ecx*4],esi
-
-    inc ecx
-    cmp ecx,edx
-    jb build_table
-
-    mov esi,base
-    xor edx,edx
-    mov ecx,edx
-matcher:
-    mov al,byte ptr [edi+ecx]
-    cmp al,byte ptr [esi+edx]
-    sete al
-    test ecx,ecx
-    jz match
-    test al,al
-    jnz match
-    mov ecx, [esp+ecx*4-4]
-    jmp matcher
-match:
-    test al,al
-    jz pre2
-    inc ecx
-    cmp ecx,search_length
-    je finish
-pre2:
-    inc edx
-    cmp edx,base_length // search_length
-    jb matcher
-    mov edx,search_length
-    dec edx
-finish:
-    mov ecx,search_length
-    sub edx,ecx
-    lea eax,[edx+1]
-    lea ecx,[ecx*4]
-    add esp,ecx
-  }
+	return 0;
 }
 
 DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size)

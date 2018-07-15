@@ -165,25 +165,6 @@ dword_t findEnclosingFunctionAfterNop(dword_t addr, dword_t searchSize = Maximum
  *  @exception  illegal memory access
  */
 dword_t findBytes(const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
-//dword_t reverseFindBytes(const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound);
-
-/**
- *  jichi 2/5/2014: The same as findBytes except it uses widecard to match everything.
- *  The widecard should use the byte seldom appears in the pattern.
- *  See: http://sakuradite.com/topic/124
- *
- *  @param  pattern  array of bytes to match
- *  @param  patternSize  size of the pattern array
- *  @param  lowerBound  search start address
- *  @param  upperBound  search stop address
- *  @param* widecard  the character to match everything
- *  @return  absolute address
- *  @exception  illegal memory access
- */
-enum : byte_t { WidecardByte = 0x11 }; // jichi 7/17/2014: 0x11 seldom appear in PSP code pattern
-//enum : WORD { WidecardWord = 0xffff };
-dword_t matchBytes(const void *pattern, dword_t patternSize, dword_t lowerBound, dword_t upperBound,
-                   byte_t wildcard = WidecardByte);
 
 // User space: 0 - 2G (0 - 0x7ffeffff)
 // Kernel space: 2G - 4G  (0x80000000 - 0xffffffff)

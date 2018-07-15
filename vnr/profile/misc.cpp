@@ -117,7 +117,7 @@ bool Parse(const std::wstring& cmd, HookParam& hp)
 	// ":GDI.dll"        -> MODULE_OFFSET && module != NULL
 	// ":GDI.dll:strlen" -> MODULE_OFFSET | FUNCTION_OFFSET && module != NULL && function != NULL
 	// ":GDI.dll:#123"   -> MODULE_OFFSET | FUNCTION_OFFSET && module != NULL && function != NULL
-	std::wstring module(L"([^:[:space:]]+)"), name(L"[^:[:space:]]+"), ordinal(L"\\d+");
+	std::wstring module(L"([^:]+)"), name(L"[^:[:space:]]+"), ordinal(L"\\d+");
 	rx = wregex(L"^:(" + module + L"(:" + name + L"|#" + ordinal + L")?)?$", wregex::icase);
 	result = regex_search(start, end, m, rx);
 	if (result) // :[module[:{name|#ordinal}]]
