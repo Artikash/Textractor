@@ -16053,7 +16053,7 @@ bool InsertAIRNovelHook()
 		hp.offset = pusha_edx_off - 4;
 		hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index) 
 		{ 
-			return *len > 4 &&
+			return *len < 4 &&
 				*(char*)str != '[' &&
 				*(char*)str != ';' &&
 				*(char*)str != '&' &&
