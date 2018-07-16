@@ -547,6 +547,13 @@ bool DetermineEngineOther()
     return true;
   }
 
+  // Artikash 7/16/2018: Uses libuv: likely Tyranobuilder - sample game https://vndb.org/v22975
+  if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime"))
+  {
+	  InsertTyranobuilderHook();
+	  return true;
+  }
+
   // jichi 8/24/2013: Move into functions
   // Artikash 6/15/2018: Removed this detection for Abel Software games. IthGetFileInfo no longer works correctly
   //static BYTE static_file_info[0x1000];

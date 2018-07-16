@@ -10176,6 +10176,65 @@ bool InsertNexton1Hook()
 }
 
 /**
+*  Artikash 7/15/2018: Insert Tyranobuilder hook
+*  Sample game: https://vndb.org/v22252: /HWN-8:-1C@233A54:yuika_t.exe
+   Issue with hook: many garbage text threads. Maybe use another split?
+
+   yuika_t.v8::Locker::IsLocked+2B57 - 56                    - push esi
+   yuika_t.v8::Locker::IsLocked+2B58 - 8B F3                 - mov esi,ebx
+   yuika_t.v8::Locker::IsLocked+2B5A - 33 C0                 - xor eax,eax
+   yuika_t.v8::Locker::IsLocked+2B5C - 2B F7                 - sub esi,edi
+   yuika_t.v8::Locker::IsLocked+2B5E - 33 D2                 - xor edx,edx
+   yuika_t.v8::Locker::IsLocked+2B60 - 46                    - inc esi
+   yuika_t.v8::Locker::IsLocked+2B61 - D1 EE                 - shr esi,1
+   yuika_t.v8::Locker::IsLocked+2B63 - 3B FB                 - cmp edi,ebx
+   yuika_t.v8::Locker::IsLocked+2B65 - 0F47 F0               - cmova esi,eax
+   yuika_t.v8::Locker::IsLocked+2B68 - 85 F6                 - test esi,esi
+   yuika_t.v8::Locker::IsLocked+2B6A - 74 15                 - je yuika_t.v8::Locker::IsLocked+2B81
+   yuika_t.v8::Locker::IsLocked+2B6C - 8B 45 0C              - mov eax,[ebp+0C]
+   yuika_t.v8::Locker::IsLocked+2B6F - 2B F8                 - sub edi,eax
+   yuika_t.v8::Locker::IsLocked+2B71 - 66 8B 08              - mov cx,[eax]; Moves a wchar into ecx.
+   yuika_t.v8::Locker::IsLocked+2B74 - 8D 40 02              - lea eax,[eax+02]; Hook here!
+   yuika_t.v8::Locker::IsLocked+2B77 - 42                    - inc edx
+   yuika_t.v8::Locker::IsLocked+2B78 - 66 89 4C 07 FE        - mov [edi+eax-02],cx
+   yuika_t.v8::Locker::IsLocked+2B7D - 3B D6                 - cmp edx,esi; esi holds string length. best split I can find but not ideal...
+   yuika_t.v8::Locker::IsLocked+2B7F - 72 F0                 - jb yuika_t.v8::Locker::IsLocked+2B71
+   yuika_t.v8::Locker::IsLocked+2B81 - 5E                    - pop esi
+   yuika_t.v8::Locker::IsLocked+2B82 - 5F                    - pop edi
+   yuika_t.v8::Locker::IsLocked+2B83 - 5B                    - pop ebx
+   yuika_t.v8::Locker::IsLocked+2B84 - 5D                    - pop ebp
+   yuika_t.v8::Locker::IsLocked+2B85 - C3                    - ret
+
+   
+*/
+bool InsertTyranobuilderHook()
+{
+	const BYTE bytes[] =
+	{
+		0x2b, 0xf8, // sub edi,edx
+		0x66, 0x8b, 0x08, // mov cx,[eax]
+		0x8d, 0x40, 0x02 // lea eax,[eax + 02]; Hook here!
+	};
+	DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr)
+	{
+		ConsoleOutput("NextHooker: Tyranobuilder: pattern not found");
+		return false;
+	}
+	HookParam hp = {};
+	hp.address = addr + 5;
+	hp.type = USING_UNICODE | NO_CONTEXT | USING_SPLIT;
+	hp.length_offset = 1;
+	hp.offset = pusha_ecx_off - 4;
+	hp.split = pusha_esi_off - 4;
+	hp.index = 0x8;
+
+	ConsoleOutput("NextHooker: INSERT Tyranobuilder");
+	NewHook(hp, "Tyranobuilder");
+	return true;
+}
+
+/**
  *  jichi 9/16/2013: a-unicorn / gesen18
  *  See (CaoNiMaGeBi): http://tieba.baidu.com/p/2586681823
  *  Pattern: 2bce8bf8
@@ -15969,8 +16028,9 @@ bool InsertAdobeAirHook()
 
 /**
 *  Artikash 7/15/2018: Insert AIRNovel hook
-*  Sample game:
-*  https://vndb.org/v22252: /HQ-C@130380:Adobe AIR.dll <- produces a lot of garbage along with text, should be filtered
+*  Sample game: https://vndb.org/v22252: /HQ-8*8:-8*14@130380:Adobe AIR.dll
+*  When entering this function, ecx points to a struct containing a pointer to the text along with info about the type of text
+*  ecx+8 is the (w)char(_t)* we want, ecx+14 is the int* that tells apart text types.
 
 Adobe AIR.dll+130300 - 55                    - push ebp
 Adobe AIR.dll+130301 - 8B EC                 - mov ebp,esp
@@ -15987,7 +16047,7 @@ Adobe AIR.dll+130325 - F3 0FE6 C0            - cvtdq2pd xmm0,xmm0
 Adobe AIR.dll+130329 - 66 0F2F C8            - comisd xmm1,xmm0
 Adobe AIR.dll+13032D - 73 21                 - jae "Adobe AIR.dll"+130350 { ->Adobe AIR.dll+130350 }
 Adobe AIR.dll+13032F - F2 0F11 4D F4         - movsd [ebp-0C],xmm1
-Adobe AIR.dll+130334 - 33 D2                 - xor edx,edx
+Adobe AIR.dll+130334 - 33 D2                 - xor edx,edx; Safe to hook here!
 Adobe AIR.dll+130336 - 8B 45 F8              - mov eax,[ebp-08]
 Adobe AIR.dll+130339 - 25 FFFFFF7F           - and eax,7FFFFFFF { 2147483647 }
 Adobe AIR.dll+13033E - 3D 0000F07F           - cmp eax,7FF00000 { 2146435072 }
@@ -16010,11 +16070,11 @@ Adobe AIR.dll+13036B - C1 E8 02              - shr eax,02 { 2 }
 Adobe AIR.dll+13036E - A8 01                 - test al,01 { 1 }
 Adobe AIR.dll+130370 - 75 05                 - jne "Adobe AIR.dll"+130377 { ->Adobe AIR.dll+130377 }
 Adobe AIR.dll+130372 - 8B 51 08              - mov edx,[ecx+08] // Address of text moved into edx here
-Adobe AIR.dll+130375 - EB 09                 - jmp "Adobe AIR.dll"+130380 { ->Adobe AIR.dll+130380 } // Unconditional jump to hook location
+Adobe AIR.dll+130375 - EB 09                 - jmp "Adobe AIR.dll"+130380 { ->Adobe AIR.dll+130380 }; Unconditional jump to hook location
 Adobe AIR.dll+130377 - 8B 41 0C              - mov eax,[ecx+0C]
 Adobe AIR.dll+13037A - 8B 50 08              - mov edx,[eax+08]
 Adobe AIR.dll+13037D - 03 51 08              - add edx,[ecx+08]
-Adobe AIR.dll+130380 - F6 41 14 01           - test byte ptr [ecx+14],01 { 1 } // Hook here!
+Adobe AIR.dll+130380 - F6 41 14 01           - test byte ptr [ecx+14],01 { 1 }; Hook here also works
 Adobe AIR.dll+130384 - 8B 45 FC              - mov eax,[ebp-04]
 Adobe AIR.dll+130387 - 75 06                 - jne "Adobe AIR.dll"+13038F { ->Adobe AIR.dll+13038F }
 Adobe AIR.dll+130389 - 0FB6 04 10            - movzx eax,byte ptr [eax+edx]
@@ -16038,7 +16098,8 @@ bool InsertAIRNovelHook()
 	{
 		const BYTE bytes[] =
 		{
-			0xf6, 0x41, 0x14, 0x01 // test byte ptr [ecx+14], 01
+			0x33, 0xD2, //- xor edx,edx
+			0x8B, 0x45, 0xF8, //- mov eax,[ebp - 08]
 		};
 		DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), base, base + 0x200000); // Artikash 7/14/2018: Probably big enough
 		if (!addr)
@@ -16048,20 +16109,23 @@ bool InsertAIRNovelHook()
 		}
 		HookParam hp = {};
 		hp.address = addr;
+		hp.type = USING_UNICODE|USING_STRING|USING_SPLIT|SPLIT_INDIRECT|DATA_INDIRECT;
 		hp.length_offset = 0;
-		hp.type = USING_UNICODE|USING_STRING;
-		hp.offset = pusha_edx_off - 4;
-		hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index) 
-		{ 
-			return *len < 4 &&
-				*(char*)str != '[' &&
-				*(char*)str != ';' &&
-				*(char*)str != '&' &&
-				*(char*)str != '*' &&
-				*(char*)str != '\n' &&
-				*(char*)str != '\t' &&
-				memcmp((char*)str, "app:/", 5); 
-		};
+		hp.offset = pusha_ecx_off - 4;
+		hp.split = pusha_ecx_off - 4;
+		hp.index = 0x8;
+		hp.split_index = 0x14;
+		//hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index)  // removes some of the garbage threads
+		//{ 
+		//	return *len < 4 &&
+		//		*(char*)str != '[' &&
+		//		*(char*)str != ';' &&
+		//		*(char*)str != '&' &&
+		//		*(char*)str != '*' &&
+		//		*(char*)str != '\n' &&
+		//		*(char*)str != '\t' &&
+		//		memcmp((char*)str, "app:/", 5); 
+		//};
 
 		ConsoleOutput("NextHooker: INSERT AIRNovel");
 		NewHook(hp, "AIRNovel");

@@ -21,7 +21,7 @@ extern HMODULE currentModule;
 
 DWORD WINAPI PipeManager(LPVOID unused)
 {
-	enum { STANDARD_WAIT = 1000 };
+	enum { STANDARD_WAIT = 50 };
 	while (::running)
 	{
 		DWORD count;

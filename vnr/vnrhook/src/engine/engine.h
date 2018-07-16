@@ -81,7 +81,7 @@ bool Insert5pbHook();           // 5pb.jp, PSP/PS3 games ported to PC
 bool InsertAB2TryHook();        // Yane@AkabeiSoft2Try: YaneSDK.dll.
 bool InsertAbelHook();          // Abel
 bool InsertAdobeAirHook();      // Adobe AIR
-bool InsertAIRNovelHook();
+bool InsertAIRNovelHook();      // AIRNovel: *.swf
 bool InsertAdobeFlash10Hook();  // Adobe Flash Player 10
 bool InsertAliceHook();         // System40@AliceSoft; do not work for latest alice games
 //bool InsertAmuseCraftHook();    // AMUSE CRAFT: *.pac
@@ -148,6 +148,7 @@ bool InsertTanukiHook();        // Tanuki: *.tak
 bool InsertTaskforce2Hook();    // Taskforce2.exe
 bool InsertTencoHook();         // Tenco: Check.mdx
 bool InsertTriangleHook();      // Triangle: Execle.exe
+bool InsertTyranobuilderHook(); // Tyranobuilder: has libuv
 bool InsertUnicornHook();       // Gsen18: *.szs|Data/*.szs
 bool InsertWillPlusHook();      // WillPlus: Rio.arc
 bool InsertWolfHook();          // Wolf: Data.wolf
