@@ -18,15 +18,12 @@ enum { MAX_REGISTER = 0xf };
 enum { MAX_PREV_REPEAT_LENGTH = 0x20 };
 
 struct ProcessRecord {
-  DWORD pid_register;
-  DWORD hookman_register;
-  DWORD module_register;
-  //DWORD engine_register; // jichi 10/19/2014: removed
   HANDLE process_handle;
   HANDLE hookman_mutex;
   HANDLE hookman_section;
   LPVOID hookman_map;
   HANDLE hostPipe;
+  //std::unordered_map<DWORD, Hook> hooksByAddress;
 };
 
 typedef DWORD (*ProcessEventCallback)(DWORD pid);
@@ -39,7 +36,7 @@ struct ThreadParameterHasher
 	}
 };
 
-class IHFSERVICE HookManager
+class DLLEXPORT HookManager
 {
 public:
   HookManager();
@@ -62,7 +59,7 @@ public:
   void UnRegisterProcess(DWORD pid);
   //void SetName(DWORD);
 
-  HANDLE GetCommandPipe(DWORD pid);
+  HANDLE GetHostPipe(DWORD pid);
 
   ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
   { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }
@@ -81,6 +78,8 @@ public:
 
   ProcessEventCallback RegisterProcessDetachCallback(ProcessEventCallback cf)
   { return (ProcessEventCallback)_InterlockedExchange((long*)&detach,(long)cf); }
+
+  void SetSplitInterval(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
   void OnThreadCreate(pugi::xml_node profile_node, TextThread* thread);
   void GetProfile(DWORD pid, pugi::xml_node profile_node);
@@ -101,6 +100,8 @@ private:
                        hook;
   WORD register_count,
        new_thread_number;
+
+  unsigned int splitDelay;
 
   void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid);
 };

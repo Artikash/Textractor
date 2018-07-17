@@ -9,26 +9,15 @@
 #include "host/hookman.h"
 #include <string>
 
-struct Settings;
 struct HookParam;
 
-IHFSERVICE void IHFAPI Host_Init();
-IHFSERVICE void IHFAPI Host_Destroy();
-
-IHFSERVICE void IHFAPI StartHost();
-IHFSERVICE bool IHFAPI OpenHost();
-IHFSERVICE void IHFAPI CloseHost();
-IHFSERVICE void IHFAPI GetHostHookManager(HookManager **hookman);
-IHFSERVICE void IHFAPI GetHostSettings(Settings **settings);
-IHFSERVICE DWORD IHFAPI Host_GetPIDByName(LPCWSTR pwcTarget);
-IHFSERVICE bool IHFAPI InjectProcessById(DWORD pid, DWORD timeout = 5000);
-IHFSERVICE bool IHFAPI DetachProcessById(DWORD pid);
-IHFSERVICE bool IHFAPI Host_HijackProcess(DWORD pid);
-IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, const HookParam *hp, std::string name = "");
-IHFSERVICE DWORD IHFAPI Host_ModifyHook(DWORD pid, HookParam *hp);
-IHFSERVICE DWORD IHFAPI RemoveHook(DWORD pid, DWORD addr);
-IHFSERVICE DWORD IHFAPI Host_AddLink(DWORD from, DWORD to);
-IHFSERVICE DWORD IHFAPI Host_UnLink(DWORD from);
-IHFSERVICE DWORD IHFAPI Host_UnLinkAll(DWORD from);
+DLLEXPORT void OpenHost();
+DLLEXPORT bool StartHost();
+DLLEXPORT void CloseHost();
+DLLEXPORT void GetHostHookManager(HookManager **hookman);
+DLLEXPORT bool InjectProcessById(DWORD pid, DWORD timeout = 5000);
+DLLEXPORT bool DetachProcessById(DWORD pid);
+DLLEXPORT DWORD InsertHook(DWORD pid, const HookParam *hp, std::string name = "");
+DLLEXPORT DWORD RemoveHook(DWORD pid, DWORD addr);
 
 // EOF

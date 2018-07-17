@@ -23,13 +23,6 @@ struct ThreadParameter {
 };
 
 #define CURRENT_SELECT 0x1000
-#define REPEAT_NUMBER_DECIDED  0x2000
-#define BUFF_NEWLINE 0x4000
-#define CYCLIC_REPEAT 0x8000
-#define COUNT_PER_FOWARD 0x200
-#define REPEAT_DETECT 0x10000
-#define REPEAT_SUPPRESS 0x20000
-#define REPEAT_NEWLINE 0x40000
 
 class TextThread;
 typedef DWORD (* ThreadOutputFilterCallback)(TextThread *,const BYTE *, DWORD, DWORD);
@@ -40,7 +33,7 @@ typedef DWORD (* ThreadEventCallback)(TextThread *);
 class TextThread : public MyVector<BYTE, 0x200>
 {
 public:
-  TextThread(ThreadParameter tp, WORD num);
+  TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay);
 
   virtual void GetEntryString(LPSTR buffer, DWORD max);
 
@@ -64,10 +57,10 @@ public:
 
 private:
   ThreadParameter tp;
-
+  ThreadOutputFilterCallback output;
   std::vector<char> sentenceBuffer;
   unsigned int thread_number;
-  ThreadOutputFilterCallback output;
+  unsigned int splitDelay;
   DWORD status;
 };
 

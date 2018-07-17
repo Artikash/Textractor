@@ -5,10 +5,6 @@
 // The first header file that are included by all source files.
 
 #define IHF // for dll import
-//#include "ith/dllconfig.h"
-#define IHFAPI __stdcall
-#ifdef IHF
-# define IHFSERVICE __declspec(dllexport)
-#endif
+#define DLLEXPORT __declspec(dllexport)
 
 // EOF

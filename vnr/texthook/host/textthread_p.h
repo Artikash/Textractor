@@ -5,15 +5,6 @@
 
 #include <windows.h>
 
-template <typename T>
-void Release(const T &p) { delete p; }
-
-// Prevent memory release.
-// Used when T is basic types and will be automatically released (on stack).
-#define MK_BASIC_TYPE(T) \
-  template<> \
-  void Release<T>(const T &p) {}
-
 template<class T, int default_size>
 class MyVector
 {
@@ -42,7 +33,7 @@ protected:
   {
     EnterCriticalSection(&cs_store);
     for (int i = 0; i < used; i++) {
-      Release<T>(storage[i]);
+      //Release<T>(storage[i]);
       storage[i] = T();
     }
     used = 0;
@@ -52,7 +43,7 @@ protected:
   {
     if (index>=used)
       return;
-    Release<T>(storage[index]);
+    //Release<T>(storage[index]);
     for (int i = index; i < used; i++)
       storage[i] = storage[i+1];
     used--;

@@ -23,7 +23,6 @@
 #include "vnrhook/include/const.h"
 #include "version.h"
 #include "ProfileManager.h"
-#include "host/settings.h"
 #include "profile/Profile.h"
 #include "TextBuffer.h"
 #include "profile/misc.h"
@@ -44,7 +43,6 @@ ProcessWindow* pswnd;
 TextBuffer* texts;
 extern ProfileManager* pfman; // ProfileManager.cpp
 extern HookManager* man; // main.cpp
-extern Settings* setman; // main.cpp
 #define COMMENT_BUFFER_LENGTH 512
 static WCHAR comment_buffer[COMMENT_BUFFER_LENGTH];
 
@@ -108,7 +106,7 @@ BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetWindowText(GetDlgItem(hDlg, IDC_EDIT1), str, 0x80);
 			DWORD st = std::stoul(str);
 			split_time = st > 100 ? st : 100;
-			setman->splittingInterval = split_time;
+			man->SetSplitInterval(split_time);
 		}
 		case IDCANCEL:
 			EndDialog(hDlg, 0);
@@ -602,7 +600,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			man->RegisterProcessDetachCallback(RemoveProcessList);
 			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
 			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
-			StartHost();
+			OpenHost();
 			{
 				static const WCHAR program_name[] = L"NextHooker beta v";
 				//static const WCHAR program_version[] = L"3.0";

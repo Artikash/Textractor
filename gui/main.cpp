@@ -18,7 +18,6 @@
 #include "ITH.h"
 #include "host/host.h"
 #include "host/hookman.h"
-#include "host/settings.h"
 #include "profile/Profile.h"
 #include "ProfileManager.h"
 
@@ -30,7 +29,6 @@ extern HWND hMainWnd; // windows.cpp
 extern ProfileManager* pfman; // ProfileManager.cpp
 
 HookManager* man;
-Settings* setman;
 LONG split_time;
 
 std::map<std::wstring, long> setting;
@@ -148,17 +146,15 @@ LONG WINAPI UnhandledExcept(_EXCEPTION_POINTERS *ExceptionInfo)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	InitCommonControls();
-	if (OpenHost())
+	if (StartHost())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
 		GetHostHookManager(&man);
-		GetHostSettings(&setman);
-		setman->splittingInterval = 200;
 		pfman = new ProfileManager();
 		DefaultSettings();
 		LoadSettings();
 		InitializeSettings();
-		setman->splittingInterval = split_time;
+		man->SetSplitInterval(split_time);
 		hIns = hInstance;
 		MyRegisterClass(hIns);
 		InitInstance(hIns, FALSE, &window);

@@ -76,9 +76,9 @@ void ProcessWindow::AttachProcess()
 {
 	DWORD pid = GetSelectedPID();
 	if (InjectProcessById(pid))
-	{
 		RefreshThreadWithPID(pid, true);
-	}
+	else
+		ConsoleOutput(L"NextHooker: could not inject");
 }
 
 void ProcessWindow::DetachProcess()

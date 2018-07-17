@@ -21,13 +21,4 @@ DWORD GetExportAddress(DWORD hModule,DWORD hash);
 
 extern BYTE LeadByteTable[];
 
-inline DWORD GetHash(LPSTR str)
-{
-  DWORD hash = 0;
-  //for (; *str; str++)
-  while (*str)
-    hash = ((hash>>7) | (hash<<25)) + *str++;
-  return hash;
-}
-
 // EOF

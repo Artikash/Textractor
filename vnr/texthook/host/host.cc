@@ -10,34 +10,20 @@
 //#include "customfilter.h"
 #include "growl.h"
 #include "host.h"
-#include "host_p.h"
-#include "settings.h"
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include "ithsys/ithsys.h"
 #include <commctrl.h>
 #include <string>
 #include "extensions/Extensions.h"
 
 #define DEBUG "vnrhost/host.cc"
 
-namespace 
-{ // unnamed
+HANDLE preventDuplicationMutex;
 
-	CRITICAL_SECTION hostCs;
-	HANDLE preventDuplicationMutex; // jichi 9/28/2013: used to guard pipe
-	HANDLE hookMutex;  // jichi 9/28/2013: used to guard hook modification
-} // unnamed namespace
-
-//extern LPWSTR current_dir;
-extern CRITICAL_SECTION detachCs;
-
-Settings *settings;
+HookManager* man;
 HWND dummyWindow;
-BOOL running;
-
-#define ITH_SYNC_HOOK MutexLocker locker(::hookMutex)
+bool running;
 
 namespace 
 { // unnamed
@@ -62,7 +48,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	{
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hinstDLL);
-		InitializeCriticalSection(&::hostCs);
 		GetDebugPrivileges();
 		// jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
 		// Used by timers.
@@ -73,7 +58,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	case DLL_PROCESS_DETACH:
 		if (::running)
 			CloseHost();
-		DeleteCriticalSection(&::hostCs);
 		DestroyWindow(dummyWindow);
 		break;
 	default:
@@ -82,129 +66,83 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	return true;
 }
 
-IHFSERVICE bool IHFAPI OpenHost()
+DLLEXPORT bool StartHost()
 {
-	bool success;
-	EnterCriticalSection(&::hostCs);
 
 	preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
 	if (GetLastError() == ERROR_ALREADY_EXISTS || ::running)
 	{
 		GROWL_WARN(L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!");
-		success = false;
+		return false;
 	}
 	else
 	{
 		LoadExtensions();
 		::running = true;
-		::settings = new Settings;
 		::man = new HookManager;
-		InitializeCriticalSection(&detachCs);
-		::hookMutex = CreateMutexW(nullptr, FALSE, ITH_SERVER_HOOK_MUTEX);
-		success = true;
+		return true;
 	}
-	LeaveCriticalSection(&::hostCs);
-	return success;
 }
 
-IHFSERVICE void IHFAPI StartHost()
+DLLEXPORT void OpenHost()
 {
 	CreateNewPipe();
 }
 
-IHFSERVICE void IHFAPI CloseHost()
+DLLEXPORT void CloseHost()
 {
-	EnterCriticalSection(&::hostCs);
 	if (::running)
 	{
 		::running = false;
 		delete man;
-		delete settings;
-		CloseHandle(::hookMutex);
 		CloseHandle(preventDuplicationMutex);
-		DeleteCriticalSection(&detachCs);
 	}
-	LeaveCriticalSection(&::hostCs);
 }
 
-IHFSERVICE bool IHFAPI InjectProcessById(DWORD processId, DWORD timeout)
+DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 {
-	bool success = true;
 
 	if (processId == GetCurrentProcessId())
 	{
-		success = false;
+		return false;
 	}
 
 	CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		man->AddConsoleOutput(L"already locked");
-		success = false;
+		return false;
 	}
 
 	HMODULE textHooker = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
-	if (textHooker == nullptr)
-	{
-		success = false;
-	}
 	wchar_t textHookerPath[MAX_PATH];
 	unsigned int textHookerPathSize = GetModuleFileNameW(textHooker, textHookerPath, MAX_PATH) * 2 + 2;
 	FreeLibrary(textHooker);
 
-	HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
-	if (processHandle == INVALID_HANDLE_VALUE || processHandle == nullptr)
-	{
-		success = false;
-	}
-
-	LPTHREAD_START_ROUTINE loadLibraryStartRoutine = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW");
-
-	if (success)
-	{
+	if (HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
 		if (LPVOID remoteData = VirtualAllocEx(processHandle, nullptr, textHookerPathSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
-		{
 			if (WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr))
-			{
-				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, loadLibraryStartRoutine, remoteData, 0, nullptr))
+				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
 				{
 					WaitForSingleObject(thread, timeout);
 					CloseHandle(thread);
+					VirtualFreeEx(processHandle, remoteData, textHookerPathSize, MEM_RELEASE);
+					CloseHandle(processHandle);
+					return true;
 				}
-				else
-				{
-					success = false;
-				}
-			}
-			else
-			{
-				success = false;
-			}
-			VirtualFreeEx(processHandle, remoteData, textHookerPathSize, MEM_RELEASE);
-		}
-		else
-		{
-			success = false;
-		}
-	}
-
-	if (!success)
-	{
-		man->AddConsoleOutput(L"error: could not inject");
-	}
-
-	CloseHandle(processHandle);
-	return success;
+	
+	man->AddConsoleOutput(L"couldn't inject dll");
+	return false;
 }
 
-IHFSERVICE bool IHFAPI DetachProcessById(DWORD processId)
+DLLEXPORT bool DetachProcessById(DWORD processId)
 {
 	DWORD command = HOST_COMMAND_DETACH;
 	DWORD unused;
-	return WriteFile(man->GetCommandPipe(processId), &command, sizeof(command), &unused, nullptr);
+	return WriteFile(man->GetHostPipe(processId), &command, sizeof(command), &unused, nullptr);
 }
 
-IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
+DLLEXPORT void GetHostHookManager(HookManager** hookman)
 {
 	if (::running)
 	{
@@ -212,17 +150,9 @@ IHFSERVICE void IHFAPI GetHostHookManager(HookManager** hookman)
 	}
 }
 
-IHFSERVICE void IHFAPI GetHostSettings(Settings **p)
+DLLEXPORT DWORD InsertHook(DWORD pid, const HookParam *hp, std::string name)
 {
-	if (::running)
-	{
-		*p = settings;
-	}
-}
-
-IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, const HookParam *hp, std::string name)
-{
-  HANDLE commandPipe = man->GetCommandPipe(pid);
+  HANDLE commandPipe = man->GetHostPipe(pid);
   if (commandPipe == nullptr)
     return -1;
 
@@ -236,9 +166,9 @@ IHFSERVICE DWORD IHFAPI InsertHook(DWORD pid, const HookParam *hp, std::string n
   return 0;
 }
 
-IHFSERVICE DWORD IHFAPI RemoveHook(DWORD pid, DWORD addr)
+DLLEXPORT DWORD RemoveHook(DWORD pid, DWORD addr)
 {
-	HANDLE commandPipe = man->GetCommandPipe(pid);
+	HANDLE commandPipe = man->GetHostPipe(pid);
 	if (commandPipe == nullptr)
 		return -1;
     

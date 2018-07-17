@@ -67,6 +67,15 @@ DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size)
   return (info.Type&PAGE_NOACCESS) == 0;
 }
 
+inline DWORD GetHash(LPSTR str)
+{
+	DWORD hash = 0;
+	//for (; *str; str++)
+	while (*str)
+		hash = ((hash >> 7) | (hash << 25)) + *str++;
+	return hash;
+}
+
 //Query module export table. Return function address if found.
 //Similar to GetProcAddress
 DWORD GetExportAddress(DWORD hModule,DWORD hash)

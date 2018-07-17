@@ -248,6 +248,13 @@ enum {
   , IHF_FILTER_CAPACITY = IHF_FILTER_COUNT + 1  // one more than the dll count
 };
 
+// jichi 12/25/2013: Header in each message sent to vnrsrv
+// There are totally three elements
+// - 0x0 dwAddr  hook address
+// - 0x4 dwRetn  return address
+// - 0x8 dwSplit split value
+#define HEADER_SIZE 0xc
+
 #define TIMEOUT 5000 // 5 seconds
 
 // EOF

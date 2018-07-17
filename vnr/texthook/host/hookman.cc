@@ -12,88 +12,27 @@
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include "ithsys/ithsys.h"
 #include <stdio.h>
 //#include <emmintrin.h>
 #include "profile/Profile.h"
 #include "profile/pugixml.h"
 #include "profile/misc.h"
 
-#define DEBUG "vnrhost/hookman.cc"
-
-namespace { // unnamed
-//enum { MAX_ENTRY = 0x40 };
-
 #define HM_LOCK CriticalSectionLocker d_locker(hmcs) // Synchronized scope for accessing private data
 
-
-} // unnamed namespace
-
-HookManager *man; // jichi 9/22/2013: initialized in main
-//BitMap* pid_map;
-DWORD clipboard_flag,
-      split_time,
-      repeat_count,
-      global_filter,
-      cyclic_remove;
-
-DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
-{
-  if (!pid)
-    return 0;
-
-  DWORD len = 0;
-  max--; //for '\0' magic marker.
-
-  //if (pid == 0) {
-  //  len = wcslen(HookNameInitTable[0]);
-  //  if (len >= max)
-  //    len = max;
-  //  memcpy(str, HookNameInitTable[0], len << 1);
-  //  str[len] = 0;
-  //  return len;
-  //}
-
-  //::man->LockProcessHookman(pid);
-  ProcessRecord *pr = ::man->GetProcessRecord(pid);
-  if (!pr)
-    return 0;
-  WaitForSingleObject(pr->hookman_mutex, 0);
-  const Hook *hks = (const Hook *)pr->hookman_map;
-  for (int i = 0; i < MAX_HOOK; i++)
-    if (hks[i].Address() == hook_addr) {
-      len = hks[i].NameLength();
-      if (len >= max)
-        len = max;
-      ReadProcessMemory(pr->process_handle, hks[i].Name(), str, len, &len);
-      if (str[len - 1] == 0)
-        len--;
-      else
-        str[len] = 0;
-      break;
-    }
-
-  ReleaseMutex(pr->hookman_mutex);
-  //::man->UnlockProcessHookman(pid);
-  return len;
-}
-
-//Class member of HookManger
 HookManager::HookManager() :
-	// jichi 9/21/2013: Zero memory
-	//CRITICAL_SECTION hmcs;
-	current(nullptr)
-	, create(nullptr)
-	, remove(nullptr)
-	, reset(nullptr)
-	, attach(nullptr)
-	, detach(nullptr)
-	, hook(nullptr)
-	, new_thread_number(0)
-	, threadTable()
-	, processRecordsByIds()
+	current(nullptr),
+	create(nullptr),
+	remove(nullptr),
+	reset(nullptr),
+	attach(nullptr),
+	detach(nullptr),
+	hook(nullptr),
+	new_thread_number(0),
+	threadTable(),
+	processRecordsByIds()
 {
-	TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++);
+  TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
 
@@ -102,17 +41,7 @@ HookManager::HookManager() :
 
 HookManager::~HookManager()
 {
-	// Artikash 5/31/2018: This is called when the program terminates, so Windows should automatically free all these resources.....right?
-  //LeaveCriticalSection(&hmcs);
-  //LARGE_INTEGER timeout={-1000*1000,-1};
-  //IthBreak();
-  //NtWaitForSingleObject(destroy_event, 0, 0);
-  //CloseHandle(destroy_event);
-  //CloseHandle(cmd_pipes[0]);
-  //CloseHandle(recv_threads[0]);
-  //delete thread_table;
-  //delete head.key;
-  //DeleteCriticalSection(&hmcs);
+  DeleteCriticalSection(&hmcs);
 }
 
 TextThread *HookManager::FindSingle(DWORD number)
@@ -232,7 +161,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   TextThread *it;
   if (!(it = threadTable[tp]))
   {
-	  it = threadTable[tp] = new TextThread(tp, new_thread_number++);
+	  it = threadTable[tp] = new TextThread(tp, new_thread_number++, splitDelay);
 	  if (create)
 	  {
 		  create(it);
@@ -267,14 +196,11 @@ ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
   return processRecordsByIds[pid];
 }
 
-HANDLE HookManager::GetCommandPipe(DWORD pid)
+HANDLE HookManager::GetHostPipe(DWORD pid)
 {
   HM_LOCK;
   return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
 }
-
-MK_BASIC_TYPE(DWORD)
-MK_BASIC_TYPE(LPVOID)
 
 void AddHooksToProfile(Profile& pf, const ProcessRecord& pr);
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread);
