@@ -253,7 +253,7 @@ enum {
 // - 0x0 dwAddr  hook address
 // - 0x4 dwRetn  return address
 // - 0x8 dwSplit split value
-#define HEADER_SIZE 0xc
+#define HEADER_SIZE sizeof(DWORD) * 3
 
 #define TIMEOUT 5000 // 5 seconds
 

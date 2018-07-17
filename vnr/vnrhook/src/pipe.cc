@@ -56,13 +56,11 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		ReleaseMutex(pipeAcquisitionMutex);
 		CloseHandle(pipeAcquisitionMutex);
 
-		::live = true;
 		Engine::hijack();
 		ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
 
 		while (::running)
 		{
-			Sleep(STANDARD_WAIT);
 			if (!ReadFile(hostPipe, buffer, PIPE_BUFFER_SIZE / 2, &count, nullptr)) // Artikash 5/21/2018: why / 2? wchar_t?
 			{
 				break;
@@ -72,18 +70,20 @@ DWORD WINAPI PipeManager(LPVOID unused)
 			{
 			case HOST_COMMAND_NEW_HOOK:
 				buffer[count] = 0;
-				NewHook(*(HookParam *)(buffer + 4), (LPSTR)(buffer + 4 + sizeof(HookParam)), 0);
+				NewHook(*(HookParam *)(buffer + sizeof(DWORD)), // Hook parameter
+					(LPSTR)(buffer + 4 + sizeof(HookParam)), // Hook name
+					0
+				);
 				break;
 			case HOST_COMMAND_REMOVE_HOOK:
 			{
-				DWORD removalAddress = *(DWORD *)(buffer + 4);
 				HANDLE hookRemovalEvent = OpenEventW(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, ITH_REMOVEHOOK_EVENT);
 
 				TextHook *in = hookman;
 				for (int i = 0; i < currentHook; in++)
 				{
 					if (in->Address()) i++;
-					if (in->Address() == removalAddress)
+					if (in->Address() == *(DWORD *)(buffer + sizeof(DWORD))) // Hook address
 					{
 						break;
 					}
@@ -102,8 +102,9 @@ DWORD WINAPI PipeManager(LPVOID unused)
 				break;
 			}
 		}
+		CloseHandle(::hookPipe);
+		CloseHandle(hostPipe);
 
-		::live = false;
 		for (int i = 0, count = 0; count < ::currentHook; i++)
 		{
 			if (hookman[i].RemoveHook())
@@ -111,44 +112,31 @@ DWORD WINAPI PipeManager(LPVOID unused)
 				count++;
 			}
 		}
-		CloseHandle(::hookPipe);
-		CloseHandle(hostPipe);
 	}
 	FreeLibraryAndExitThread(::currentModule, 0);
 	return 0;
 }
 
 void ConsoleOutput(LPCSTR text)
-{ // jichi 12/25/2013: Rewrite the implementation
-	if (!::live)
-	{
-		return;
-	}
-		
-	DWORD textSize = strlen(text) + 1;
-	DWORD dataSize = textSize + 8;
-	BYTE *buffer = new BYTE[dataSize];
-	*(DWORD*)buffer = HOST_NOTIFICATION; //cmd
-	*(DWORD*)(buffer + 4) = HOST_NOTIFICATION_TEXT; //console
-	memcpy(buffer + 8, text, textSize);
+{	
+	BYTE buffer[PIPE_BUFFER_SIZE];
+	*(DWORD*)buffer = HOST_NOTIFICATION;
+	*(DWORD*)(buffer + sizeof(DWORD)) = HOST_NOTIFICATION_TEXT;
+	strcpy((char*)buffer + sizeof(DWORD) * 2, text);
 	DWORD unused;
-	WriteFile(::hookPipe, buffer, dataSize, &unused, nullptr);
+	WriteFile(::hookPipe, buffer, strlen(text) + sizeof(DWORD) * 2, &unused, nullptr);
 }
 
-// Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook name
+// Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook info
 void NotifyHookInsert(HookParam hp, LPCSTR name)
 {
-	if (!::live)
-	{
-		return;
-	}
     BYTE buffer[PIPE_BUFFER_SIZE];
     *(DWORD*)buffer = HOST_NOTIFICATION;
-    *(DWORD*)(buffer + 4) = HOST_NOTIFICATION_NEWHOOK;
-    *(HookParam*)(buffer + 8) = hp;
-	strcpy((char*)buffer + 8 + sizeof(HookParam), name);
+    *(DWORD*)(buffer + sizeof(DWORD)) = HOST_NOTIFICATION_NEWHOOK;
+    *(HookParam*)(buffer + sizeof(DWORD) * 2) = hp;
+	strcpy((char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam), name);
 	DWORD unused;
-	WriteFile(::hookPipe, buffer, strlen(name) + 8 + sizeof(HookParam), &unused, nullptr);
+	WriteFile(::hookPipe, buffer, strlen(name) + sizeof(DWORD) * 2 + sizeof(HookParam), &unused, nullptr);
 	return;
 }
 

@@ -39,7 +39,7 @@ DWORD GetHookName(LPSTR str, DWORD pid, DWORD hook_addr, DWORD max)
 	if (!pr)
 		return 0;
 	WaitForSingleObject(pr->hookman_mutex, 0);
-	const Hook *hks = (const Hook *)pr->hookman_map;
+	const OldHook *hks = (const OldHook *)pr->hookman_map;
 	for (int i = 0; i < MAX_HOOK; i++)
 		if (hks[i].Address() == hook_addr) {
 			len = hks[i].NameLength();

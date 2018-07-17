@@ -339,8 +339,6 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
   BYTE *pbData,
        pbSmallBuff[SMALL_BUFF_SIZE];
   DWORD dwType = hp.type;
-  if (!::live) // the pipe thread is busy
-    return 0;
   //if ((dwType & NO_CONTEXT) == 0 && HookFilter(dwRetn))
   //  return 0;
 
@@ -728,26 +726,6 @@ int TextHook::ClearHook()
   currentHook--;
   ReleaseMutex(hmMutex);
   return err;
-}
-
-int TextHook::ModifyHook(const HookParam &hp)
-{
-  //WCHAR name[0x40];
-  DWORD len = 0;
-  if (hook_name)
-    len = ::strlen(hook_name);
-  LPSTR name = 0;
-  if (len) {
-    name = new char[len + 1];
-    //ITH_MEMSET_HEAP(name, 0, sizeof(wchar_t) * (len + 1)); // jichi 9/26/2013: zero memory
-    strcpy(name, hook_name);
-  }
-  ClearHook();
-  InitHook(hp, name);
-  InsertHook();
-  if (name)
-    delete[] name;
-  return 0;
 }
 
 int TextHook::RecoverHook()

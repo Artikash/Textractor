@@ -257,7 +257,7 @@ std::wstring GetHookNameByAddress(const ProcessRecord& pr, DWORD hook_address)
 {
 	std::wstring hook_name;
 	WaitForSingleObject(pr.hookman_mutex, 0);
-	auto hooks = (const Hook*)pr.hookman_map;
+	auto hooks = (const OldHook*)pr.hookman_map;
 	for (int i = 0; i < MAX_HOOK; ++i)
 	{
 		auto& hook = hooks[i];

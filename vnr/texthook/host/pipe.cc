@@ -61,32 +61,37 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 		if (*(DWORD*)buffer == HOST_NOTIFICATION)
 		{
+			USES_CONVERSION;
 			switch (*(DWORD*)(buffer + 4)) // Artikash 7/17/2018: Notification type
 			{
-			case HOST_NOTIFICATION_NEWHOOK:
-			{
-				
+			case HOST_NOTIFICATION_NEWHOOK:				
+				man->SetHook(processId,
+					((HookParam*)(buffer + sizeof(DWORD) * 2))->address, 
+					{ 
+						*(HookParam*)(buffer + sizeof(DWORD) * 2), // Hook address
+						std::wstring(A2W(
+							(const char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam) // Hook name
+						))
+					}
+				);
 				break;
-			}
 			case HOST_NOTIFICATION_TEXT:
-				USES_CONVERSION;
-				man->AddConsoleOutput(A2W((LPCSTR)(buffer + 8)));
+				man->AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
 				break;
 			}
 		}
 		else
 		{
-			DWORD hook = *(DWORD*)buffer;
-			DWORD retn = *(DWORD*)(buffer + 4);
-			DWORD split = *(DWORD*)(buffer + 8);
 			// jichi 9/28/2013: Debug raw data
 			//ITH_DEBUG_DWORD9(RecvLen - 0xc,
 			//    buffer[0xc], buffer[0xd], buffer[0xe], buffer[0xf],
 			//    buffer[0x10], buffer[0x11], buffer[0x12], buffer[0x13]);
-
-			const BYTE *data = buffer + HEADER_SIZE; // th
-			int dataLength = bytesRead - HEADER_SIZE;
-			man->DispatchText(processId, data, hook, retn, split, dataLength);
+			man->DispatchText(processId, buffer + HEADER_SIZE, 
+				*(DWORD*)buffer, // Hook address
+				*(DWORD*)(buffer + sizeof(DWORD)), // Return address
+				*(DWORD*)(buffer + sizeof(DWORD) * 2), // Split
+				bytesRead - HEADER_SIZE
+			);
 		}
 	}
 

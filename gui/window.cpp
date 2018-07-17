@@ -363,23 +363,8 @@ bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)
 {
 	if (!pid)
 		return false;
-	ProcessRecord *pr = ::man->GetProcessRecord(pid);
-	if (!pr)
-		return false;
-	bool result = false;
-	WaitForSingleObject(pr->hookman_mutex, 0);
-	const Hook *hks = (Hook *)pr->hookman_map;
-	for (int i = 0; i < MAX_HOOK; i++)
-	{
-		if (hks[i].Address() == hook_addr)
-		{
-			hp = hks[i].hp;
-			result = true;
-			break;
-		}
-	}
-	ReleaseMutex(pr->hookman_mutex);
-	return result;
+	hp = man->GetHook(pid, hook_addr).hp;
+	return true;
 }
 
 std::wstring GetEntryString(TextThread& thread)
@@ -506,7 +491,7 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 {
 	bool res = false;
 	WaitForSingleObject(pr.hookman_mutex, 0);
-	auto hooks = (const Hook*)pr.hookman_map;
+	auto hooks = (const OldHook*)pr.hookman_map;
 	for (DWORD i = 0; i < MAX_HOOK; i++)
 	{
 		if (hooks[i].Address() == hook)

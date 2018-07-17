@@ -29,10 +29,10 @@ HookManager::HookManager() :
 	detach(nullptr),
 	hook(nullptr),
 	new_thread_number(0),
-	threadTable(),
+	textThreadsByParams(),
 	processRecordsByIds()
 {
-  TextThread* consoleTextThread = threadTable[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
+  TextThread* consoleTextThread = textThreadsByParams[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
 
@@ -46,7 +46,7 @@ HookManager::~HookManager()
 
 TextThread *HookManager::FindSingle(DWORD number)
 { 
-	for (auto i : threadTable)
+	for (auto i : textThreadsByParams)
 	{
 		if (i.second->Number() == number)
 		{
@@ -77,7 +77,7 @@ void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 {
   HM_LOCK;
   std::vector<ThreadParameter> removedThreads;
-  for (auto i : threadTable)
+  for (auto i : textThreadsByParams)
   {
 	  if (i.second->PID() == pid && i.second->Addr() == addr)
 	  {
@@ -91,7 +91,7 @@ void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
   }
   for (auto i : removedThreads)
   {
-	  threadTable.erase(i);
+	  textThreadsByParams.erase(i);
   }
   SelectCurrent(0);
 }
@@ -100,7 +100,7 @@ void HookManager::RemoveProcessContext(DWORD pid)
 {
 	HM_LOCK;
 	std::vector<ThreadParameter> removedThreads;
-	for (auto i : threadTable)
+	for (auto i : textThreadsByParams)
 	{
 		if (i.second->PID() == pid)
 		{
@@ -114,7 +114,7 @@ void HookManager::RemoveProcessContext(DWORD pid)
 	}
 	for (auto i : removedThreads)
 	{
-		threadTable.erase(i);
+		textThreadsByParams.erase(i);
 	}
 	SelectCurrent(0);
 }
@@ -159,9 +159,9 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   HM_LOCK;
   ThreadParameter tp = {pid, hook, retn, spl};
   TextThread *it;
-  if (!(it = threadTable[tp]))
+  if (!(it = textThreadsByParams[tp]))
   {
-	  it = threadTable[tp] = new TextThread(tp, new_thread_number++, splitDelay);
+	  it = textThreadsByParams[tp] = new TextThread(tp, new_thread_number++, splitDelay);
 	  if (create)
 	  {
 		  create(it);
@@ -175,7 +175,7 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
   if (text) 
   {
     int len = wcslen(text) * 2;
-	TextThread *console = threadTable[{0, -1UL, -1UL, -1UL}];
+	TextThread *console = textThreadsByParams[{0, -1UL, -1UL, -1UL}];
     console->AddSentence(std::wstring(text));
   }
 }
@@ -202,6 +202,18 @@ HANDLE HookManager::GetHostPipe(DWORD pid)
   return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
 }
 
+Hook HookManager::GetHook(DWORD processId, DWORD addr)
+{
+	HM_LOCK;
+	return hooksByAddresses[{ processId, addr, 0, 0}];
+}
+
+void HookManager::SetHook(DWORD processId, DWORD addr, Hook hook)
+{
+	HM_LOCK;
+	hooksByAddresses[{ processId, addr, 0, 0}] = hook;
+}
+
 void AddHooksToProfile(Profile& pf, const ProcessRecord& pr);
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread);
 void MakeHookRelative(const ProcessRecord& pr, HookParam& hp);
@@ -220,7 +232,7 @@ void HookManager::GetProfile(DWORD pid, pugi::xml_node profile_node)
 void AddHooksToProfile(Profile& pf, const ProcessRecord& pr)
 {
 	WaitForSingleObject(pr.hookman_mutex, 0);
-	auto hooks = (const Hook*)pr.hookman_map;
+	auto hooks = (const OldHook*)pr.hookman_map;
 	for (DWORD i = 0; i < MAX_HOOK; ++i)
 	{
 		if (hooks[i].Address() == 0)

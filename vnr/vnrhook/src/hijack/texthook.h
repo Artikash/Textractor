@@ -26,7 +26,7 @@ void InitFilterTable();
 
 // jichi 9/25/2013: This class will be used by NtMapViewOfSectionfor
 // interprocedure communication, where constructor/destructor will NOT work.
-class TextHook : public Hook
+class TextHook : public OldHook
 {
   int UnsafeInsertHookCode();
   DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);
@@ -40,7 +40,6 @@ public:
   int RecoverHook();
   int RemoveHook();
   int ClearHook();
-  int ModifyHook(const HookParam&);
   int SetHookName(LPCSTR name);
   int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
   void CoolDown(); // jichi 9/28/2013: flush instruction cache on wine

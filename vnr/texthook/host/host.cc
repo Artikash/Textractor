@@ -68,7 +68,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 
 DLLEXPORT bool StartHost()
 {
-
 	preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
 	if (GetLastError() == ERROR_ALREADY_EXISTS || ::running)
 	{
@@ -101,7 +100,6 @@ DLLEXPORT void CloseHost()
 
 DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 {
-
 	if (processId == GetCurrentProcessId())
 	{
 		return false;
@@ -158,11 +156,11 @@ DLLEXPORT DWORD InsertHook(DWORD pid, const HookParam *hp, std::string name)
 
   BYTE buffer[PIPE_BUFFER_SIZE] = {};
   *(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
-  memcpy(buffer + 4, hp, sizeof(HookParam));
-  if (name.size()) strcpy((char*)buffer + 4 + sizeof(HookParam), name.c_str());
+  *(HookParam*)(buffer + sizeof(DWORD)) = *hp;
+  if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
 
   DWORD unused;
-  WriteFile(commandPipe, buffer, 4 + sizeof(HookParam) + name.size(), &unused, nullptr);
+  WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
   return 0;
 }
 
@@ -173,12 +171,12 @@ DLLEXPORT DWORD RemoveHook(DWORD pid, DWORD addr)
 		return -1;
     
 	HANDLE hookRemovalEvent = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
-	BYTE buffer[8];
+	BYTE buffer[sizeof(DWORD) * 2] = {};
 	*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
-	*(DWORD*)(buffer + 4) = addr;
+	*(DWORD*)(buffer + sizeof(DWORD)) = addr;
   
 	DWORD unused;
-  WriteFile(commandPipe, buffer, 8, &unused, nullptr);
+  WriteFile(commandPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
   WaitForSingleObject(hookRemovalEvent, 1000);
   CloseHandle(hookRemovalEvent);
   man->RemoveSingleHook(pid, addr);

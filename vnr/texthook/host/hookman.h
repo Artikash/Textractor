@@ -8,6 +8,8 @@
 #include "host/textthread.h"
 #include "winmutex/winmutex.h"
 #include <unordered_map>
+#include <string>
+#include "vnrhook/include/types.h"
 
 namespace pugi {
 	class xml_node;
@@ -23,7 +25,12 @@ struct ProcessRecord {
   HANDLE hookman_section;
   LPVOID hookman_map;
   HANDLE hostPipe;
-  //std::unordered_map<DWORD, Hook> hooksByAddress;
+};
+
+struct Hook
+{
+	HookParam hp;
+	std::wstring name;
 };
 
 typedef DWORD (*ProcessEventCallback)(DWORD pid);
@@ -41,11 +48,10 @@ class DLLEXPORT HookManager
 public:
   HookManager();
   ~HookManager();
-  // jichi 12/26/2013: remove virtual modifiers
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
-  //void LockHookman();
-  //void UnlockHookman();
+  Hook GetHook(DWORD processId, DWORD addr);
+  void SetHook(DWORD processId, DWORD addr, Hook hook);
   void ClearCurrent();
   void SelectCurrent(DWORD num);
   void SetCurrent(TextThread *it);
@@ -85,7 +91,8 @@ public:
   void GetProfile(DWORD pid, pugi::xml_node profile_node);
 
 private:
-	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> threadTable;
+	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
+	std::unordered_map<ThreadParameter, Hook, ThreadParameterHasher> hooksByAddresses; // Artikash 7/17/2018: retn and spl should always be zero when accessing this!
 	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
 
   CRITICAL_SECTION hmcs;

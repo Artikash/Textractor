@@ -74,7 +74,7 @@ struct SendParam {
   HookParam hp;
 };
 
-struct Hook { // size: 0x80
+struct OldHook { // size: 0x80
   HookParam hp;
   LPSTR hook_name;
   int name_length;

@@ -41,8 +41,7 @@ FilterRange *filter = _filter;
 
 WCHAR hm_section[0x100];
 HANDLE hSection;
-bool running,
-     live = false;
+bool running;
 int currentHook = 0,
     user_hook_count = 0;
 DWORD trigger = 0;
@@ -121,7 +120,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       // jichi 10/2/2103: Cannot use __try in functions that require object unwinding
       //ITH_TRY {
       ::running = false;
-      ::live = false;
 
       Engine::terminate();
 
