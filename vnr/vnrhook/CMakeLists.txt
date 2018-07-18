@@ -73,7 +73,7 @@ target_compile_options(vnrhook PRIVATE
 )
 
 set(vnrhook_libs
-  ${WDK_HOME}/lib/wxp/i386/ntdll.lib
+  "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.17134.0\\um\\x86\\ntdll.lib"
   Version.lib
 )
 

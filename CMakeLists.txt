@@ -4,7 +4,6 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 project(NextHooker)
 
-set(WDK_HOME "C:\\WinDDK\\7600.16385.1" CACHE FILEPATH "Windows Driver Kit path")
 set(CMAKE_INSTALL_PREFIX "" CACHE FILEPATH "installation path")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug")

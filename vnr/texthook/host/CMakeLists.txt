@@ -10,7 +10,6 @@ set(vnrhost_src
   config.h
   hookman.h
   host.h
-  host_p.h
   textthread.h
   textthread_p.h
   hookman.cc
