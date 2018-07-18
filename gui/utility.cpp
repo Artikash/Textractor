@@ -292,3 +292,13 @@ int WC_MB(const wchar_t *wc, char* mb, int mb_length)
 {
 	return WideCharToMultiByte(932, 0, wc, -1, mb, mb_length, NULL, NULL);
 }
+
+std::wstring GetEntryString(TextThread* thread)
+{
+	ThreadParameter tp = thread->GetThreadParameter();
+	std::wstring buffer;
+	buffer.resize(200);
+	buffer.resize(swprintf(&buffer[0], L"%.4X:%.4d:0x%08X:0x%08X:0x%08X:", thread->Number(), tp.pid, tp.hook, tp.retn, tp.spl));
+	buffer += man->GetHook(tp.pid, tp.hook).name;
+	return buffer;
+}

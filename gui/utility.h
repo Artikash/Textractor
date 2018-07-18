@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ITH.h"
+#include "texthook/host/textthread.h"
 
 struct HookParam;
 struct ProcessRecord;
@@ -56,6 +57,7 @@ HANDLE IthCreateFile(LPCWSTR name, DWORD option, DWORD share, DWORD disposition)
 int MB_WC(const char* mb, wchar_t* wc, int wc_length);
 int MB_WC_count(const char* mb, int mb_length);
 int WC_MB(const wchar_t *wc, char* mb, int mb_length);
+std::wstring GetEntryString(TextThread * thread);
 bool Parse(const std::wstring& cmd, HookParam& hp);
 
 // http://jrdodds.blogs.com/blog/2004/08/raii_in_c.html

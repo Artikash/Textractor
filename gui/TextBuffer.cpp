@@ -23,11 +23,10 @@ TextBuffer::~TextBuffer()
 	WaitForSingleObject(hThread.get(), 0);
 }
 
-void TextBuffer::AddText(LPCWSTR str, int len, bool line)
+void TextBuffer::AddText(std::wstring text, bool line)
 {
 	CSLock lock(cs);
-	if (len > 0)
-		this->str.append(str, len);
+	this->str.append(text);
 	line_break = line;
 }
 

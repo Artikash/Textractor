@@ -66,9 +66,9 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 			{
 			case HOST_NOTIFICATION_NEWHOOK:				
 				man->SetHook(processId,
-					((HookParam*)(buffer + sizeof(DWORD) * 2))->address, 
+					((HookParam*)(buffer + sizeof(DWORD) * 2))->address, // Hook address
 					{ 
-						*(HookParam*)(buffer + sizeof(DWORD) * 2), // Hook address
+						*(HookParam*)(buffer + sizeof(DWORD) * 2), // Hook parameter
 						std::wstring(A2W(
 							(const char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam) // Hook name
 						))

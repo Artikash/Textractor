@@ -18,7 +18,7 @@
 #include "profile/pugixml.h"
 #include "profile/misc.h"
 
-#define HM_LOCK CriticalSectionLocker d_locker(hmcs) // Synchronized scope for accessing private data
+#define HM_LOCK CriticalSectionLocker locker(hmcs) // Synchronized scope for accessing private data
 
 HookManager::HookManager() :
 	current(nullptr),
@@ -27,12 +27,11 @@ HookManager::HookManager() :
 	reset(nullptr),
 	attach(nullptr),
 	detach(nullptr),
-	hook(nullptr),
 	new_thread_number(0),
 	textThreadsByParams(),
 	processRecordsByIds()
 {
-  TextThread* consoleTextThread = textThreadsByParams[{0, -1UL, -1UL, -1UL}] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
+	TextThread* consoleTextThread = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
 
@@ -79,7 +78,7 @@ void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
   std::vector<ThreadParameter> removedThreads;
   for (auto i : textThreadsByParams)
   {
-	  if (i.second->PID() == pid && i.second->Addr() == addr)
+	  if (i.first.pid == pid && i.first.hook == addr)
 	  {
 		  if (remove)
 		  {
@@ -102,7 +101,7 @@ void HookManager::RemoveProcessContext(DWORD pid)
 	std::vector<ThreadParameter> removedThreads;
 	for (auto i : textThreadsByParams)
 	{
-		if (i.second->PID() == pid)
+		if (i.first.hook == pid)
 		{
 			if (remove)
 			{
@@ -274,11 +273,11 @@ void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWOR
 
 DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread)
 {
-	const ThreadParameter* tp = thread->GetThreadParameter();
-	std::wstring hook_name = GetHookNameByAddress(pr, tp->hook);
+	ThreadParameter tp = thread->GetThreadParameter();
+	std::wstring hook_name = GetHookNameByAddress(pr, tp.hook);
 	if (hook_name.empty())
 		return -1;
-	auto thread_profile = new ThreadProfile(hook_name, tp->retn, tp->spl, 0, 0,
+	auto thread_profile = new ThreadProfile(hook_name, tp.retn, tp.spl, 0, 0,
 		THREAD_MASK_RETN | THREAD_MASK_SPLIT, L"");
 	DWORD threads_size = pf.Threads().size();
 	int thread_profile_index = pf.AddThread(thread_ptr(thread_profile));

@@ -5,7 +5,7 @@
 // Branch: ITH/HookManager.h, rev 133
 
 #include "config.h"
-#include "host/textthread.h"
+#include "textthread.h"
 #include "winmutex/winmutex.h"
 #include <unordered_map>
 #include <string>
@@ -15,9 +15,6 @@ namespace pugi {
 	class xml_node;
 }
 class Profile;
-
-enum { MAX_REGISTER = 0xf };
-enum { MAX_PREV_REPEAT_LENGTH = 0x20 };
 
 struct ProcessRecord {
   HANDLE process_handle;
@@ -33,7 +30,8 @@ struct Hook
 	std::wstring name;
 };
 
-typedef DWORD (*ProcessEventCallback)(DWORD pid);
+typedef DWORD(*ProcessEventCallback)(DWORD pid);
+typedef DWORD(*ThreadEventCallback)(TextThread*);
 
 struct ThreadParameterHasher
 {
@@ -67,27 +65,14 @@ public:
 
   HANDLE GetHostPipe(DWORD pid);
 
-  ThreadEventCallback RegisterThreadCreateCallback(ThreadEventCallback cf)
-  { return (ThreadEventCallback)_InterlockedExchange((long*)&create,(long)cf); }
-
-  ThreadEventCallback RegisterThreadRemoveCallback(ThreadEventCallback cf)
-  { return (ThreadEventCallback)_InterlockedExchange((long*)&remove,(long)cf); }
-
-  ThreadEventCallback RegisterThreadResetCallback(ThreadEventCallback cf)
-  { return (ThreadEventCallback)_InterlockedExchange((long*)&reset,(long)cf); }
-
-  ThreadEventCallback RegisterAddRemoveLinkCallback(ThreadEventCallback cf)
-  { return (ThreadEventCallback)_InterlockedExchange((long*)&addRemoveLink, (long)cf); }
-
-  ProcessEventCallback RegisterProcessAttachCallback(ProcessEventCallback cf)
-  { return (ProcessEventCallback)_InterlockedExchange((long*)&attach,(long)cf); }
-
-  ProcessEventCallback RegisterProcessDetachCallback(ProcessEventCallback cf)
-  { return (ProcessEventCallback)_InterlockedExchange((long*)&detach,(long)cf); }
+  void RegisterThreadCreateCallback(ThreadEventCallback cf) { create = cf; }
+  void RegisterThreadRemoveCallback(ThreadEventCallback cf) { remove = cf; }
+  void RegisterThreadResetCallback(ThreadEventCallback cf) { reset = cf; }
+  void RegisterProcessAttachCallback(ProcessEventCallback cf) { attach = cf; }
+  void RegisterProcessDetachCallback(ProcessEventCallback cf) { detach = cf; }
 
   void SetSplitInterval(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
-  void OnThreadCreate(pugi::xml_node profile_node, TextThread* thread);
   void GetProfile(DWORD pid, pugi::xml_node profile_node);
 
 private:
@@ -99,14 +84,12 @@ private:
 
   TextThread *current;
   ThreadEventCallback create,
-                      remove,
-                      reset,
-					  addRemoveLink;
+	  remove,
+	  reset;
   ProcessEventCallback attach,
-                       detach,
-                       hook;
+	  detach;
   WORD register_count,
-       new_thread_number;
+	  new_thread_number;
 
   unsigned int splitDelay;
 

@@ -9,7 +9,7 @@ public:
 	TextBuffer(HWND edit);
 	~TextBuffer();
 	void Flush();
-	void AddText(LPCWSTR str, int len, bool line);
+	void AddText(std::wstring text, bool line);
 	void ClearBuffer();
 	bool Running() { return running; }
 private:

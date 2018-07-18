@@ -4,7 +4,8 @@
 // 8/23/2013 jichi
 // Branch: ITH/TextThread.h, rev 120
 
-#include "host/textthread_p.h"
+#include <Windows.h>
+#include "config.h"
 #include <intrin.h> // require _InterlockedExchange
 #include <string>
 #include <vector>
@@ -25,41 +26,37 @@ struct ThreadParameter {
 #define CURRENT_SELECT 0x1000
 
 class TextThread;
-typedef DWORD (* ThreadOutputFilterCallback)(TextThread *,const BYTE *, DWORD, DWORD);
-typedef DWORD (* ThreadEventCallback)(TextThread *);
+typedef void(*ThreadOutputCallback)(TextThread*, std::wstring data);
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
 
-class TextThread : public MyVector<BYTE, 0x200>
+class DLLEXPORT TextThread
 {
 public:
   TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay);
-
-  virtual void GetEntryString(LPSTR buffer, DWORD max);
+  ~TextThread();
 
   void Reset();
-  void AddText(const BYTE *con,int len);
+  void AddText(const BYTE *con, int len);
   void AddSentence();
   void AddSentence(std::wstring sentence);
 
-  BYTE *GetStore(DWORD *len) { if (len) *len = used; return storage; }
-  DWORD PID() const { return tp.pid; }
-  DWORD Addr() const {return tp.hook; }
+  std::wstring GetStore();
   DWORD &Status() { return status; }
-  WORD Number() const { return thread_number; }
-  ThreadParameter *GetThreadParameter() { return &tp; }
+  WORD Number() const { return threadNumber; }
+  ThreadParameter GetThreadParameter() { return tp; }
   //LPCWSTR GetComment() { return comment; }
 
-  ThreadOutputFilterCallback RegisterOutputCallBack(ThreadOutputFilterCallback cb, PVOID data)
-  {
-    return (ThreadOutputFilterCallback)_InterlockedExchange((long*)&output,(long)cb);
-  }
+  void RegisterOutputCallBack(ThreadOutputCallback cb) { output = cb; }
 
 private:
-  ThreadParameter tp;
-  ThreadOutputFilterCallback output;
+  CRITICAL_SECTION ttCs;
+  ThreadOutputCallback output;
   std::vector<char> sentenceBuffer;
-  unsigned int thread_number;
+  std::wstring storage;
+
+  ThreadParameter tp;
+  unsigned int threadNumber;
   unsigned int splitDelay;
   DWORD status;
 };

@@ -347,16 +347,9 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 }
 
-DWORD ThreadOutput(TextThread* thread, const BYTE* out, DWORD len, DWORD new_line)
+void ThreadOutput(TextThread* thread, std::wstring output)
 {
-	if (len == 0)
-		return len;
-	DWORD status = thread->Status();
-	if (status & CURRENT_SELECT)
-	{
-		texts->AddText((LPWSTR)out, len / 2, false);
-	}
-	return len;
+	if (thread->Status() & CURRENT_SELECT) texts->AddText(output, false);
 }
 
 bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)
@@ -367,28 +360,21 @@ bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)
 	return true;
 }
 
-std::wstring GetEntryString(TextThread& thread)
-{
-	CHAR entry[512];
-	thread.GetEntryString(entry, 512);
-	return toUnicodeString(entry);
-}
-
-std::wstring CreateEntryWithLink(TextThread& thread, std::wstring& entry)
+std::wstring CreateEntryWithLink(ThreadParameter tp, std::wstring& entry)
 {
 	std::wstring entryWithLink = entry;
-	if (thread.PID() == 0)
+	if (tp.pid == 0)
 		entryWithLink += L"ConsoleOutput";
 	HookParam hp = {};
-	if (GetHookParam(thread.PID(), thread.Addr(), hp))
-		entryWithLink += L" (" + GetCode(hp, thread.PID()) + L")";
+	if (GetHookParam(tp.pid, tp.hook, hp))
+		entryWithLink += L" (" + GetCode(hp, tp.hook) + L")";
 	return entryWithLink;
 }
 
 void AddToCombo(TextThread& thread, bool replace)
 {
-	std::wstring entry = GetEntryString(thread);
-	std::wstring entryWithLink = CreateEntryWithLink(thread, entry);
+	std::wstring entry = GetEntryString(&thread);
+	std::wstring entryWithLink = CreateEntryWithLink(thread.GetThreadParameter(), entry);
 	int i = ComboBox_FindString(hwndCombo, -1, entry.c_str());
 	if (replace)
 	{
@@ -410,12 +396,10 @@ void AddToCombo(TextThread& thread, bool replace)
 
 void RemoveFromCombo(TextThread* thread)
 {
-	CHAR entry[512];
-	thread->GetEntryString(entry, 512);
-	std::wstring unicodeEntry = toUnicodeString(entry);
-	if (thread->PID() == 0)
-		unicodeEntry += L"ConsoleOutput";
-	int i = ComboBox_FindString(hwndCombo, 0, unicodeEntry.c_str());
+	std::wstring entry = GetEntryString(thread);
+	if (thread->GetThreadParameter().pid == 0)
+		entry += L"ConsoleOutput";
+	int i = ComboBox_FindString(hwndCombo, 0, entry.c_str());
 	if (i != CB_ERR)
 	{
 		if (ComboBox_DeleteString(hwndCombo, i) == CB_ERR)
@@ -423,7 +407,7 @@ void RemoveFromCombo(TextThread* thread)
 	}
 }
 
-DWORD SetEditText(LPWSTR wc)
+DWORD SetEditText(LPCWSTR wc)
 {
 	DWORD line;
 	Edit_SetText(hwndEdit, wc);
@@ -435,21 +419,16 @@ DWORD SetEditText(LPWSTR wc)
 DWORD ThreadReset(TextThread* thread)
 {
 	texts->ClearBuffer();
-	man->SetCurrent(thread);
-	thread->LockVector();
+	man->SetCurrent(thread);;
 
-	DWORD len = 0;
-	LPWSTR wc = (LPWSTR)thread->GetStore(&len);
-	len /= 2;
-	wc[len] = L'\0';
-	SetEditText(wc);
+	std::wstring text = thread->GetStore();
+	SetEditText(text.c_str());
 
 	WCHAR buffer[16];
 	std::swprintf(buffer, L"%04X", thread->Number());
 	DWORD tmp = ComboBox_FindString(hwndCombo, 0, buffer);
 	if (tmp != CB_ERR)
 		ComboBox_SetCurSel(hwndCombo, tmp);
-	thread->UnlockVector();
 	return 0;
 }
 
@@ -463,20 +442,20 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
 
 DWORD ThreadCreate(TextThread* thread)
 {
-	thread->RegisterOutputCallBack(ThreadOutput, 0);
+	thread->RegisterOutputCallBack(ThreadOutput);
 	//thread->RegisterFilterCallBack(ThreadFilter, 0);
 	AddToCombo(*thread, false);
-	const auto& tp = thread->GetThreadParameter();
-	auto pr = man->GetProcessRecord(tp->pid);
+	auto tp = thread->GetThreadParameter();
+	auto pr = man->GetProcessRecord(tp.pid);
 	if (pr == NULL)
 		return 0;
-	if (IsUnicodeHook(*pr, tp->hook))
+	if (IsUnicodeHook(*pr, tp.hook))
 		thread->Status() |= USING_UNICODE;
-	auto pf = pfman->GetProfile(tp->pid);
+	auto pf = pfman->GetProfile(tp.pid);
 	if (!pf)
 		return 0;
-	const std::wstring& hook_name = GetHookNameByAddress(*pr, thread->GetThreadParameter()->hook);
-	auto thread_profile = pf->FindThread(thread->GetThreadParameter(), hook_name);
+	const std::wstring& hook_name = GetHookNameByAddress(*pr, thread->GetThreadParameter().hook);
+	auto thread_profile = pf->FindThread(&thread->GetThreadParameter(), hook_name);
 	if (thread_profile != pf->Threads().end())
 	{
 		(*thread_profile)->HookManagerIndex() = thread->Number();
@@ -579,7 +558,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			man->RegisterThreadRemoveCallback(ThreadRemove);
 			man->RegisterThreadResetCallback(ThreadReset);
 			TextThread* console = man->FindSingle(0);
-			console->RegisterOutputCallBack(ThreadOutput, NULL);
+			console->RegisterOutputCallBack(ThreadOutput);
 			AddToCombo(*console, false);
 			man->RegisterProcessAttachCallback(RegisterProcess);
 			man->RegisterProcessDetachCallback(RemoveProcessList);
