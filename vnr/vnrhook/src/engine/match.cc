@@ -92,7 +92,7 @@ bool DeterminePCEngine()
 bool DetermineEngineByFile1()
 {
   // Artikash 7/14/2018: AIRNovel - sample game https://vndb.org/v18814
-  if (Util::CheckFile(L"*.swf") && Util::CheckFile(L"RIO.INI"))
+  if (Util::CheckFile(L"*.swf"))
   {
 	  //InsertAdobeAirHook();
 	InsertAIRNovelHook();
