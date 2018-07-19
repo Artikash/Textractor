@@ -52,6 +52,7 @@ TextThread *HookManager::FindSingle(DWORD number)
 void HookManager::SetCurrent(TextThread *it)
 {
 	HM_LOCK;
+	if (it == nullptr) return;
 	current->Status() &= ~CURRENT_SELECT;
 	current = it;
 	it->Status() |= CURRENT_SELECT;
