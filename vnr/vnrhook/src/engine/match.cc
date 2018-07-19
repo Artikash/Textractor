@@ -879,10 +879,13 @@ DWORD InsertDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 
 void Hijack()
 {
+	static bool hijacked = false;
+	if (hijacked) return;
 	GetModuleFileNameW(nullptr, processPath, MAX_PATH);
 	processName = wcsrchr(processPath, L'\\') + 1;
 
 	DetermineEngineType();
+	hijacked = true;
 }
 
 } // namespace Engine

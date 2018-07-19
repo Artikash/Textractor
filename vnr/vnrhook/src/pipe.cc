@@ -45,19 +45,11 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		*(DWORD*)buffer = GetCurrentProcessId();
 		WriteFile(::hookPipe, buffer, sizeof(DWORD), &count, nullptr);
 
-		for (int i = 0, count = 0; count < ::currentHook; i++)
-		{
-			if (hookman[i].RecoverHook()) // jichi 9/27/2013: This is the place where built-in hooks like TextOutA are inserted
-			{
-				count++;
-			}
-		}
-
 		ReleaseMutex(pipeAcquisitionMutex);
 		CloseHandle(pipeAcquisitionMutex);
 
-		Engine::Hijack();
 		ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
+		Engine::Hijack();
 
 		while (::running)
 		{
@@ -104,14 +96,6 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		}
 		CloseHandle(::hookPipe);
 		CloseHandle(hostPipe);
-
-		for (int i = 0, count = 0; count < ::currentHook; i++)
-		{
-			if (hookman[i].RemoveHook())
-			{
-				count++;
-			}
-		}
 	}
 	FreeLibraryAndExitThread(::currentModule, 0);
 	return 0;

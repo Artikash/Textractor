@@ -18,7 +18,6 @@
 #define HM_LOCK CriticalSectionLocker hmLocker(hmCs) // Synchronized scope for accessing private data
 
 HookManager::HookManager() :
-	current(nullptr),
 	create(nullptr),
 	remove(nullptr),
 	reset(nullptr),
@@ -30,9 +29,9 @@ HookManager::HookManager() :
 {
 	InitializeCriticalSection(&hmCs);
 
-	TextThread* consoleTextThread = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay);
-	consoleTextThread->Status() |= USING_UNICODE;
-	SetCurrent(consoleTextThread);
+	// Console text thread
+	current = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay);
+	current->Status() |= USING_UNICODE | CURRENT_SELECT;
 }
 
 HookManager::~HookManager()

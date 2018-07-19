@@ -728,17 +728,6 @@ int TextHook::ClearHook()
   return err;
 }
 
-int TextHook::RecoverHook()
-{
-  if (hp.address) {
-    // jichi 9/28/2013: Only enable TextOutA to debug Cross Channel
-    //if (hp.address == (DWORD)TextOutA)
-    InsertHook();
-    return 1;
-  }
-  return 0;
-}
-
 int TextHook::SetHookName(LPCSTR name)
 {
   name_length = strlen(name) + 1;
