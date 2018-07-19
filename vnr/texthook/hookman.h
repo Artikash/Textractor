@@ -30,6 +30,7 @@ struct ThreadParameterHasher
 	}
 };
 
+// Artikash 7/19/2018: This should probably be broken up into 2-4 classes...
 class __declspec(dllexport) HookManager
 {
 public:

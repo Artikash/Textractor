@@ -141,12 +141,9 @@ void HookManager::DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD spl, con
 void HookManager::AddConsoleOutput(LPCWSTR text)
 {
 	HM_LOCK;
-	if (text)
-	{
-		int len = wcslen(text) * 2;
-		TextThread *console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
-		console->AddSentence(std::wstring(text));
-	}
+	int len = wcslen(text) * 2;
+	TextThread *console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
+	console->AddSentence(std::wstring(text));
 }
 
 void HookManager::ClearCurrent()
