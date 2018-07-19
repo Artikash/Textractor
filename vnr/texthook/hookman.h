@@ -4,14 +4,14 @@
 // 8/23/2013 jichi
 // Branch: ITH/HookManager.h, rev 133
 
-#include "config.h"
+#include <Windows.h>
 #include "textthread.h"
-#include "winmutex/winmutex.h"
 #include <unordered_map>
 #include <string>
 #include "vnrhook/include/types.h"
 
-struct ProcessRecord {
+struct ProcessRecord 
+{
   HANDLE process_handle;
   HANDLE hookman_mutex;
   HANDLE hookman_section;
@@ -30,29 +30,26 @@ struct ThreadParameterHasher
 	}
 };
 
-class DLLEXPORT HookManager
+class __declspec(dllexport) HookManager
 {
 public:
   HookManager();
   ~HookManager();
+
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
+  HANDLE GetHostPipe(DWORD pid);
   void ClearCurrent();
   void SelectCurrent(DWORD num);
   void SetCurrent(TextThread *it);
   void AddConsoleOutput(LPCWSTR text);
-
-  // jichi 10/27/2013: Add const; add space.
-  void DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD split, int len);
+  void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
   void RemoveProcessContext(DWORD pid); // private
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterProcess(DWORD pid, HANDLE hostPipe);
   void UnRegisterProcess(DWORD pid);
   HookParam GetHookParam(DWORD pid, DWORD addr);
   std::wstring GetHookName(DWORD pid, DWORD addr);
-  //void SetName(DWORD);
-
-  HANDLE GetHostPipe(DWORD pid);
 
   void RegisterThreadCreateCallback(ThreadEventCallback cf) { create = cf; }
   void RegisterThreadRemoveCallback(ThreadEventCallback cf) { remove = cf; }
@@ -69,14 +66,11 @@ private:
   CRITICAL_SECTION hmcs;
 
   TextThread *current;
-  ThreadEventCallback create,
-	  remove,
-	  reset;
-  ProcessEventCallback attach,
-	  detach;
-  WORD register_count,
-	  new_thread_number;
 
+  ThreadEventCallback create, remove, reset;
+  ProcessEventCallback attach, detach;
+
+  WORD nextThreadNumber;
   unsigned int splitDelay;
 };
 

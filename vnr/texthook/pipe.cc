@@ -1,10 +1,9 @@
 // pipe.cc
 // 8/24/2013 jichi
 // Branch IHF/pipe.cpp, rev 93
-// 8/24/2013 TODO: Clean up this file
 
+#include "pipe.h"
 #include "host.h"
-#include "hookman.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/const.h"
 #include <atlbase.h>
@@ -16,8 +15,6 @@ struct Pipes
 	HANDLE hookPipe;
 	HANDLE hostPipe;
 };
-
-DWORD WINAPI TextReceiver(LPVOID lpThreadParameter);
 
 void CreateNewPipe()
 {
@@ -64,15 +61,12 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 		}
 		else
 		{
-			// jichi 9/28/2013: Debug raw data
-			//ITH_DEBUG_DWORD9(RecvLen - 0xc,
-			//    buffer[0xc], buffer[0xd], buffer[0xe], buffer[0xf],
-			//    buffer[0x10], buffer[0x11], buffer[0x12], buffer[0x13]);
-			man->DispatchText(processId, buffer + HEADER_SIZE, 
+			man->DispatchText(processId,
 				*(DWORD*)buffer, // Hook address
 				*(DWORD*)(buffer + sizeof(DWORD)), // Return address
 				*(DWORD*)(buffer + sizeof(DWORD) * 2), // Split
-				bytesRead - HEADER_SIZE
+				buffer + HEADER_SIZE, // Data
+				bytesRead - HEADER_SIZE // Data size
 			);
 		}
 	}

@@ -3,6 +3,7 @@
 // Branch IHF/main.cpp, rev 111
 
 #include "host.h"
+#include "pipe.h"
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
@@ -26,8 +27,6 @@ namespace
 		CloseHandle(processToken);
 	}
 } // unnamed namespace
-
-void CreateNewPipe();
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 {
@@ -135,8 +134,7 @@ DLLEXPORT bool InsertHook(DWORD pid, const HookParam *hp, std::string name)
 	*(HookParam*)(buffer + sizeof(DWORD)) = *hp;
 	if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
 	DWORD unused;
-	WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
-	return true;
+	return WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
 }
 
 DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)

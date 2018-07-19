@@ -4,12 +4,10 @@
 // 8/23/2013 jichi
 // Branch: ITH/IHF.h, rev 105
 
-//#include "host/settings.h"
-#include "config.h"
+#define DLLEXPORT __declspec(dllexport)
 #include "hookman.h"
+#include "vnrhook/include/types.h"
 #include <string>
-
-struct HookParam;
 
 DLLEXPORT void OpenHost();
 DLLEXPORT bool StartHost();

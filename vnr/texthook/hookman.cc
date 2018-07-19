@@ -12,7 +12,7 @@
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include <stdio.h>
+#include "winmutex/winmutex.h"
 #include <atlbase.h>
 
 #define HM_LOCK CriticalSectionLocker locker(hmcs) // Synchronized scope for accessing private data
@@ -24,11 +24,11 @@ HookManager::HookManager() :
 	reset(nullptr),
 	attach(nullptr),
 	detach(nullptr),
-	new_thread_number(0),
+	nextThreadNumber(0),
 	textThreadsByParams(),
 	processRecordsByIds()
 {
-	TextThread* consoleTextThread = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, new_thread_number++, splitDelay);
+	TextThread* consoleTextThread = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay);
   consoleTextThread->Status() |= USING_UNICODE;
   SetCurrent(consoleTextThread);
 
@@ -147,7 +147,7 @@ void HookManager::UnRegisterProcess(DWORD pid)
     detach(pid);
 }
 
-void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD retn, DWORD spl, int len)
+void HookManager::DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD spl, const BYTE *text, int len)
 {
   // jichi 20/27/2013: When PID is zero, the text comes from console, which I don't need
   if (!text || !pid || len <= 0)
@@ -157,7 +157,7 @@ void HookManager::DispatchText(DWORD pid, const BYTE *text, DWORD hook, DWORD re
   TextThread *it;
   if (!(it = textThreadsByParams[tp]))
   {
-	  it = textThreadsByParams[tp] = new TextThread(tp, new_thread_number++, splitDelay);
+	  it = textThreadsByParams[tp] = new TextThread(tp, nextThreadNumber++, splitDelay);
 	  if (create)
 	  {
 		  create(it);
