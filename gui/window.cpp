@@ -394,7 +394,7 @@ void AddToCombo(TextThread& thread, bool replace)
 	}
 }
 
-void RemoveFromCombo(TextThread* thread)
+void ThreadRemove(TextThread* thread)
 {
 	std::wstring entry = GetEntryString(thread);
 	if (thread->GetThreadParameter().pid == 0)
@@ -407,16 +407,15 @@ void RemoveFromCombo(TextThread* thread)
 	}
 }
 
-DWORD SetEditText(LPCWSTR wc)
+void SetEditText(LPCWSTR wc)
 {
 	DWORD line;
 	Edit_SetText(hwndEdit, wc);
 	line = Edit_GetLineCount(hwndEdit);
 	SendMessage(hwndEdit, EM_LINESCROLL, 0, line);
-	return 0;
 }
 
-DWORD ThreadReset(TextThread* thread)
+void ThreadReset(TextThread* thread)
 {
 	texts->ClearBuffer();
 	man->SetCurrent(thread);;
@@ -429,12 +428,11 @@ DWORD ThreadReset(TextThread* thread)
 	DWORD tmp = ComboBox_FindString(hwndCombo, 0, buffer);
 	if (tmp != CB_ERR)
 		ComboBox_SetCurSel(hwndCombo, tmp);
-	return 0;
 }
 
 bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
 
-DWORD ThreadCreate(TextThread* thread)
+void ThreadCreate(TextThread* thread)
 {
 	thread->RegisterOutputCallBack(ThreadOutput);
 	//thread->RegisterFilterCallBack(ThreadFilter, 0);
@@ -442,12 +440,12 @@ DWORD ThreadCreate(TextThread* thread)
 	auto tp = thread->GetThreadParameter();
 	auto pr = man->GetProcessRecord(tp.pid);
 	if (pr == NULL)
-		return 0;
+		return;
 	if (IsUnicodeHook(*pr, tp.hook))
 		thread->Status() |= USING_UNICODE;
 	auto pf = pfman->GetProfile(tp.pid);
 	if (!pf)
-		return 0;
+		return;
 	const std::wstring& hook_name = GetHookNameByAddress(*pr, thread->GetThreadParameter().hook);
 	auto thread_profile = pf->FindThread(&thread->GetThreadParameter(), hook_name);
 	if (thread_profile != pf->Threads().end())
@@ -457,7 +455,6 @@ DWORD ThreadCreate(TextThread* thread)
 		if (pf->IsThreadSelected(thread_profile))
 			ThreadReset(thread);
 	}
-	return 0;
 }
 
 bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
@@ -477,13 +474,7 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 	return res;
 }
 
-DWORD ThreadRemove(TextThread* thread)
-{
-	RemoveFromCombo(thread);
-	return 0;
-}
-
-DWORD RegisterProcess(DWORD pid)
+void RegisterProcess(DWORD pid)
 {
 	auto path = GetProcessPath(pid);
 	if (!path.empty())
@@ -502,10 +493,9 @@ DWORD RegisterProcess(DWORD pid)
 			InsertHook(pid, &i->get()->HP(), toMultiByteString(i->get()->Name()));
 		}
 	}
-	return 0;
 }
 
-DWORD RemoveProcessList(DWORD pid)
+void RemoveProcessList(DWORD pid)
 {
 	WCHAR str[MAX_PATH];
 	std::swprintf(str, L"%04d", pid);
@@ -517,7 +507,6 @@ DWORD RemoveProcessList(DWORD pid)
 		if (i == j)
 			ComboBox_SetCurSel(hwndProcessComboBox, 0);
 	}
-	return 0;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
