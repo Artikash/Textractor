@@ -10,13 +10,13 @@
 #include <string>
 #include "vnrhook/include/types.h"
 
-struct ProcessRecord 
+struct ProcessRecord
 {
-  HANDLE process_handle;
-  HANDLE hookman_mutex;
-  HANDLE hookman_section;
-  LPVOID hookman_map;
-  HANDLE hostPipe;
+	HANDLE process_handle;
+	HANDLE hookman_mutex;
+	HANDLE hookman_section;
+	LPVOID hookman_map;
+	HANDLE hostPipe;
 };
 
 typedef void(*ProcessEventCallback)(DWORD pid);
@@ -33,45 +33,45 @@ struct ThreadParameterHasher
 class __declspec(dllexport) HookManager
 {
 public:
-  HookManager();
-  ~HookManager();
+	HookManager();
+	~HookManager();
 
-  TextThread *FindSingle(DWORD number);
-  ProcessRecord *GetProcessRecord(DWORD pid);
-  HANDLE GetHostPipe(DWORD pid);
-  void ClearCurrent();
-  void SelectCurrent(DWORD num);
-  void SetCurrent(TextThread *it);
-  void AddConsoleOutput(LPCWSTR text);
-  void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
-  void RemoveProcessContext(DWORD pid); // private
-  void RemoveSingleHook(DWORD pid, DWORD addr);
-  void RegisterProcess(DWORD pid, HANDLE hostPipe);
-  void UnRegisterProcess(DWORD pid);
-  HookParam GetHookParam(DWORD pid, DWORD addr);
-  std::wstring GetHookName(DWORD pid, DWORD addr);
+	TextThread *FindSingle(DWORD number);
+	ProcessRecord *GetProcessRecord(DWORD pid);
+	HANDLE GetHostPipe(DWORD pid);
+	void ClearCurrent();
+	void SelectCurrent(DWORD num);
+	void SetCurrent(TextThread *it);
+	void AddConsoleOutput(LPCWSTR text);
+	void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
+	void RemoveProcessContext(DWORD pid); // private
+	void RemoveSingleHook(DWORD pid, DWORD addr);
+	void RegisterProcess(DWORD pid, HANDLE hostPipe);
+	void UnRegisterProcess(DWORD pid);
+	HookParam GetHookParam(DWORD pid, DWORD addr);
+	std::wstring GetHookName(DWORD pid, DWORD addr);
 
-  void RegisterThreadCreateCallback(ThreadEventCallback cf) { create = cf; }
-  void RegisterThreadRemoveCallback(ThreadEventCallback cf) { remove = cf; }
-  void RegisterThreadResetCallback(ThreadEventCallback cf) { reset = cf; }
-  void RegisterProcessAttachCallback(ProcessEventCallback cf) { attach = cf; }
-  void RegisterProcessDetachCallback(ProcessEventCallback cf) { detach = cf; }
+	void RegisterThreadCreateCallback(ThreadEventCallback cf) { create = cf; }
+	void RegisterThreadRemoveCallback(ThreadEventCallback cf) { remove = cf; }
+	void RegisterThreadResetCallback(ThreadEventCallback cf) { reset = cf; }
+	void RegisterProcessAttachCallback(ProcessEventCallback cf) { attach = cf; }
+	void RegisterProcessDetachCallback(ProcessEventCallback cf) { detach = cf; }
 
-  void SetSplitInterval(unsigned int splitDelay) { this->splitDelay = splitDelay; }
+	void SetSplitInterval(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
 private:
 	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
 	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
 
-  CRITICAL_SECTION hmcs;
+	CRITICAL_SECTION hmCs;
 
-  TextThread *current;
+	TextThread *current;
 
-  ThreadEventCallback create, remove, reset;
-  ProcessEventCallback attach, detach;
+	ThreadEventCallback create, remove, reset;
+	ProcessEventCallback attach, detach;
 
-  WORD nextThreadNumber;
-  unsigned int splitDelay;
+	WORD nextThreadNumber;
+	unsigned int splitDelay;
 };
 
 // EOF
