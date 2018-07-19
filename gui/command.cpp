@@ -16,7 +16,7 @@
  */
 
 #include "ITH.h"
-#include "host/host.h"
+#include "host.h"
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/types.h"
 #include "language.h"

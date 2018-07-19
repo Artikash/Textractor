@@ -6,7 +6,6 @@
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include <string>
 #include "extensions/Extensions.h"
 
 HANDLE preventDuplicationMutex;
@@ -15,11 +14,10 @@ HookManager* man;
 HWND dummyWindow;
 bool running;
 
-namespace 
+namespace
 { // unnamed
-
-	void GetDebugPrivileges()
-	{ // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
+	void GetDebugPrivileges() // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
+	{
 		HANDLE processToken;
 		TOKEN_PRIVILEGES Privileges = { 1, {0x14, 0, SE_PRIVILEGE_ENABLED} };
 
@@ -27,7 +25,6 @@ namespace
 		AdjustTokenPrivileges(processToken, FALSE, &Privileges, 0, nullptr, nullptr);
 		CloseHandle(processToken);
 	}
-
 } // unnamed namespace
 
 void CreateNewPipe();
@@ -39,14 +36,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hinstDLL);
 		GetDebugPrivileges();
-		// jichi 12/20/2013: Since I already have a GUI, I don't have to InitCommonControls()
-		// Used by timers.
-		// InitCommonControls();
 		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
 		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
 		break;
 	case DLL_PROCESS_DETACH:
-		if (::running) CloseHost();
+		CloseHost();
 		DestroyWindow(dummyWindow);
 		break;
 	default:
@@ -60,7 +54,7 @@ DLLEXPORT bool StartHost()
 	preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
 	if (GetLastError() == ERROR_ALREADY_EXISTS || ::running)
 	{
-		GROWL_WARN(L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!");
+		MessageBoxW(nullptr, L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!", L"Error", MB_ICONERROR);
 		return false;
 	}
 	else
@@ -114,7 +108,7 @@ DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 					CloseHandle(processHandle);
 					return true;
 				}
-	
+
 	man->AddConsoleOutput(L"couldn't inject dll");
 	return false;
 }
@@ -128,44 +122,41 @@ DLLEXPORT bool DetachProcessById(DWORD processId)
 
 DLLEXPORT void GetHostHookManager(HookManager** hookman)
 {
-	if (::running)
-	{
-		*hookman = man;
-	}
+	*hookman = man;
 }
 
-DLLEXPORT DWORD InsertHook(DWORD pid, const HookParam *hp, std::string name)
-{
-  HANDLE commandPipe = man->GetHostPipe(pid);
-  if (commandPipe == nullptr)
-    return -1;
-
-  BYTE buffer[PIPE_BUFFER_SIZE] = {};
-  *(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
-  *(HookParam*)(buffer + sizeof(DWORD)) = *hp;
-  if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
-
-  DWORD unused;
-  WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
-  return 0;
-}
-
-DLLEXPORT DWORD RemoveHook(DWORD pid, DWORD addr)
+DLLEXPORT bool InsertHook(DWORD pid, const HookParam *hp, std::string name)
 {
 	HANDLE commandPipe = man->GetHostPipe(pid);
-	if (commandPipe == nullptr) return -1;
-    
+	if (commandPipe == nullptr) return false;
+
+	BYTE buffer[PIPE_BUFFER_SIZE] = {};
+	*(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
+	*(HookParam*)(buffer + sizeof(DWORD)) = *hp;
+	if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
+	DWORD unused;
+	WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
+	return true;
+}
+
+DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
+{
+	HANDLE commandPipe = man->GetHostPipe(pid);
+	if (commandPipe == nullptr) return false;
+
 	HANDLE hookRemovalEvent = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
+
 	BYTE buffer[sizeof(DWORD) * 2] = {};
 	*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
 	*(DWORD*)(buffer + sizeof(DWORD)) = addr;
-  
 	DWORD unused;
-  WriteFile(commandPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
-  WaitForSingleObject(hookRemovalEvent, 1000);
-  CloseHandle(hookRemovalEvent);
-  man->RemoveSingleHook(pid, addr);
-  return 0;
+	WriteFile(commandPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
+
+	WaitForSingleObject(hookRemovalEvent, 1000);
+	CloseHandle(hookRemovalEvent);
+
+	man->RemoveSingleHook(pid, addr);
+	return true;
 }
 
 // EOF

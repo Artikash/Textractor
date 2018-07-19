@@ -69,9 +69,9 @@ void TextThread::AddSentence(std::wstring sentence)
 void TextThread::AddText(const BYTE *con, int len)
 {
 	TT_LOCK;
-	sentenceBuffer.insert(sentenceBuffer.end(), con, con+len);
-	SetTimer(dummyWindow, (UINT_PTR)this, splitDelay, 
-		[](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) 
+	sentenceBuffer.insert(sentenceBuffer.end(), con, con + len);
+	SetTimer(dummyWindow, (UINT_PTR)this, splitDelay,
+		[](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	{
 		KillTimer(hWnd, idEvent);
 		((TextThread*)idEvent)->AddSentence();

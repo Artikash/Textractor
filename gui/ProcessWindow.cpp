@@ -1,7 +1,7 @@
 #include "ProcessWindow.h"
 #include "resource.h"
-#include "host/host.h"
-#include "host/hookman.h"
+#include "host.h"
+#include "hookman.h"
 #include "ProfileManager.h"
 #include "profile/Profile.h"
 

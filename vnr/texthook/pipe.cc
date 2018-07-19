@@ -7,8 +7,6 @@
 #include "hookman.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/const.h"
-#include <stdio.h>
-#include "growl.h"
 #include <atlbase.h>
 
 extern HookManager* man;
@@ -38,13 +36,6 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	DWORD bytesRead, processId;
-
-	// Artikash 5/20/2018: Shouldn't Windows automatically close the handles when the host process stops running?
-	//if (!::running) {
-	//  NtClose(hookPipe);
-	//  return 0;
-	//}
-
 	ReadFile(pipes->hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
 	man->RegisterProcess(processId, pipes->hostPipe);
 
@@ -91,9 +82,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	man->UnRegisterProcess(processId);
 	CloseHandle(pipes->hookPipe);
 	CloseHandle(pipes->hostPipe);
-
 	delete pipes;
-
 	return 0;
 }
 

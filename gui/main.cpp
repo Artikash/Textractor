@@ -16,8 +16,8 @@
  */
 
 #include "ITH.h"
-#include "host/host.h"
-#include "host/hookman.h"
+#include "host.h"
+#include "hookman.h"
 #include "profile/Profile.h"
 #include "ProfileManager.h"
 

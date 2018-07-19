@@ -16,8 +16,8 @@
  */
 
 #include "utility.h"
-#include "host/host.h"
-#include "host/hookman.h"
+#include "host.h"
+#include "hookman.h"
 #include "vnrhook/include/types.h"
 #include "vnrhook/include/const.h"
 #include "profile/misc.h"

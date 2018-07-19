@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ITH.h"
-#include "texthook/host/textthread.h"
+#include "textthread.h"
 
 struct HookParam;
 struct ProcessRecord;
