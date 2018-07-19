@@ -34,11 +34,11 @@ GPL v3
 
 ## Developers
 
-- Copyright (C) 2010-2012  [kaosu](qiupf2000@gmail.com)
+- Copyright (C) 2010-2012  [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
 - VNR engine making by [jichi](http://sakuradite.com/topic)
 - ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- ITHVNR updating by [mireado](http://blog.naver.com/mireado) and [Eguni](https://github.com/Eguni)
+- ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
 
 ## Special Thanks
 
