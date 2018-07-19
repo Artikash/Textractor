@@ -25,7 +25,8 @@ Previous releases of *ITHVNR* can be found [here](https://github.com/mireado/ITH
 ## Features
 
 - Open-source
-- Hook text (AGTH hook codes supported)
+- Hook text (most AGTH hook codes supported)
+- Auto hook many engines (including some not supported by VNR!)
 - Extensions (New!)
 
 ## License
