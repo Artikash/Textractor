@@ -15,7 +15,7 @@
 #include "winmutex/winmutex.h"
 #include <atlbase.h>
 
-#define HM_LOCK CriticalSectionLocker locker(hmCs) // Synchronized scope for accessing private data
+#define HM_LOCK CriticalSectionLocker hmLocker(hmCs) // Synchronized scope for accessing private data
 
 HookManager::HookManager() :
 	current(nullptr),
