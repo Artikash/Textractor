@@ -68,7 +68,7 @@ set_target_properties(vnrhook PROPERTIES
 
 target_compile_options(vnrhook PRIVATE
   /EHa
-  $<$<CONFIG:Release>:>
+    $<$<CONFIG:MinSizeRel>:/MT>
   $<$<CONFIG:Debug>:>
 )
 

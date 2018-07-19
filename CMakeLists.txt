@@ -31,8 +31,8 @@ add_compile_options(
   /wd4819 # config.pri
   /MP
   /GS-
-#  $<$<CONFIG:Release>:/MT>
-#  $<$<CONFIG:Debug>:/MTd>
+  $<$<CONFIG:MinSizeRel>:/MT>
+  $<$<CONFIG:Debug>:/MTd>
 )
 
 add_definitions(
