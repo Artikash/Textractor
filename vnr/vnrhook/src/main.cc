@@ -121,8 +121,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
       //ITH_TRY {
       ::running = false;
 
-      Engine::terminate();
-
       if (pipeThread) {
 		  WaitForSingleObject(pipeThread, TIMEOUT);
         CloseHandle(pipeThread);
@@ -169,7 +167,7 @@ DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
 
     if (::hookman[current].InsertHook() == 0) {
       ConsoleOutput("vnrcli:NewHook: hook inserted");
-	  NotifyHookInsert(hp, name);
+	  NotifyHookInsert(hp, str);
     } else
       ConsoleOutput("vnrcli:NewHook:WARNING: failed to insert hook");
   }

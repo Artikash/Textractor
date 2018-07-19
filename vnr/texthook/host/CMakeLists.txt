@@ -11,7 +11,6 @@ set(vnrhost_src
   hookman.h
   host.h
   textthread.h
-  textthread_p.h
   hookman.cc
   host.cc
   pipe.cc
@@ -33,11 +32,7 @@ target_compile_options(vnrhost PRIVATE
 
 #STRING(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-target_link_libraries(vnrhost
-  #ithsys
-  profile
-  #${WDK_HOME}/lib/wxp/i386/ntdll.lib
-)
+target_link_libraries(vnrhost)
 
 target_compile_definitions(vnrhost
   PRIVATE

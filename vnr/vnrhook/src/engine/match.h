@@ -12,7 +12,7 @@
 namespace Engine {
 
 // jichi 10/21/2014: Return whether found the engine
-void hijack();
+void Hijack();
 void terminate();
 
 // jichi 10/21/2014: Return 0 if failed

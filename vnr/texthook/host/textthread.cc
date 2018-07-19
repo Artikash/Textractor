@@ -1,18 +1,13 @@
 // textthread.cc
 // 8/24/2013 jichi
 // Branch IHF/TextThread.cpp, rev 133
-// 8/24/2013 TODO: Clean up this file
-
 #ifdef _MSC_VER
 # pragma warning (disable:4100)   // C4100: unreference formal parameter
 #endif // _MSC_VER
 
 #include "host.h"
 #include "textthread.h"
-//#include "wintimer/wintimer.h"
 #include "vnrhook/include/const.h"
-#include "vnrhook/include/types.h"
-#include <stdio.h>
 #include "extensions/Extensions.h"
 #include "winmutex/winmutex.h"
 
@@ -43,12 +38,6 @@ void TextThread::Reset()
 {
 	TT_LOCK;
 	storage.clear();
-}
-
-std::wstring TextThread::GetStore()
-{
-	TT_LOCK;
-	return storage;
 }
 
 void TextThread::AddSentence()

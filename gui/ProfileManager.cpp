@@ -143,19 +143,24 @@ DWORD ProfileManager::CountProfiles()
 	return profile_tree.size();
 }
 
-DWORD SaveProcessProfile(DWORD pid)
+DWORD SaveProcessProfile(TextThread* thread)
 {
-	std::wstring path = GetProcessPath(pid);
+	ThreadParameter tp = thread->GetThreadParameter();
+	std::wstring path = GetProcessPath(tp.pid);
 	if (path.empty())
 		return 0;
 	pugi::xml_document doc;
 	pugi::xml_node profile_node = doc.append_child(L"Profile");
-	man->GetProfile(pid, profile_node);
-	Profile* pf = pfman->GetProfile(pid);
+	Profile* pf = pfman->GetProfile(tp.pid);
 	if (pf != NULL)
 		pf->Clear();
 	else
-		pf = pfman->CreateProfile(pid);
+		pf = pfman->CreateProfile(tp.pid);
+	
+	pf->AddHook(hook_ptr(new HookProfile(man->GetHookParam(tp.pid, tp.hook), man->GetHookName(tp.pid, tp.hook))));
+	pf->AddThread(thread_ptr(new ThreadProfile(man->GetHookName(tp.pid, tp.hook), tp.retn, tp.spl, tp.hook, 0, THREAD_MASK_RETN | THREAD_MASK_SPLIT, L"")));
+
 	pf->XmlReadProfile(profile_node);
+
 	return 0;
 }

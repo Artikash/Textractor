@@ -56,7 +56,7 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		ReleaseMutex(pipeAcquisitionMutex);
 		CloseHandle(pipeAcquisitionMutex);
 
-		Engine::hijack();
+		Engine::Hijack();
 		ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
 
 		while (::running)

@@ -1,23 +1,13 @@
 // host.cc
 // 8/24/2013 jichi
 // Branch IHF/main.cpp, rev 111
-// 8/24/2013 TODO: Clean up this file
 
-//#ifdef _MSC_VER
-//# pragma warning(disable:4800) // C4800: forcing value to bool (performance warning)
-//#endif // _MSC_VER
-
-//#include "customfilter.h"
-#include "growl.h"
 #include "host.h"
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include <commctrl.h>
 #include <string>
 #include "extensions/Extensions.h"
-
-#define DEBUG "vnrhost/host.cc"
 
 HANDLE preventDuplicationMutex;
 
@@ -31,7 +21,7 @@ namespace
 	void GetDebugPrivileges()
 	{ // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
 		HANDLE processToken;
-		TOKEN_PRIVILEGES Privileges = {1, {0x14, 0, SE_PRIVILEGE_ENABLED}};
+		TOKEN_PRIVILEGES Privileges = { 1, {0x14, 0, SE_PRIVILEGE_ENABLED} };
 
 		OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &processToken);
 		AdjustTokenPrivileges(processToken, FALSE, &Privileges, 0, nullptr, nullptr);
@@ -56,8 +46,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
 		break;
 	case DLL_PROCESS_DETACH:
-		if (::running)
-			CloseHost();
+		if (::running) CloseHost();
 		DestroyWindow(dummyWindow);
 		break;
 	default:
@@ -100,10 +89,7 @@ DLLEXPORT void CloseHost()
 
 DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 {
-	if (processId == GetCurrentProcessId())
-	{
-		return false;
-	}
+	if (processId == GetCurrentProcessId()) return false;
 
 	CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
@@ -167,8 +153,7 @@ DLLEXPORT DWORD InsertHook(DWORD pid, const HookParam *hp, std::string name)
 DLLEXPORT DWORD RemoveHook(DWORD pid, DWORD addr)
 {
 	HANDLE commandPipe = man->GetHostPipe(pid);
-	if (commandPipe == nullptr)
-		return -1;
+	if (commandPipe == nullptr) return -1;
     
 	HANDLE hookRemovalEvent = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
 	BYTE buffer[sizeof(DWORD) * 2] = {};

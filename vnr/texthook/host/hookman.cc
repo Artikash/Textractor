@@ -13,10 +13,7 @@
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
 #include <stdio.h>
-//#include <emmintrin.h>
-#include "profile/Profile.h"
-#include "profile/pugixml.h"
-#include "profile/misc.h"
+#include <atlbase.h>
 
 #define HM_LOCK CriticalSectionLocker locker(hmcs) // Synchronized scope for accessing private data
 
@@ -174,7 +171,7 @@ void HookManager::AddConsoleOutput(LPCWSTR text)
   if (text) 
   {
     int len = wcslen(text) * 2;
-	TextThread *console = textThreadsByParams[{0, -1UL, -1UL, -1UL}];
+	TextThread *console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
     console->AddSentence(std::wstring(text));
   }
 }
@@ -201,93 +198,38 @@ HANDLE HookManager::GetHostPipe(DWORD pid)
   return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
 }
 
-Hook HookManager::GetHook(DWORD processId, DWORD addr)
+HookParam HookManager::GetHookParam(DWORD pid, DWORD addr)
 {
-	HM_LOCK;
-	return hooksByAddresses[{ processId, addr, 0, 0}];
+	HookParam ret = {};
+	ProcessRecord* pr = GetProcessRecord(pid);
+	if (pr == nullptr) return ret;
+	WaitForSingleObject(pr->hookman_mutex, 0);
+	const Hook* hooks = (const Hook*)pr->hookman_map;
+	for (int i = 0; i < MAX_HOOK; ++i)
+		if (hooks[i].Address() == addr)
+			ret = hooks[i].hp;
+	ReleaseMutex(pr->hookman_mutex);
+	return ret;
 }
 
-void HookManager::SetHook(DWORD processId, DWORD addr, Hook hook)
+std::wstring HookManager::GetHookName(DWORD pid, DWORD addr)
 {
-	HM_LOCK;
-	hooksByAddresses[{ processId, addr, 0, 0}] = hook;
-}
-
-void AddHooksToProfile(Profile& pf, const ProcessRecord& pr);
-DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread);
-void MakeHookRelative(const ProcessRecord& pr, HookParam& hp);
-
-void HookManager::GetProfile(DWORD pid, pugi::xml_node profile_node)
-{
-	const ProcessRecord* pr = GetProcessRecord(pid);
-	if (pr == NULL)
-		return;
-	Profile pf(L"serialize");
-	AddHooksToProfile(pf, *pr);
-	AddThreadsToProfile(pf, *pr, pid);
-	pf.XmlWriteProfile(profile_node);
-}
-
-void AddHooksToProfile(Profile& pf, const ProcessRecord& pr)
-{
-	WaitForSingleObject(pr.hookman_mutex, 0);
-	auto hooks = (const OldHook*)pr.hookman_map;
-	for (DWORD i = 0; i < MAX_HOOK; ++i)
+	std::string buffer;
+	ProcessRecord* pr = GetProcessRecord(pid);
+	if (pr == nullptr) return L"";
+	WaitForSingleObject(pr->hookman_mutex, 0);
+	USES_CONVERSION;
+	const Hook* hooks = (const Hook*)pr->hookman_map;
+	for (int i = 0; i < MAX_HOOK; ++i)
 	{
-		if (hooks[i].Address() == 0)
-			continue;
-		auto& hook = hooks[i];
-		DWORD type = hook.Type();
-		if ((type & HOOK_ADDITIONAL) && (type & HOOK_ENGINE) == 0)
+		if (hooks[i].Address() == addr)
 		{
-			std::unique_ptr<CHAR[]> name(new CHAR[hook.NameLength()]);
-			if (ReadProcessMemory(pr.process_handle, hook.Name(), name.get(), hook.NameLength(), NULL))
-			{
-				if (hook.hp.module)
-				{
-					HookParam hp = hook.hp;
-					MakeHookRelative(pr, hp);
-					pf.AddHook(hook_ptr(new HookProfile(hp, toUnicodeString(name.get()))));
-				}
-				else
-					pf.AddHook(hook_ptr(new HookProfile(hook.hp, toUnicodeString(name.get()))));
-			}
+			buffer.resize(hooks[i].NameLength());
+			ReadProcessMemory(pr->process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
 		}
-	}
-	ReleaseMutex(pr.hookman_mutex);
-}
-
-void MakeHookRelative(const ProcessRecord& pr, HookParam& hp)
-{
-	MEMORY_BASIC_INFORMATION info;
-	VirtualQueryEx(pr.process_handle, (LPCVOID)hp.address, &info, sizeof(info));
-	hp.address -= (DWORD)info.AllocationBase;
-	hp.function = 0;
-}
-
-void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid)
-{
-	HM_LOCK;
-	AddThreadToProfile(pf, pr, current);
-}
-
-DWORD AddThreadToProfile(Profile& pf, const ProcessRecord& pr, TextThread* thread)
-{
-	ThreadParameter tp = thread->GetThreadParameter();
-	std::wstring hook_name = GetHookNameByAddress(pr, tp.hook);
-	if (hook_name.empty())
-		return -1;
-	auto thread_profile = new ThreadProfile(hook_name, tp.retn, tp.spl, 0, 0,
-		THREAD_MASK_RETN | THREAD_MASK_SPLIT, L"");
-	DWORD threads_size = pf.Threads().size();
-	int thread_profile_index = pf.AddThread(thread_ptr(thread_profile));
-	if (thread_profile_index == threads_size) // new thread
-	{
-		WORD iw = thread_profile_index & 0xFFFF;
-		if (thread->Status() & CURRENT_SELECT)
-			pf.SelectedIndex() = iw;
-	}
-	return thread_profile_index; // in case more than one thread links to the same thread
+	}	
+	ReleaseMutex(pr->hookman_mutex);
+	return std::wstring(A2W(buffer.c_str()));
 }
 
 // EOF

@@ -83,7 +83,7 @@ BOOL InitInstance(HINSTANCE hInstance, DWORD nAdmin, RECT* rc)
 	return TRUE;
 }
 
-DWORD SaveProcessProfile(DWORD pid); // ProfileManager.cpp
+DWORD SaveProcessProfile(TextThread* thread); // ProfileManager.cpp
 
 BOOL CALLBACK OptionDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -318,10 +318,10 @@ void ClickButton(HWND hWnd, HWND h)
 	else if (h == hwndSave)
 	{
 		WCHAR str[32];
-		if (GetWindowText(hwndProcessComboBox, str, 32))
+		if (GetWindowText(hwndCombo, str, 32))
 		{
-			DWORD pid = std::stoul(str);
-			SaveProcessProfile(pid);
+			TextThread* current = man->FindSingle(std::stoul(str, nullptr, 16));
+			SaveProcessProfile(current);
 		}
 		pfman->SaveProfiles();
 	}
@@ -356,7 +356,7 @@ bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)
 {
 	if (!pid)
 		return false;
-	hp = man->GetHook(pid, hook_addr).hp;
+	hp = man->GetHookParam(pid, hook_addr);
 	return true;
 }
 
@@ -367,7 +367,7 @@ std::wstring CreateEntryWithLink(ThreadParameter tp, std::wstring& entry)
 		entryWithLink += L"ConsoleOutput";
 	HookParam hp = {};
 	if (GetHookParam(tp.pid, tp.hook, hp))
-		entryWithLink += L" (" + GetCode(hp, tp.hook) + L")";
+		entryWithLink += L" (" + GetCode(hp, tp.pid) + L")";
 	return entryWithLink;
 }
 
@@ -432,12 +432,6 @@ DWORD ThreadReset(TextThread* thread)
 	return 0;
 }
 
-DWORD AddRemoveLink(TextThread* thread)
-{
-	AddToCombo(*thread, true);
-	return 0;
-}
-
 bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook);
 
 DWORD ThreadCreate(TextThread* thread)
@@ -470,7 +464,7 @@ bool IsUnicodeHook(const ProcessRecord& pr, DWORD hook)
 {
 	bool res = false;
 	WaitForSingleObject(pr.hookman_mutex, 0);
-	auto hooks = (const OldHook*)pr.hookman_map;
+	auto hooks = (const Hook*)pr.hookman_map;
 	for (DWORD i = 0; i < MAX_HOOK; i++)
 	{
 		if (hooks[i].Address() == hook)
@@ -562,8 +556,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			AddToCombo(*console, false);
 			man->RegisterProcessAttachCallback(RegisterProcess);
 			man->RegisterProcessDetachCallback(RemoveProcessList);
-			//man->RegisterProcessNewHookCallback(RefreshProfileOnNewHook); Artikash 5/30/2018 TODO: Finish implementing this.
-			man->RegisterAddRemoveLinkCallback(AddRemoveLink);
 			OpenHost();
 			{
 				static const WCHAR program_name[] = L"NextHooker beta v";

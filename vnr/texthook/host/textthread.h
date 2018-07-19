@@ -5,12 +5,11 @@
 // Branch: ITH/TextThread.h, rev 120
 
 #include <Windows.h>
-#include "config.h"
-#include <intrin.h> // require _InterlockedExchange
 #include <string>
 #include <vector>
 
-struct ThreadParameter {
+struct ThreadParameter 
+{
   DWORD pid; // jichi: 5/11/2014: The process ID
   DWORD hook; // Artikash 6/6/2018: The start address of the hook
   DWORD retn; // jichi 5/11/2014: The return address of the hook
@@ -30,7 +29,7 @@ typedef void(*ThreadOutputCallback)(TextThread*, std::wstring data);
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
 
-class DLLEXPORT TextThread
+class TextThread
 {
 public:
   TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay);
@@ -41,11 +40,10 @@ public:
   void AddSentence();
   void AddSentence(std::wstring sentence);
 
-  std::wstring GetStore();
+  std::wstring GetStore() { return storage; }
   DWORD &Status() { return status; }
   WORD Number() const { return threadNumber; }
   ThreadParameter GetThreadParameter() { return tp; }
-  //LPCWSTR GetComment() { return comment; }
 
   void RegisterOutputCallBack(ThreadOutputCallback cb) { output = cb; }
 

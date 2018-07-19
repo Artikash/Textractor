@@ -11,23 +11,12 @@
 #include <string>
 #include "vnrhook/include/types.h"
 
-namespace pugi {
-	class xml_node;
-}
-class Profile;
-
 struct ProcessRecord {
   HANDLE process_handle;
   HANDLE hookman_mutex;
   HANDLE hookman_section;
   LPVOID hookman_map;
   HANDLE hostPipe;
-};
-
-struct Hook
-{
-	HookParam hp;
-	std::wstring name;
 };
 
 typedef DWORD(*ProcessEventCallback)(DWORD pid);
@@ -48,8 +37,6 @@ public:
   ~HookManager();
   TextThread *FindSingle(DWORD number);
   ProcessRecord *GetProcessRecord(DWORD pid);
-  Hook GetHook(DWORD processId, DWORD addr);
-  void SetHook(DWORD processId, DWORD addr, Hook hook);
   void ClearCurrent();
   void SelectCurrent(DWORD num);
   void SetCurrent(TextThread *it);
@@ -61,6 +48,8 @@ public:
   void RemoveSingleHook(DWORD pid, DWORD addr);
   void RegisterProcess(DWORD pid, HANDLE hostPipe);
   void UnRegisterProcess(DWORD pid);
+  HookParam GetHookParam(DWORD pid, DWORD addr);
+  std::wstring GetHookName(DWORD pid, DWORD addr);
   //void SetName(DWORD);
 
   HANDLE GetHostPipe(DWORD pid);
@@ -73,11 +62,8 @@ public:
 
   void SetSplitInterval(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
-  void GetProfile(DWORD pid, pugi::xml_node profile_node);
-
 private:
 	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
-	std::unordered_map<ThreadParameter, Hook, ThreadParameterHasher> hooksByAddresses; // Artikash 7/17/2018: retn and spl should always be zero when accessing this!
 	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
 
   CRITICAL_SECTION hmcs;
@@ -92,8 +78,6 @@ private:
 	  new_thread_number;
 
   unsigned int splitDelay;
-
-  void HookManager::AddThreadsToProfile(Profile& pf, const ProcessRecord& pr, DWORD pid);
 };
 
 // EOF

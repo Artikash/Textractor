@@ -870,66 +870,23 @@ bool DetermineEngineType()
 #endif // ITH_DISABLE_ENGINE
 }
 
-//  __asm
-//  {
-//    mov eax,seh_recover
-//    mov recv_eip,eax
-//    push ExceptHandler
-//    push fs:[0]
-//    mov fs:[0],esp
-//    pushad
-//    mov recv_esp,esp
-//  }
-//  DetermineEngineType();
-//  status++;
-//  __asm
-//  {
-//seh_recover:
-//    popad
-//    mov eax,[esp]
-//    mov fs:[0],eax
-//    add esp,8
-//  }
-//  if (status == 0)
-//    ConsoleOutput("Fail to identify engine type.");
-//  else
-//    ConsoleOutput("Initialized successfully.");
-//}
-//
+} // unnamed
 
-HANDLE hijackThread;
-DWORD WINAPI hijackThreadProc(LPVOID unused)
+DWORD InsertDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 {
-  // Initialize shared process name and path
-  GetModuleFileNameW(nullptr, processPath, MAX_PATH);
-  processName = wcsrchr(processPath, L'\\') + 1;
-
-  DetermineEngineType();
-  return 0;
+	return trigger_fun_ ? !trigger_fun_(addr, frame, stack) : 0;
 }
 
-}} // namespace Engine unnamed
+void Hijack()
+{
+	GetModuleFileNameW(nullptr, processPath, MAX_PATH);
+	processName = wcsrchr(processPath, L'\\') + 1;
+
+	DetermineEngineType();
+}
+
+} // namespace Engine
 
 // - API -
-
-DWORD Engine::InsertDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
-{ return trigger_fun_ ? !trigger_fun_(addr, frame, stack) : 0; }
-
-void Engine::hijack()
-{
-  if (!hijackThread) {
-    ConsoleOutput("vnreng: hijack process");
-    hijackThread = CreateThread(nullptr, 0, hijackThreadProc, 0, 0, nullptr);
-  }
-}
-
-void Engine::terminate()
-{
-  if (hijackThread) {
-	  WaitForSingleObject(hijackThread, TIMEOUT);
-    CloseHandle(hijackThread);
-    hijackThread = 0;
-  }
-}
 
 // EOF

@@ -26,7 +26,7 @@ void InitFilterTable();
 
 // jichi 9/25/2013: This class will be used by NtMapViewOfSectionfor
 // interprocedure communication, where constructor/destructor will NOT work.
-class TextHook : public OldHook
+class TextHook : public Hook
 {
   int UnsafeInsertHookCode();
   DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);

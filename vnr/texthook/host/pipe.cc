@@ -64,16 +64,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 			USES_CONVERSION;
 			switch (*(DWORD*)(buffer + 4)) // Artikash 7/17/2018: Notification type
 			{
-			case HOST_NOTIFICATION_NEWHOOK:				
-				man->SetHook(processId,
-					((HookParam*)(buffer + sizeof(DWORD) * 2))->address, // Hook address
-					{ 
-						*(HookParam*)(buffer + sizeof(DWORD) * 2), // Hook parameter
-						std::wstring(A2W(
-							(const char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam) // Hook name
-						))
-					}
-				);
+			case HOST_NOTIFICATION_NEWHOOK:	// Artikash 7/18/2018: Useless for now, but could be used to implement smth later
 				break;
 			case HOST_NOTIFICATION_TEXT:
 				man->AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
