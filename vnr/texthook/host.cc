@@ -103,7 +103,7 @@ DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 				{
 					WaitForSingleObject(thread, timeout);
 					CloseHandle(thread);
-					VirtualFreeEx(processHandle, remoteData, textHookerPathSize, MEM_RELEASE);
+					VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
 					CloseHandle(processHandle);
 					return true;
 				}

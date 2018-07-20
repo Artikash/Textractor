@@ -24,6 +24,7 @@ HookManager::HookManager() :
 	attach(nullptr),
 	detach(nullptr),
 	nextThreadNumber(0),
+	splitDelay(250),
 	textThreadsByParams(),
 	processRecordsByIds()
 {
