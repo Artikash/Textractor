@@ -49,40 +49,40 @@ include_directories(
   .
   
   texthook
-  ${CMAKE_BINARY_DIR}/gui
+  ${CMAKE_BINARY_DIR}/oldgui
 )
 
 set(resource_src
-  gui/ITHVNR.rc
-  gui/icon1.ico
+  oldgui/ITHVNR.rc
+  oldgui/icon1.ico
 )  
 
 set(nexthooker_src
-  gui/command.cpp
-  gui/ITH.h
-  gui/language.cpp
-  gui/language.h
-  gui/main.cpp
-  gui/ProcessWindow.cpp
-  gui/ProcessWindow.h
-  gui/ProfileManager.cpp
-  gui/ProfileManager.h
-  gui/resource.h
-  gui/utility.cpp
-  gui/utility.h
-  ${CMAKE_BINARY_DIR}/gui/version.h
-  gui/version.h.in
-  gui/window.cpp
-  gui/window.h
-  gui/TextBuffer.cpp
-  gui/TextBuffer.h
-  gui/profile/Profile.h
-  gui/profile/Profile.cpp
-  gui/profile/pugiconfig.h
-  gui/profile/pugixml.cpp
-  gui/profile/pugixml.h
-  gui/profile/misc.h
-  gui/profile/misc.cpp
+  oldgui/command.cpp
+  oldgui/ITH.h
+  oldgui/language.cpp
+  oldgui/language.h
+  oldgui/main.cpp
+  oldgui/ProcessWindow.cpp
+  oldgui/ProcessWindow.h
+  oldgui/ProfileManager.cpp
+  oldgui/ProfileManager.h
+  oldgui/resource.h
+  oldgui/utility.cpp
+  oldgui/utility.h
+  ${CMAKE_BINARY_DIR}/oldgui/version.h
+  oldgui/version.h.in
+  oldgui/window.cpp
+  oldgui/window.h
+  oldgui/TextBuffer.cpp
+  oldgui/TextBuffer.h
+  oldgui/profile/Profile.h
+  oldgui/profile/Profile.cpp
+  oldgui/profile/pugiconfig.h
+  oldgui/profile/pugixml.cpp
+  oldgui/profile/pugixml.h
+  oldgui/profile/misc.h
+  oldgui/profile/misc.cpp
   ${resource_src}
 )
 
@@ -123,4 +123,4 @@ install(TARGETS ${PROJECT_NAME}
   CONFIGURATIONS Release
 )
 
-configure_file(gui/version.h.in gui/version.h)
+configure_file(oldgui/version.h.in oldgui/version.h)
