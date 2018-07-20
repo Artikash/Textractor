@@ -17,6 +17,8 @@
 #     QMAKE_CXXFLAGS_EXCEPTIONS_ON += /EHa
 #   }
 
+project(engine)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(vnrhook_src

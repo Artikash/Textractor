@@ -47,8 +47,8 @@ add_definitions(
 
 include_directories(
   .
-  vnr
-  vnr/texthook
+  
+  texthook
   ${CMAKE_BINARY_DIR}/gui
 )
 
@@ -90,7 +90,8 @@ source_group("Resource Files" FILES ${resource_src})
 
 add_executable(${PROJECT_NAME} ${nexthooker_src})
 
- add_subdirectory(vnr)
+add_subdirectory(texthook)
+add_subdirectory(vnrhook)
 # add_subdirectory(profile)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

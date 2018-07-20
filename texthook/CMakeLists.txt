@@ -6,6 +6,8 @@
 # # TODO: Get rid of dependence on msvc's swprintf
 # DEFINES += _CRT_NON_CONFORMING_SWPRINTFS
 
+project(host)
+
 set(vnrhost_src
   hookman.h
   host.h
