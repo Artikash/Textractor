@@ -12,7 +12,7 @@
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include "winmutex/winmutex.h"
+#include "winmutex.h"
 #include <atlbase.h>
 
 #define HM_LOCK CriticalSectionLocker hmLocker(hmCs) // Synchronized scope for accessing private data

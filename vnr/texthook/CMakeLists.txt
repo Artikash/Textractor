@@ -11,13 +11,11 @@ set(vnrhost_src
   host.h
   pipe.h
   textthread.h
+  winmutex.h
   hookman.cc
   host.cc
   pipe.cc
   textthread.cc
-  ${PROJECT_SOURCE_DIR}/winmutex/winmutex.h
-  ${PROJECT_SOURCE_DIR}/extensions/Extensions.cpp
-  ${PROJECT_SOURCE_DIR}/extensions/Extensions.h
 )
 
 add_library(vnrhost SHARED ${vnrhost_src})
