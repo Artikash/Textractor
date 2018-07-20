@@ -32,7 +32,7 @@ add_compile_options(
   /MP
   /GS-
   $<$<CONFIG:MinSizeRel>:/MT>
-  $<$<CONFIG:Debug>:/MTd>
+  #$<$<CONFIG:Debug>:/MTd>
 )
 
 add_definitions(

@@ -101,12 +101,13 @@ void HookManager::RemoveProcessContext(DWORD pid)
 void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
 {
 	HM_LOCK;
-	ProcessRecord record = processRecordsByIds[pid];
+	ProcessRecord record;
 	record.hostPipe = hostPipe;
 	record.hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
 	record.hookman_map = MapViewOfFile(record.hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
 	record.process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	record.hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
+	processRecordsByIds[pid] = record;
 	if (attach) attach(pid);
 }
 
