@@ -438,15 +438,12 @@ void ThreadCreate(TextThread* thread)
 	//thread->RegisterFilterCallBack(ThreadFilter, 0);
 	AddToCombo(*thread, false);
 	auto tp = thread->GetThreadParameter();
-	auto pr = man->GetProcessRecord(tp.pid);
-	if (pr == NULL)
-		return;
-	if (IsUnicodeHook(*pr, tp.hook))
-		thread->Status() |= USING_UNICODE;
+	auto hook = man->GetHookParam(tp.pid, tp.hook);
+	if (hook.type & USING_UNICODE) thread->Status() |= USING_UNICODE;
 	auto pf = pfman->GetProfile(tp.pid);
 	if (!pf)
 		return;
-	const std::wstring& hook_name = GetHookNameByAddress(*pr, thread->GetThreadParameter().hook);
+	const std::wstring& hook_name = man->GetHookName(tp.pid, tp.hook);
 	auto thread_profile = pf->FindThread(&thread->GetThreadParameter(), hook_name);
 	if (thread_profile != pf->Threads().end())
 	{

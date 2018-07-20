@@ -118,7 +118,7 @@ void ProcessWindow::RefreshThread(int index)
 	item.iItem = index;
 	ListView_GetItem(hlProcess, &item);
 	DWORD pid = item.lParam;
-	bool isAttached = man->GetProcessRecord(pid) != NULL;
+	bool isAttached = man->GetHostPipe(pid) != NULL;
 	RefreshThreadWithPID(pid, isAttached);
 }
 

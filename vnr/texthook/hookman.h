@@ -38,7 +38,6 @@ public:
 	~HookManager();
 
 	TextThread *FindSingle(DWORD number);
-	ProcessRecord *GetProcessRecord(DWORD pid);
 	HANDLE GetHostPipe(DWORD pid);
 	void ClearCurrent();
 	void SelectCurrent(DWORD num);
@@ -62,7 +61,7 @@ public:
 
 private:
 	std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
-	std::unordered_map<DWORD, ProcessRecord*> processRecordsByIds;
+	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
 	CRITICAL_SECTION hmCs;
 
