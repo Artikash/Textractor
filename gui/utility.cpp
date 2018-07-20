@@ -171,12 +171,11 @@ std::wstring GetCode(const HookParam& hp, DWORD pid)
 
 std::wstring GetModuleFileNameAsString(DWORD pid, PVOID allocationBase)
 {
-	const ProcessRecord* pr = man->GetProcessRecord(pid);
-	if (pr)
+	UniqueHandle hProc(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
+	if (hProc.get())
 	{
-		HANDLE hProc = pr->process_handle;
 		WCHAR path[MAX_PATH];
-		if (GetModuleFileNameEx(hProc, (HMODULE)allocationBase, path, MAX_PATH))
+		if (GetModuleFileNameEx(hProc.get(), (HMODULE)allocationBase, path, MAX_PATH))
 			return path;
 	}
 	return L"";
@@ -184,12 +183,11 @@ std::wstring GetModuleFileNameAsString(DWORD pid, PVOID allocationBase)
 
 PVOID GetAllocationBase(DWORD pid, LPCVOID addr)
 {
-	const ProcessRecord *pr = man->GetProcessRecord(pid);
-	if (pr)
+	UniqueHandle hProc(OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid));
+	if (hProc.get())
 	{
 		MEMORY_BASIC_INFORMATION info;
-		HANDLE hProc = pr->process_handle;
-		if (VirtualQueryEx(hProc, addr, &info, sizeof(info)))
+		if (VirtualQueryEx(hProc.get(), addr, &info, sizeof(info)))
 		{
 			if (info.Type & MEM_IMAGE)
 				return info.AllocationBase;

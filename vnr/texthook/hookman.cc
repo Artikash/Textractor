@@ -101,19 +101,20 @@ void HookManager::RemoveProcessContext(DWORD pid)
 void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
 {
 	HM_LOCK;
-	ProcessRecord* record = processRecordsByIds[pid] = new ProcessRecord;
-	record->hostPipe = hostPipe;
-	record->hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
-	record->hookman_map = MapViewOfFile(record->hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
-	record->process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	record->hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
+	ProcessRecord record;
+	record.hostPipe = hostPipe;
+	record.hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
+	record.hookman_map = MapViewOfFile(record.hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
+	record.process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	record.hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
+	processRecordsByIds[pid] = record;
 	if (attach) attach(pid);
 }
 
 void HookManager::UnRegisterProcess(DWORD pid)
 {
 	HM_LOCK;
-	ProcessRecord pr = *processRecordsByIds[pid];
+	ProcessRecord pr = processRecordsByIds[pid];
 	CloseHandle(pr.hookman_mutex);
 	UnmapViewOfFile(pr.hookman_map);
 	CloseHandle(pr.process_handle);
@@ -154,26 +155,20 @@ void HookManager::ClearCurrent()
 	if (reset) reset(current);
 }
 
-ProcessRecord *HookManager::GetProcessRecord(DWORD pid)
-{
-	HM_LOCK;
-	return processRecordsByIds[pid];
-}
-
 HANDLE HookManager::GetHostPipe(DWORD pid)
 {
 	HM_LOCK;
-	return processRecordsByIds[pid] ? processRecordsByIds[pid]->hostPipe : nullptr;
+	return processRecordsByIds[pid].hostPipe;
 }
 
 HookParam HookManager::GetHookParam(DWORD pid, DWORD addr)
 {
 	HM_LOCK;
 	HookParam ret = {};
-	ProcessRecord* pr = GetProcessRecord(pid);
-	if (pr == nullptr) return ret;
-	MutexLocker locker(pr->hookman_mutex);
-	const Hook* hooks = (const Hook*)pr->hookman_map;
+	ProcessRecord pr = processRecordsByIds[pid];
+	if (pr.hookman_map == nullptr) return ret;
+	MutexLocker locker(pr.hookman_mutex);
+	const Hook* hooks = (const Hook*)pr.hookman_map;
 	for (int i = 0; i < MAX_HOOK; ++i)
 		if (hooks[i].Address() == addr)
 			ret = hooks[i].hp;
@@ -184,17 +179,17 @@ std::wstring HookManager::GetHookName(DWORD pid, DWORD addr)
 {
 	HM_LOCK;
 	std::string buffer;
-	ProcessRecord* pr = GetProcessRecord(pid);
-	if (pr == nullptr) return L"";
-	MutexLocker locker(pr->hookman_mutex);
+	ProcessRecord pr = processRecordsByIds[pid];
+	if (pr.hookman_map == nullptr) return L"";
+	MutexLocker locker(pr.hookman_mutex);
 	USES_CONVERSION;
-	const Hook* hooks = (const Hook*)pr->hookman_map;
+	const Hook* hooks = (const Hook*)pr.hookman_map;
 	for (int i = 0; i < MAX_HOOK; ++i)
 	{
 		if (hooks[i].Address() == addr)
 		{
 			buffer.resize(hooks[i].NameLength());
-			ReadProcessMemory(pr->process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
+			ReadProcessMemory(pr.process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
 		}
 	}
 	return std::wstring(A2W(buffer.c_str()));
