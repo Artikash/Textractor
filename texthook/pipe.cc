@@ -4,8 +4,8 @@
 
 #include "pipe.h"
 #include "host.h"
-#include "vnrhook/include/defs.h"
-#include "vnrhook/include/const.h"
+#include "../vnrhook/include/defs.h"
+#include "../vnrhook/include/const.h"
 #include <atlbase.h>
 
 extern HookManager* man;

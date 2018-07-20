@@ -20,8 +20,6 @@ set(vnrhost_src
   textthread.cc
 )
 
-include_directories(../)
-
 add_library(vnrhost SHARED ${vnrhost_src})
 
 set_target_properties(vnrhost PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)

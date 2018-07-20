@@ -8,7 +8,7 @@
 #include "textthread.h"
 #include <unordered_map>
 #include <string>
-#include "vnrhook/include/types.h"
+#include "../vnrhook/include/types.h"
 
 struct ProcessRecord
 {

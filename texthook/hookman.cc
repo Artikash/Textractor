@@ -9,9 +9,9 @@
 #endif // _MSC_VER
 
 #include "hookman.h"
-#include "vnrhook/include/const.h"
-#include "vnrhook/include/defs.h"
-#include "vnrhook/include/types.h"
+#include "../vnrhook/include/const.h"
+#include "../vnrhook/include/defs.h"
+#include "../vnrhook/include/types.h"
 #include "winmutex.h"
 #include <atlbase.h>
 

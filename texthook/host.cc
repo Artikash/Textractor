@@ -4,9 +4,9 @@
 
 #include "host.h"
 #include "pipe.h"
-#include "vnrhook/include/const.h"
-#include "vnrhook/include/defs.h"
-#include "vnrhook/include/types.h"
+#include "../vnrhook/include/const.h"
+#include "../vnrhook/include/defs.h"
+#include "../vnrhook/include/types.h"
 
 HANDLE preventDuplicationMutex;
 

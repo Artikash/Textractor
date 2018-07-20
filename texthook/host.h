@@ -6,7 +6,7 @@
 
 #define DLLEXPORT __declspec(dllexport)
 #include "hookman.h"
-#include "vnrhook/include/types.h"
+#include "../vnrhook/include/types.h"
 #include <string>
 
 DLLEXPORT void OpenHost();

@@ -7,7 +7,7 @@
 
 #include "host.h"
 #include "textthread.h"
-#include "vnrhook/include/const.h"
+#include "../vnrhook/include/const.h"
 #include "winmutex.h"
 
 extern HookManager* man;
