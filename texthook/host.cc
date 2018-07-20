@@ -7,7 +7,6 @@
 #include "vnrhook/include/const.h"
 #include "vnrhook/include/defs.h"
 #include "vnrhook/include/types.h"
-#include "extensions/Extensions.h"
 
 HANDLE preventDuplicationMutex;
 
@@ -58,7 +57,6 @@ DLLEXPORT bool StartHost()
 	}
 	else
 	{
-		LoadExtensions();
 		::running = true;
 		::man = new HookManager;
 		return true;

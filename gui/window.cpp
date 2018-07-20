@@ -347,9 +347,10 @@ void ClickButton(HWND hWnd, HWND h)
 	}
 }
 
-void ThreadOutput(TextThread* thread, std::wstring output)
+std::wstring ThreadOutput(TextThread* thread, std::wstring output)
 {
 	if (thread->Status() & CURRENT_SELECT) texts->AddText(output, false);
+	return output;
 }
 
 bool GetHookParam(DWORD pid, DWORD hook_addr, HookParam& hp)

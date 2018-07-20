@@ -8,8 +8,7 @@
 #include "host.h"
 #include "textthread.h"
 #include "vnrhook/include/const.h"
-#include "extensions/Extensions.h"
-#include "winmutex/winmutex.h"
+#include "winmutex.h"
 
 extern HookManager* man;
 extern HWND dummyWindow;
@@ -54,7 +53,7 @@ void TextThread::AddSentence()
 		sentence = std::wstring(converted, MultiByteToWideChar(932, 0, sentenceBuffer.data(), sentenceBuffer.size(), converted, sentenceBuffer.size()));
 		delete[] converted;
 	}
-	AddSentence(DispatchSentenceToExtensions(sentence, status));
+	AddSentence(sentence);
 	sentenceBuffer.clear();
 }
 
@@ -62,7 +61,7 @@ void TextThread::AddSentence(std::wstring sentence)
 {
 	TT_LOCK;
 	sentence.append(L"\r\n");
-	if (output) output(this, sentence);
+	if (output) sentence = output(this, sentence);
 	storage.append(sentence);
 }
 

@@ -6,19 +6,21 @@
 # # TODO: Get rid of dependence on msvc's swprintf
 # DEFINES += _CRT_NON_CONFORMING_SWPRINTFS
 
+project(host)
+
 set(vnrhost_src
   hookman.h
   host.h
   pipe.h
   textthread.h
+  winmutex.h
   hookman.cc
   host.cc
   pipe.cc
   textthread.cc
-  ${PROJECT_SOURCE_DIR}/winmutex/winmutex.h
-  ${PROJECT_SOURCE_DIR}/extensions/Extensions.cpp
-  ${PROJECT_SOURCE_DIR}/extensions/Extensions.h
 )
+
+include_directories(../)
 
 add_library(vnrhost SHARED ${vnrhost_src})
 
