@@ -20,7 +20,7 @@ add_definitions(
 
 include_directories(
   ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/texthook
+  #${PROJECT_SOURCE_DIR}/texthook
 )
 
 add_subdirectory(vnrhook)

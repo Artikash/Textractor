@@ -42,14 +42,16 @@ set(vnrhook_src
   src/util/growl.h
   src/util/util.cc
   src/util/util.h
-  ${PROJECT_SOURCE_DIR}/ithsys/ithsys.cc
-  ${PROJECT_SOURCE_DIR}/disasm/disasm.cc
-  ${PROJECT_SOURCE_DIR}/memdbg/memdbg.h
-  ${PROJECT_SOURCE_DIR}/memdbg/memsearch.cc
-  ${PROJECT_SOURCE_DIR}/memdbg/memsearch.h
-  ${PROJECT_SOURCE_DIR}/mono/monoobject.h
-  ${PROJECT_SOURCE_DIR}/mono/monotype.h
+  src/util/ithsys/ithsys.cc
+  src/util/disasm/disasm.cc
+  src/util/memdbg/memdbg.h
+  src/util/memdbg/memsearch.cc
+  src/util/memdbg/memsearch.h
+  src/util/mono/monoobject.h
+  src/util/mono/monotype.h
 )
+
+include_directories(src/util)
 
 add_library(vnrhook SHARED ${vnrhook_src})
 
