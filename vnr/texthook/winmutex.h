@@ -8,26 +8,28 @@
 # pragma warning(disable:4800) // C4800: forcing value to bool
 #endif // _MSC_VER
 
-  class MutexLocker
-  {
-	  HANDLE m;
-  public:
-	  explicit MutexLocker(HANDLE mutex) : m(mutex)
-	  {
-		  WaitForSingleObject(m, 0);
-	  }
-	  ~MutexLocker() { if (m != INVALID_HANDLE_VALUE && m != nullptr) ReleaseMutex(m); }
-  };
+// Artikash 7/20/2018: these are similar to std::lock guard but use Winapi objects
 
-  class CriticalSectionLocker
-  {
-	  CRITICAL_SECTION cs;
-  public:
-	  explicit CriticalSectionLocker(CRITICAL_SECTION cs) : cs(cs)
-	  {
-		  EnterCriticalSection(&cs);
-	  }
-	  ~CriticalSectionLocker() { LeaveCriticalSection(&cs); }
-  };
+class MutexLocker
+{
+	HANDLE m;
+public:
+	explicit MutexLocker(HANDLE mutex) : m(mutex)
+	{
+		WaitForSingleObject(m, 0);
+	}
+	~MutexLocker() { if (m != INVALID_HANDLE_VALUE && m != nullptr) ReleaseMutex(m); }
+};
+
+class CriticalSectionLocker
+{
+	CRITICAL_SECTION cs;
+public:
+	explicit CriticalSectionLocker(CRITICAL_SECTION cs) : cs(cs)
+	{
+		EnterCriticalSection(&cs);
+	}
+	~CriticalSectionLocker() { LeaveCriticalSection(&cs); }
+};
 
 // EOF
