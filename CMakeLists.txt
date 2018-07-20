@@ -76,6 +76,13 @@ set(nexthooker_src
   gui/window.h
   gui/TextBuffer.cpp
   gui/TextBuffer.h
+  gui/profile/Profile.h
+  gui/profile/Profile.cpp
+  gui/profile/pugiconfig.h
+  gui/profile/pugixml.cpp
+  gui/profile/pugixml.h
+  gui/profile/misc.h
+  gui/profile/misc.cpp
   ${resource_src}
 )
 
@@ -83,7 +90,7 @@ source_group("Resource Files" FILES ${resource_src})
 
 add_executable(${PROJECT_NAME} ${nexthooker_src})
 
-add_subdirectory(vnr)
+ add_subdirectory(vnr)
 # add_subdirectory(profile)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -97,7 +104,7 @@ target_compile_definitions(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-  profile
+  #profile
   vnrhost
   #ithsys
   #${WDK_HOME}/lib/wxp/i386/ntdll.lib
