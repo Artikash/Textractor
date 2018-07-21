@@ -5,16 +5,22 @@ VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "GUI\GUI.csproj", "{D847D0DC-78F5-4722-8E06-1A124B957353}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostInterop", "HostInterop\HostInterop.vcxproj", "{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D847D0DC-78F5-4722-8E06-1A124B957353}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D847D0DC-78F5-4722-8E06-1A124B957353}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D847D0DC-78F5-4722-8E06-1A124B957353}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D847D0DC-78F5-4722-8E06-1A124B957353}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D847D0DC-78F5-4722-8E06-1A124B957353}.Debug|x86.ActiveCfg = Debug|x86
+		{D847D0DC-78F5-4722-8E06-1A124B957353}.Debug|x86.Build.0 = Debug|x86
+		{D847D0DC-78F5-4722-8E06-1A124B957353}.Release|x86.ActiveCfg = Release|x86
+		{D847D0DC-78F5-4722-8E06-1A124B957353}.Release|x86.Build.0 = Release|x86
+		{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}.Debug|x86.ActiveCfg = Debug|Win32
+		{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}.Debug|x86.Build.0 = Debug|Win32
+		{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}.Release|x86.ActiveCfg = Release|Win32
+		{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
