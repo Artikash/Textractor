@@ -20,7 +20,6 @@
 HookManager::HookManager() :
 	create(nullptr),
 	remove(nullptr),
-	reset(nullptr),
 	attach(nullptr),
 	detach(nullptr),
 	nextThreadNumber(0),
@@ -31,8 +30,7 @@ HookManager::HookManager() :
 	InitializeCriticalSection(&hmCs);
 
 	// Console text thread
-	current = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay);
-	current->Status() |= USING_UNICODE | CURRENT_SELECT;
+	(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay))->Status() |= USING_UNICODE;
 }
 
 HookManager::~HookManager()
@@ -50,25 +48,6 @@ TextThread *HookManager::FindSingle(DWORD number)
 	return nullptr;
 }
 
-void HookManager::SetCurrent(TextThread *it)
-{
-	HM_LOCK;
-	if (it == nullptr) return;
-	current->Status() &= ~CURRENT_SELECT;
-	current = it;
-	it->Status() |= CURRENT_SELECT;
-}
-
-void HookManager::SelectCurrent(DWORD num)
-{
-	HM_LOCK;
-	if (TextThread *st = FindSingle(num)) 
-	{
-		SetCurrent(st);
-		if (reset) reset(st);
-	}
-}
-
 void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 {
 	HM_LOCK;
@@ -81,7 +60,6 @@ void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);
-	SelectCurrent(0);
 }
 
 void HookManager::RemoveProcessContext(DWORD pid)
@@ -96,7 +74,6 @@ void HookManager::RemoveProcessContext(DWORD pid)
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);
-	SelectCurrent(0);
 }
 
 void HookManager::RegisterProcess(DWORD pid, HANDLE hostPipe)
@@ -136,6 +113,7 @@ void HookManager::DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD spl, con
 	if ((it = textThreadsByParams[tp]) == nullptr)
 	{
 		it = textThreadsByParams[tp] = new TextThread(tp, nextThreadNumber++, splitDelay);
+		if (GetHookParam(pid, hook).type & USING_UNICODE) it->Status() |= USING_UNICODE;
 		if (create) create(it);
 	}
 	it->AddText(text, len);
@@ -146,13 +124,6 @@ void HookManager::AddConsoleOutput(std::wstring text)
 	HM_LOCK;
 	TextThread *console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
 	console->AddSentence(std::wstring(text));
-}
-
-void HookManager::ClearCurrent()
-{
-	HM_LOCK;
-	current->Reset();
-	if (reset) reset(current);
 }
 
 HANDLE HookManager::GetHostPipe(DWORD pid)

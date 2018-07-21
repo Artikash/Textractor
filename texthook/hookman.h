@@ -39,9 +39,6 @@ public:
 
 	TextThread *FindSingle(DWORD number);
 	HANDLE GetHostPipe(DWORD pid);
-	void ClearCurrent();
-	void SelectCurrent(DWORD num);
-	void SetCurrent(TextThread *it);
 	void AddConsoleOutput(std::wstring text);
 	void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
 	void RemoveProcessContext(DWORD pid); // private
@@ -53,7 +50,6 @@ public:
 
 	void RegisterThreadCreateCallback(ThreadEventCallback cf) { create = cf; }
 	void RegisterThreadRemoveCallback(ThreadEventCallback cf) { remove = cf; }
-	void RegisterThreadResetCallback(ThreadEventCallback cf) { reset = cf; }
 	void RegisterProcessAttachCallback(ProcessEventCallback cf) { attach = cf; }
 	void RegisterProcessDetachCallback(ProcessEventCallback cf) { detach = cf; }
 
@@ -65,9 +61,7 @@ private:
 
 	CRITICAL_SECTION hmCs;
 
-	TextThread *current;
-
-	ThreadEventCallback create, remove, reset;
+	ThreadEventCallback create, remove;
 	ProcessEventCallback attach, detach;
 
 	WORD nextThreadNumber;
