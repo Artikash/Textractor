@@ -19,8 +19,8 @@ struct ProcessRecord
 	HANDLE hostPipe;
 };
 
-typedef void(*ProcessEventCallback)(DWORD pid);
-typedef void(*ThreadEventCallback)(TextThread*);
+typedef void(__stdcall *ProcessEventCallback)(DWORD pid);
+typedef void(__stdcall *ThreadEventCallback)(TextThread*);
 
 struct ThreadParameterHasher
 {
