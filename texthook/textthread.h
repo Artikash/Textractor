@@ -22,10 +22,8 @@ struct ThreadParameter
 	}
 };
 
-#define CURRENT_SELECT 0x1000
-
 class TextThread;
-typedef std::wstring(__stdcall *ThreadOutputCallback)(TextThread*, std::wstring data);
+typedef std::wstring(*ThreadOutputCallback)(TextThread*, std::wstring data);
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
 
