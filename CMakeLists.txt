@@ -47,80 +47,9 @@ add_definitions(
 
 include_directories(
   .
-  
   texthook
-  ${CMAKE_BINARY_DIR}/oldgui
 )
-
-set(resource_src
-  oldgui/ITHVNR.rc
-  oldgui/icon1.ico
-)  
-
-set(nexthooker_src
-  oldgui/command.cpp
-  oldgui/ITH.h
-  oldgui/language.cpp
-  oldgui/language.h
-  oldgui/main.cpp
-  oldgui/ProcessWindow.cpp
-  oldgui/ProcessWindow.h
-  oldgui/ProfileManager.cpp
-  oldgui/ProfileManager.h
-  oldgui/resource.h
-  oldgui/utility.cpp
-  oldgui/utility.h
-  ${CMAKE_BINARY_DIR}/oldgui/version.h
-  oldgui/version.h.in
-  oldgui/window.cpp
-  oldgui/window.h
-  oldgui/TextBuffer.cpp
-  oldgui/TextBuffer.h
-  oldgui/profile/Profile.h
-  oldgui/profile/Profile.cpp
-  oldgui/profile/pugiconfig.h
-  oldgui/profile/pugixml.cpp
-  oldgui/profile/pugixml.h
-  oldgui/profile/misc.h
-  oldgui/profile/misc.cpp
-  ${resource_src}
-)
-
-source_group("Resource Files" FILES ${resource_src})
-
-add_executable(${PROJECT_NAME} ${nexthooker_src})
 
 add_subdirectory(texthook)
 add_subdirectory(vnrhook)
 # add_subdirectory(profile)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  LINK_FLAGS "/SUBSYSTEM:WINDOWS /MANIFESTDEPENDENCY:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\""
-)
-
-target_compile_definitions(${PROJECT_NAME}
-  PRIVATE
-  PSAPI_VERSION=1
-  DEFAULT_MM
-)
-
-target_link_libraries(${PROJECT_NAME}
-  #profile
-  vnrhost
-  #ithsys
-  #${WDK_HOME}/lib/wxp/i386/ntdll.lib
-  comctl32.lib
-  psapi.lib
-)
-
-target_compile_options(${PROJECT_NAME}
-  PRIVATE
-  /EHsc
-)
-
-install(TARGETS ${PROJECT_NAME}
-  DESTINATION .
-  CONFIGURATIONS Release
-)
-
-configure_file(oldgui/version.h.in oldgui/version.h)
