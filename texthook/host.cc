@@ -78,7 +78,7 @@ DLLEXPORT void CloseHost()
 	}
 }
 
-DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
+DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
 {
 	if (processId == GetCurrentProcessId()) return false;
 
@@ -110,26 +110,26 @@ DLLEXPORT bool InjectProcessById(DWORD processId, DWORD timeout)
 	return false;
 }
 
-DLLEXPORT bool DetachProcessById(DWORD processId)
+DLLEXPORT bool DetachProcess(DWORD processId)
 {
 	DWORD command = HOST_COMMAND_DETACH;
 	DWORD unused;
 	return WriteFile(man->GetHostPipe(processId), &command, sizeof(command), &unused, nullptr);
 }
 
-DLLEXPORT void GetHostHookManager(HookManager** hookman)
+DLLEXPORT HookManager* GetHostHookManager()
 {
-	*hookman = man;
+	return man;
 }
 
-DLLEXPORT bool InsertHook(DWORD pid, const HookParam *hp, std::string name)
+DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name)
 {
 	HANDLE commandPipe = man->GetHostPipe(pid);
 	if (commandPipe == nullptr) return false;
 
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	*(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
-	*(HookParam*)(buffer + sizeof(DWORD)) = *hp;
+	*(HookParam*)(buffer + sizeof(DWORD)) = hp;
 	if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
 	DWORD unused;
 	return WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);

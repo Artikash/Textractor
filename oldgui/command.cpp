@@ -35,13 +35,13 @@ DWORD ProcessCommand(const std::wstring& cmd, DWORD pid)
 	if (regex_match(cmd, m, wregex(L"/p(\\d+)", wregex::icase)))
 	{
 		pid = std::stoul(m[1].str());
-		InjectProcessById(pid);
+		InjectProcess(pid);
 	}
 	else if (regex_match(cmd, m, wregex(L"/h(.+)", wregex::icase)))
 	{
 		HookParam hp = {};
 		if (Parse(m[1].str(), hp))
-			InsertHook(pid, &hp);
+			InsertHook(pid, hp);
 	}
 	else if (regex_match(cmd, m, wregex(L":(?:h|help)", wregex::icase)))
 	{

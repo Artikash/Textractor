@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "GUI\GUI.csproj", "{D847D0DC-78F5-4722-8E06-1A124B957353}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5} = {0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostInterop", "HostInterop\HostInterop.vcxproj", "{0DF42D0B-0F87-475E-9E2C-9E32776B2AD5}"
 EndProject

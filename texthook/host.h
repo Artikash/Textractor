@@ -12,10 +12,10 @@
 DLLEXPORT void OpenHost();
 DLLEXPORT bool StartHost();
 DLLEXPORT void CloseHost();
-DLLEXPORT void GetHostHookManager(HookManager **hookman);
-DLLEXPORT bool InjectProcessById(DWORD pid, DWORD timeout = 5000);
-DLLEXPORT bool DetachProcessById(DWORD pid);
-DLLEXPORT bool InsertHook(DWORD pid, const HookParam *hp, std::string name = "");
+DLLEXPORT HookManager* GetHostHookManager();
+DLLEXPORT bool InjectProcess(DWORD pid, DWORD timeout = 5000);
+DLLEXPORT bool DetachProcess(DWORD pid);
+DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name = "");
 DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr);
 
 // EOF

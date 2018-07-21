@@ -42,7 +42,7 @@ public:
 	void ClearCurrent();
 	void SelectCurrent(DWORD num);
 	void SetCurrent(TextThread *it);
-	void AddConsoleOutput(LPCWSTR text);
+	void AddConsoleOutput(std::wstring text);
 	void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
 	void RemoveProcessContext(DWORD pid); // private
 	void RemoveSingleHook(DWORD pid, DWORD addr);
