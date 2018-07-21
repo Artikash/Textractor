@@ -488,7 +488,7 @@ void RegisterProcess(DWORD pid)
 	{
 		for (auto i = pf->Hooks().begin(); i != pf->Hooks().end(); ++i)
 		{
-			InsertHook(pid, i->get()->HP(), toMultiByteString(i->get()->Name()));
+			InsertHook(pid, &i->get()->HP(), toMultiByteString(i->get()->Name()));
 		}
 	}
 }

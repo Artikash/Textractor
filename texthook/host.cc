@@ -117,19 +117,19 @@ DLLEXPORT bool DetachProcessById(DWORD processId)
 	return WriteFile(man->GetHostPipe(processId), &command, sizeof(command), &unused, nullptr);
 }
 
-DLLEXPORT HookManager* GetHostHookManager()
+DLLEXPORT void GetHostHookManager(HookManager** hookman)
 {
-	return man;
+	*hookman = man;
 }
 
-DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name)
+DLLEXPORT bool InsertHook(DWORD pid, const HookParam *hp, std::string name)
 {
 	HANDLE commandPipe = man->GetHostPipe(pid);
 	if (commandPipe == nullptr) return false;
 
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	*(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
-	*(HookParam*)(buffer + sizeof(DWORD)) = hp;
+	*(HookParam*)(buffer + sizeof(DWORD)) = *hp;
 	if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
 	DWORD unused;
 	return WriteFile(commandPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);

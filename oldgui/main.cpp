@@ -149,7 +149,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (StartHost())
 	{
 		SetUnhandledExceptionFilter(UnhandledExcept);
-		man = GetHostHookManager();
+		GetHostHookManager(&man);
 		pfman = new ProfileManager();
 		DefaultSettings();
 		LoadSettings();
