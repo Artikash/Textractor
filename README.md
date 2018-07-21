@@ -47,7 +47,8 @@ GPL v3
 
 ## Compiling
 
-Before compiling *NextHooker*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
+Before compiling *NextHooker*, you should get Visual Studio with CMake, ATL, and .NET 4.6.<br>
+You should first compile all the CMake projects, then compile the *GUI* solution.
 
 ## Project Architecture
 
