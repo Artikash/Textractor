@@ -32,7 +32,11 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
+win32: LIBS += \
+        -L$$PWD/../Builds/Debug/texthook/ -lvnrhost
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+

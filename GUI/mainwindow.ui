@@ -13,7 +13,28 @@
   <property name="windowTitle">
    <string>NextHooker</string>
   </property>
-  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QLineEdit" name="lineEdit">
+    <property name="geometry">
+     <rect>
+      <x>252</x>
+      <y>0</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>3</x>
+      <y>40</y>
+      <width>491</width>
+      <height>291</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -23,23 +44,6 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuNextHooker">
-    <property name="title">
-     <string>NextHooker</string>
-    </property>
-   </widget>
-   <addaction name="menuNextHooker"/>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <property name="windowTitle">
-    <string>NextHooker</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
