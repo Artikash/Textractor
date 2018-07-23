@@ -151,7 +151,7 @@ DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
 	WaitForSingleObject(hookRemovalEvent, 1000);
 	CloseHandle(hookRemovalEvent);
 
-	man->RemoveSingleHook(pid, addr);
+	man->RemoveThreads([](auto one, auto two) { return one.pid == two.pid && one.hook == two.hook; }, { pid, addr, 0, 0 });
 	return true;
 }
 

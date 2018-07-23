@@ -37,14 +37,13 @@ public:
 	HookManager();
 	~HookManager();
 
-	TextThread *FindSingle(DWORD number);
-	HANDLE GetHostPipe(DWORD pid);
+	TextThread* FindSingle(DWORD number);
 	void AddConsoleOutput(std::wstring text);
 	void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
-	void RemoveProcessContext(DWORD pid); // private
-	void RemoveSingleHook(DWORD pid, DWORD addr);
+	void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadParameter cmp);
 	void RegisterProcess(DWORD pid, HANDLE hostPipe);
 	void UnRegisterProcess(DWORD pid);
+	HANDLE GetHostPipe(DWORD pid);
 	HookParam GetHookParam(DWORD pid, DWORD addr);
 	std::wstring GetHookName(DWORD pid, DWORD addr);
 

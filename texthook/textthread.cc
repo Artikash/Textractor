@@ -29,7 +29,8 @@ TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned i
 
 TextThread::~TextThread()
 {
-	TT_LOCK;
+	EnterCriticalSection(&ttCs);
+	LeaveCriticalSection(&ttCs);
 	DeleteCriticalSection(&ttCs);
 }
 

@@ -35,11 +35,14 @@ HookManager::HookManager() :
 
 HookManager::~HookManager()
 {
-	HM_LOCK;
+	EnterCriticalSection(&hmCs);
+	RemoveThreads([](auto one, auto two) { return true; }, {});
+	for (auto i : processRecordsByIds) UnRegisterProcess(i.first);
+	LeaveCriticalSection(&hmCs);
 	DeleteCriticalSection(&hmCs);
 }
 
-TextThread *HookManager::FindSingle(DWORD number)
+TextThread* HookManager::FindSingle(DWORD number)
 {
 	HM_LOCK;
 	for (auto i : textThreadsByParams)
@@ -48,26 +51,12 @@ TextThread *HookManager::FindSingle(DWORD number)
 	return nullptr;
 }
 
-void HookManager::RemoveSingleHook(DWORD pid, DWORD addr)
+void HookManager::RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadParameter cmp)
 {
 	HM_LOCK;
 	std::vector<ThreadParameter> removedThreads;
 	for (auto i : textThreadsByParams)
-		if (i.first.pid == pid && i.first.hook == addr)
-		{
-			if (remove) remove(i.second);
-			delete i.second;
-			removedThreads.push_back(i.first);
-		}
-	for (auto i : removedThreads) textThreadsByParams.erase(i);
-}
-
-void HookManager::RemoveProcessContext(DWORD pid)
-{
-	HM_LOCK;
-	std::vector<ThreadParameter> removedThreads;
-	for (auto i : textThreadsByParams)
-		if (i.first.pid == pid)
+		if (RemoveIf(i.first, cmp))
 		{
 			if (remove) remove(i.second);
 			delete i.second;
@@ -98,7 +87,7 @@ void HookManager::UnRegisterProcess(DWORD pid)
 	CloseHandle(pr.process_handle);
 	CloseHandle(pr.hookman_section);
 	processRecordsByIds.erase(pid);
-	RemoveProcessContext(pid);
+	RemoveThreads([](auto one, auto two) { return one.pid == two.pid; }, { pid, 0, 0, 0 });
 	if (detach) detach(pid);
 }
 
@@ -149,7 +138,7 @@ HookParam HookManager::GetHookParam(DWORD pid, DWORD addr)
 std::wstring HookManager::GetHookName(DWORD pid, DWORD addr)
 {
 	HM_LOCK;
-	std::string buffer;
+	std::string buffer = "";
 	ProcessRecord pr = processRecordsByIds[pid];
 	if (pr.hookman_map == nullptr) return L"";
 	MutexLocker locker(pr.hookman_mutex);
