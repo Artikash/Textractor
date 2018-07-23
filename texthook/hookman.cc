@@ -28,7 +28,6 @@ HookManager::HookManager() :
 	processRecordsByIds()
 {
 	InitializeCriticalSection(&hmCs);
-
 	// Console text thread
 	(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, splitDelay))->Status() |= USING_UNICODE;
 }
@@ -94,8 +93,7 @@ void HookManager::UnRegisterProcess(DWORD pid)
 void HookManager::DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD spl, const BYTE *text, int len)
 {
 	// jichi 20/27/2013: When PID is zero, the text comes from console, which I don't need
-	if (!text || !pid || len <= 0)
-		return;
+	if (!text || !pid || len <= 0) return;
 	HM_LOCK;
 	ThreadParameter tp = { pid, hook, retn, spl };
 	TextThread *it;
@@ -111,8 +109,7 @@ void HookManager::DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD spl, con
 void HookManager::AddConsoleOutput(std::wstring text)
 {
 	HM_LOCK;
-	TextThread *console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
-	console->AddSentence(std::wstring(text));
+	textThreadsByParams[{ 0, -1UL, -1UL, -1UL }]->AddSentence(std::wstring(text));
 }
 
 HANDLE HookManager::GetHostPipe(DWORD pid)
@@ -142,7 +139,6 @@ std::wstring HookManager::GetHookName(DWORD pid, DWORD addr)
 	ProcessRecord pr = processRecordsByIds[pid];
 	if (pr.hookman_map == nullptr) return L"";
 	MutexLocker locker(pr.hookman_mutex);
-	USES_CONVERSION;
 	const Hook* hooks = (const Hook*)pr.hookman_map;
 	for (int i = 0; i < MAX_HOOK; ++i)
 	{
@@ -152,6 +148,7 @@ std::wstring HookManager::GetHookName(DWORD pid, DWORD addr)
 			ReadProcessMemory(pr.process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
 		}
 	}
+	USES_CONVERSION;
 	return std::wstring(A2W(buffer.c_str()));
 }
 
