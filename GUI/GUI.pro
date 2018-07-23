@@ -35,6 +35,9 @@ FORMS += \
 win32: LIBS += \
         -L$$PWD/../Builds/Debug/Debug/ -lvnrhost
 
+QMAKE_CXXFLAGS_RELEASE += \
+        /MT
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

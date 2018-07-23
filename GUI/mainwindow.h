@@ -3,8 +3,9 @@
 
 #include <QMainWindow>
 
-namespace Ui {
-class MainWindow;
+namespace Ui
+{
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -15,8 +16,10 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-public slots:
-    void onCommand();
+private slots:
+
+    void on_attachButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

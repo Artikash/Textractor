@@ -30,7 +30,7 @@ typedef std::wstring(*ThreadOutputCallback)(TextThread*, std::wstring data);
 class TextThread
 {
 public:
-	TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay);
+	TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay = 250);
 	~TextThread();
 
 	void Reset();
@@ -42,6 +42,7 @@ public:
 	DWORD &Status() { return status; }
 	WORD Number() const { return threadNumber; }
 	ThreadParameter GetThreadParameter() { return tp; }
+	void SetSplitDelay(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { output = cb; }
 

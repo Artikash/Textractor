@@ -1,12 +1,10 @@
 project(host)
 
 set(vnrhost_src
-  hookman.h
   host.h
   pipe.h
   textthread.h
   winmutex.h
-  hookman.cc
   host.cc
   pipe.cc
   textthread.cc
