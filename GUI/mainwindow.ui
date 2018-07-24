@@ -10,6 +10,11 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>NextHooker</string>
   </property>
@@ -34,14 +39,18 @@
         <widget class="QLineEdit" name="lineEdit"/>
        </item>
        <item>
+        <widget class="QComboBox" name="processCombo">
+         <property name="insertPolicy">
+          <enum>QComboBox::InsertAtBottom</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="attachButton">
          <property name="text">
           <string>Attach to game</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="processCombo"/>
        </item>
        <item>
         <widget class="QPushButton" name="detachButton">
@@ -79,6 +88,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
         </widget>
        </item>
       </layout>
@@ -92,7 +106,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

@@ -24,10 +24,12 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    hostsignaller.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    hostsignaller.h
 
 FORMS += \
         mainwindow.ui

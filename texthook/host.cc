@@ -45,10 +45,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
 		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
 		break;
-	case DLL_PROCESS_DETACH:
-		Host::Close();
-		DestroyWindow(dummyWindow);
-		break;
 	default:
 		break;
 	}
@@ -73,7 +69,6 @@ namespace Host
 			onAttach = onDetach = nullptr;
 			onCreate = onRemove = nullptr;
 			nextThreadNumber = 0;
-			// Console text thread
 			return true;
 		}
 	}
@@ -92,8 +87,9 @@ namespace Host
 		{
 			EnterCriticalSection(&hostCs);
 			running = false;
+			DestroyWindow(dummyWindow);
 			RemoveThreads([](auto one, auto two) { return true; }, {});
-			for (auto i : processRecordsByIds) UnregisterProcess(i.first);
+			//for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
 			LeaveCriticalSection(&hostCs);
 			DeleteCriticalSection(&hostCs);
 			CloseHandle(preventDuplicationMutex);
@@ -243,7 +239,8 @@ void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadPara
 		if (RemoveIf(i.first, cmp))
 		{
 			if (onRemove) onRemove(i.second);
-			delete i.second;
+			//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
+			i.second->Reset(); // Temp workaround to free some memory.
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);

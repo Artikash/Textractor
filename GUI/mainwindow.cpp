@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "QCoreApplication"
 #include "QTextBrowser"
 #include "QMessageBox"
 #include "QComboBox"
 #include "QLineEdit"
-#include "QTableWidget"
 #include "QInputDialog"
+#include <QCursor>
+#include <Qt>
 #include <Windows.h>
 #include <qdebug.h>
 #include <Psapi.h>
@@ -33,63 +35,82 @@ QString ProcessString(DWORD processId)
 QString TextThreadString(TextThread* thread)
 {
     ThreadParameter tp = thread->GetThreadParameter();
-    return QString("%1:%2:%3:%4:%5:%6").arg(
+    return QString("%1:%2:%3:%4:%5: ").arg(
         QString::number(thread->Number()),
         QString::number(tp.pid),
         QString::number(tp.hook, 16),
         QString::number(tp.retn, 16),
-        QString::number(tp.spl, 16),
-        QString::fromWCharArray(Host::GetHookName(tp.pid, tp.hook).c_str())
-    );
+        QString::number(tp.spl, 16)
+    ).toUpper() + QString::fromWCharArray(Host::GetHookName(tp.pid, tp.hook).c_str());
 }
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    hostSignaller(new HostSignaller)
 {
     ui->setupUi(this);
     mainWindow = this;
     processCombo = mainWindow->findChild<QComboBox*>("processCombo");
     ttCombo = mainWindow->findChild<QComboBox*>("ttCombo");
-    textOutput = this->findChild<QTextBrowser*>("textOutput");
+    textOutput = mainWindow->findChild<QTextBrowser*>("textOutput");
 
     Host::Start();
-    Host::RegisterProcessAttachCallback(AddProcess);
-    Host::RegisterProcessDetachCallback(RemoveProcess);
-    Host::RegisterThreadCreateCallback(AddThread);
-    Host::RegisterThreadRemoveCallback(RemoveThread);
+    hostSignaller->Initialize();
+    connect(hostSignaller, &HostSignaller::AddProcess, this, &MainWindow::AddProcess);
+    connect(hostSignaller, &HostSignaller::RemoveProcess, this, &MainWindow::RemoveProcess);
+    connect(hostSignaller, &HostSignaller::AddThread, this, &MainWindow::AddThread);
+    connect(hostSignaller, &HostSignaller::RemoveThread, this, &MainWindow::RemoveThread);
+    connect(hostSignaller, &HostSignaller::ThreadOutput, this, &MainWindow::ThreadOutput);
     Host::Open();
 }
 
 MainWindow::~MainWindow()
 {
     Host::Close();
+    delete hostSignaller;
     delete ui;
 }
 
-void AddProcess(DWORD processId)
+void MainWindow::AddProcess(unsigned int processId)
 {
-    processCombo->addItem(ProcessString(processId));
+    processCombo->addItem(ProcessString(processId), Qt::AlignHCenter);
 }
 
-void RemoveProcess(DWORD processId)
+void MainWindow::RemoveProcess(unsigned int processId)
 {
-    processCombo->removeItem(processCombo->findText(ProcessString(processId)));
+    for (int i = 0; i < processCombo->count(); ++i)
+        if (processCombo->itemText(i).split(":")[0] == QString::number(processId))
+            processCombo->removeItem(i);
 }
 
-void AddThread(TextThread* thread)
+void MainWindow::AddThread(TextThread* thread)
 {
     ttCombo->addItem(TextThreadString(thread));
-    thread->RegisterOutputCallBack([](auto thread, auto data)
-    {
-        if (ttCombo->currentText() == TextThreadString(thread)) textOutput->append(QString::fromWCharArray(data.c_str()));
-        return data + L"\r\n";
-    });
 }
 
-void RemoveThread(TextThread* thread)
+void MainWindow::RemoveThread(TextThread* thread)
 {
-    ttCombo->removeItem(ttCombo->findText(TextThreadString(thread)));
+    for (int i = 0; i < ttCombo->count(); ++i)
+        if (ttCombo->itemText(i).split(":")[0] == QString::number(thread->Number()))
+        {
+            ttCombo->removeItem(i);
+            if (i == ttCombo->currentIndex())
+            {
+                ttCombo->setCurrentIndex(0);
+                on_ttCombo_activated(0);
+            }
+        }
+}
+
+void MainWindow::ThreadOutput(TextThread* thread, QString output)
+{
+    if (TextThreadString(thread) == ttCombo->currentText())
+    {
+       textOutput->moveCursor(QTextCursor::End);
+       textOutput->insertPlainText(output);
+       textOutput->moveCursor(QTextCursor::End);
+    }
 }
 
 void MainWindow::on_attachButton_clicked()
@@ -104,5 +125,5 @@ void MainWindow::on_detachButton_clicked()
 
 void MainWindow::on_ttCombo_activated(int index)
 {
-    textOutput->setText(QString::fromWCharArray(Host::GetThread(index)->GetStore().c_str()));
+    textOutput->setText(QString::fromWCharArray(Host::GetThread(ttCombo->itemText(index).split(":")[0].toInt())->GetStore().c_str()));
 }

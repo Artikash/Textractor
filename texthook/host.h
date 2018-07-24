@@ -9,6 +9,7 @@
 #include <Windows.h>
 #include "textthread.h"
 #include <string>
+#include <functional>
 #include "../vnrhook/include/types.h"
 
 struct ProcessRecord
@@ -20,8 +21,8 @@ struct ProcessRecord
 	HANDLE hostPipe;
 };
 
-typedef void(*ProcessEventCallback)(DWORD pid);
-typedef void(*ThreadEventCallback)(TextThread*);
+typedef std::function<void(DWORD)> ProcessEventCallback;
+typedef std::function<void(TextThread*)> ThreadEventCallback;
 
 struct ThreadParameterHasher
 {

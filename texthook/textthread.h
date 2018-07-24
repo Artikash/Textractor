@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <functional>
 
 struct ThreadParameter
 {
@@ -23,7 +24,7 @@ struct ThreadParameter
 };
 
 class TextThread;
-typedef std::wstring(*ThreadOutputCallback)(TextThread*, std::wstring data);
+typedef std::function<std::wstring(TextThread*, std::wstring)> ThreadOutputCallback;
 
 //extern DWORD split_time,repeat_count,global_filter,cyclic_remove;
 
