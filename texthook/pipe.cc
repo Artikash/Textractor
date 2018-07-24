@@ -4,11 +4,9 @@
 
 #include "pipe.h"
 #include "host.h"
-#include "vnrhook/include/defs.h"
-#include "vnrhook/include/const.h"
+#include "../vnrhook/include/defs.h"
+#include "../vnrhook/include/const.h"
 #include <atlbase.h>
-
-extern HookManager* man;
 
 struct Pipes
 {
@@ -34,7 +32,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	DWORD bytesRead, processId;
 	ReadFile(pipes->hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-	man->RegisterProcess(processId, pipes->hostPipe);
+	RegisterProcess(processId, pipes->hostPipe);
 
 	// jichi 9/27/2013: why recursion?
 	// Artikash 5/20/2018: To create a new pipe for another process
@@ -55,13 +53,13 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 			case HOST_NOTIFICATION_NEWHOOK:	// Artikash 7/18/2018: Useless for now, but could be used to implement smth later
 				break;
 			case HOST_NOTIFICATION_TEXT:
-				man->AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
+				Host::AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
 				break;
 			}
 		}
 		else
 		{
-			man->DispatchText(processId,
+			DispatchText(processId,
 				*(DWORD*)buffer, // Hook address
 				*(DWORD*)(buffer + sizeof(DWORD)), // Return address
 				*(DWORD*)(buffer + sizeof(DWORD) * 2), // Split
@@ -73,7 +71,7 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 	DisconnectNamedPipe(pipes->hookPipe);
 	DisconnectNamedPipe(pipes->hostPipe);
-	man->UnRegisterProcess(processId);
+	UnregisterProcess(processId);
 	CloseHandle(pipes->hookPipe);
 	CloseHandle(pipes->hostPipe);
 	delete pipes;

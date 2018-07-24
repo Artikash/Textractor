@@ -1,2 +1,3 @@
-.vs/
-CMakeBuilds/
+Builds/
+*.vs/
+*.pro.user

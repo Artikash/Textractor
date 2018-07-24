@@ -1,22 +1,3 @@
-# # hook.pro
-# # Exception handler to catch all exceptions
-# CONFIG += dll noqt eh eha # noeh nosafeseh
-
-# DEFINES += ITH_HAS_CRT ITH_HAS_SEH
-# DEFINES += MEMDBG_NO_STL NTINSPECT_NO_STL # disabled as not used
-
-# # jichi 11/13/2011: disable swprinf warning
-# DEFINES += _CRT_NON_CONFORMING_SWPRINTFS
-
-# config.pri
-#   CONFIG(eha) {
-#     message(CONFIG eha)
-#     QMAKE_CXXFLAGS_STL_ON        -= /EHsc
-#     QMAKE_CXXFLAGS_EXCEPTIONS_ON -= /EHsc
-#     QMAKE_CXXFLAGS_STL_ON        += /EHa
-#     QMAKE_CXXFLAGS_EXCEPTIONS_ON += /EHa
-#   }
-
 project(engine)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -72,12 +53,12 @@ set_target_properties(vnrhook PROPERTIES
 
 target_compile_options(vnrhook PRIVATE
   /EHa
-    $<$<CONFIG:MinSizeRel>:/MT>
+  $<$<CONFIG:Release>:/MT>
   $<$<CONFIG:Debug>:>
 )
 
 set(vnrhook_libs
-  "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.17134.0\\um\\x86\\ntdll.lib"
+  ntdll.lib
   Version.lib
 )
 
@@ -88,9 +69,4 @@ target_compile_definitions(vnrhook
   ITH_HAS_CRT
   ITH_HAS_SEH
   _CRT_NON_CONFORMING_SWPRINTFS
-)
-
-install(TARGETS vnrhook RUNTIME
-  DESTINATION .
-  CONFIGURATIONS Release
 )

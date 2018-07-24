@@ -47,7 +47,8 @@ GPL v3
 
 ## Compiling
 
-Before compiling *NextHooker*, You should get CMake, [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800), and Visual Studio.
+Before compiling *NextHooker*, you should get Visual Studio with CMake and ATL support, as well as Qt version 5.11<br>
+Use Visual Studio to compile all the CMake projects, then use Qt Creator to compile/run the GUI.
 
 ## Project Architecture
 

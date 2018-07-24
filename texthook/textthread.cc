@@ -5,12 +5,10 @@
 # pragma warning (disable:4100)   // C4100: unreference formal parameter
 #endif // _MSC_VER
 
-#include "host.h"
 #include "textthread.h"
-#include "vnrhook/include/const.h"
+#include "../vnrhook/include/const.h"
 #include "winmutex.h"
 
-extern HookManager* man;
 extern HWND dummyWindow;
 
 #define TT_LOCK CriticalSectionLocker ttLocker(ttCs) // Synchronized scope for accessing private data
@@ -29,7 +27,8 @@ TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned i
 
 TextThread::~TextThread()
 {
-	TT_LOCK;
+	EnterCriticalSection(&ttCs);
+	LeaveCriticalSection(&ttCs);
 	DeleteCriticalSection(&ttCs);
 }
 
