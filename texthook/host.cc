@@ -74,13 +74,15 @@ namespace Host
 			onCreate = onRemove = nullptr;
 			nextThreadNumber = 0;
 			// Console text thread
-			(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++))->Status() |= USING_UNICODE;
 			return true;
 		}
 	}
 
 	DLLEXPORT void Open()
 	{
+		TextThread* console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++);
+		console->Status() |= USING_UNICODE;
+		if (onCreate) onCreate(console);
 		CreateNewPipe();
 	}
 
@@ -179,6 +181,7 @@ namespace Host
 
 	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr)
 	{
+		if (pid == 0) return L"Console";
 		HOST_LOCK;
 		std::string buffer = "";
 		ProcessRecord pr = processRecordsByIds[pid];
