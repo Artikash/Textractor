@@ -235,7 +235,7 @@ void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadPara
 		{
 			if (onRemove) onRemove(i.second);
 			//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
-			//i.second->Clear(); // Temp workaround to free some memory.
+			i.second->Clear(); // Temp workaround to free some memory.
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);
