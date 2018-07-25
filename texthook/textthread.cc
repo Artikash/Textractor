@@ -32,10 +32,11 @@ TextThread::~TextThread()
 	DeleteCriticalSection(&ttCs);
 }
 
-void TextThread::Reset()
+void TextThread::Clear()
 {
 	TT_LOCK;
 	storage.clear();
+	storage.shrink_to_fit();
 }
 
 void TextThread::AddSentence()

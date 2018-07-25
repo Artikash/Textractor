@@ -81,13 +81,14 @@ namespace Host
 
 	DLLEXPORT void Close()
 	{
-		EnterCriticalSection(&hostCs);
-		DestroyWindow(dummyWindow);
-		RemoveThreads([](auto one, auto two) { return true; }, {});
-		//for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
-		LeaveCriticalSection(&hostCs);
-		DeleteCriticalSection(&hostCs);
-		CloseHandle(preventDuplicationMutex);
+		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
+		//EnterCriticalSection(&hostCs);
+		//DestroyWindow(dummyWindow);
+		//RemoveThreads([](auto one, auto two) { return true; }, {});
+		////for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
+		//LeaveCriticalSection(&hostCs);
+		//DeleteCriticalSection(&hostCs);
+		//CloseHandle(preventDuplicationMutex);
 	}
 
 	DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
@@ -211,7 +212,7 @@ namespace Host
 
 void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE * text, int len)
 {
-	// jichi 20/27/2013: When PID is zero, the text comes from console, which I don't need
+	// jichi 2/27/2013: When PID is zero, the text comes from console, which I don't need
 	if (!text || !pid || len <= 0) return;
 	HOST_LOCK;
 	ThreadParameter tp = { pid, hook, retn, split };
@@ -234,7 +235,7 @@ void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadPara
 		{
 			if (onRemove) onRemove(i.second);
 			//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
-			i.second->Reset(); // Temp workaround to free some memory.
+			i.second->Clear(); // Temp workaround to free some memory.
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);
