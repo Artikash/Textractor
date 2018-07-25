@@ -55,7 +55,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ttCombo = mainWindow->findChild<QComboBox*>("ttCombo");
     textOutput = mainWindow->findChild<QTextBrowser*>("textOutput");
 
-    Host::Start();
     hostSignaller->Initialize();
     connect(hostSignaller, &HostSignaller::AddProcess, this, &MainWindow::AddProcess);
     connect(hostSignaller, &HostSignaller::RemoveProcess, this, &MainWindow::RemoveProcess);
@@ -74,14 +73,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::AddProcess(unsigned int processId)
 {
-    processCombo->addItem(ProcessString(processId), Qt::AlignHCenter);
+    processCombo->addItem(ProcessString(processId));
 }
 
 void MainWindow::RemoveProcess(unsigned int processId)
 {
-    for (int i = 0; i < processCombo->count(); ++i)
-        if (processCombo->itemText(i).split(":")[0] == QString::number(processId))
-            processCombo->removeItem(i);
+    processCombo->removeItem(processCombo->findText(QString::number(processId), Qt::MatchStartsWith));
 }
 
 void MainWindow::AddThread(TextThread* thread)
@@ -91,16 +88,13 @@ void MainWindow::AddThread(TextThread* thread)
 
 void MainWindow::RemoveThread(TextThread* thread)
 {
-    for (int i = 0; i < ttCombo->count(); ++i)
-        if (ttCombo->itemText(i).split(":")[0] == QString::number(thread->Number()))
-        {
-            ttCombo->removeItem(i);
-            if (i == ttCombo->currentIndex())
-            {
-                ttCombo->setCurrentIndex(0);
-                on_ttCombo_activated(0);
-            }
-        }
+    int threadIndex = ttCombo->findText(QString::number(thread->Number()), Qt::MatchStartsWith);
+    ttCombo->removeItem(threadIndex);
+    if (threadIndex == ttCombo->currentIndex())
+    {
+        ttCombo->setCurrentIndex(0);
+        on_ttCombo_activated(0);
+    }
 }
 
 void MainWindow::ThreadOutput(TextThread* thread, QString output)

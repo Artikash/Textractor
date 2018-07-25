@@ -23,7 +23,6 @@ ProcessEventCallback onAttach, onDetach;
 
 WORD nextThreadNumber;
 HWND dummyWindow;
-bool running;
 
 #define HOST_LOCK CriticalSectionLocker hostLocker(hostCs) // Synchronized scope for accessing private data
 
@@ -56,14 +55,13 @@ namespace Host
 	DLLEXPORT bool Start()
 	{
 		preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
-		if (GetLastError() == ERROR_ALREADY_EXISTS || running)
+		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
 			MessageBoxW(nullptr, L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!", L"Error", MB_ICONERROR);
 			return false;
 		}
 		else
 		{
-			running = true;
 			GetDebugPrivileges();
 			InitializeCriticalSection(&hostCs);
 			onAttach = onDetach = nullptr;
@@ -83,17 +81,13 @@ namespace Host
 
 	DLLEXPORT void Close()
 	{
-		if (running)
-		{
-			EnterCriticalSection(&hostCs);
-			running = false;
-			DestroyWindow(dummyWindow);
-			RemoveThreads([](auto one, auto two) { return true; }, {});
-			//for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
-			LeaveCriticalSection(&hostCs);
-			DeleteCriticalSection(&hostCs);
-			CloseHandle(preventDuplicationMutex);
-		}
+		EnterCriticalSection(&hostCs);
+		DestroyWindow(dummyWindow);
+		RemoveThreads([](auto one, auto two) { return true; }, {});
+		//for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
+		LeaveCriticalSection(&hostCs);
+		DeleteCriticalSection(&hostCs);
+		CloseHandle(preventDuplicationMutex);
 	}
 
 	DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
