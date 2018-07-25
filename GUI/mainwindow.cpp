@@ -95,6 +95,7 @@ void MainWindow::RemoveThread(TextThread* thread)
         ttCombo->setCurrentIndex(0);
         on_ttCombo_activated(0);
     }
+    delete thread;
 }
 
 void MainWindow::ThreadOutput(TextThread* thread, QString output)
