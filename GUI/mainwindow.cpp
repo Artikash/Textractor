@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "QCoreApplication"
+#include <QCoreApplication>
 #include "QTextBrowser"
 #include "QMessageBox"
 #include "QComboBox"
@@ -8,24 +8,16 @@
 #include "QInputDialog"
 #include <QCursor>
 #include <Qt>
+#include <unordered_set>
 #include <Windows.h>
 #include <qdebug.h>
 #include <Psapi.h>
-#include "../texthook/host.h"
+#include "misc.h"
 
 QMainWindow* mainWindow;
 QComboBox* processCombo;
 QComboBox* ttCombo;
 QTextBrowser* textOutput;
-
-QString GetModuleName(DWORD processId, HMODULE module = NULL)
-{
-	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-	wchar_t buffer[MAX_PATH];
-	GetModuleFileNameExW(handle, module, buffer, MAX_PATH);
-	CloseHandle(handle);
-	return QString::fromWCharArray(wcsrchr(buffer, L'\\') + 1);
-}
 
 QString ProcessString(DWORD processId)
 {
@@ -66,8 +58,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	Host::Close();
-	delete hostSignaller;
 	delete ui;
 }
 
@@ -85,7 +75,10 @@ void MainWindow::AddThread(TextThread* thread)
 {
 	ttCombo->addItem(
 		TextThreadString(thread) +
-		QString::fromWCharArray(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook).c_str())
+		QString::fromWCharArray(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook).c_str()) +
+		" (" +
+		GenerateHCode(Host::GetHookParam(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook), thread->GetThreadParameter().pid) +
+		")"
 	);
 }
 
@@ -110,14 +103,54 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 	}
 }
 
+QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
+{
+	std::unordered_set<DWORD> addresses;
+	QVector<HookParam> hooks;
+	for (int i = 0; i < ttCombo->count(); ++i)
+		if (ttCombo->itemText(i).split(":")[1].toInt() == processId &&
+				!addresses.count(ttCombo->itemText(i).split(":")[2].toInt(nullptr, 16)))
+		{
+			addresses.insert(ttCombo->itemText(i).split(":")[2].toInt(nullptr, 16));
+			hooks.push_back(Host::GetHookParam(ttCombo->itemText(i).split(":")[1].toInt(), ttCombo->itemText(i).split(":")[2].toInt(nullptr, 16)));
+		}
+	return hooks;
+}
+
 void MainWindow::on_attachButton_clicked()
 {
-	Host::InjectProcess(QInputDialog::getInt(this, "Process ID?", "You can find this under Task Manager -> Details"));
+	bool ok;
+	int processId = QInputDialog::getInt(this, "Attach Process", "Process ID?\r\nYou can find this under Task Manager -> Details", 0, 0, 100000, 1, &ok);
+	if (ok) Host::InjectProcess(processId);
 }
 
 void MainWindow::on_detachButton_clicked()
 {
 	Host::DetachProcess(processCombo->currentText().split(":")[0].toInt());
+}
+
+void MainWindow::on_hookButton_clicked()
+{
+	bool ok;
+	QString hookCode = QInputDialog::getText(this, "Add Hook",
+		"Enter hook code\r\n/H{A|B|W|S|Q}[N][data_offset[*drdo]][:sub_offset[*drso]]@addr[:module]",
+		QLineEdit::Normal, "/H", &ok
+	);
+	if (ok) Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseHCode(hookCode, processCombo->currentText().split(":")[0].toInt()));
+}
+
+void MainWindow::on_unhookButton_clicked()
+{
+	QVector<HookParam> hooks = GetAllHooks(processCombo->currentText().split(":")[0].toInt());
+	QStringList hookList;
+	for (auto i : hooks) hookList.push_back(
+				QString::fromWCharArray(Host::GetHookName(processCombo->currentText().split(":")[0].toInt(), i.address).c_str()) +
+				": " +
+				GenerateHCode(i, processCombo->currentText().split(":")[0].toInt())
+			);
+	bool ok;
+	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
+	if (ok) Host::RemoveHook(processCombo->currentText().split(":")[0].toInt(), hooks.at(hookList.indexOf(hook)).address);
 }
 
 void MainWindow::on_ttCombo_activated(int index)

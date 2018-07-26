@@ -1,5 +1,4 @@
 #include "hostsignaller.h"
-#include "../texthook/host.h"
 
 void HostSignaller::Initialize()
 {

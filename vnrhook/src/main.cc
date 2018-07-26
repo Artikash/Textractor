@@ -142,32 +142,27 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 }
 
 //extern "C" {
-DWORD NewHook(const HookParam &hp, LPCSTR name, DWORD flag)
+DWORD NewHook(const HookParam &hp, LPCSTR lpname, DWORD flag)
 {
-  CHAR str[128];
+  std::string name = lpname;
   int current = ::current_available - ::hookman;
   if (current < MAX_HOOK) {
     //flag &= 0xffff;
     //if ((flag & HOOK_AUXILIARY) == 0)
     flag |= HOOK_ADDITIONAL;
-	if (name == NULL || name[0] == '\0')
+	if (name[0] == '\0')
 	{
-		sprintf(str, "UserHook%d", user_hook_count++);
-	}
-	else
-	{
-		strcpy(str, name);
+		name = "UserHook" + std::to_string(user_hook_count++);
 	}
 
-    ConsoleOutput("vnrcli:NewHook: try inserting hook:");
-	ConsoleOutput(str);
+    ConsoleOutput(("vnrcli:NewHook: try inserting hook: " + name).c_str());
 
     // jichi 7/13/2014: This function would raise when too many hooks added
-    ::hookman[current].InitHook(hp, str, flag & 0xffff);
+    ::hookman[current].InitHook(hp, name.c_str(), flag & 0xffff);
 
     if (::hookman[current].InsertHook() == 0) {
-      ConsoleOutput("vnrcli:NewHook: hook inserted");
-	  NotifyHookInsert(hp, str);
+      ConsoleOutput(("vnrcli:NewHook: inserted hook: " + name).c_str());
+	  NotifyHookInsert(hp, name.c_str());
     } else
       ConsoleOutput("vnrcli:NewHook:WARNING: failed to insert hook");
   }

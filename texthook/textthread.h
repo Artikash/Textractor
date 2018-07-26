@@ -34,19 +34,18 @@ public:
 	TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay = 250);
 	~TextThread();
 
-	void Clear();
-	void AddText(const BYTE *con, int len);
-	void AddSentence();
-	void AddSentence(std::wstring sentence);
-
-	// Artikash 7/25/2018: Not thread-safe with Clear(), but since they should both be accessed from GUI thread, should be fine
-	std::wstring GetStore() { return storage; }
+	virtual std::wstring GetStore();
 	DWORD &Status() { return status; }
 	WORD Number() const { return threadNumber; }
 	ThreadParameter GetThreadParameter() { return tp; }
 	void SetSplitDelay(unsigned int splitDelay) { this->splitDelay = splitDelay; }
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { output = cb; }
+
+	void Clear();
+	void AddText(const BYTE *con, int len);
+	void AddSentence();
+	void AddSentence(std::wstring sentence);	
 
 private:
 	CRITICAL_SECTION ttCs;

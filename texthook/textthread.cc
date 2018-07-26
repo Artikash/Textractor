@@ -39,6 +39,12 @@ void TextThread::Clear()
 	storage.shrink_to_fit();
 }
 
+std::wstring TextThread::GetStore()
+{
+	TT_LOCK;
+	return storage;
+}
+
 void TextThread::AddSentence()
 {
 	TT_LOCK;

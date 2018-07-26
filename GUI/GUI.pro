@@ -23,22 +23,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    hostsignaller.cpp
+	main.cpp \
+	mainwindow.cpp \
+	hostsignaller.cpp \
+	misc.cpp
 
 HEADERS += \
-        mainwindow.h \
-    hostsignaller.h
+	mainwindow.h \
+	hostsignaller.h \
+	misc.h
 
 FORMS += \
-        mainwindow.ui
+	mainwindow.ui
 
 win32: LIBS += \
-        -L$$PWD/../Builds/Debug/Debug/ -lvnrhost
+	-L$$PWD/../Builds/Debug/Debug/ -lvnrhost
 
 QMAKE_CXXFLAGS_RELEASE += \
-        /MT
+	/MT
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
