@@ -3,23 +3,30 @@
 #include <QRegExp>
 #include <Psapi.h>
 
-QString GetModuleName(DWORD processId, HMODULE module)
+QString GetFullModuleName(DWORD processId, HMODULE module)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
 	wchar_t buffer[MAX_PATH];
 	GetModuleFileNameExW(handle, module, buffer, MAX_PATH);
 	CloseHandle(handle);
-	return QString::fromWCharArray(wcsrchr(buffer, L'\\') + 1);
+	return QString::fromWCharArray(buffer);
+}
+
+QString GetModuleName(DWORD processId, HMODULE module)
+{
+	QString fullName = GetFullModuleName(processId, module);
+	return fullName.remove(0, fullName.lastIndexOf("\\") + 1);
 }
 
 DWORD Hash(QString module)
 {
+	module = module.toLower();
 	DWORD hash = 0;
 	for (auto i : module) hash = _rotr(hash, 7) + i.unicode();
 	return hash;
 }
 
-HookParam ParseHCode(QString HCode, DWORD processId)
+HookParam ParseHCode(QString HCode)
 {
 	HookParam hp = {};
 	HCode = HCode.toUpper();
@@ -87,7 +94,7 @@ HookParam ParseHCode(QString HCode, DWORD processId)
 	if (HCode.length())
 	{
 		hp.type |= MODULE_OFFSET;
-		hp.module = Hash(HCode.toLower());
+		hp.module = Hash(HCode);
 	}
 	if (hp.offset & 0x80000000)
 		hp.offset -= 4;

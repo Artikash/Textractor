@@ -26,21 +26,20 @@ SOURCES += \
 	main.cpp \
 	mainwindow.cpp \
 	hostsignaller.cpp \
-	misc.cpp
+	misc.cpp \
+    extensions.cpp
 
 HEADERS += \
 	mainwindow.h \
 	hostsignaller.h \
-	misc.h
+	misc.h \
+    extensions.h
 
 FORMS += \
 	mainwindow.ui
 
 win32: LIBS += \
 	-L$$PWD/../Builds/Debug/Debug/ -lvnrhost
-
-QMAKE_CXXFLAGS_RELEASE += \
-	/MT
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

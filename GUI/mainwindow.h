@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <Windows.h>
 #include <QVector>
+#include <unordered_map>
+#include <string>
 #include "../texthook/host.h"
 #include "hostsignaller.h"
 
@@ -21,17 +23,18 @@ public:
 	~MainWindow();
 
 private slots:
-	void on_attachButton_clicked();
-	void on_detachButton_clicked();
-	void on_ttCombo_activated(int index);
-	void on_unhookButton_clicked();
 	void AddProcess(unsigned int processId);
 	void RemoveProcess(unsigned int processId);
 	void AddThread(TextThread* thread);
 	void RemoveThread(TextThread* thread);
 	void ThreadOutput(TextThread* thread, QString output);
-
+	void on_attachButton_clicked();
+	void on_detachButton_clicked();
+	void on_ttCombo_activated(int index);
+	void on_unhookButton_clicked();
 	void on_hookButton_clicked();
+	void on_saveButton_clicked();
+	void on_addExtenButton_clicked();
 
 private:
 	QVector<HookParam> GetAllHooks(DWORD processId);

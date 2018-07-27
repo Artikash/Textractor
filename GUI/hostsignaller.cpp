@@ -1,4 +1,5 @@
 #include "hostsignaller.h"
+#include "extensions.h"
 
 void HostSignaller::Initialize()
 {
@@ -9,7 +10,7 @@ void HostSignaller::Initialize()
 		emit AddThread(thread);
 		thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
 		{
-			//output = DispatchToExtensions(output);
+			output = DispatchSentenceToExtensions(output, {});
 			emit ThreadOutput(thread, QString::fromWCharArray(output.c_str()));
 			return output;
 		});

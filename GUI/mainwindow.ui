@@ -241,7 +241,7 @@
         <widget class="QComboBox" name="ttCombo"/>
        </item>
        <item>
-        <widget class="QTextBrowser" name="textOutput">
+        <widget class="QPlainTextEdit" name="textOutput">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>5</horstretch>
@@ -252,6 +252,9 @@
           <font>
            <pointsize>12</pointsize>
           </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -266,7 +269,7 @@
      <x>0</x>
      <y>0</y>
      <width>949</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuOptions">
