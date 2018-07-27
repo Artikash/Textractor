@@ -10,7 +10,10 @@ void HostSignaller::Initialize()
 		emit AddThread(thread);
 		thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
 		{
-			output = DispatchSentenceToExtensions(output, {});
+			output = DispatchSentenceToExtensions(output,
+			{
+				{ "current select", ttCombo->currentText().split(":")[0].toInt() == thread->Number() ? 1 : 0 }
+			});
 			emit ThreadOutput(thread, QString::fromWCharArray(output.c_str()));
 			return output;
 		});
