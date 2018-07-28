@@ -1,3 +1,4 @@
+build/
 Builds/
 *.vs/
 *.pro.user
