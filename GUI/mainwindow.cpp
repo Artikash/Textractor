@@ -62,8 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(hostSignaller, &HostSignaller::AddThread, this, &MainWindow::AddThread);
 	connect(hostSignaller, &HostSignaller::RemoveThread, this, &MainWindow::RemoveThread);
 	connect(hostSignaller, &HostSignaller::ThreadOutput, this, &MainWindow::ThreadOutput);
-	std::map<int, std::wstring> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + QString::fromWCharArray(i.second.c_str()));
+	std::map<int, QString> extensions = LoadExtensions();
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 	Host::Open();
 }
 
@@ -157,7 +157,7 @@ void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
 	QString hookCode = QInputDialog::getText(this, "Add Hook",
-		"Enter hook code\r\n/H{A|B|W|S|Q}[N][data_offset[*drdo]][:sub_offset[*drso]]@addr[:module]",
+		"Enter hook code\r\n/H{A|B|W|S|Q}[N]data_offset[*drdo][:sub_offset[*drso]]@addr[:module]",
 		QLineEdit::Normal, "/H", &ok
 	);
 	if (ok) Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseHCode(hookCode));
@@ -197,6 +197,27 @@ void MainWindow::on_ttCombo_activated(int index)
 
 void MainWindow::on_addExtenButton_clicked()
 {
-	QFileDialog extenSelector;
+	QString extenFileName = QFileDialog::getOpenFileName(this, "Select extension dll", "C:\\", "Extensions (*.dll)");
+	if (!extenFileName.length()) return;
+	QString extenName = extenFileName.split("/")[extenFileName.split("/").count() - 1];
+	extenName.chop(4);
+	QString copyTo = QString::number(extenCombo->itemText(extenCombo->count() - 1).split(":")[0].toInt() + 1) + "_" +
+			extenName +
+			"_nexthooker_extension.dll";
+	QFile::copy(extenFileName, copyTo);
+	extenCombo->clear();
+	std::map<int, QString> extensions = LoadExtensions();
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
+}
 
+void MainWindow::on_rmvExtenButton_clicked()
+{
+	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(":")[1] + "_nexthooker_extension.dll";
+	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
+	QString disabledFileName = extenFileName;
+	disabledFileName.replace("extension", "disabled_extension");
+	QFile::rename(extenFileName, disabledFileName);
+	extenCombo->clear();
+	std::map<int, QString> extensions = LoadExtensions();
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 }

@@ -191,16 +191,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="enableExtenButton">
+           <widget class="QPushButton" name="rmvExtenButton">
             <property name="text">
-             <string>Enable extension</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="disableExtenButton">
-            <property name="text">
-             <string>Disable extension</string>
+             <string>Remove extension</string>
             </property>
            </widget>
           </item>

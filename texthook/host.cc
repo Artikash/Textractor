@@ -98,7 +98,7 @@ namespace Host
 		CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
-			AddConsoleOutput(L"already locked");
+			AddConsoleOutput(L"already injected");
 			return false;
 		}
 

@@ -36,6 +36,8 @@ private slots:
 	void on_saveButton_clicked();
 	void on_addExtenButton_clicked();
 
+	void on_rmvExtenButton_clicked();
+
 private:
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
