@@ -214,9 +214,7 @@ void MainWindow::on_rmvExtenButton_clicked()
 {
 	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(":")[1] + "_nexthooker_extension.dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
-	QString disabledFileName = extenFileName;
-	disabledFileName.replace("extension", "disabled_extension");
-	QFile::rename(extenFileName, disabledFileName);
+	DeleteFileW(extenFileName.toStdWString().c_str());
 	extenCombo->clear();
 	std::map<int, QString> extensions = LoadExtensions();
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);

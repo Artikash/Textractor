@@ -10,8 +10,13 @@
 
 std::map<int, QString> LoadExtensions();
 std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo);
-
-typedef void(*ExtensionFunction)(std::wstring&, std::unordered_map<std::string, int>&);
+struct InfoForExtension
+{
+	char* propertyName;
+	int propertyValue;
+	InfoForExtension* nextProperty;
+};
+typedef wchar_t*(*ExtensionFunction)(wchar_t*, InfoForExtension*);
 extern QComboBox* ttCombo;
 
 #endif // EXTENSIONS_H

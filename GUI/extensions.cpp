@@ -29,7 +29,32 @@ std::map<int, QString> LoadExtensions()
 
 std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo)
 {
-	for (auto extension : extensions)
-		extension.second(sentence, miscInfo);
-	return sentence;
+	wchar_t* sentenceBuffer = new wchar_t[sentence.size() + 1];
+	wcscpy(sentenceBuffer, sentence.c_str());
+	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
+	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
+	for (auto i : miscInfo)
+	{
+		miscInfoTraverser->propertyName = new char[i.first.size() + 1];
+		strcpy(miscInfoTraverser->propertyName, i.first.c_str());
+		miscInfoTraverser->propertyValue = i.second;
+		miscInfoTraverser->nextProperty = new InfoForExtension;
+		miscInfoTraverser = miscInfoTraverser->nextProperty;
+	}
+	miscInfoTraverser->propertyName = new char[sizeof("END")];
+	strcpy(miscInfoTraverser->propertyName, "END");
+	miscInfoTraverser->nextProperty = nullptr;
+	for (auto i : extensions)
+		sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+	miscInfoTraverser = miscInfoLinkedList;
+	while (miscInfoTraverser != nullptr)
+	{
+		InfoForExtension* nextNode = miscInfoTraverser->nextProperty;
+		delete[] miscInfoTraverser->propertyName;
+		delete miscInfoTraverser;
+		miscInfoTraverser = nextNode;
+	}
+	std::wstring newSentence = std::wstring(sentenceBuffer);
+	delete[] sentenceBuffer;
+	return newSentence;
 }
