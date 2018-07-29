@@ -16,7 +16,7 @@ set_target_properties(vnrhost PROPERTIES LINK_FLAGS /SUBSYSTEM:WINDOWS)
 
 target_compile_options(vnrhost PRIVATE
 #  /GR-
-  $<$<CONFIG:Release>:/MT>
+  $<$<CONFIG:Release>:>
   $<$<CONFIG:Debug>:>
 )
 
