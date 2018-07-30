@@ -36,7 +36,7 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 {
 	while (processing < 0) Sleep(10);
 	processing++;
-	wchar_t* sentenceOrigBuffer = new wchar_t[sentence.size() + 1];
+	wchar_t* sentenceOrigBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy(sentenceOrigBuffer, sentence.c_str());
 	const wchar_t* sentenceBuffer = sentenceOrigBuffer;
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
@@ -57,7 +57,7 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 		const wchar_t* prev = sentenceBuffer;
 		sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
 		if (sentenceBuffer == nullptr) sentence = prev;
-		if (sentenceBuffer != prev) delete[] prev;
+		if (sentenceBuffer != prev) free((void*)prev);
 	}
 	miscInfoTraverser = miscInfoLinkedList;
 	while (miscInfoTraverser != nullptr)
@@ -68,7 +68,7 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 		miscInfoTraverser = nextNode;
 	}
 	std::wstring newSentence = std::wstring(sentenceBuffer);
-	delete[] sentenceBuffer;
+	free((void*)sentenceBuffer);
 	processing--;
 	return newSentence;
 }
