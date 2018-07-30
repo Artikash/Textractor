@@ -39,7 +39,8 @@ GPL v3
 - VNR engine making by [jichi](http://sakuradite.com/topic)
 - ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- ITHVNR updating by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [DoumanAsh](https://github.com/DoumanAsh)
+- ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- NextHooker creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 
 ## Special Thanks
 
