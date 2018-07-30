@@ -1,9 +1,11 @@
 #include "extensions.h"
 #include <map>
 #include <QDir>
+#include <thread>
+#include <mutex>
 
 std::map<int, ExtensionFunction> extensions;
-int processing;
+static std::mutex MutexGuard;
 
 std::map<int, QString> LoadExtensions()
 {
@@ -25,19 +27,22 @@ std::map<int, QString> LoadExtensions()
 			extensionNames[std::wcstol(fileData.cFileName, nullptr, 10)] = name;
 		}
 	while (FindNextFileW(file, &fileData) != 0);
-	while (processing) Sleep(10);
-	processing = -1;
-	extensions = newExtensions;
-	processing = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(MutexGuard);
+	    extensions = newExtensions;
+    }
+
 	return extensionNames;
 }
 
 std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo)
 {
-	while (processing < 0) Sleep(10);
-	processing++;
-	wchar_t* sentenceBuffer = new wchar_t[sentence.size() + 1];
-	wcscpy(sentenceBuffer, sentence.c_str());
+    std::lock_guard<std::mutex> lock(MutexGuard);
+
+    const wchar_t* sentenceOriginalBuff = sentence.c_str();
+    const wchar_t* sentenceBuffer = sentenceOriginalBuff;
+
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto i : miscInfo)
@@ -51,8 +56,18 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 	miscInfoTraverser->propertyName = new char[sizeof("END")];
 	strcpy(miscInfoTraverser->propertyName, "END");
 	miscInfoTraverser->nextProperty = nullptr;
-	for (auto i : extensions)
+
+	for (auto i : extensions) {
+        const wchar_t* prev = sentenceBuffer;
 		sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+
+        if (sentenceBuffer == nullptr) sentence = prev;
+        else if (sentenceBuffer != prev && sentenceBuffer != sentenceOriginalBuff) {
+            //TODO: Plugin should define own free function?
+            free(static_cast<void*>(const_cast<wchar_t*>(prev)));
+        }
+    }
+
 	miscInfoTraverser = miscInfoLinkedList;
 	while (miscInfoTraverser != nullptr)
 	{
@@ -61,8 +76,12 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 		delete miscInfoTraverser;
 		miscInfoTraverser = nextNode;
 	}
-	std::wstring newSentence = std::wstring(sentenceBuffer);
-	delete[] sentenceBuffer;
-	processing--;
-	return newSentence;
+
+    if (sentenceBuffer != sentenceOriginalBuff) {
+	    sentence = std::wstring(sentenceBuffer);
+        //TODO: Plugin should define own free function?
+        free(static_cast<void*>(const_cast<wchar_t*>(sentenceBuffer)));
+    }
+
+	return sentence;
 }
