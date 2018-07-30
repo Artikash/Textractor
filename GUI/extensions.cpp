@@ -53,7 +53,12 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 	strcpy(miscInfoTraverser->propertyName, "END");
 	miscInfoTraverser->nextProperty = nullptr;
 	for (auto i : extensions)
+	{
+		const wchar_t* prev = sentenceBuffer;
 		sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+		if (sentenceBuffer == nullptr) sentence = prev;
+		if (sentenceBuffer != prev) delete[] prev;
+	}
 	miscInfoTraverser = miscInfoLinkedList;
 	while (miscInfoTraverser != nullptr)
 	{
