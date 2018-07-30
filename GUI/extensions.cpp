@@ -36,8 +36,9 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 {
 	while (processing < 0) Sleep(10);
 	processing++;
-	wchar_t* sentenceBuffer = new wchar_t[sentence.size() + 1];
-	wcscpy(sentenceBuffer, sentence.c_str());
+	wchar_t* sentenceOrigBuffer = new wchar_t[sentence.size() + 1];
+	wcscpy(sentenceOrigBuffer, sentence.c_str());
+	const wchar_t* sentenceBuffer = sentenceOrigBuffer;
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto i : miscInfo)
