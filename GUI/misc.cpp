@@ -1,12 +1,13 @@
 #include "misc.h"
 #include "../vnrhook/include/const.h"
 #include <QRegExp>
+#include <QStringList>
 #include <Psapi.h>
 
 QString GetFullModuleName(DWORD processId, HMODULE module)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-	wchar_t buffer[MAX_PATH];
+	wchar_t buffer[MAX_PATH] = {};
 	GetModuleFileNameExW(handle, module, buffer, MAX_PATH);
 	CloseHandle(handle);
 	return QString::fromWCharArray(buffer);
@@ -16,6 +17,19 @@ QString GetModuleName(DWORD processId, HMODULE module)
 {
 	QString fullName = GetFullModuleName(processId, module);
 	return fullName.remove(0, fullName.lastIndexOf("\\") + 1);
+}
+
+QStringList GetAllProcesses()
+{
+	DWORD allProcessIds[0x1000];
+	DWORD spaceUsed;
+	QStringList ret;
+	if (!EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed)) return ret;
+	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
+		if (GetModuleName(allProcessIds[i]).size())
+			ret.push_back(GetModuleName(allProcessIds[i]) + ": " + QString::number(allProcessIds[i]));
+	ret.sort();
+	return ret;
 }
 
 DWORD Hash(QString module)

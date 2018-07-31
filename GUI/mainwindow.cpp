@@ -52,8 +52,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	mainWindow = this;
 	processCombo = mainWindow->findChild<QComboBox*>("processCombo");
+	processCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
+	processCombo->lineEdit()->setReadOnly(true);
 	ttCombo = mainWindow->findChild<QComboBox*>("ttCombo");
+	ttCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
+	ttCombo->lineEdit()->setReadOnly(true);
 	extenCombo = mainWindow->findChild<QComboBox*>("extenCombo");
+	extenCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
+	extenCombo->lineEdit()->setReadOnly(true);
 	textOutput = mainWindow->findChild<QPlainTextEdit*>("textOutput");
 
 	hostSignaller->Initialize();
@@ -65,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::map<int, QString> extensions = LoadExtensions();
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 	Host::Open();
+	Host::AddConsoleOutput(L"NextHooker beta v2.0.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
@@ -85,7 +92,11 @@ void MainWindow::AddProcess(unsigned int processId)
 		{
 			Sleep(50);
 			QStringList hooks = allProcesses.at(i).split(" , ");
-			for (int j = 1; j < hooks.length(); ++j) Host::InsertHook(processId, ParseHCode(hooks.at(j)));
+			for (int j = 1; j < hooks.length(); ++j)
+			{
+				Sleep(10);
+				Host::InsertHook(processId, ParseHCode(hooks.at(j)));
+			}
 			return;
 		}
 }
@@ -144,8 +155,11 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 void MainWindow::on_attachButton_clicked()
 {
 	bool ok;
-	int processId = QInputDialog::getInt(this, "Attach Process", "Process ID?\r\nYou can find this under Task Manager -> Details", 0, 0, 100000, 1, &ok);
-	if (ok) Host::InjectProcess(processId);
+	QString process = QInputDialog::getItem(this, "Select Process",
+		"If you don't see the process you want to inject, try running with admin rights",
+		GetAllProcesses(), 0, true, &ok);
+	if (!ok) return;
+	if (!Host::InjectProcess(process.split(":")[1].toInt())) Host::AddConsoleOutput(L"Failed to attach");
 }
 
 void MainWindow::on_detachButton_clicked()
@@ -160,7 +174,14 @@ void MainWindow::on_hookButton_clicked()
 		"Enter hook code\r\n/H{A|B|W|S|Q}[N]data_offset[*drdo][:sub_offset[*drso]]@addr[:module]",
 		QLineEdit::Normal, "/H", &ok
 	);
-	if (ok) Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseHCode(hookCode));
+	if (!ok) return;
+	HookParam toInsert = ParseHCode(hookCode);
+	if (toInsert.type == 0 && toInsert.length_offset == 0)
+	{
+		Host::AddConsoleOutput(L"invalid /H code");
+		return;
+	}
+	Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseHCode(hookCode));
 }
 
 void MainWindow::on_unhookButton_clicked()

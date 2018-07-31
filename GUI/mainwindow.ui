@@ -97,6 +97,9 @@
           </property>
           <item>
            <widget class="QComboBox" name="processCombo">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
             <property name="insertPolicy">
              <enum>QComboBox::InsertAtBottom</enum>
             </property>
@@ -181,7 +184,11 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QComboBox" name="extenCombo"/>
+           <widget class="QComboBox" name="extenCombo">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="addExtenButton">
@@ -231,7 +238,14 @@
         <number>4</number>
        </property>
        <item>
-        <widget class="QComboBox" name="ttCombo"/>
+        <widget class="QComboBox" name="ttCombo">
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+         <property name="maxVisibleItems">
+          <number>50</number>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPlainTextEdit" name="textOutput">
@@ -265,18 +279,6 @@
      <height>20</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuOptions">
-    <property name="title">
-     <string>Options</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuAbout">
-    <property name="title">
-     <string>About</string>
-    </property>
-   </widget>
-   <addaction name="menuOptions"/>
-   <addaction name="menuAbout"/>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
