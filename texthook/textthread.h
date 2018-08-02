@@ -57,6 +57,7 @@ private:
 	unsigned int threadNumber;
 	unsigned int splitDelay;
 	DWORD status;
+	unsigned int flushTimer;
 };
 
 // EOF

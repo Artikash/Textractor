@@ -17,6 +17,7 @@ TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned i
 	storage(),
 	sentenceBuffer(),
 	status(0),
+	flushTimer(0),
 	threadNumber(threadNumber),
 	splitDelay(splitDelay),
 	output(nullptr),
@@ -28,6 +29,7 @@ TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned i
 TextThread::~TextThread()
 {
 	EnterCriticalSection(&ttCs);
+	KillTimer(dummyWindow, flushTimer);
 	LeaveCriticalSection(&ttCs);
 	DeleteCriticalSection(&ttCs);
 }
@@ -75,7 +77,7 @@ void TextThread::AddText(const BYTE *con, int len)
 {
 	TT_LOCK;
 	sentenceBuffer.insert(sentenceBuffer.end(), con, con + len);
-	SetTimer(dummyWindow, (UINT_PTR)this, splitDelay,
+	flushTimer = SetTimer(dummyWindow, (UINT_PTR)this, splitDelay,
 		[](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	{
 		KillTimer(hWnd, idEvent);
