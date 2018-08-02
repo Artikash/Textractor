@@ -1995,7 +1995,7 @@ bool InsertBGI2Hook()
     return false;
   }
 
-  DWORD funaddr = MemDbg::findEnclosingAlignedFunction(addr, 0x100); // range is around 177 ~ 190
+  DWORD funaddr = MemDbg::findEnclosingAlignedFunction(addr, 0x300); // range is around 177 ~ 190
 
   enum : BYTE { push_ebp = 0x55 };  // 011d4c80  /$ 55             push ebp
   if (!funaddr || *(BYTE *)funaddr != push_ebp) {
@@ -2021,9 +2021,10 @@ bool InsertBGI2Hook()
   case 0x00D8A660 - 0x00D8A73A:
     hp.offset = 4 * 2;
     break;
+  // Artikash 8/1/2018: Looks like it's basically always 4*2. Remove error from default case: breaks SubaHibi HD. Will figure out how to do this properly if it becomes an issue.
   default:
-    ConsoleOutput("vnreng:BGI2: function found bug unrecognized hook offset");
-    return false;
+	  hp.offset = 4 * 2;
+	  break;
   }
   hp.address = funaddr;
 
@@ -5940,7 +5941,7 @@ void InsertWaffleHook()
       HookParam hp = {};
       hp.address = i;
       hp.length_offset = 1;
-      hp.offset = -0x20;
+      hp.offset = 8;
       hp.index = 4;
       hp.split = 0x1e8;
       hp.type = DATA_INDIRECT|USING_SPLIT;
@@ -7731,6 +7732,54 @@ void InsertBrunsHook()
  */
 
 namespace { // unnamed QLIE
+
+/**
+* Artikash 8/1/2018: new QLIE hook. old one misses on https://vndb.org/v22308 and https://vndb.org/v19182
+* ExtTextOut hook misses characters because of font caching
+* Method to find H-code: trace call stack from ExtTextOut until missing characters from default hook are found
+* /HW-1C*0:-20@base address of pattern
+* characterizing pattern:
+kimimeza.exe+100D9C - 55                    - push ebp
+kimimeza.exe+100D9D - 8B EC                 - mov ebp,esp
+kimimeza.exe+100D9F - 83 C4 E4              - add esp,-1C { 228 }
+kimimeza.exe+100DA2 - 53                    - push ebx
+kimimeza.exe+100DA3 - 56                    - push esi
+kimimeza.exe+100DA4 - 57                    - push edi
+kimimeza.exe+100DA5 - 33 D2                 - xor edx,edx
+kimimeza.exe+100DA7 - 89 55 FC              - mov [ebp-04],edx
+*/
+bool InsertQLIE3Hook()
+{
+	const BYTE bytes[] = 
+	{
+		0x55,
+		0x8b, 0xec,
+		0x83, 0xc4, 0xe4,
+		0x53,
+		0x56,
+		0x57,
+		0x33, 0xd2,
+		0x89, 0x55, 0xfc
+	};
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr) {
+		ConsoleOutput("NextHooker:QLIE3: pattern not found");
+		//ConsoleOutput("Not QLIE2");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.type = USING_UNICODE | DATA_INDIRECT | USING_SPLIT;
+	hp.length_offset = 1;
+	hp.offset = pusha_esi_off - 4;
+	hp.split = pusha_edi_off - 4;
+	hp.address = addr;
+
+	ConsoleOutput("NextHooker: INSERT QLIE3");
+	NewHook(hp, "QLiE3");
+	//ConsoleOutput("QLIE2");
+	return true;
+}
 /**
  * jichi 8/18/2013: new QLIE hook
  * See: http://www.hongfire.com/forum/showthread.php/420362-QLIE-engine-Hcode
@@ -7822,7 +7871,7 @@ bool InsertQLIE1Hook()
 
 // jichi 8/18/2013: Add new hook
 bool InsertQLIEHook()
-{ return InsertQLIE1Hook() || InsertQLIE2Hook(); }
+{ return InsertQLIE1Hook() || InsertQLIE2Hook() || InsertQLIE3Hook(); }
 
 /********************************************************************************************
 CandySoft hook:
