@@ -47,12 +47,16 @@ DWORD WINAPI TextReceiver(LPVOID lpThreadParameter)
 
 		if (*(DWORD*)buffer == HOST_NOTIFICATION)
 		{
-			USES_CONVERSION;
-			switch (*(DWORD*)(buffer + 4)) // Artikash 7/17/2018: Notification type
+			switch (*(DWORD*)(buffer + sizeof(DWORD))) // Artikash 7/17/2018: Notification type
 			{
 			case HOST_NOTIFICATION_NEWHOOK:	// Artikash 7/18/2018: Useless for now, but could be used to implement smth later
 				break;
+			case HOST_NOTIFICATION_RMVHOOK:
+				RemoveThreads([](auto one, auto two) { return one.pid == two.pid && one.hook == two.hook; },
+					{ processId, *(DWORD*)(buffer + sizeof(DWORD) * 2) }); // Address
+				break;
 			case HOST_NOTIFICATION_TEXT:
+				USES_CONVERSION;
 				Host::AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
 				break;
 			}

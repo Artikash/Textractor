@@ -73,8 +73,7 @@ namespace Host
 
 	DLLEXPORT void Open()
 	{
-		TextThread* console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++);
-		console->Status() |= USING_UNICODE;
+		TextThread* console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, USING_UNICODE);
 		if (onCreate) onCreate(console);
 		CreateNewPipe();
 	}
@@ -142,18 +141,11 @@ namespace Host
 
 	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
 	{
-		HANDLE hostPipe = processRecordsByIds[pid].hostPipe;
-		if (hostPipe == nullptr) return false;
-		HANDLE hookRemovalEvent = CreateEventW(nullptr, TRUE, FALSE, ITH_REMOVEHOOK_EVENT);
 		BYTE buffer[sizeof(DWORD) * 2] = {};
 		*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
 		*(DWORD*)(buffer + sizeof(DWORD)) = addr;
 		DWORD unused;
-		WriteFile(hostPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
-		WaitForSingleObject(hookRemovalEvent, 1000);
-		CloseHandle(hookRemovalEvent);
-		RemoveThreads([](auto one, auto two) { return one.pid == two.pid && one.hook == two.hook; }, { pid, addr, 0, 0 });
-		return true;
+		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
 	}
 
 	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr)
@@ -219,8 +211,7 @@ void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE * t
 	TextThread *it;
 	if ((it = textThreadsByParams[tp]) == nullptr)
 	{
-		it = textThreadsByParams[tp] = new TextThread(tp, nextThreadNumber++);
-		if (Host::GetHookParam(pid, hook).type & USING_UNICODE) it->Status() |= USING_UNICODE;
+		it = textThreadsByParams[tp] = new TextThread(tp, nextThreadNumber++, Host::GetHookParam(pid, hook).type);
 		if (onCreate) onCreate(it);
 	}
 	it->AddText(text, len);

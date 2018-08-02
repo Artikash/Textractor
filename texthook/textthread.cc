@@ -13,13 +13,12 @@ extern HWND dummyWindow;
 
 #define TT_LOCK CriticalSectionLocker ttLocker(ttCs) // Synchronized scope for accessing private data
 
-TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, unsigned int splitDelay) :
+TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, DWORD status) :
 	storage(),
 	sentenceBuffer(),
-	status(0),
+	status(status),
 	flushTimer(0),
 	threadNumber(threadNumber),
-	splitDelay(splitDelay),
 	output(nullptr),
 	tp(tp)
 {
@@ -77,7 +76,7 @@ void TextThread::AddText(const BYTE *con, int len)
 {
 	TT_LOCK;
 	sentenceBuffer.insert(sentenceBuffer.end(), con, con + len);
-	flushTimer = SetTimer(dummyWindow, (UINT_PTR)this, splitDelay,
+	flushTimer = SetTimer(dummyWindow, (UINT_PTR)this, 250, // TODO: Let user change delay before sentenceBuffer is flushed
 		[](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 	{
 		KillTimer(hWnd, idEvent);
