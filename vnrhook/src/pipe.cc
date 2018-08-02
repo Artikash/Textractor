@@ -69,8 +69,6 @@ DWORD WINAPI PipeManager(LPVOID unused)
 				break;
 			case HOST_COMMAND_REMOVE_HOOK:
 			{
-				HANDLE hookRemovalEvent = OpenEventW(SYNCHRONIZE | EVENT_MODIFY_STATE, FALSE, ITH_REMOVEHOOK_EVENT);
-
 				TextHook *in = hookman;
 				for (int i = 0; i < currentHook; in++)
 				{
@@ -84,9 +82,6 @@ DWORD WINAPI PipeManager(LPVOID unused)
 				{
 					in->ClearHook();
 				}
-
-				SetEvent(hookRemovalEvent);
-				CloseHandle(hookRemovalEvent);
 			}
 			break;
 			case HOST_COMMAND_DETACH:
@@ -111,7 +106,6 @@ void ConsoleOutput(LPCSTR text)
 	WriteFile(::hookPipe, buffer, strlen(text) + sizeof(DWORD) * 2, &unused, nullptr);
 }
 
-// Artikash 7/3/2018: TODO: Finish using this in vnrhost instead of section to deliver hook info
 void NotifyHookInsert(HookParam hp, LPCSTR name)
 {
     BYTE buffer[PIPE_BUFFER_SIZE];
@@ -121,6 +115,17 @@ void NotifyHookInsert(HookParam hp, LPCSTR name)
 	strcpy((char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam), name);
 	DWORD unused;
 	WriteFile(::hookPipe, buffer, strlen(name) + sizeof(DWORD) * 2 + sizeof(HookParam), &unused, nullptr);
+	return;
+}
+
+void NotifyHookRemove(DWORD addr)
+{
+	BYTE buffer[sizeof(DWORD) * 3];
+	*(DWORD*)buffer = HOST_NOTIFICATION;
+	*(DWORD*)(buffer + sizeof(DWORD)) = HOST_NOTIFICATION_RMVHOOK;
+	*(DWORD*)(buffer + sizeof(DWORD) * 2) = addr;
+	DWORD unused;
+	WriteFile(::hookPipe, buffer, sizeof(DWORD) * 3, &unused, nullptr);
 	return;
 }
 

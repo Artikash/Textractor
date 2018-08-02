@@ -725,6 +725,7 @@ int TextHook::ClearHook()
   //  current_available = this;
   currentHook--;
   ReleaseMutex(hmMutex);
+  NotifyHookRemove(hp.address);
   return err;
 }
 

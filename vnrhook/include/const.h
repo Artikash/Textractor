@@ -82,6 +82,7 @@ enum HostNotificationType {
   HOST_NOTIFICATION = -1 // null type
   , HOST_NOTIFICATION_TEXT = 0
   , HOST_NOTIFICATION_NEWHOOK = 1
+  , HOST_NOTIFICATION_RMVHOOK = 2
 };
 
 // jichi 9/8/2013: The meaning are guessed
