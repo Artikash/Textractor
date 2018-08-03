@@ -498,41 +498,18 @@ int TextHook::UnsafeInsertHookCode()
 {
   //ConsoleOutput("vnrcli:UnsafeInsertHookCode: enter");
   enum : int { yes = 0, no = 1 };
-  // MODULE_OFFSET is set, but there's no module address
-  // this means that this is an absolute address found on Windows 2000/XP
-  // we make the address relative to the process base
-  // we also store the original address in the function field because normally there can not
-  // exist a function address without a module address
-  if (hp.type & MODULE_OFFSET && !hp.module) {
-    DWORD base = GetModuleBase();
-    hp.function = hp.address;
-    hp.address -= 0x400000;
-    hp.address += base;
-    hp.type &= ~MODULE_OFFSET;
+  if (hp.module && (hp.type & MODULE_OFFSET)) { // Map hook offset to real address.
+	  if (DWORD base = GetModuleBase(hp.module)) {
+		  hp.address += base;
+	  }
+	  else {
+		  currentHook--;
+		  ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: module not present");
+		  return no;
+	  }
+	  hp.type &= ~MODULE_OFFSET;
   }
-  else if (hp.module && (hp.type & MODULE_OFFSET)) { // Map hook offset to real address.
-    if (DWORD base = GetModuleBase(hp.module)) {
-      if (hp.function && (hp.type & FUNCTION_OFFSET)) {
-        base = GetExportAddress(base, hp.function);
-        if (base)
-          hp.address += base;
-        else {
-          currentHook--;
-          ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: function not found in the export table");
-          return no;
-        }
-      }
-      else {
-        hp.address += base;
-      }
-      hp.type &= ~(MODULE_OFFSET | FUNCTION_OFFSET);
-    }
-    else {
-      currentHook--;
-      ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: module not present");
-      return no;
-    }
-  }
+
 
   {
     TextHook *it = hookman;

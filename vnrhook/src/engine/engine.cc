@@ -7655,19 +7655,17 @@ void InsertBrunsHook()
     HookParam hp = {};
     hp.offset = 4;
     hp.length_offset = 1;
-    hp.type = USING_UNICODE|MODULE_OFFSET|FUNCTION_OFFSET;
-    // jichi 12/27/2013: This function does not work for the latest bruns games anymore
-    hp.function = 0x8b24c7bc;
+	hp.type = USING_UNICODE;
     //?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z
-    if (Util::CheckFile(L"msvcp90.dll"))
-      hp.module = 0xc9c36a5b; // 3385027163
+	if (Util::CheckFile(L"msvcp90.dll"))
+		hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"msvcp90.dll"), "?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z");
     else if (Util::CheckFile(L"msvcp80.dll"))
-      hp.module = 0xa9c36a5b; // 2848156251
+		hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"msvcp80.dll"), "?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z");
     else if (Util::CheckFile(L"msvcp100.dll")) // jichi 8/17/2013: MSVCRT 10.0 and 11.0
-      hp.module = 0xb571d760; // 3044136800;
+		hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"msvcp100.dll"), "?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z");
     else if (Util::CheckFile(L"msvcp110.dll"))
-      hp.module = 0xd571d760; // 3581007712;
-    if (hp.module) {
+		hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"msvcp110.dll"), "?push_back@?$basic_string@GU?$char_traits@G@std@@V?$allocator@G@2@@std@@QAEXG@Z");
+    if (hp.address) {
       ConsoleOutput("vnreng: INSERT Brus#1");
       NewHook(hp, "Bruns");
     }
