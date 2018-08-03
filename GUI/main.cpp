@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "../texthook/host.h"
+#include "../host/host.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])

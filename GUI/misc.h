@@ -3,7 +3,7 @@
 
 #include <QString>
 #include <Windows.h>
-#include "../texthook/host.h"
+#include "../host/host.h"
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);
 QString GetModuleName(DWORD processId, HMODULE module = NULL);

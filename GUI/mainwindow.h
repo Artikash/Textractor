@@ -6,7 +6,7 @@
 #include <QVector>
 #include <unordered_map>
 #include <string>
-#include "../texthook/host.h"
+#include "../host/host.h"
 #include "hostsignaller.h"
 
 namespace Ui

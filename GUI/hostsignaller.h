@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <Windows.h>
-#include "../texthook/host.h"
+#include "../host/host.h"
 
 // Artikash 7/24/2018: This class is a workaround for the fact that Qt only lets me manipulate the GUI in the main thread.
 class HostSignaller : public QObject

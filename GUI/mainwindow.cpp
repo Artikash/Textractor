@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::map<int, QString> extensions = LoadExtensions();
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 	Host::Open();
-	Host::AddConsoleOutput(L"NextHooker beta v2.0.1 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v2.0.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
