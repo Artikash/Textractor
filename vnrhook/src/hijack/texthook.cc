@@ -716,6 +716,7 @@ int TextHook::ClearHook()
 {
   WaitForSingleObject(hmMutex, 0);
   int err = RemoveHook();
+  NotifyHookRemove(hp.address);
   if (hook_name) {
     delete[] hook_name;
     hook_name = nullptr;
@@ -725,7 +726,6 @@ int TextHook::ClearHook()
   //  current_available = this;
   currentHook--;
   ReleaseMutex(hmMutex);
-  NotifyHookRemove(hp.address);
   return err;
 }
 
