@@ -292,17 +292,6 @@ int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to en
 }
 #endif // 1
 
-// Return false if all text are ascii
-bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
-{
-  auto text = reinterpret_cast<LPBYTE>(data);
-  if (text)
-    for (size_t i = 0; i < *size; i++)
-      if (text[i] > 127)
-        return true;
-  return false;
-}
-
 } // unnamed namespace
 
 // - TextHook methods -
@@ -339,11 +328,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
   BYTE *pbData,
        pbSmallBuff[SMALL_BUFF_SIZE];
   DWORD dwType = hp.type;
-  //if ((dwType & NO_CONTEXT) == 0 && HookFilter(dwRetn))
-  //  return 0;
 
-  if ((dwType & NO_ASCII) && !hp.filter_fun)
-    hp.filter_fun = NoAsciiFilter;
 
   // jichi 10/24/2014: Skip GDI functions 
   // Artikash 6/3/2018: ^ why??

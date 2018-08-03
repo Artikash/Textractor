@@ -65,6 +65,9 @@ HookParam ParseHCode(QString HCode)
 		hp.type |= USING_UNICODE;
 		hp.length_offset = 1;
 		break;
+	case L'V':
+		hp.type |= USING_STRING | USING_UTF8;
+		break;
 	default:
 		return {};
 	}
@@ -129,7 +132,9 @@ QString GenerateHCode(HookParam hp, DWORD processId)
 	}
 	else
 	{
-		if (hp.type & USING_STRING)
+		if (hp.type & USING_UTF8)
+			code += "V";
+		else if (hp.type & USING_STRING)
 			code += "S";
 		else if (hp.type & BIG_ENDIAN)
 			code += "A";

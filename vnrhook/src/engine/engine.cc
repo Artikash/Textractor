@@ -16464,6 +16464,16 @@ static void SpecialHookMonoString(DWORD esp_base, HookParam *hp, BYTE, DWORD *da
   }
 }
 
+bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+	auto text = reinterpret_cast<LPBYTE>(data);
+	if (text)
+		for (size_t i = 0; i < *size; i++)
+			if (text[i] > 127)
+				return true;
+	return false;
+}
+
 bool InsertMonoHooks()
 {
   HMODULE h = ::GetModuleHandleA("mono.dll");
@@ -16481,7 +16491,8 @@ bool InsertMonoHooks()
     const auto &it = funcs[i];
     if (FARPROC addr = ::GetProcAddress(h, it.functionName)) {
       hp.address = (DWORD)addr;
-      hp.type = it.hookType|NO_ASCII; // 11/27/2015: Disable ascii string
+	  hp.type = it.hookType;
+	  hp.filter_fun = NoAsciiFilter;
       hp.offset = it.textIndex * 4;
       hp.length_offset = it.lengthIndex * 4;
       hp.text_fun = (HookParam::text_fun_t)it.text_fun;

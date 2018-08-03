@@ -54,6 +54,12 @@ void TextThread::AddSentence()
 	{
 		sentence = std::wstring((wchar_t*)sentenceBuffer.data(), sentenceBuffer.size() / 2);
 	}
+	else if (status & USING_UTF8)
+	{
+		wchar_t* converted = new wchar_t[sentenceBuffer.size()];
+		sentence = std::wstring(converted, MultiByteToWideChar(CP_UTF8, 0, sentenceBuffer.data(), sentenceBuffer.size(), converted, sentenceBuffer.size()));
+		delete[] converted;
+	}
 	else
 	{
 		wchar_t* converted = new wchar_t[sentenceBuffer.size()];

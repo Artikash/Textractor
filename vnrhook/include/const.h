@@ -91,7 +91,6 @@ enum HostNotificationType {
 // - 0x100
 enum HookParamType : unsigned long {
   USING_STRING      = 0x1     // type(data) is char* or wchar_t* and has length
-  , USING_UTF8 = USING_STRING // jichi 10/21/2014: temporarily handled the same way as USING_STRING
   , USING_UNICODE     = 0x2     // type(data) is wchar_t or wchar_t*
   , BIG_ENDIAN        = 0x4     // type(data) is char
   , DATA_INDIRECT     = 0x8
@@ -99,8 +98,7 @@ enum HookParamType : unsigned long {
   , SPLIT_INDIRECT    = 0x20
   , MODULE_OFFSET     = 0x40    // do hash module, and the address is relative to module
   , FUNCTION_OFFSET   = 0x80    // do hash function, and the address is relative to funccion
-  , PRINT_DWORD       = 0x100 // jichi 12/7/2014: Removed
-  , NO_ASCII          = 0x100   // jichi 1l/22/2015: Skip ascii characters
+  , USING_UTF8        = 0x100
   , STRING_LAST_CHAR  = 0x200
   , NO_CONTEXT        = 0x400
   , HOOK_EMPTY        = 0x800
