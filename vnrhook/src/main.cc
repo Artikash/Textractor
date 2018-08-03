@@ -126,7 +126,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
         CloseHandle(pipeThread);
       }
 
-      for (TextHook *man = ::hookman; man->RemoveHook(); man++);
       for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++)
         man->ClearHook();
       //if (ith_has_section)

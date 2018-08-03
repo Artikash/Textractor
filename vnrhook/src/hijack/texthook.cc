@@ -640,26 +640,6 @@ int TextHook::UnsafeInsertHookCode()
   return 0;
 }
 
-int TextHook::InitHook(LPVOID addr, DWORD data, DWORD data_ind,
-    DWORD split_off, DWORD split_ind, WORD type, DWORD len_off)
-{
-  WaitForSingleObject(hmMutex, 0);
-  hp.address = (DWORD)addr;
-  hp.offset = data;
-  hp.index = data_ind;
-  hp.split = split_off;
-  hp.split_index = split_ind;
-  hp.type = type;
-  hp.hook_len = 0;
-  hp.module = 0;
-  hp.length_offset = len_off & 0xffff;
-  currentHook++;
-  if (current_available >= this)
-    for (current_available = this + 1; current_available->Address(); current_available++);
-  ReleaseMutex(hmMutex);
-  return this - hookman;
-}
-
 int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 {
   WaitForSingleObject(hmMutex, 0);
