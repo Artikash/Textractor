@@ -54,7 +54,6 @@ private:
 	ThreadParameter tp;
 	unsigned int threadNumber;
 	DWORD status;
-	unsigned int flushTimer;
 };
 
 // EOF
