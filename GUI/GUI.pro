@@ -39,7 +39,7 @@ FORMS += \
 	mainwindow.ui
 
 win32: LIBS += \
-	-L$$PWD/../Builds/Debug/Debug/ -lvnrhost
+	-L$$PWD/../Builds/x86-Debug/Build/ -lvnrhost
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
