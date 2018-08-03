@@ -12489,8 +12489,6 @@ static bool InsertNewPal1Hook()
 
   HookParam hp = {};
   hp.address = addr;
-  //hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
-  hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
   hp.offset = 4 * 2; // arg2
   ConsoleOutput("vnreng: INSERT Pal1");
   NewHook(hp, "Pal");
@@ -12518,8 +12516,6 @@ static bool InsertNewPal2Hook()
 
   HookParam hp = {};
   hp.address = addr;
-  //hp.type = NO_CONTEXT|USING_SPLIT|DATA_INDIRECT; // 0x418
-  hp.type = RELATIVE_SPLIT;  // Use relative address to prevent floating issue
   hp.offset = 4 * 2; // arg2
   ConsoleOutput("vnreng: INSERT Pal2");
   NewHook(hp, "Pal");
@@ -13231,8 +13227,8 @@ bool InsertSideBHook()
   hp.address = addr;
   //hp.length_offset = 1;
   hp.offset = 4; // [esp+4] == arg1
-  hp.type = USING_STRING|NO_CONTEXT|USING_SPLIT|RELATIVE_SPLIT; // NO_CONTEXT && RELATIVE_SPLIT to get rid of floating return address
-  //hp.split = 0; // use retaddr as split
+  hp.type = USING_STRING|NO_CONTEXT|USING_SPLIT; // NO_CONTEXT && RELATIVE_SPLIT to get rid of floating return address
+  hp.split = 0; // use retaddr as split
   ConsoleOutput("vnreng: INSERT SideB");
   NewHook(hp, "SideB");
   return true;

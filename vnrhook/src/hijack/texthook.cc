@@ -32,15 +32,6 @@ void EnableGDIPlusHooks() { ::gdiplus_hook_enabled_ = true; }
 void DisableGDIHooks() { ::gdi_hook_enabled_ = false; }
 void DisableGDIPlusHooks() { ::gdiplus_hook_enabled_ = false; }
 
-static bool IsGDIFunction(LPCVOID addr)
-{
-  static LPVOID funcs[] = { HOOK_GDI_FUNCTION_LIST };
-  for (size_t i = 0; i < sizeof(funcs)/sizeof(*funcs); i++)
-    if (addr == funcs[i])
-      return true;
-  return false;
-}
-
 //FilterRange filter[8];
 
 DWORD flag,
@@ -54,21 +45,6 @@ TextHook *hookman,
 namespace { // unnamed
 //provide const time hook entry.
 int userhook_count;
-
-#if 0 // 3/6/2015 jichi: this hook is not used and hence disabled
-const byte common_hook2[] = {
-  0x89, 0x3c,0xe4, // mov [esp],edi
-  0x60, // pushad
-  0x9c, // pushfd
-  0x8d,0x54,0x24,0x28, // lea edx,[esp+0x28] ; esp value
-  0x8b,0x32,     // mov esi,[edx] ; return address
-  0xb9, 0,0,0,0, // mov ecx, $ ; pointer to TextHook
-  0xe8, 0,0,0,0, // call @hook
-  0x9d, // popfd
-  0x61, // popad
-  0x5f, // pop edi ; skip return address on stack
-}; //...
-#endif // 0
 
 const BYTE common_hook[] = {
   0x9c, // pushfd
@@ -214,65 +190,6 @@ termin:
   }
 }
 
-DWORD GetModuleBase()
-{
-	__asm
-	{
-		mov eax, fs:[0x18]
-			mov eax, [eax + 0x30]
-			mov eax, [eax + 0xc]
-			mov eax, [eax + 0xc]
-			mov eax, [eax + 0x18]
-	}
-}
-
-//void NotifyHookInsert()
-//{
-//  if (live)
-//  {
-//    BYTE buffer[0x10];
-//    *(DWORD*)buffer=-1;
-//    *(DWORD*)(buffer+4)=1;
-//    IO_STATUS_BLOCK ios;
-//    NtWriteFile(hookPipe,0,0,0,&ios,buffer,0x10,0,0);
-//  }
-//}
-
-__declspec(naked) void SafeExit() // Return to eax
-{
-  __asm
-  {
-    mov [esp+0x24], eax
-    popfd
-    popad
-    retn
-  }
-}
-
-#if 0
-// jichi 12/2/2013: This function mostly return 0.
-// But sometimes return the hook address from TextHook::Send
-__declspec(naked) // jichi 10/2/2013: No prolog and epilog
-int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to ensure normal execution even bad hook inserted.
-{
-  //with_seh(hook->Send(dwDataBase, dwRetn));
-  seh_push_(seh_exit, 0, eax, ebx) // jichi 12/13/2013: only eax and ebx are available. ecx and edx are used.
-  __asm
-  {
-    push esi
-    push edx
-    call TextHook::UnsafeSend
-    test eax, eax
-    jz seh_exit   // label in seh_pop
-    mov ecx, SafeExit
-    mov [esp + 8], ecx // jichi 12/13/2013: change exit point if Send returns non-zero, not + 8 beause two elements has been pused
-  }
-  seh_pop_(seh_exit)
-  __asm retn    // jichi 12/13/2013: return near, see: http://stackoverflow.com/questions/1396909/ret-retn-retf-how-to-use-them
-}
-#endif // 0
-
-#if 1
 __declspec(naked) // jichi 10/2/2013: No prolog and epilog
 int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to ensure normal execution even bad hook inserted.
 {
@@ -282,15 +199,9 @@ int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to en
     push esi
     push edx
     call TextHook::Send
-    test eax, eax
-    jz ok   // label in seh_pop
-    mov ecx, SafeExit
-    mov [esp], ecx // jichi 12/13/2013: change exit point if Send returns non-zero
-  ok:
     retn    // jichi 12/13/2013: return near, see: http://stackoverflow.com/questions/1396909/ret-retn-retf-how-to-use-them
   }
 }
-#endif // 1
 
 } // unnamed namespace
 
@@ -305,36 +216,19 @@ int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to en
 // - dwRetn: the return address of the hook
 DWORD TextHook::Send(DWORD dwDataBase, DWORD dwRetn)
 {
-  // jich: 6/17/2015: do not send when ctrl/shift are controlled
-  //if (WinKey::isKeyControlPressed() || WinKey::isKeyShiftPressed() && !WinKey::isKeyReturnPressed())
-  //  return 0;
-
   DWORD ret = 0;
-  //char b[0x100];
-  //::wcstombs(b, hook_name, 0x100);
-  //ConsoleOutput(b);
   ITH_WITH_SEH(ret = UnsafeSend(dwDataBase, dwRetn));
   return ret;
 }
 
 DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 {
-  enum { SMALL_BUFF_SIZE = 0x80 };
-  enum { MAX_DATA_SIZE = 0x10000 }; // jichi 12/25/2013: The same as the original ITH
   DWORD dwCount,
       dwAddr,
       dwDataIn,
       dwSplit;
-  BYTE *pbData,
-       pbSmallBuff[SMALL_BUFF_SIZE];
+  BYTE pbData[PIPE_BUFFER_SIZE];
   DWORD dwType = hp.type;
-
-
-  // jichi 10/24/2014: Skip GDI functions 
-  // Artikash 6/3/2018: ^ why??
-  // Artikash 6/3/2018: Reenable GDI functions
-  //if (!::gdi_hook_enabled_ && ::IsGDIFunction((LPCVOID)hp.address))
-  //  return 0;
 
   dwAddr = hp.address;
 
@@ -346,27 +240,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
    */
   if (::trigger)
     ::trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase-0x18));
-  // jichi 10/21/2014: Directly invoke engine functions.
-  //if (trigger) {
-  //  if (InsertDynamicHook)
-  //    trigger = InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase-0x18));
-  //  else
-  //    trigger = 0;
-  //}
-#if 0 // diasble HOOK_AUXILIARY
-  // jichi 12/13/2013: None of known hooks are auxiliary
-  if (dwType & HOOK_AUXILIARY) {
-    //Clean hook when dynamic hook finished.
-    //AUX hook is only used for a foothold of dynamic hook.
-    if (!trigger) {
-      ClearHook();
-      // jichi 12/13/2013: This is the only place where this function could return non-zero value
-      // However, I non of the known hooks are auxiliary
-      return dwAddr;
-    }
-    return 0;
-  }
-#endif // 0
+
   // jichi 10/24/2014: generic hook function
   if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp))
     hp.hook_fun = nullptr;
@@ -374,21 +248,12 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
   if (dwType & HOOK_EMPTY) // jichi 10/24/2014: dummy hook only for dynamic hook
     return 0;
 
-  // jichi 2/2/2015: Send multiple texts
-  for (BYTE textIndex = 0; textIndex <= hp.extra_text_count; textIndex++) {
     dwCount = 0;
     dwSplit = 0;
     dwDataIn = *(DWORD *)(dwDataBase + hp.offset); // default value
 
-    //if (dwType & EXTERN_HOOK) {
-    if (hp.text_fun) {  // jichi 10/24/2014: remove EXTERN_HOOK
-      //DataFun fun=(DataFun)hp.text_fun;
-      //auto fun = hp.text_fun;
-      hp.text_fun(dwDataBase, &hp, textIndex, &dwDataIn, &dwSplit, &dwCount);
-      //if (dwCount == 0 || dwCount > MAX_DATA_SIZE)
-      //  return 0;
-      if (dwSplit && (dwType & RELATIVE_SPLIT) && dwSplit > ::processStartAddress)
-        dwSplit -= ::processStartAddress;
+    if (hp.text_fun) {
+      hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
     } else {
       if (dwDataIn == 0)
         return 0;
@@ -402,8 +267,6 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
           else
             return 0;
         }
-        if (dwSplit && (dwType & RELATIVE_SPLIT) && dwSplit > ::processStartAddress)
-          dwSplit -= ::processStartAddress;
       }
       if (dwType & DATA_INDIRECT) {
         if (IthGetMemoryRange((LPVOID)(dwDataIn + hp.index), 0, 0))
@@ -411,29 +274,14 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
         else
           return 0;
       }
-      //if (dwType & PRINT_DWORD) {
-      //  swprintf((WCHAR *)(pbSmallBuff + HEADER_SIZE), L"%.8X ", dwDataIn);
-      //  dwDataIn = (DWORD)pbSmallBuff + HEADER_SIZE;
-      //}
       dwCount = GetLength(dwDataBase, dwDataIn);
     }
 
     // jichi 12/25/2013: validate data size
-    if (dwCount == 0 || dwCount > MAX_DATA_SIZE)
+    if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - HEADER_SIZE)
       return 0;
 
-    size_t sz = dwCount + HEADER_SIZE;
-    if (sz >= SMALL_BUFF_SIZE)
-      pbData = new BYTE[sz];
-      //ITH_MEMSET_HEAP(pbData, 0, sz * sizeof(BYTE)); // jichi 9/26/2013: zero memory
-    else
-      pbData = pbSmallBuff;
-
     if (hp.length_offset == 1) {
-      if (dwType & STRING_LAST_CHAR) {
-        LPWSTR ts = (LPWSTR)dwDataIn;
-        dwDataIn = ts[::wcslen(ts) -1];
-      }
       dwDataIn &= 0xffff;
       if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8))
         dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
@@ -445,17 +293,13 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
       ::memcpy(pbData + HEADER_SIZE, (void *)dwDataIn, dwCount);
 
     // jichi 10/14/2014: Add filter function
-    if (hp.filter_fun && !hp.filter_fun(pbData + HEADER_SIZE, &dwCount, &hp, textIndex) || dwCount <= 0) {
-      if (pbData != pbSmallBuff)
-        delete[] pbData;
+    if (hp.filter_fun && !hp.filter_fun(pbData + HEADER_SIZE, &dwCount, &hp, 0) || dwCount <= 0) {
       return 0;
     }
 
     *(DWORD *)pbData = dwAddr;
     if (dwType & (NO_CONTEXT|FIXING_SPLIT))
       dwRetn = 0;
-    else if (dwRetn && (dwType & RELATIVE_SPLIT))
-      dwRetn -= ::processStartAddress;
 
     *((DWORD *)pbData + 1) = dwRetn;
     *((DWORD *)pbData + 2) = dwSplit;
@@ -466,9 +310,6 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 	  WriteFile(::hookPipe, pbData, dwCount + HEADER_SIZE, &unused, nullptr);
       //CliUnlockPipe();
     }
-    if (pbData != pbSmallBuff)
-      delete[] pbData;
-  }
   return 0;
 
 }
@@ -535,28 +376,20 @@ int TextHook::UnsafeInsertHookCode()
     return no;
   }
 
-  // Initialize common routine.
   memcpy(recover, common_hook, sizeof(common_hook));
+  void* thisPtr = (void*)this;
+  void* funcPtr = (void*)((BYTE*)ProcessHook - (BYTE*)(recover + 19));
+  memcpy(recover + 10, &thisPtr, sizeof(void*));
+  memcpy(recover + 15, &funcPtr, sizeof(void*));
   BYTE *c = (BYTE *)hp.address,
        *r = recover;
-  BYTE inst[8]; // jichi 9/27/2013: Why 8? Only 5 bytes will be written using NtWriteVirtualMemory
-  inst[0] = 0xe9; // jichi 9/27/2013: 0xe9 is jump, see: http://code.google.com/p/sexyhook/wiki/SEXYHOOK_Hackers_Manual
-  __asm
-  {
-    mov edx,r // r = recover
-    mov eax,this
-    mov [edx+0xa],eax // push TextHook*, resolve to correspond hook.
-    lea eax,[edx+0x13]
-    mov edx,ProcessHook
-    sub edx,eax
-    mov [eax-4],edx // call ProcessHook
-    mov eax,c
-    add eax,5
-    mov edx,r
-    sub edx,eax
-    lea eax,inst+1
-    mov [eax],edx // jichi 12/17/2013: the parameter of jmp is in edx. So, ProcessHook must be naked.
-  }
+  BYTE inst[] = // jichi 9/27/2013: Why 8? Only 5 bytes will be written using NtWriteVirtualMemory
+  { 
+	  0xe9, 0, 0, 0, 0, // jmp recover 
+	  0, 0, 0 // ???
+  };
+  void* relRecover = (void*)(recover - (BYTE*)hp.address - 5);
+  memcpy(inst + 1, &relRecover, sizeof(void*));
   r += sizeof(common_hook);
   hp.hook_len = 5;
   //bool jmpflag=false; // jichi 9/28/2013: nto used
@@ -720,83 +553,3 @@ int TextHook::GetLength(DWORD base, DWORD in)
 }
 
 // EOF
-
-//typedef void (*DataFun)(DWORD, const HookParam*, DWORD*, DWORD*, DWORD*);
-
-/*
-DWORD recv_esp, recv_addr;
-EXCEPTION_DISPOSITION ExceptHandler(EXCEPTION_RECORD *ExceptionRecord,
-    void *EstablisherFrame, CONTEXT *ContextRecord, void *DispatcherContext)
-{
-  //WCHAR str[0x40],
-  //      name[0x100];
-  //ConsoleOutput(L"Exception raised during hook processing.");
-  //swprintf(str, L"Exception code: 0x%.8X", ExceptionRecord->ExceptionCode);
-  //ConsoleOutput(str);
-  //MEMORY_BASIC_INFORMATION info;
-  //if (NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
-  //    MemoryBasicInformation,&info,sizeof(info),0)) &&
-  //    NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
-  //    MemorySectionName,name,0x200,0))) {
-  //  swprintf(str, L"Exception offset: 0x%.8X:%s",
-  //      ContextRecord->Eip-(DWORD)info.AllocationBase,
-  //      wcsrchr(name,L'\\')+1);
-  //  ConsoleOutput(str);
-  //}
-  ContextRecord->Esp = recv_esp;
-  ContextRecord->Eip = recv_addr;
-  return ExceptionContinueExecution;
-}
-
-
-//typedef void (*DataFun)(DWORD, const HookParam*, DWORD*, DWORD*, DWORD*);
-
-DWORD recv_esp, recv_addr;
-EXCEPTION_DISPOSITION ExceptHandler(EXCEPTION_RECORD *ExceptionRecord,
-    void *EstablisherFrame, CONTEXT *ContextRecord, void *DispatcherContext)
-{
-  //WCHAR str[0x40],
-  //      name[0x100];
-  //ConsoleOutput(L"Exception raised during hook processing.");
-  //swprintf(str, L"Exception code: 0x%.8X", ExceptionRecord->ExceptionCode);
-  //ConsoleOutput(str);
-  //MEMORY_BASIC_INFORMATION info;
-  //if (NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
-  //    MemoryBasicInformation,&info,sizeof(info),0)) &&
-  //    NT_SUCCESS(NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)ContextRecord->Eip,
-  //    MemorySectionName,name,0x200,0))) {
-  //  swprintf(str, L"Exception offset: 0x%.8X:%s",
-  //      ContextRecord->Eip-(DWORD)info.AllocationBase,
-  //      wcsrchr(name,L'\\')+1);
-  //  ConsoleOutput(str);
-  //}
-  ContextRecord->Esp = recv_esp;
-  ContextRecord->Eip = recv_addr;
-  return ExceptionContinueExecution;
-}
-
-__declspec(naked) // jichi 10/2/2013: No prolog and epilog
-int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to ensure normal execution even bad hook inserted.
-{
-  __asm
-  {
-    mov eax,seh_recover
-    mov recv_addr,eax
-    push ExceptHandler
-    push fs:[0]
-    mov recv_esp,esp
-    mov fs:[0],esp
-    push esi
-    push edx
-    call TextHook::Send
-    test eax,eax
-    jz seh_recover
-    mov ecx,SafeExit
-    mov [esp + 0x8], ecx // change exit point
-seh_recover:
-    pop dword ptr fs:[0]
-    pop ecx
-    retn
-  }
-}
-*/

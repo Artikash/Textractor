@@ -97,14 +97,14 @@ enum HookParamType : unsigned long {
   , USING_SPLIT       = 0x10    // aware of split time?
   , SPLIT_INDIRECT    = 0x20
   , MODULE_OFFSET     = 0x40    // do hash module, and the address is relative to module
-  , FUNCTION_OFFSET   = 0x80    // do hash function, and the address is relative to funccion
+  //, FUNCTION_OFFSET   = 0x80    // do hash function, and the address is relative to funccion
   , USING_UTF8        = 0x100
-  , STRING_LAST_CHAR  = 0x200
+  //, STRING_LAST_CHAR  = 0x200
   , NO_CONTEXT        = 0x400
   , HOOK_EMPTY        = 0x800
   , FIXING_SPLIT      = 0x1000
   //, HOOK_AUXILIARY    = 0x2000  // jichi 12/13/2013: None of known hooks are auxiliary
-  , RELATIVE_SPLIT    = 0x2000 // jichi 10/24/2014: relative split return address
+  //, RELATIVE_SPLIT    = 0x2000 // Artikash 8/3/2018: does nothing
   , HOOK_ENGINE       = 0x4000
   , HOOK_ADDITIONAL   = 0x8000
 };
