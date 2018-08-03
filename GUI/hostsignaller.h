@@ -18,7 +18,6 @@ signals:
 	void RemoveProcess(unsigned int processId);
 	void AddThread(TextThread* thread);
 	void RemoveThread(TextThread* thread);
-	void ThreadOutput(TextThread* thread, QString output);
 };
 
 #endif // HOSTSIGNALLER_H

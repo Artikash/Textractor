@@ -22,6 +22,9 @@ public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
 
+signals:
+	void ThreadOutputReceived(TextThread* thread, QString output);
+
 private slots:
 	void AddProcess(unsigned int processId);
 	void RemoveProcess(unsigned int processId);
@@ -35,7 +38,6 @@ private slots:
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
 	void on_addExtenButton_clicked();
-
 	void on_rmvExtenButton_clicked();
 
 private:

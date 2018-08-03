@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(hostSignaller, &HostSignaller::RemoveProcess, this, &MainWindow::RemoveProcess);
 	connect(hostSignaller, &HostSignaller::AddThread, this, &MainWindow::AddThread);
 	connect(hostSignaller, &HostSignaller::RemoveThread, this, &MainWindow::RemoveThread);
-	connect(hostSignaller, &HostSignaller::ThreadOutput, this, &MainWindow::ThreadOutput);
+	connect(this, &MainWindow::ThreadOutputReceived, this, &MainWindow::ThreadOutput);
 	std::map<int, QString> extensions = LoadExtensions();
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 	Host::Open();
@@ -115,6 +115,15 @@ void MainWindow::AddThread(TextThread* thread)
 		GenerateHCode(Host::GetHookParam(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook), thread->GetThreadParameter().pid) +
 		")"
 	);
+	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
+	{
+		output = DispatchSentenceToExtensions(output,
+			{
+				{ "current select", ttCombo->currentText().split(":")[0].toInt() == thread->Number() ? 1 : 0 }
+			});
+		emit ThreadOutputReceived(thread, QString::fromWCharArray(output.c_str()));
+		return output;
+	});
 }
 
 void MainWindow::RemoveThread(TextThread* thread)
@@ -218,7 +227,7 @@ void MainWindow::on_ttCombo_activated(int index)
 
 void MainWindow::on_addExtenButton_clicked()
 {
-	QString extenFileName = QFileDialog::getOpenFileName(this, "Select extension dll", "C:\\", "Extensions (*.dll)");
+	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension dll", "C:\\", "Extensions (*.dll)");
 	if (!extenFileName.length()) return;
 	QString extenName = extenFileName.split("/")[extenFileName.split("/").count() - 1];
 	extenName.chop(4);
@@ -233,6 +242,7 @@ void MainWindow::on_addExtenButton_clicked()
 
 void MainWindow::on_rmvExtenButton_clicked()
 {
+	if (extenCombo->currentText().size() == 0) return;
 	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(":")[1] + "_nexthooker_extension.dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
 	DeleteFileW(extenFileName.toStdWString().c_str());
