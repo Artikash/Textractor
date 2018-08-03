@@ -179,10 +179,7 @@ void MainWindow::on_detachButton_clicked()
 void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
-	QString hookCode = QInputDialog::getText(this, "Add Hook",
-		"Enter hook code\r\n/H{A|B|W|S|Q|V}[N]data_offset[*drdo][:sub_offset[*drso]]@addr[:module]",
-		QLineEdit::Normal, "/H", &ok
-	);
+	QString hookCode = QInputDialog::getText(this, "Add Hook", HCodeInfoDump, QLineEdit::Normal, "/H", &ok);
 	if (!ok) return;
 	HookParam toInsert = ParseHCode(hookCode);
 	if (toInsert.type == 0 && toInsert.length_offset == 0)
