@@ -43,6 +43,7 @@ DWORD Hash(QString module)
 HookParam ParseRCode(QString RCode)
 {
 	HookParam hp = {};
+	hp.type |= DIRECT_READ;
 	switch (RCode.at(0).unicode())
 	{
 	case L'S':
