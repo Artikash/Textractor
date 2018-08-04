@@ -9,23 +9,18 @@
 namespace { // unnamed
 
 // jichi 4/19/2014: Return the integer that can mask the signature
+// Artikash 8/4/2018: change implementation
 DWORD SigMask(DWORD sig)
 {
-  __asm
-  {
-    xor ecx,ecx //ecx = 0
-    mov eax,sig //eax = sig
-_mask:
-    shr eax,8 // eax >>= 8
-    inc ecx //++ecx
-    test eax,eax // if (eax > 0)
-    jnz _mask //goto _mask
-    sub ecx,4 //ecx -= 4
-    neg ecx //ecx *= -1
-    or eax,-1
-    shl ecx,3
-    shr eax,cl
-  }
+	DWORD count = 0;
+	while (sig)
+	{
+		sig >>= 8;
+		++count;
+	}
+	count -= 4;
+	count = -count;
+	return 0xffffffff >> (count << 3);
 }
 
 } // namespace unnamed
