@@ -66,7 +66,7 @@ HookParam ParseRCode(QString RCode)
 	RCode.remove(0, 1);
 	QRegExp address("[\\dA-F]+$");
 	if (address.indexIn(RCode) == -1) return {};
-	hp.address = address.cap(1).toInt(nullptr, 16);
+	hp.address = address.cap(0).toInt(nullptr, 16);
 	return hp;
 }
 
@@ -231,7 +231,7 @@ QString GenerateRCode(HookParam hp)
 	code += QString::number(hp.offset, 16);
 	code += "@";
 	code += QString::number(hp.address, 16);
-	return code;
+	return code.toUpper();
 }
 
 QString GenerateCode(HookParam hp, DWORD processId)
