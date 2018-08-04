@@ -9291,7 +9291,6 @@ bool InsertWillPlusAHook()
   hp.address = addr;
   hp.text_fun = SpecialHookWillPlusA;
   hp.type = NO_CONTEXT;
-  hp.extra_text_count = 1;
   hp.filter_fun = NewLineStringFilter; // remove two characters of "\\n"
   ConsoleOutput("vnreng: INSERT WillPlusA");
   NewHook(hp, "WillPlusA");
@@ -13946,7 +13945,6 @@ bool Insert5pbHook3()
   hp.address = addr;
   hp.type = USING_STRING|NO_CONTEXT;
   hp.text_fun = SpecialHook5pb3;
-  hp.extra_text_count = 1; // extract character name in arg1
   hp.filter_fun = NewLineCharToSpaceFilter; // replace '\n' by ' '
   ConsoleOutput("vnreng: INSERT 5pb3");
   NewHook(hp, "5pb3");
@@ -16024,8 +16022,7 @@ bool InsertLovaGameHook()
  */
 bool InsertAdobeAirHook()
 {
-  enum { module = 0xd107ed5f }; // hash of "Adobe AIR.dll"
-  DWORD base = Util::FindModuleBase(module);
+  DWORD base = (DWORD)GetModuleHandleW(L"Adobe AIR.dll");
   if (!base) {
     ConsoleOutput("vnreng:Adobe AIR: module not found");
     return false;

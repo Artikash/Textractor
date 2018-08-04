@@ -20,25 +20,7 @@ DWORD FindEntryAligned(DWORD start, DWORD back_range);
 DWORD FindImportEntry(DWORD hModule, DWORD fun);
 bool CheckFile(LPCWSTR name);
 
-// jichi 4/15/2014: Copied from ITH CLI, for debugging purpose
-DWORD FindModuleBase(DWORD hash);
-
 bool SearchResourceString(LPCWSTR str);
-
-/**
- *  @return  HANDLE  module handle
- */
-inline DWORD GetModuleBase()
-{
-  __asm
-  {
-    mov eax,fs:[0x18]
-    mov eax,[eax+0x30]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0xc]
-    mov eax,[eax+0x18]
-  }
-}
 
 } // namespace Util
 

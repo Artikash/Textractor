@@ -13,15 +13,15 @@ DWORD SigMask(DWORD sig)
 {
   __asm
   {
-    xor ecx,ecx
-    mov eax,sig
+    xor ecx,ecx //ecx = 0
+    mov eax,sig //eax = sig
 _mask:
-    shr eax,8
-    inc ecx
-    test eax,eax
-    jnz _mask
-    sub ecx,4
-    neg ecx
+    shr eax,8 // eax >>= 8
+    inc ecx //++ecx
+    test eax,eax // if (eax > 0)
+    jnz _mask //goto _mask
+    sub ecx,4 //ecx -= 4
+    neg ecx //ecx *= -1
     or eax,-1
     shl ecx,3
     shr eax,cl
@@ -265,7 +265,7 @@ DWORD Util::FindImportEntry(DWORD hModule, DWORD fun)
 // Search string in rsrc section. This section usually contains version and copyright info.
 bool Util::SearchResourceString(LPCWSTR str)
 {
-  DWORD hModule = Util::GetModuleBase();
+  DWORD hModule = (DWORD)GetModuleHandleW(nullptr);
   IMAGE_DOS_HEADER *DosHdr;
   IMAGE_NT_HEADERS *NtHdr;
   DosHdr = (IMAGE_DOS_HEADER *)hModule;
@@ -284,45 +284,6 @@ bool Util::SearchResourceString(LPCWSTR str)
     }
   }
   return false;
-}
-
-// jichi 4/15/2014: Copied from GetModuleBase in ITH CLI, for debugging purpose
-DWORD Util::FindModuleBase(DWORD hash)
-{
-  __asm
-  {
-    mov eax,fs:[0x30]
-    mov eax,[eax+0xc]
-    mov esi,[eax+0x14]
-    mov edi,_wcslwr
-listfind:
-    mov edx,[esi+0x28]
-    test edx,edx
-    jz notfound
-    push edx
-    call edi
-    pop edx
-    xor eax,eax
-calc:
-    movzx ecx, word ptr [edx]
-    test cl,cl
-    jz fin
-    ror eax,7
-    add eax,ecx
-    add edx,2
-    jmp calc
-fin:
-    cmp eax,[hash]
-    je found
-    mov esi,[esi]
-    jmp listfind
-notfound:
-    xor eax,eax
-    jmp termin
-found:
-    mov eax,[esi+0x10]
-termin:
-  }
 }
 
 // EOF

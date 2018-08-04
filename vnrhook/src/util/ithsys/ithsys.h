@@ -16,7 +16,6 @@ extern "C" {
 DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_length); // KMP
 
 DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size);
-DWORD GetExportAddress(DWORD hModule,DWORD hash);
 } // extern "C"
 
 extern BYTE LeadByteTable[];

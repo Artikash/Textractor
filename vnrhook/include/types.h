@@ -27,13 +27,13 @@ struct HookParam {
   // jichi 10/24/2014: Add generic hook function, return false if stop execution.
   typedef bool (*hook_fun_t)(DWORD esp, HookParam *hp);
 
-  DWORD address;    // absolute or relative address
-  DWORD offset,     // offset of the data in the memory
-        index,      // ?
-        split,      // esp offset of the split character = pusha offset - 4
-        split_index; // ?
-  DWORD module, // hash of the module
-        function;
+  unsigned __int64 address;    // absolute or relative address
+  short offset, // offset of the data in the memory
+	  index,
+	  split, // offset of the split character
+	  split_index;
+
+  DWORD module; // hash of the module
   text_fun_t text_fun;
   filter_fun_t filter_fun;
   hook_fun_t hook_fun;
@@ -41,10 +41,6 @@ struct HookParam {
   WORD length_offset; // index of the string length
   BYTE hook_len, // ?
        recover_len; // ?
-
-  // 2/2/2015: jichi number of times - 1 to run the hook
-  BYTE extra_text_count;
-  BYTE _unused; // jichi 2/2/2015: add a BYTE type to make to total sizeof(HookParam) even.
 
   // 7/20/2014: jichi additional parameters for PSP games
   DWORD user_flags,

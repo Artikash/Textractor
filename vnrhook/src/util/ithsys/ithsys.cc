@@ -76,46 +76,6 @@ inline DWORD GetHash(LPSTR str)
 	return hash;
 }
 
-//Query module export table. Return function address if found.
-//Similar to GetProcAddress
-DWORD GetExportAddress(DWORD hModule,DWORD hash)
-{
-  IMAGE_DOS_HEADER *DosHdr;
-  IMAGE_NT_HEADERS *NtHdr;
-  IMAGE_EXPORT_DIRECTORY *ExtDir;
-  UINT uj;
-  char* pcExportAddr,*pcFuncPtr,*pcBuffer;
-  DWORD dwReadAddr,dwFuncAddr,dwFuncName;
-  WORD wOrd;
-  DosHdr = (IMAGE_DOS_HEADER*)hModule;
-  if (IMAGE_DOS_SIGNATURE==DosHdr->e_magic) {
-    dwReadAddr=hModule+DosHdr->e_lfanew;
-    NtHdr=(IMAGE_NT_HEADERS*)dwReadAddr;
-    if (IMAGE_NT_SIGNATURE == NtHdr->Signature) {
-      pcExportAddr = (char*)((DWORD)hModule+
-          (DWORD)NtHdr->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
-      if (!pcExportAddr)
-        return 0;
-      ExtDir = (IMAGE_EXPORT_DIRECTORY*)pcExportAddr;
-      pcExportAddr = (char*)((DWORD)hModule+(DWORD)ExtDir->AddressOfNames);
-
-      for (uj = 0; uj < ExtDir->NumberOfNames; uj++) {
-        dwFuncName = *(DWORD *)pcExportAddr;
-        pcBuffer = (char*)((DWORD)hModule+dwFuncName);
-        if (GetHash(pcBuffer) == hash) {
-          pcFuncPtr = (char*)((DWORD)hModule+(DWORD)ExtDir->AddressOfNameOrdinals+(uj*sizeof(WORD)));
-          wOrd = *(WORD*)pcFuncPtr;
-          pcFuncPtr = (char*)((DWORD)hModule+(DWORD)ExtDir->AddressOfFunctions+(wOrd*sizeof(DWORD)));
-          dwFuncAddr = *(DWORD *)pcFuncPtr;
-          return hModule+dwFuncAddr;
-        }
-        pcExportAddr += sizeof(DWORD);
-      }
-    }
-  }
-  return 0;
-}
-
 } // extern "C"
 
 // EOF

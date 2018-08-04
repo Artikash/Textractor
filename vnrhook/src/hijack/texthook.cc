@@ -392,8 +392,7 @@ int TextHook::UnsafeInsertHookCode()
   memcpy(inst + 1, &relRecover, sizeof(void*));
   r += sizeof(common_hook);
   hp.hook_len = 5;
-  //bool jmpflag=false; // jichi 9/28/2013: nto used
-  // Copy original code.
+  int address = hp.address;
   switch (MapInstruction(hp.address, (DWORD)r, hp.hook_len, hp.recover_len)) {
   case -1:
     ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: failed to map instruction");
@@ -404,7 +403,7 @@ int TextHook::UnsafeInsertHookCode()
       mov ecx,this
       movzx eax,[ecx]hp.hook_len
       movzx edx,[ecx]hp.recover_len
-      add edx,[ecx]hp.address
+      add edx,address
       add eax,r
       add eax,5
       sub edx,eax
