@@ -113,9 +113,9 @@ HookParam ParseHCode(QString HCode)
 		hp.type |= MODULE_OFFSET;
 		hp.module = Hash(HCode);
 	}
-	if (hp.offset & 0x80000000)
+	if (hp.offset < 0)
 		hp.offset -= 4;
-	if (hp.split & 0x80000000)
+	if (hp.split < 0)
 		hp.split -= 4;
 	return hp;
 }
@@ -143,27 +143,29 @@ QString GenerateHCode(HookParam hp, DWORD processId)
 	}
 	if (hp.type & NO_CONTEXT)
 		code += "N";
-	if (hp.offset >> 31)
-		code += "-" + QString::number(-(hp.offset + 4), 16);
+	if (hp.offset < 0) hp.offset += 4;
+	if (hp.split < 0) hp.split += 4;
+	if (hp.offset < 0)
+		code += "-" + QString::number(-hp.offset, 16);
 	else
 		code += QString::number(hp.offset, 16);
 	if (hp.type & DATA_INDIRECT)
 	{
-		if (hp.index >> 31)
+		if (hp.index < 0)
 			code += "*-" + QString::number(-hp.index, 16);
 		else
 			code += "*" + QString::number(hp.index, 16);
 	}
 	if (hp.type & USING_SPLIT)
 	{
-		if (hp.split >> 31)
-			code += ":-" + QString::number(-(hp.split + 4), 16);
+		if (hp.split < 0)
+			code += ":-" + QString::number(-hp.split, 16);
 		else
 			code += ":" + QString::number(hp.split, 16);
 	}
 	if (hp.type & SPLIT_INDIRECT)
 	{
-		if (hp.split_index >> 31)
+		if (hp.split_index < 0)
 			code += "*-" + QString::number(-hp.split_index, 16);
 		else
 			code += "*" + QString::number(hp.split_index, 16);

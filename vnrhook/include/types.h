@@ -77,7 +77,7 @@ struct Hook { // size: 0x80
   BYTE recover[0x68 - sizeof(HookParam)];
   BYTE original[0x10];
 
-  DWORD Address() const { return hp.address; }
+  unsigned __int64 Address() const { return hp.address; }
   DWORD Type() const { return hp.type; }
   WORD Length() const { return hp.hook_len; }
   LPSTR Name() const { return hook_name; }

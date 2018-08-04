@@ -41,6 +41,7 @@ private slots:
 	void on_rmvExtenButton_clicked();
 
 private:
+	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
 	Ui::MainWindow *ui;

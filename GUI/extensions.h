@@ -17,6 +17,5 @@ struct InfoForExtension
 	InfoForExtension* nextProperty;
 };
 typedef const wchar_t*(*ExtensionFunction)(const wchar_t*, const InfoForExtension*);
-extern QComboBox* ttCombo;
 
 #endif // EXTENSIONS_H

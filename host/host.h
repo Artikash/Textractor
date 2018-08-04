@@ -28,7 +28,7 @@ struct ThreadParameterHasher
 {
 	size_t operator()(const ThreadParameter& tp) const
 	{
-		return std::hash<DWORD>()(tp.pid << 6) + std::hash<DWORD>()(tp.hook) + std::hash<DWORD>()(tp.retn) + std::hash<DWORD>()(tp.spl);
+		return std::hash<__int64>()(tp.pid << 6) + std::hash<__int64>()(tp.hook) + std::hash<__int64>()(tp.retn) + std::hash<__int64>()(tp.spl);
 	}
 };
 

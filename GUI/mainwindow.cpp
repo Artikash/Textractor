@@ -117,10 +117,7 @@ void MainWindow::AddThread(TextThread* thread)
 	);
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
 	{
-		output = DispatchSentenceToExtensions(output,
-			{
-				{ "current select", ttCombo->currentText().split(":")[0].toInt() == thread->Number() ? 1 : 0 }
-			});
+		output = DispatchSentenceToExtensions(output, GetInfoForExtensions(thread));
 		emit ThreadOutputReceived(thread, QString::fromWCharArray(output.c_str()));
 		return output;
 	});
@@ -145,6 +142,18 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 		textOutput->insertPlainText(output);
 		textOutput->moveCursor(QTextCursor::End);
 	}
+}
+
+std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread* thread)
+{
+	return 
+	{
+	{ "current select", ttCombo->currentText().split(":")[0].toInt() == thread->Number() ? 1 : 0 },
+	{ "text number", thread->Number() },
+	{ "process id", thread->GetThreadParameter().pid },
+	{ "hook address", (int)thread->GetThreadParameter().hook },
+	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParameter().hook >> 32) }
+	};
 }
 
 QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
