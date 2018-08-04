@@ -40,12 +40,38 @@ DWORD Hash(QString module)
 	return hash;
 }
 
+HookParam ParseRCode(QString RCode)
+{
+	HookParam hp = {};
+	switch (RCode.at(0).unicode())
+	{
+	case L'S':
+		break;
+	case L'Q':
+		hp.type |= USING_STRING | USING_UNICODE;
+		break;
+	case L'V':
+		hp.type |= USING_STRING | USING_UTF8;
+		break;
+	default:
+		return {};
+	}
+	RCode.remove(0, 1);
+	QRegExp stringGap("^\\-?[\\dA-F]+");
+	if (stringGap.indexIn(RCode) == -1) return {};
+	hp.offset = stringGap.cap(0).toInt(nullptr, 16);
+	RCode.remove(0, stringGap.cap(0).length());
+	if (RCode.at(0).unicode() != L'@') return {};
+	RCode.remove(0, 1);
+	QRegExp address("[\\dA-F]+$");
+	if (address.indexIn(RCode) == -1) return {};
+	hp.address = address.cap(1).toInt(nullptr, 16);
+	return hp;
+}
+
 HookParam ParseHCode(QString HCode)
 {
 	HookParam hp = {};
-	HCode = HCode.toUpper();
-	if (!HCode.startsWith("/H")) return {};
-	HCode.remove(0, 2);
 	switch (HCode.at(0).unicode())
 	{
 	case L'S':
@@ -120,6 +146,14 @@ HookParam ParseHCode(QString HCode)
 	return hp;
 }
 
+HookParam ParseCode(QString code)
+{
+	code = code.toUpper();
+	if (code.startsWith("/H")) return ParseHCode(code.remove(0, 2));
+	else if (code.startsWith("/R")) return ParseRCode(code.remove(0, 2));
+	else return {};
+}
+
 QString GenerateHCode(HookParam hp, DWORD processId)
 {
 	QString code = "/H";
@@ -182,4 +216,25 @@ QString GenerateHCode(HookParam hp, DWORD processId)
 	code = code.toUpper();
 	code += QString::fromWCharArray(wcsrchr(buffer, L'\\') + 1);
 	return code;
+}
+
+QString GenerateRCode(HookParam hp)
+{
+	QString code = "/R";
+	if (hp.type & USING_UNICODE)
+		code += "Q";
+	else if (hp.type & USING_UTF8)
+		code += "V";
+	else
+		code += "S";
+	code += QString::number(hp.offset, 16);
+	code += "@";
+	code += QString::number(hp.address, 16);
+	return code;
+}
+
+QString GenerateCode(HookParam hp, DWORD processId)
+{
+	if (hp.type & DIRECT_READ) return GenerateRCode(hp);
+	else return GenerateHCode(hp, processId);
 }

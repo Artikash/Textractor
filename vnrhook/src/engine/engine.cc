@@ -16694,11 +16694,6 @@ void SpecialPSPHook(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *spl
   LPCSTR text = LPCSTR(offset + hp->user_value);
   static LPCSTR lasttext;
   if (*text) {
-    if (hp->user_flags & HPF_IgnoreSameAddress) {
-      if (text == lasttext)
-        return;
-      lasttext = text;
-    }
     *data = (DWORD)text;
     // I only considered SHIFT-JIS/UTF-8 case
     if (hp->length_offset == 1)
@@ -17451,7 +17446,6 @@ bool InsertImageepochPSPHook()
     hp.type = USING_STRING|USING_SPLIT|NO_CONTEXT; // UTF-8, though
     hp.offset = pusha_eax_off - 4;
     hp.split = pusha_ecx_off - 4;
-    hp.user_flags = HPF_IgnoreSameAddress;
     //hp.text_fun = SpecialPSPHook;
     hp.text_fun = SpecialPSPHookImageepoch; // since this function is common, use its own static lasttext for HPF_IgnoreSameAddress
     ConsoleOutput("vnreng: Imageepoch PSP: INSERT");

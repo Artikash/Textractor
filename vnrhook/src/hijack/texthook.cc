@@ -316,9 +316,11 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 
 int TextHook::InsertHook()
 {
+  int ok = 1;
   //ConsoleOutput("vnrcli:InsertHook: enter");
   WaitForSingleObject(hmMutex, 0);
-  int ok = InsertHookCode();
+  if (hp.type & DIRECT_READ) ok = InsertReadCode();
+  else ok = InsertHookCode();
   ReleaseMutex(hmMutex);
   //ConsoleOutput("vnrcli:InsertHook: leave");
   return ok;
@@ -326,7 +328,6 @@ int TextHook::InsertHook()
 
 int TextHook::InsertHookCode()
 {
-  enum : int { yes = 0, no = 1 };
   DWORD ret = no;
   // jichi 9/17/2013: might raise 0xC0000005 AccessViolationException on win7
   ITH_WITH_SEH(ret = UnsafeInsertHookCode());
@@ -335,10 +336,76 @@ int TextHook::InsertHookCode()
   return ret;
 }
 
+DWORD WINAPI ReaderThread(LPVOID threadParam)
+{
+	TextHook* hook = (TextHook*)threadParam;
+	BYTE buffer[PIPE_BUFFER_SIZE] = {};
+	char testChar;
+	unsigned int changeCount = 0;
+	const char* currentAddress = (char*)hook->hp.address;
+	while (true)
+	{
+		Sleep(50);
+		if (testChar == *currentAddress)
+		{
+			changeCount = 0;
+			continue;
+		}
+		testChar = *currentAddress;
+		if (++changeCount > 10)
+		{
+			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
+			ConsoleOutput("NextHooker: remove read code");
+			break;
+		}
+
+		int dataLen;
+		if (hook->hp.type & USING_UNICODE)
+			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
+		else
+			dataLen = strlen(currentAddress);
+
+		*(DWORD*)buffer = hook->hp.address;
+		*(DWORD*)(buffer + 4) = 0;
+		*(DWORD*)(buffer + 8) = 0;
+		memcpy(buffer + HEADER_SIZE, currentAddress, dataLen);
+		DWORD unused;
+		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
+
+		if (hook->hp.offset == 0) continue;
+		currentAddress += dataLen + hook->hp.offset;
+		testChar = *currentAddress;
+	}
+	hook->ClearHook();
+	return 0;
+}
+
+int TextHook::InsertReadCode()
+{
+	hp.hook_len = 0x40;
+	//Check if the new hook range conflict with existing ones. Clear older if conflict.
+	TextHook *it = hookman;
+	for (int i = 0; i < currentHook; it++) {
+		if (it->Address())
+			i++;
+		if (it == this)
+			continue;
+		if ((it->Address() >= hp.address && it->Address() < hp.hook_len + hp.address) || (it->Address() <= hp.address && it->Address() + it->Length() > hp.address)) 
+			it->ClearHook();
+	}
+	if (!IthGetMemoryRange((LPCVOID)hp.address, 0, 0))
+	{
+		ConsoleOutput("cannot access read address");
+		return no;
+	}
+	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
+	return yes;
+	
+}
+
 int TextHook::UnsafeInsertHookCode()
 {
   //ConsoleOutput("vnrcli:UnsafeInsertHookCode: enter");
-  enum : int { yes = 0, no = 1 };
   if (hp.module && (hp.type & MODULE_OFFSET)) { // Map hook offset to real address.
 	  if (DWORD base = GetModuleBase(hp.module)) {
 		  hp.address += base;
@@ -467,29 +534,36 @@ int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 
 int TextHook::RemoveHookCode()
 {
-  enum : int { yes = 1, no = 0 };
   if (!hp.address)
     return no;
-  ConsoleOutput("vnrcli:RemoveHook: enter");
-  WaitForSingleObject(hmMutex, TIMEOUT); // jichi 9/28/2012: wait at most for 5 seconds
+  
   DWORD l = hp.hook_len;
   //with_seh({ // jichi 9/17/2013: might crash ><
   // jichi 12/25/2013: Actually, __try cannot catch such kind of exception
   ITH_TRY {
     NtWriteVirtualMemory(GetCurrentProcess(), (LPVOID)hp.address, original, hp.recover_len, &l);
     NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
-  } ITH_EXCEPT {}
+  }
+  ITH_EXCEPT {}
   //});
-  hp.hook_len = 0;
-  ReleaseMutex(hmMutex);
-  ConsoleOutput("vnrcli:RemoveHook: leave");
   return yes;
+}
+
+int TextHook::RemoveReadCode()
+{
+	if (!hp.address) return no;
+	TerminateThread(hp.readerHandle, 0);
+	CloseHandle(hp.readerHandle);
+	return yes;
 }
 
 int TextHook::ClearHook()
 {
+  int err;
   WaitForSingleObject(hmMutex, 0);
-  int err = RemoveHookCode();
+  ConsoleOutput("vnrcli:RemoveHook: enter");
+  if (hp.type & DIRECT_READ) err = RemoveReadCode();
+  else err = RemoveHookCode();
   NotifyHookRemove(hp.address);
   if (hook_name) {
     delete[] hook_name;
@@ -499,6 +573,7 @@ int TextHook::ClearHook()
   //if (current_available>this)
   //  current_available = this;
   currentHook--;
+  ConsoleOutput("vnrcli:RemoveHook: leave");
   ReleaseMutex(hmMutex);
   return err;
 }

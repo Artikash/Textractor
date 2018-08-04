@@ -43,8 +43,10 @@ struct HookParam {
        recover_len; // ?
 
   // 7/20/2014: jichi additional parameters for PSP games
-  DWORD user_flags,
-        user_value;
+  DWORD user_value;
+
+  // Artikash 8/4/2018: handle for reader thread
+  HANDLE readerHandle;
 };
 
 // jichi 6/1/2014: Structure of the esp for extern functions

@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::map<int, QString> extensions = LoadExtensions();
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
 	Host::Open();
-	Host::AddConsoleOutput(L"NextHooker beta v2.0.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v2.1.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
@@ -95,7 +95,7 @@ void MainWindow::AddProcess(unsigned int processId)
 			for (int j = 1; j < hooks.length(); ++j)
 			{
 				Sleep(10);
-				Host::InsertHook(processId, ParseHCode(hooks.at(j)));
+				Host::InsertHook(processId, ParseCode(hooks.at(j)));
 			}
 			return;
 		}
@@ -112,7 +112,7 @@ void MainWindow::AddThread(TextThread* thread)
 		TextThreadString(thread) +
 		QString::fromWCharArray(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook).c_str()) +
 		" (" +
-		GenerateHCode(Host::GetHookParam(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook), thread->GetThreadParameter().pid) +
+		GenerateCode(Host::GetHookParam(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook), thread->GetThreadParameter().pid) +
 		")"
 	);
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
@@ -188,15 +188,15 @@ void MainWindow::on_detachButton_clicked()
 void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
-	QString hookCode = QInputDialog::getText(this, "Add Hook", HCodeInfoDump, QLineEdit::Normal, "/H", &ok);
+	QString hookCode = QInputDialog::getText(this, "Add Hook", CodeInfoDump, QLineEdit::Normal, "", &ok);
 	if (!ok) return;
-	HookParam toInsert = ParseHCode(hookCode);
+	HookParam toInsert = ParseCode(hookCode);
 	if (toInsert.type == 0 && toInsert.length_offset == 0)
 	{
-		Host::AddConsoleOutput(L"invalid /H code");
+		Host::AddConsoleOutput(L"invalid code");
 		return;
 	}
-	Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseHCode(hookCode));
+	Host::InsertHook(processCombo->currentText().split(":")[0].toInt(), ParseCode(hookCode));
 }
 
 void MainWindow::on_unhookButton_clicked()
@@ -206,7 +206,7 @@ void MainWindow::on_unhookButton_clicked()
 	for (auto i : hooks) hookList.push_back(
 				QString::fromWCharArray(Host::GetHookName(processCombo->currentText().split(":")[0].toInt(), i.address).c_str()) +
 				": " +
-				GenerateHCode(i, processCombo->currentText().split(":")[0].toInt())
+				GenerateCode(i, processCombo->currentText().split(":")[0].toInt())
 			);
 	bool ok;
 	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
@@ -219,7 +219,7 @@ void MainWindow::on_saveButton_clicked()
 	QString hookList = GetFullModuleName(processCombo->currentText().split(":")[0].toInt());;
 	for (auto i : hooks)
 		if (!(i.type & HOOK_ENGINE))
-			hookList += " , " + GenerateHCode(i, processCombo->currentText().split(":")[0].toInt());
+			hookList += " , " + GenerateCode(i, processCombo->currentText().split(":")[0].toInt());
 	QFile file("SavedHooks.txt");
 	if (!file.open(QIODevice::Append | QIODevice::Text)) return;
 	file.write((hookList + "\r\n").toUtf8());

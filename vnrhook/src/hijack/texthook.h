@@ -29,9 +29,11 @@ void InitFilterTable();
 class TextHook : public Hook
 {
   int InsertHookCode();
+  int InsertReadCode();
   int UnsafeInsertHookCode();
   DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);
   int RemoveHookCode();
+  int RemoveReadCode();
   int SetHookName(LPCSTR name);
 public:
   int InsertHook();
@@ -70,5 +72,7 @@ DWORD WINAPI PipeManager(LPVOID unused);
 // jichi 9/28/2013: Protect pipeline in wine
 void CliLockPipe();
 void CliUnlockPipe();
+
+enum : int { yes = 0, no = 1 };
 
 // EOF
