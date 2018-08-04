@@ -103,6 +103,7 @@ enum HookParamType : unsigned long {
   , NO_CONTEXT        = 0x400
   , HOOK_EMPTY        = 0x800
   , FIXING_SPLIT      = 0x1000
+  , DIRECT_READ       = 0x2000 // /R read code instead of classic /H hook code
   //, HOOK_AUXILIARY    = 0x2000  // jichi 12/13/2013: None of known hooks are auxiliary
   //, RELATIVE_SPLIT    = 0x2000 // Artikash 8/3/2018: does nothing
   , HOOK_ENGINE       = 0x4000

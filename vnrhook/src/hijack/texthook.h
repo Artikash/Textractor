@@ -28,16 +28,16 @@ void InitFilterTable();
 // interprocedure communication, where constructor/destructor will NOT work.
 class TextHook : public Hook
 {
+  int InsertHookCode();
   int UnsafeInsertHookCode();
   DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);
-  int RemoveHook();
+  int RemoveHookCode();
+  int SetHookName(LPCSTR name);
 public:
   int InsertHook();
-  int InsertHookCode();
   int InitHook(const HookParam &hp, LPCSTR name = 0, WORD set_flag = 0);
   DWORD Send(DWORD dwDataBase, DWORD dwRetn);
   int ClearHook();
-  int SetHookName(LPCSTR name);
   int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 };
 

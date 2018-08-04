@@ -465,7 +465,7 @@ int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
   return 1;
 }
 
-int TextHook::RemoveHook()
+int TextHook::RemoveHookCode()
 {
   enum : int { yes = 1, no = 0 };
   if (!hp.address)
@@ -489,7 +489,7 @@ int TextHook::RemoveHook()
 int TextHook::ClearHook()
 {
   WaitForSingleObject(hmMutex, 0);
-  int err = RemoveHook();
+  int err = RemoveHookCode();
   NotifyHookRemove(hp.address);
   if (hook_name) {
     delete[] hook_name;

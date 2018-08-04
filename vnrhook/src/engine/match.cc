@@ -59,7 +59,7 @@ bool DeterminePCEngine()
   }
 
   if (Util::CheckFile(L"PPSSPP*.exe")) { // jichi 7/12/2014 PPSSPPWindows.exe, PPSSPPEX.exe PPSSPPSP.exe
-    InsertPPSSPPHooks();
+    //InsertPPSSPPHooks(); // Artikash 8/4/2018: removed for now as doesn't work for non ancient ppsspp versions
     return true;
   }
 
