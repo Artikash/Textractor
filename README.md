@@ -4,7 +4,7 @@
 
 ## Overview
 
-*NextHooker* is an open-source x86~~ text hooker for Windows.
+*NextHooker* is an open-source x86/x64 text hooker for Windows.
 
 Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s ITHVNR.
 
@@ -25,9 +25,11 @@ Previous releases of *ITHVNR* can be found [here](https://github.com/mireado/ITH
 ## Features
 
 - Open-source
+- x64 supported
 - Hook text (most AGTH hook codes supported)
+- Directly read text ([Guide](https://www.youtube.com/watch?v=AcEgjCoww5w))
 - Auto hook many engines (including some not supported by VNR!)
-- Extensions (New!)
+- Extensions
 
 ## License
 
