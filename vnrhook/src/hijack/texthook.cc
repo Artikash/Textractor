@@ -340,7 +340,7 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 {
 	TextHook* hook = (TextHook*)threadParam;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
-	char testChar;
+	char testChar = 0;
 	unsigned int changeCount = 0;
 	const char* currentAddress = (char*)hook->hp.address;
 	while (true)

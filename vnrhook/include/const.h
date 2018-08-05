@@ -1,4 +1,5 @@
 #pragma once
+#include "types.h"
 
 // vnrhook/const.h
 // 8/23/2013 jichi
@@ -50,7 +51,7 @@ enum { MAX_HOOK = 64 }; // must be larger than HOOK_FUN_COUNT
 //enum { HOOK_SECTION_SIZE = 0x2000 }; // default ITH value
 // jichi 1/16/2015: Change to a very large number to prevent crash
 //enum { MAX_HOOK = 0x100 }; // must be larger than HookFunCount
-enum { HOOK_SECTION_SIZE = MAX_HOOK * 0x100 }; // default ITH value is 0x2000 for 32 hook (0x100 per hook)
+enum { HOOK_SECTION_SIZE = MAX_HOOK * sizeof(Hook) * 2 }; // default ITH value is 0x2000 for 32 hook (0x100 per hook)
 
 // jichi 375/2014: Add offset of pusha/pushad
 // http://faydoc.tripod.com/cpu/pushad.htm

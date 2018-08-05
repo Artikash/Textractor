@@ -27,10 +27,10 @@
       "name": "x64-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x86_x64" ],
+      "inheritEnvironments": [ "msvc_x64" ],
       "buildRoot": "${workspaceRoot}\\Builds\\${name}",
       "installRoot": "${workspaceRoot}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-Dx64=1",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     },
@@ -38,10 +38,10 @@
       "name": "x64-Release",
       "generator": "Ninja",
       "configurationType": "Release",
-      "inheritEnvironments": [ "msvc_x86_x64" ],
+      "inheritEnvironments": [ "msvc_x64" ],
       "buildRoot": "${workspaceRoot}\\Builds\\${name}",
       "installRoot": "${workspaceRoot}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
+      "cmakeCommandArgs": "-Dx64=1",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     }
