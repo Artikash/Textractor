@@ -16,13 +16,26 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="font">
-   <font>
-    <pointsize>10</pointsize>
-   </font>
-  </property>
   <property name="windowTitle">
    <string>NextHooker</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QObject
+{
+	font: 11pt &quot;MS Shell Dlg 2&quot;;
+}
+#textOutput
+{
+	font: 14pt &quot;MS Shell Dlg 2&quot;;
+}
+QPushButton, QComboBox
+{
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-right: 10px;
+	padding-left: 10px;
+	text-align: left;
+}</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -42,7 +55,7 @@
      <widget class="QFrame" name="options">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>2</horstretch>
+        <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -98,7 +111,7 @@
           <item>
            <widget class="QComboBox" name="processCombo">
             <property name="editable">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="insertPolicy">
              <enum>QComboBox::InsertAtBottom</enum>
@@ -186,7 +199,7 @@
           <item>
            <widget class="QComboBox" name="extenCombo">
             <property name="editable">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -240,7 +253,7 @@
        <item>
         <widget class="QComboBox" name="ttCombo">
          <property name="editable">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="maxVisibleItems">
           <number>50</number>
@@ -254,11 +267,6 @@
            <horstretch>5</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-          </font>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -276,7 +284,7 @@
      <x>0</x>
      <y>0</y>
      <width>949</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>

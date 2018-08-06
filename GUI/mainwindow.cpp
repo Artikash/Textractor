@@ -52,14 +52,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	mainWindow = this;
 	processCombo = mainWindow->findChild<QComboBox*>("processCombo");
-	processCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
-	processCombo->lineEdit()->setReadOnly(true);
 	ttCombo = mainWindow->findChild<QComboBox*>("ttCombo");
-	ttCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
-	ttCombo->lineEdit()->setReadOnly(true);
 	extenCombo = mainWindow->findChild<QComboBox*>("extenCombo");
-	extenCombo->lineEdit()->setAlignment(Qt::AlignHCenter);
-	extenCombo->lineEdit()->setReadOnly(true);
 	textOutput = mainWindow->findChild<QPlainTextEdit*>("textOutput");
 
 	hostSignaller->Initialize();
@@ -69,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(hostSignaller, &HostSignaller::RemoveThread, this, &MainWindow::RemoveThread);
 	connect(this, &MainWindow::ThreadOutputReceived, this, &MainWindow::ThreadOutput);
 	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
 	Host::Open();
 	Host::AddConsoleOutput(L"NextHooker beta v2.1.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
@@ -243,7 +237,7 @@ void MainWindow::on_addExtenButton_clicked()
 	QFile::copy(extenFileName, copyTo);
 	extenCombo->clear();
 	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
 }
 
 void MainWindow::on_rmvExtenButton_clicked()
@@ -254,5 +248,5 @@ void MainWindow::on_rmvExtenButton_clicked()
 	DeleteFileW(extenFileName.toStdWString().c_str());
 	extenCombo->clear();
 	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ":" + i.second);
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
 }
