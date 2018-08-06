@@ -32,8 +32,8 @@ QPushButton, QComboBox
 {
 	padding-top: 2px;
 	padding-bottom: 2px;
-	padding-right: 10px;
-	padding-left: 10px;
+	padding-right: 6px;
+	padding-left: 6px;
 	text-align: left;
 }</string>
   </property>
@@ -115,6 +115,9 @@ QPushButton, QComboBox
             </property>
             <property name="insertPolicy">
              <enum>QComboBox::InsertAtBottom</enum>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
             </property>
            </widget>
           </item>
@@ -200,6 +203,9 @@ QPushButton, QComboBox
            <widget class="QComboBox" name="extenCombo">
             <property name="editable">
              <bool>false</bool>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
             </property>
            </widget>
           </item>
