@@ -42,7 +42,7 @@ The text that vnrhost receives through the pipe is then processed a little befor
 
 ## Contributing
 
-All contributions are appreciated! Please email (akashmozumdar@gmail.com) me if you have any questions about the codebase, I know it's messy and undercommented. And no, I'm not busy!<br>
+All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase; I know it's messy and undercommented.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).
 
 ## License
