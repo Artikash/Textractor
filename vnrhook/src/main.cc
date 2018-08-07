@@ -76,19 +76,16 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
       // jichi 9/25/2013: Interprocedural communication with vnrsrv.
 	  hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, hm_section);
-	  ::hookman = nullptr;
-	  NtMapViewOfSection(hSection, NtCurrentProcess(),
-		  (LPVOID *)&::hookman, 0, hook_buff_len, 0, &hook_buff_len, ViewUnmap, 0,
-		  PAGE_EXECUTE_READWRITE);
-	  // Artikash 6/20/2018: This crashes certain games (https://vndb.org/v7738). No idea why.
-      //::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, HOOK_SECTION_SIZE / 2);
+      ::hookman = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE, 0, 0, HOOK_BUFFER_SIZE);
 
-	  ::processStartAddress = (DWORD)GetModuleHandleW(nullptr);
+	  ::processStartAddress = ::processStopAddress = (DWORD)GetModuleHandleW(nullptr);
 
-	  // Artikash 7/1/2018: No idea how the everliving fuck this works, but it finds the process stop address.
-	  PROCESS_BASIC_INFORMATION info;
-	  NtQueryInformationProcess(GetCurrentProcess(), ProcessBasicInformation, &info, sizeof(PROCESS_BASIC_INFORMATION), 0);
-	  ::processStopAddress = ::processStartAddress + ((LDR_DATA_TABLE_ENTRY*)&info.PebBaseAddress->Ldr->InLoadOrderModuleList.Flink->Flink)->SizeOfImage;
+	  MEMORY_BASIC_INFORMATION info;
+	  do
+	  {
+		  VirtualQuery((void*)::processStopAddress, &info, sizeof(info));
+		  ::processStopAddress = (DWORD)info.BaseAddress + info.RegionSize;
+	  } while (info.Protect);
 
       {
         wchar_t hm_mutex[0x100];

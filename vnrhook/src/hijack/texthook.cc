@@ -436,11 +436,10 @@ int TextHook::UnsafeInsertHookCode()
   }
 
   // Verify hp.address.
-  MEMORY_BASIC_INFORMATION info = {};
-  NtQueryVirtualMemory(GetCurrentProcess(), (LPVOID)hp.address, MemoryBasicInformation, &info, sizeof(info), nullptr);
-  if (info.Type & PAGE_NOACCESS) {
-    ConsoleOutput("vnrcli:UnsafeInsertHookCode: FAILED: page no access");
-    return no;
+  if (!IthGetMemoryRange((LPCVOID)hp.address, nullptr, nullptr))
+  {
+	  ConsoleOutput("NextHooker: FAILED: cannot access requested memory");
+	  return no;
   }
 
   memcpy(recover, common_hook, sizeof(common_hook));
@@ -453,7 +452,7 @@ int TextHook::UnsafeInsertHookCode()
   BYTE inst[] = // jichi 9/27/2013: Why 8? Only 5 bytes will be written using NtWriteVirtualMemory
   { 
 	  0xe9, 0, 0, 0, 0, // jmp recover 
-	  0, 0, 0 // ???
+	  0xcc, 0xcc, 0xcc // int3
   };
   void* relRecover = (void*)(recover - (BYTE*)hp.address - 5);
   memcpy(inst + 1, &relRecover, sizeof(void*));
@@ -495,24 +494,13 @@ int TextHook::UnsafeInsertHookCode()
       }
     }
   }
-  // Insert hook and flush instruction cache.
-  enum {c8 = 0xcccccccc};
-  DWORD int3[] = {c8, c8};
-  DWORD t = 0x100,
-      old,
-      len;
-  // jichi 9/27/2013: Overwrite the memory with inst
-  // See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Memory%20Management/Virtual%20Memory/NtProtectVirtualMemory.html
-  // See: http://doxygen.reactos.org/d8/d6b/ndk_2mmfuncs_8h_af942709e0c57981d84586e74621912cd.html
-  DWORD addr = hp.address;
-  NtProtectVirtualMemory(GetCurrentProcess(), (PVOID *)&addr, &t, PAGE_EXECUTE_READWRITE, &old);
-  NtWriteVirtualMemory(GetCurrentProcess(), (BYTE *)hp.address, inst, 5, &t);
-  len = hp.recover_len - 5;
-  if (len)
-    NtWriteVirtualMemory(GetCurrentProcess(), (BYTE *)hp.address + 5, int3, len, &t);
-  NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
-  NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)::hookman, 0x1000);
-  //ConsoleOutput("vnrcli:UnsafeInsertHookCode: leave: succeed");
+  
+  DWORD old;
+  LPVOID addr = (void*)hp.address;
+  VirtualProtect(addr, sizeof(inst), PAGE_EXECUTE_READWRITE, &old);
+  memcpy(addr, inst, hp.recover_len);
+  FlushInstructionCache(GetCurrentProcess(), addr, hp.recover_len);
+
   return 0;
 }
 
@@ -538,14 +526,9 @@ int TextHook::RemoveHookCode()
     return no;
   
   DWORD l = hp.hook_len;
-  //with_seh({ // jichi 9/17/2013: might crash ><
-  // jichi 12/25/2013: Actually, __try cannot catch such kind of exception
-  ITH_TRY {
-    NtWriteVirtualMemory(GetCurrentProcess(), (LPVOID)hp.address, original, hp.recover_len, &l);
-    NtFlushInstructionCache(GetCurrentProcess(), (LPVOID)hp.address, hp.recover_len);
-  }
-  ITH_EXCEPT {}
-  //});
+
+  memcpy((void*)hp.address, original, hp.recover_len);
+  FlushInstructionCache(GetCurrentProcess(), (void*)hp.address, hp.recover_len);
   return yes;
 }
 
