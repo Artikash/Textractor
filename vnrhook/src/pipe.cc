@@ -49,7 +49,11 @@ DWORD WINAPI PipeManager(LPVOID unused)
 		CloseHandle(pipeAcquisitionMutex);
 
 		ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
+#ifdef _WIN64
+		ConsoleOutput("Hooks don't work on x64, only read codes work. Engine disabled.");
+#else
 		Engine::Hijack();
+#endif
 
 		while (::running)
 		{

@@ -7,7 +7,8 @@
 #ifdef _MSC_VER
 # pragma warning(disable:4800) // C4800: forcing value to bool
 #endif // _MSC_VER
-#include "ntdll/ntdll.h"
+//#include "ntdll/ntdll.h"
+#include <Windows.h>
 
 // jichi 8/24/2013: Why extern "C"? Any specific reason to use C instead of C++ naming?
 extern "C" {

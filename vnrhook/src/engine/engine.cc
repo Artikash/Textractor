@@ -8,6 +8,7 @@
 #endif // _MSC_VER
 
 #include "src/engine/engine.h"
+#include "ntdll/ntdll.h"
 #include "src/engine/match.h"
 #include "src/engine/hookdefs.h"
 #include "src/util/util.h"

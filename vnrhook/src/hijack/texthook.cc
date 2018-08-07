@@ -42,6 +42,7 @@ TextHook *hookman,
 
 // - Unnamed helpers -
 
+#ifndef _WIN64
 namespace { // unnamed
 //provide const time hook entry.
 int userhook_count;
@@ -204,9 +205,25 @@ int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to en
 }
 
 } // unnamed namespace
+#endif // _WIN32
 
 // - TextHook methods -
 
+int TextHook::InsertHook()
+{
+  int ok = 1;
+  //ConsoleOutput("vnrcli:InsertHook: enter");
+  WaitForSingleObject(hmMutex, 0);
+  if (hp.type & DIRECT_READ) ok = InsertReadCode();
+#ifndef _WIN64
+  else ok = InsertHookCode();
+#endif
+  ReleaseMutex(hmMutex);
+  //ConsoleOutput("vnrcli:InsertHook: leave");
+  return ok;
+}
+
+#ifndef _WIN64
 // jichi 12/2/2013: This function mostly return 0.
 // It return the hook address only for auxiliary case.
 // However, because no known hooks are auxiliary, this function always return 0.
@@ -314,18 +331,6 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 
 }
 
-int TextHook::InsertHook()
-{
-  int ok = 1;
-  //ConsoleOutput("vnrcli:InsertHook: enter");
-  WaitForSingleObject(hmMutex, 0);
-  if (hp.type & DIRECT_READ) ok = InsertReadCode();
-  else ok = InsertHookCode();
-  ReleaseMutex(hmMutex);
-  //ConsoleOutput("vnrcli:InsertHook: leave");
-  return ok;
-}
-
 int TextHook::InsertHookCode()
 {
   DWORD ret = no;
@@ -336,72 +341,6 @@ int TextHook::InsertHookCode()
   return ret;
 }
 
-DWORD WINAPI ReaderThread(LPVOID threadParam)
-{
-	TextHook* hook = (TextHook*)threadParam;
-	BYTE buffer[PIPE_BUFFER_SIZE] = {};
-	char testChar = 0;
-	unsigned int changeCount = 0;
-	const char* currentAddress = (char*)hook->hp.address;
-	while (true)
-	{
-		Sleep(50);
-		if (testChar == *currentAddress)
-		{
-			changeCount = 0;
-			continue;
-		}
-		testChar = *currentAddress;
-		if (++changeCount > 10)
-		{
-			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
-			ConsoleOutput("NextHooker: remove read code");
-			break;
-		}
-
-		int dataLen;
-		if (hook->hp.type & USING_UNICODE)
-			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
-		else
-			dataLen = strlen(currentAddress);
-
-		*(DWORD*)buffer = hook->hp.address;
-		*(DWORD*)(buffer + 4) = 0;
-		*(DWORD*)(buffer + 8) = 0;
-		memcpy(buffer + HEADER_SIZE, currentAddress, dataLen);
-		DWORD unused;
-		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
-
-		if (hook->hp.offset == 0) continue;
-		currentAddress += dataLen + hook->hp.offset;
-		testChar = *currentAddress;
-	}
-	hook->ClearHook();
-	return 0;
-}
-
-int TextHook::InsertReadCode()
-{
-	hp.hook_len = 0x40;
-	//Check if the new hook range conflict with existing ones. Clear older if conflict.
-	TextHook *it = hookman;
-	for (int i = 0; i < currentHook; it++) {
-		if (it->Address())
-			i++;
-		if (it == this)
-			continue;
-		if ((it->Address() >= hp.address && it->Address() < hp.hook_len + hp.address) || (it->Address() <= hp.address && it->Address() + it->Length() > hp.address)) 
-			it->ClearHook();
-	}
-	if (!IthGetMemoryRange((LPCVOID)hp.address, 0, 0))
-	{
-		ConsoleOutput("cannot access read address");
-		return no;
-	}
-	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
-	return yes;
-	
-}
 
 int TextHook::UnsafeInsertHookCode()
 {
@@ -502,6 +441,74 @@ int TextHook::UnsafeInsertHookCode()
   FlushInstructionCache(GetCurrentProcess(), addr, hp.recover_len);
 
   return 0;
+}
+#endif // _WIN32
+
+DWORD WINAPI ReaderThread(LPVOID threadParam)
+{
+	TextHook* hook = (TextHook*)threadParam;
+	BYTE buffer[PIPE_BUFFER_SIZE] = {};
+	char testChar = 0;
+	unsigned int changeCount = 0;
+	const char* currentAddress = (char*)hook->hp.address;
+	while (true)
+	{
+		Sleep(1000);
+		if (testChar == *currentAddress)
+		{
+			changeCount = 0;
+			continue;
+		}
+		testChar = *currentAddress;
+		if (++changeCount > 10)
+		{
+			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
+			ConsoleOutput("NextHooker: remove read code");
+			break;
+		}
+
+		int dataLen;
+		if (hook->hp.type & USING_UNICODE)
+			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
+		else
+			dataLen = strlen(currentAddress);
+
+		*(DWORD*)buffer = hook->hp.address;
+		*(DWORD*)(buffer + 4) = 0;
+		*(DWORD*)(buffer + 8) = 0;
+		memcpy(buffer + HEADER_SIZE, currentAddress, dataLen);
+		DWORD unused;
+		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
+
+		if (hook->hp.offset == 0) continue;
+		currentAddress += dataLen + hook->hp.offset;
+		testChar = *currentAddress;
+	}
+	hook->ClearHook();
+	return 0;
+}
+
+int TextHook::InsertReadCode()
+{
+	hp.hook_len = 0x40;
+	//Check if the new hook range conflict with existing ones. Clear older if conflict.
+	TextHook *it = hookman;
+	for (int i = 0; i < currentHook; it++) {
+		if (it->Address())
+			i++;
+		if (it == this)
+			continue;
+		if ((it->Address() >= hp.address && it->Address() < hp.hook_len + hp.address) || (it->Address() <= hp.address && it->Address() + it->Length() > hp.address)) 
+			it->ClearHook();
+	}
+	if (!IthGetMemoryRange((LPCVOID)hp.address, 0, 0))
+	{
+		ConsoleOutput("cannot access read address");
+		return no;
+	}
+	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
+	return yes;
+	
 }
 
 int TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)

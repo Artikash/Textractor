@@ -2,6 +2,18 @@ project(vnrhook)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+if (${x64})
+set(vnrhook_src
+ include/const.h
+  include/defs.h
+  include/types.h
+  src/main.cc
+  src/main.h
+  src/pipe.cc
+  src/util/ithsys/ithsys.cc
+  src/hijack/texthook.cc
+)
+else(${x64})
 set(vnrhook_src
   include/const.h
   include/defs.h
@@ -33,6 +45,7 @@ set(vnrhook_src
   src/util/mono/monoobject.h
   src/util/mono/monotype.h
 )
+endif(${x64})
 
 include_directories(src/util)
 

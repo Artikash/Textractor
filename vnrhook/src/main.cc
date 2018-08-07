@@ -80,12 +80,14 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 
 	  ::processStartAddress = ::processStopAddress = (DWORD)GetModuleHandleW(nullptr);
 
+#ifndef _WIN64
 	  MEMORY_BASIC_INFORMATION info;
 	  do
 	  {
 		  VirtualQuery((void*)::processStopAddress, &info, sizeof(info));
 		  ::processStopAddress = (DWORD)info.BaseAddress + info.RegionSize;
 	  } while (info.Protect);
+#endif
 
       {
         wchar_t hm_mutex[0x100];
