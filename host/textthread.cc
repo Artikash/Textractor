@@ -72,7 +72,6 @@ void TextThread::AddSentence()
 void TextThread::AddSentence(std::wstring sentence)
 {
 	TT_LOCK;
-	sentence.append(L"\r\n");
 	if (output) sentence = output(this, sentence);
 	storage.append(sentence);
 }

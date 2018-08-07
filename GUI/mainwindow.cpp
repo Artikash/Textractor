@@ -112,6 +112,7 @@ void MainWindow::AddThread(TextThread* thread)
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
 	{
 		output = DispatchSentenceToExtensions(output, GetInfoForExtensions(thread));
+		output += L"\r\n";
 		emit ThreadOutputReceived(thread, QString::fromWCharArray(output.c_str()));
 		return output;
 	});
