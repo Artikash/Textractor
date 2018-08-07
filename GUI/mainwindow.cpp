@@ -243,7 +243,7 @@ void MainWindow::on_addExtenButton_clicked()
 void MainWindow::on_rmvExtenButton_clicked()
 {
 	if (extenCombo->currentText().size() == 0) return;
-	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(":")[1] + "_nexthooker_extension.dll";
+	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + "_nexthooker_extension.dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
 	DeleteFileW(extenFileName.toStdWString().c_str());
 	extenCombo->clear();
