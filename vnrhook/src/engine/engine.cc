@@ -5746,7 +5746,7 @@ void SpecialHookShina1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *
 int GetShinaRioVersion()
 {
   int ret = 0;
-  HANDLE hFile = CreateFileW(L"RIO.INI", FILE_READ_DATA, FILE_SHARE_READ, nullptr, FILE_OPEN, FILE_ATTRIBUTE_NORMAL, nullptr);
+  HANDLE hFile = CreateFileW(L"RIO.INI", FILE_READ_DATA, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (hFile == INVALID_HANDLE_VALUE)  {
     size_t len = ::wcslen(processName);
     if (len > 3) {
@@ -16433,6 +16433,25 @@ bool InsertAdobeFlash10Hook()
   ConsoleOutput("vnreng:AdobeFlash10: disable GDI hooks");
   DisableGDIHooks();
   return true;
+}
+
+bool InsertRenpyHook()
+{
+	HookParam hp = {};
+	hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"python27"), "PyUnicodeUCS2_Format");
+	if (!hp.address)
+	{
+		ConsoleOutput("NextHooker: Ren'py failed: failed to find python27.dll or PyUnicodeUCS2_Format");
+		return false;
+	}
+	hp.offset = pusha_eax_off - 4;
+	hp.index = 0xc;
+	hp.length_offset = 0;
+	hp.split = pusha_ebx_off - 4;
+	hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
+	//hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
+	NewHook(hp, "Ren'py");
+	return true;
 }
 
 /** jichi 12/26/2014 Mono

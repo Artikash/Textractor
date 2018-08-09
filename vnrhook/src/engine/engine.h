@@ -132,6 +132,7 @@ bool InsertQLIEHook();          // QLiE: GameData/*.pack
 //bool InsertRai7Hook();          // Rai7puk: rai7.exe
 bool InsertRejetHook();         // Rejet: Module/{gd.dat,pf.dat,sd.dat}
 bool InsertRUGPHook();          // rUGP: rUGP.exe
+bool InsertRenpyHook();         // Ren'py: python27.dll
 bool InsertRetouchHook();       // Retouch: resident.dll
 bool InsertRREHook();           // RunrunEngine: rrecfg.rcf
 bool InsertShinaHook();         // ShinaRio: Rio.ini
