@@ -12,24 +12,24 @@
 
 class MutexLocker
 {
-	HANDLE m;
+	HANDLE mutex;
 public:
-	explicit MutexLocker(HANDLE mutex) : m(mutex)
+	explicit MutexLocker(HANDLE mutex) : mutex(mutex)
 	{
-		WaitForSingleObject(m, 0);
+		WaitForSingleObject(mutex, 0);
 	}
-	~MutexLocker() { if (m != INVALID_HANDLE_VALUE && m != nullptr) ReleaseMutex(m); }
+	~MutexLocker() { if (mutex != INVALID_HANDLE_VALUE && mutex != nullptr) ReleaseMutex(mutex); }
 };
 
 class CriticalSectionLocker
 {
-	CRITICAL_SECTION cs;
+	CRITICAL_SECTION* cs;
 public:
-	explicit CriticalSectionLocker(CRITICAL_SECTION cs) : cs(cs)
+	explicit CriticalSectionLocker(CRITICAL_SECTION* cs) : cs(cs)
 	{
-		EnterCriticalSection(&cs);
+		EnterCriticalSection(cs);
 	}
-	~CriticalSectionLocker() { LeaveCriticalSection(&cs); }
+	~CriticalSectionLocker() { LeaveCriticalSection(cs); }
 };
 
 // EOF

@@ -11,7 +11,7 @@
 
 extern HWND dummyWindow;
 
-#define TT_LOCK CriticalSectionLocker ttLocker(ttCs) // Synchronized scope for accessing private data
+#define TT_LOCK CriticalSectionLocker ttLocker(&ttCs) // Synchronized scope for accessing private data
 
 TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, DWORD status) :
 	storage(),

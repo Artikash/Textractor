@@ -24,7 +24,7 @@ ProcessEventCallback onAttach, onDetach;
 WORD nextThreadNumber;
 HWND dummyWindow;
 
-#define HOST_LOCK CriticalSectionLocker hostLocker(hostCs) // Synchronized scope for accessing private data
+#define HOST_LOCK CriticalSectionLocker hostLocker(&hostCs) // Synchronized scope for accessing private data
 
 void GetDebugPrivileges() // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
 {
