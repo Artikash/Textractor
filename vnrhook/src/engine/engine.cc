@@ -16440,7 +16440,8 @@ bool InsertAdobeFlash10Hook()
 *  Sample games: https://vndb.org/v19843 https://vndb.org/v12038 and many more OELVNs
 *
 *  Uses CPython, and links to python27.dll. PyUicodeUCS2_Format is the function used to process text.
-*  seems to use __thiscall convention, so ecx points to string class. offset 0xc from that is a wchar_t* to the actual string
+*  eax points to string class. offset 0xc from that is a wchar_t* to the actual string
+*  ebx seems to work well as the split param, not sure why
 */
 bool InsertRenpyHook()
 {
@@ -16451,7 +16452,7 @@ bool InsertRenpyHook()
 		ConsoleOutput("NextHooker: Ren'py failed: failed to find python27.dll or PyUnicodeUCS2_Format");
 		return false;
 	}
-	hp.offset = pusha_ecx_off - 4;
+	hp.offset = pusha_eax_off - 4;
 	hp.index = 0xc;
 	hp.length_offset = 0;
 	hp.split = pusha_ebx_off - 4;
