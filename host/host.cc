@@ -13,15 +13,15 @@
 
 HANDLE preventDuplicationMutex;
 
-std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
-std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
+std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams(10);
+std::unordered_map<DWORD, ProcessRecord> processRecordsByIds(2);
 
 CRITICAL_SECTION hostCs;
 
-ThreadEventCallback onCreate, onRemove;
-ProcessEventCallback onAttach, onDetach;
+ThreadEventCallback onCreate(nullptr), onRemove(nullptr);
+ProcessEventCallback onAttach(nullptr), onDetach(nullptr);
 
-WORD nextThreadNumber;
+WORD nextThreadNumber(0);
 HWND dummyWindow;
 
 #define HOST_LOCK CriticalSectionLocker hostLocker(&hostCs) // Synchronized scope for accessing private data
@@ -45,20 +45,8 @@ namespace Host
 {
 	DLLEXPORT bool Start()
 	{
-		preventDuplicationMutex = CreateMutexW(nullptr, TRUE, ITH_SERVER_MUTEX);
-		if (GetLastError() == ERROR_ALREADY_EXISTS)
-		{
-			MessageBoxW(nullptr, L"I am sorry that this game is attached by some other VNR ><\nPlease restart the game and try again!", L"Error", MB_ICONERROR);
-			return false;
-		}
-		else
-		{
-			InitializeCriticalSection(&hostCs);
-			onAttach = onDetach = nullptr;
-			onCreate = onRemove = nullptr;
-			nextThreadNumber = 0;
-			return true;
-		}
+		InitializeCriticalSection(&hostCs);
+		return true;
 	}
 
 	DLLEXPORT void Open()
