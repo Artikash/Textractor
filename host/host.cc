@@ -26,15 +26,6 @@ HWND dummyWindow;
 
 #define HOST_LOCK CriticalSectionLocker hostLocker(&hostCs) // Synchronized scope for accessing private data
 
-void GetDebugPrivileges() // Artikash 5/19/2018: Is it just me or is this function 100% superfluous?
-{
-	HANDLE processToken;
-	TOKEN_PRIVILEGES Privileges = { 1, {0x14, 0, SE_PRIVILEGE_ENABLED} };
-	OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &processToken);
-	AdjustTokenPrivileges(processToken, FALSE, &Privileges, 0, nullptr, nullptr);
-	CloseHandle(processToken);
-}
-
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
 {
 	switch (fdwReason)
@@ -62,7 +53,6 @@ namespace Host
 		}
 		else
 		{
-			GetDebugPrivileges();
 			InitializeCriticalSection(&hostCs);
 			onAttach = onDetach = nullptr;
 			onCreate = onRemove = nullptr;
