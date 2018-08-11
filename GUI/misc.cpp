@@ -66,7 +66,7 @@ HookParam ParseRCode(QString RCode)
 	RCode.remove(0, 1);
 	QRegExp address("[\\dA-F]+$");
 	if (address.indexIn(RCode) == -1) return {};
-	hp.address = address.cap(0).toInt(nullptr, 16);
+	hp.address = address.cap(0).toULongLong(nullptr, 16);
 	return hp;
 }
 

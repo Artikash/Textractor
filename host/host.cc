@@ -157,7 +157,7 @@ namespace Host
 		MutexLocker locker(pr.hookman_mutex);
 		const Hook* hooks = (const Hook*)pr.hookman_map;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].Address() == addr)
+			if ((DWORD)hooks[i].Address() == addr)
 				ret = hooks[i].hp;
 		return ret;
 	}
@@ -172,7 +172,7 @@ namespace Host
 		MutexLocker locker(pr.hookman_mutex);
 		const Hook* hooks = (const Hook*)pr.hookman_map;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].Address() == addr)
+			if ((DWORD)hooks[i].Address() == addr)
 			{
 				buffer.resize(hooks[i].NameLength());
 				ReadProcessMemory(pr.process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
