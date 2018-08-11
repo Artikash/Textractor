@@ -51,7 +51,7 @@ GPL v3
 
 ## Developers
 
-- Copyright (C) 2010-2012  [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
+- ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
 - VNR engine making by [jichi](https://archive.is/prJwr)
 - ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
