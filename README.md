@@ -17,7 +17,7 @@ Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVN
 ## Features
 
 - Open-source
-- x64 supported
+- x64 supported (x64 version only works with x64 programs)
 - Hook text (most AGTH hook codes supported)
 - Directly read text ([Guide](https://www.youtube.com/watch?v=AcEgjCoww5w))
 - Auto hook many engines (including some not supported by VNR!)
