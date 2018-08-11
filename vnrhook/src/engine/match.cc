@@ -721,7 +721,7 @@ bool DetermineNoEngine()
   }
 
   // jichi 2/14/2015: Guilty+ ＲＩＮ×ＳＥＮ (PK)
-  if (Util::CheckFile(L"rio.ini") || Util::CheckFile(L"*.war")) {
+  if (/*Util::CheckFile(L"rio.ini") || */Util::CheckFile(L"*.war")) {
     ConsoleOutput("vnreng: IGNORE unknown ShinaRio");
     return true;
   }
