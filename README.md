@@ -17,7 +17,7 @@ Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVN
 ## Features
 
 - Open-source
-- x64 supported
+- x64 supported (x64 version only works with x64 programs)
 - Hook text (most AGTH hook codes supported)
 - Directly read text ([Guide](https://www.youtube.com/watch?v=AcEgjCoww5w))
 - Auto hook many engines (including some not supported by VNR!)
@@ -51,7 +51,7 @@ GPL v3
 
 ## Developers
 
-- Copyright (C) 2010-2012  [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
+- ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
 - VNR engine making by [jichi](https://archive.is/prJwr)
 - ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
