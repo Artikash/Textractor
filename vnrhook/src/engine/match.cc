@@ -100,7 +100,7 @@ bool DetermineEngineByFile1()
   }
 
   // Artikash 8/9/2018: Renpy - sample game https://vndb.org/v19843
-  if (GetModuleHandleW(L"python27"))
+  if (Util::CheckFile(L"*.py"))
   {
 	  InsertRenpyHook();
 	  return true;
@@ -164,7 +164,7 @@ bool DetermineEngineByFile1()
   }
   // jichi 10/12/2013: Restore wolf engine
   // jichi 10/18/2013: Check for data/*.wolf
-  if (Util::CheckFile(L"data.wolf") || Util::CheckFile(L"data\\*.wolf")) {
+  if (Util::CheckFile(L"data.wolf") || Util::CheckFile(L"data\\*.wolf") || Util::CheckFile(L"data\\basicdata\\cdatabase.dat")) {
     InsertWolfHook();
     return true;
   }
