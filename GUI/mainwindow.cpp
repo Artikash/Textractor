@@ -62,8 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(hostSignaller, &HostSignaller::AddThread, this, &MainWindow::AddThread);
 	connect(hostSignaller, &HostSignaller::RemoveThread, this, &MainWindow::RemoveThread);
 	connect(this, &MainWindow::ThreadOutputReceived, this, &MainWindow::ThreadOutput);
-	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
+	ReloadExtensions();
 	Host::Open();
 	Host::AddConsoleOutput(L"NextHooker beta v2.1.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
@@ -137,6 +136,13 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 		textOutput->insertPlainText(output);
 		textOutput->moveCursor(QTextCursor::End);
 	}
+}
+
+void MainWindow::ReloadExtensions()
+{
+	extenCombo->clear();
+	std::map<int, QString> extensions = LoadExtensions();
+	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
 }
 
 std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread* thread)
@@ -236,9 +242,7 @@ void MainWindow::on_addExtenButton_clicked()
 			extenName +
 			"_nexthooker_extension.dll";
 	QFile::copy(extenFileName, copyTo);
-	extenCombo->clear();
-	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
+	ReloadExtensions();
 }
 
 void MainWindow::on_rmvExtenButton_clicked()
@@ -247,7 +251,5 @@ void MainWindow::on_rmvExtenButton_clicked()
 	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + "_nexthooker_extension.dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
 	DeleteFileW(extenFileName.toStdWString().c_str());
-	extenCombo->clear();
-	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
+	ReloadExtensions();
 }
