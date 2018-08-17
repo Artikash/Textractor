@@ -18,8 +18,8 @@
 
 // Pipes
 
-#define ITH_TEXT_PIPE       L"\\??\\pipe\\VNR_TEXT"
-#define ITH_COMMAND_PIPE    L"\\??\\pipe\\VNR_COMMAND"
+#define ITH_TEXT_PIPE       L"\\\\.\\pipe\\VNR_TEXT"
+#define ITH_COMMAND_PIPE    L"\\\\.\\pipe\\VNR_COMMAND"
 
 // Sections
 
