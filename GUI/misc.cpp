@@ -27,8 +27,10 @@ QStringList GetAllProcesses()
 	if (!EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed)) return ret;
 	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
 		if (GetModuleName(allProcessIds[i]).size())
-			ret.push_back(GetModuleName(allProcessIds[i]) + ": " + QString::number(allProcessIds[i]));
-	ret.sort();
+			ret.push_back(GetModuleName(allProcessIds[i]) + ":" + QString::number(allProcessIds[i]));
+	ret.sort(Qt::CaseInsensitive);
+	for (int i = 0; i < ret.size(); ++i)
+		ret[i] = ret[i].split(":")[1] + ": " + ret[i].split(":")[0];
 	return ret;
 }
 
