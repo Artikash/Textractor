@@ -6,6 +6,5 @@
 #include <Windows.h>
 
 void CreateNewPipe();
-DWORD WINAPI TextReceiver(LPVOID lpThreadParam);
 
 // EOF
