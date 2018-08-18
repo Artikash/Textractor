@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this, &MainWindow::ThreadOutputReceived, this, &MainWindow::ThreadOutput);
 	ReloadExtensions();
 	Host::Open();
-	Host::AddConsoleOutput(L"NextHooker beta v2.1.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v2.1.3 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
@@ -175,7 +175,7 @@ void MainWindow::on_attachButton_clicked()
 {
 	bool ok;
 	QString process = QInputDialog::getItem(this, "Select Process",
-		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also just type in the process id if you know it",
+		"If you don't see the process you want to inject, try running with admin rights\r\nYou can just type in the process id if you know it",
 		GetAllProcesses(), 0, true, &ok);
 	if (!ok) return;
 	if (!Host::InjectProcess(process.split(":")[0].toInt())) Host::AddConsoleOutput(L"Failed to attach");
