@@ -11355,18 +11355,23 @@ bool InsertScenarioPlayerHook()
   }
 
   HookParam hp = {};
-  hp.address = addr;
+  //hp.address = addr;
   hp.length_offset = 1;
   hp.offset = 4;
-  if (addr - start == addr_offset_W) {
-    hp.type = USING_UNICODE;
-    ConsoleOutput("vnreng: INSERT ScenarioPlayerW");
-    NewHook(hp, "ScenarioPlayerW");
-  } else {
-    hp.type = BIG_ENDIAN; // 4
-    ConsoleOutput("vnreng: INSERT ScenarioPlayerA");
-    NewHook(hp, "ScenarioPlayerA");
-  }
+  //if (addr - start == addr_offset_W) {
+  // Artikash 8/18/2018: can't figure out how to tell apart which hook is needed, so just insert both xD
+  HookParam hp2 = hp;
+
+  hp.type = USING_UNICODE;
+  hp.address = addr;
+  ConsoleOutput("vnreng: INSERT ScenarioPlayerW");
+  NewHook(hp, "ScenarioPlayerW");
+  //} else {
+  hp2.type = BIG_ENDIAN; // 4
+  hp2.address = addr + 5;
+  ConsoleOutput("vnreng: INSERT ScenarioPlayerA");
+  NewHook(hp2, "ScenarioPlayerA");
+  //}
   return true;
 }
 
