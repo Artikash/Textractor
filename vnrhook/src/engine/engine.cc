@@ -21,6 +21,7 @@
 #include "disasm/disasm.h"
 #include "cpputil/cppcstring.h"
 #include "mono/monoobject.h"
+#include "growl.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
 #include <string>
