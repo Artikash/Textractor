@@ -30,7 +30,7 @@
       "inheritEnvironments": [ "msvc_x64" ],
       "buildRoot": "${workspaceRoot}\\Builds\\${name}",
       "installRoot": "${workspaceRoot}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-Dx64=1",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     },
@@ -41,7 +41,7 @@
       "inheritEnvironments": [ "msvc_x64" ],
       "buildRoot": "${workspaceRoot}\\Builds\\${name}",
       "installRoot": "${workspaceRoot}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "-Dx64=1",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": ""
     }

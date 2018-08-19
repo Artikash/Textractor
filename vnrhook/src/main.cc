@@ -87,8 +87,8 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 		  VirtualQuery((void*)::processStopAddress, &info, sizeof(info));
 		  ::processStopAddress = (DWORD)info.BaseAddress + info.RegionSize;
 	  } while (info.Protect > PAGE_NOACCESS);
-#endif
 	  processStopAddress -= info.RegionSize;
+#endif
 
       {
         wchar_t hm_mutex[0x100];

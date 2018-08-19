@@ -1,0 +1,5 @@
+cmake_policy(SET CMP0037 OLD)
+add_library(1_Remove\ Repetition_nexthooker_extension SHARED removerepeat.cpp)
+add_library(2_Copy\ to\ Clipboard_nexthooker_extension SHARED copyclipboard.cpp)
+#add_library("3_Google\ Translate_nexthooker_extension" SHARED googletranslate.cpp)
+add_library(4_Extra\ Newlines_nexthooker_extension SHARED extranewlines.cpp)

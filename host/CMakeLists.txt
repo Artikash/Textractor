@@ -1,5 +1,3 @@
-project(host)
-
 set(vnrhost_src
   host.h
   pipe.h
