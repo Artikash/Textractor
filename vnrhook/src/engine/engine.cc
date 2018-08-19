@@ -11360,7 +11360,7 @@ bool InsertScenarioPlayerHook()
   hp.offset = 4;
   //if (addr - start == addr_offset_W) {
   // Artikash 8/18/2018: can't figure out how to tell apart which hook is needed, so just insert both xD
-  // (The method to tell the hooks apart previously fails on https://vndb.org/v19713
+  // (The method used to tell the hooks apart previously fails on https://vndb.org/v19713)
   HookParam hp2 = hp;
 
   hp.type = USING_UNICODE;
