@@ -60,7 +60,7 @@ extern "C"
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
 						DWORD bytesRead;
-						char buffer[100000]; // Google Translate page is ~64kb
+						char buffer[100000] = {}; // Google Translate page is ~64kb
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 100000, &bytesRead);
 						TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
@@ -76,9 +76,9 @@ extern "C"
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
 						DWORD bytesRead;
-						char buffer[0x10000] = {};
+						char buffer[10000] = {};
 						WinHttpReceiveResponse(request, NULL);
-						WinHttpReadData(request, buffer, 0x10000, &bytesRead);
+						WinHttpReadData(request, buffer, 10000, &bytesRead);
 						// Response formatted as JSON: starts with '[[["'
 						MultiByteToWideChar(CP_UTF8, 0, buffer + 4, (int)((strstr(buffer, "\",\"")) - (buffer + 4)), translation, 10000);
 						message = translation;

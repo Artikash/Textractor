@@ -9,22 +9,18 @@ std::map<int, QString> LoadExtensions()
 {
 	std::map<int, ExtensionFunction> newExtensions;
 	std::map<int, QString> extensionNames;
-	wchar_t path[MAX_PATH] = {};
-	(QDir::currentPath() + "/*_nexthooker_extension.dll").toWCharArray(path);
-	WIN32_FIND_DATAW fileData;
-	HANDLE file = FindFirstFileW(path, &fileData);
-	do
-		if (GetProcAddress(GetModuleHandleW(fileData.cFileName), "OnNewSentence") ||
-			GetProcAddress(LoadLibraryW(fileData.cFileName), "OnNewSentence")
-		)
-		{
-			newExtensions[std::wcstol(fileData.cFileName, nullptr, 10)] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(fileData.cFileName), "OnNewSentence");
-			QString name = QString::fromWCharArray(fileData.cFileName);
-			name.chop(sizeof("_nexthooker_extension.dll") - 1);
-			name.remove(0, name.split("_")[0].length() + 1);
-			extensionNames[std::wcstol(fileData.cFileName, nullptr, 10)] = name;
-		}
-	while (FindNextFileW(file, &fileData) != 0);
+	QStringList files = QDir().entryList();
+	for (auto file : files)
+		if (file.endsWith("_nexthooker_extension.dll"))
+			if (GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence") ||
+				GetProcAddress(LoadLibraryW(file.toStdWString().c_str()), "OnNewSentence"))
+			{
+				QString extensionNumber = file.split("_")[0];
+				newExtensions[extensionNumber.toInt()] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence");
+				file.chop(sizeof("_nexthooker_extension.dll") - 1);
+				file.remove(0, extensionNumber.length() + 1);
+				extensionNames[extensionNumber.toInt()] = file;
+			}
 	while (processing) Sleep(10);
 	processing = -1;
 	extensions = newExtensions;

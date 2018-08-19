@@ -103,7 +103,7 @@ void MainWindow::AddThread(TextThread* thread)
 {
 	ttCombo->addItem(
 		TextThreadString(thread) +
-		QString::fromWCharArray(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook).c_str()) +
+		QString::fromStdWString(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook)) +
 		" (" +
 		GenerateCode(Host::GetHookParam(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook), thread->GetThreadParameter().pid) +
 		")"
@@ -112,7 +112,7 @@ void MainWindow::AddThread(TextThread* thread)
 	{
 		output = DispatchSentenceToExtensions(output, GetInfoForExtensions(thread));
 		output += L"\r\n";
-		emit ThreadOutputReceived(thread, QString::fromWCharArray(output.c_str()));
+		emit ThreadOutputReceived(thread, QString::fromStdWString(output));
 		return output;
 	});
 }
@@ -205,7 +205,7 @@ void MainWindow::on_unhookButton_clicked()
 	QVector<HookParam> hooks = GetAllHooks(processCombo->currentText().split(":")[0].toInt());
 	QStringList hookList;
 	for (auto i : hooks) hookList.push_back(
-				QString::fromWCharArray(Host::GetHookName(processCombo->currentText().split(":")[0].toInt(), i.address).c_str()) +
+				QString::fromStdWString(Host::GetHookName(processCombo->currentText().split(":")[0].toInt(), i.address)) +
 				": " +
 				GenerateCode(i, processCombo->currentText().split(":")[0].toInt())
 			);
@@ -250,6 +250,6 @@ void MainWindow::on_rmvExtenButton_clicked()
 	if (extenCombo->currentText().size() == 0) return;
 	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + "_nexthooker_extension.dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
-	DeleteFileW(extenFileName.toStdWString().c_str());
+	QFile::remove(extenFileName);
 	ReloadExtensions();
 }
