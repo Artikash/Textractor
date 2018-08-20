@@ -55,6 +55,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	ttCombo = mainWindow->findChild<QComboBox*>("ttCombo");
 	extenCombo = mainWindow->findChild<QComboBox*>("extenCombo");
 	textOutput = mainWindow->findChild<QPlainTextEdit*>("textOutput");
+	QFile settings("NHWindow");
+	settings.open(QIODevice::ReadOnly);
+	QDataStream reader(&settings);
+	QRect rect = QRect();
+	reader >> rect;
+	if (rect.bottom()) this->setGeometry(rect);
 
 	hostSignaller->Initialize();
 	connect(hostSignaller, &HostSignaller::AddProcess, this, &MainWindow::AddProcess);
@@ -69,6 +75,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+	QFile settings("NHWindow");
+	settings.open(QIODevice::ReadWrite | QIODevice::Truncate);
+	QDataStream writer(&settings);
+	writer << this->geometry();
 	delete ui;
 }
 
@@ -228,7 +238,7 @@ void MainWindow::on_saveButton_clicked()
 
 void MainWindow::on_ttCombo_activated(int index)
 {
-	textOutput->setPlainText(QString::fromWCharArray(Host::GetThread(ttCombo->itemText(index).split(":")[0].toInt())->GetStore().c_str()));
+	textOutput->setPlainText(QString::fromStdWString(Host::GetThread(ttCombo->itemText(index).split(":")[0].toInt())->GetStore()));
 	textOutput->moveCursor(QTextCursor::End);
 }
 
