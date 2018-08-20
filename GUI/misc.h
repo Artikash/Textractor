@@ -2,12 +2,13 @@
 #define MISC_H
 
 #include <QString>
+#include <unordered_map>
 #include <Windows.h>
 #include "../host/host.h"
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);
 QString GetModuleName(DWORD processId, HMODULE module = NULL);
-QStringList GetAllProcesses();
+std::unordered_map<std::wstring, DWORD> GetAllProcesses();
 HookParam ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
 
