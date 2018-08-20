@@ -448,18 +448,17 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 {
 	TextHook* hook = (TextHook*)threadParam;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
-	char testChar = 0;
+	char testChar1 = 0, testChar2 = 0; // Artikash 8/20/2018: two testChars in case the first character of the string is the same
 	unsigned int changeCount = 0;
 	const char* currentAddress = (char*)hook->hp.address;
 	while (true)
 	{
 		Sleep(1000);
-		if (testChar == *currentAddress)
+		if (testChar1 == *currentAddress && testChar2 == *(currentAddress + 3))
 		{
 			changeCount = 0;
 			continue;
 		}
-		testChar = *currentAddress;
 		if (++changeCount > 10)
 		{
 			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
@@ -480,9 +479,8 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
 
-		if (hook->hp.offset == 0) continue;
-		currentAddress += dataLen + hook->hp.offset;
-		testChar = *currentAddress;
+		testChar1 = *currentAddress;
+		testChar2 = *(currentAddress + 3);
 	}
 	hook->ClearHook();
 	return 0;
