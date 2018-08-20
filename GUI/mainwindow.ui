@@ -22,11 +22,11 @@
   <property name="styleSheet">
    <string notr="true">QObject
 {
-	font: 11pt &quot;MS Shell Dlg 2&quot;;
+	font: 10pt &quot;MS Shell Dlg 2&quot;;
 }
 #textOutput
 {
-	font: 14pt &quot;MS Shell Dlg 2&quot;;
+	font: 13pt &quot;MS Shell Dlg 2&quot;;
 }
 QPushButton, QComboBox
 {
@@ -290,7 +290,7 @@ QPushButton, QComboBox
      <x>0</x>
      <y>0</y>
      <width>949</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
