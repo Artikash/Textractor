@@ -49,7 +49,7 @@ extern "C"
 		wchar_t translation[10000] = {};
 		wchar_t* message = error;
 
-		if (wcslen(sentence) > 2000 || GetProperty("text number", miscInfo) == 0 || GetProperty("current select", miscInfo) == 0) return sentence;
+		if (wcslen(sentence) > 2000 || GetProperty("text number", miscInfo) == 0) return sentence;
 
 		if (internet)
 		{
