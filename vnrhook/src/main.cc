@@ -94,14 +94,8 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
         wchar_t hm_mutex[0x100];
         swprintf(hm_mutex, ITH_HOOKMAN_MUTEX_ L"%d", GetCurrentProcessId());
 		::hmMutex = CreateMutexW(nullptr, FALSE, hm_mutex);
-      }
-      {
-        wchar_t dll_mutex[0x100];
-        swprintf(dll_mutex, ITH_PROCESS_MUTEX_ L"%d", GetCurrentProcessId());
-        DWORD exists;
-		::hMutex = CreateMutexW(nullptr, TRUE, dll_mutex); // jichi 9/18/2013: own is true, make sure the injected dll is singleton
-        if (GetLastError() == ERROR_ALREADY_EXISTS)
-          return FALSE;
+		if (GetLastError() == ERROR_ALREADY_EXISTS)
+			return FALSE;
       }
 
       ::running = true;
