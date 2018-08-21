@@ -22,24 +22,8 @@ ThreadEventCallback onCreate(nullptr), onRemove(nullptr);
 ProcessEventCallback onAttach(nullptr), onDetach(nullptr);
 
 WORD nextThreadNumber(0);
-HWND dummyWindow;
 
 #define HOST_LOCK CriticalSectionLocker hostLocker(&hostCs) // Synchronized scope for accessing private data
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID unused)
-{
-	switch (fdwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-		DisableThreadLibraryCalls(hinstDLL);
-		// jichi 8/24/2013: Create hidden window so that ITH can access timer and events
-		dummyWindow = CreateWindowW(L"Button", L"InternalWindow", 0, 0, 0, 0, 0, 0, 0, hinstDLL, 0);
-		break;
-	default:
-		break;
-	}
-	return true;
-}
 
 namespace Host
 {

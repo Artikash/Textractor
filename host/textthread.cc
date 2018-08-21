@@ -9,25 +9,32 @@
 #include "../vnrhook/include/const.h"
 #include "winmutex.h"
 
-extern HWND dummyWindow;
-
 #define TT_LOCK CriticalSectionLocker ttLocker(&ttCs) // Synchronized scope for accessing private data
 
 TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, DWORD status) :
 	storage(),
 	sentenceBuffer(),
 	status(status),
+	timestamp(GetTickCount()),
 	threadNumber(threadNumber),
 	output(nullptr),
 	tp(tp)
 {
 	InitializeCriticalSection(&ttCs);
+	flushThread = CreateThread(nullptr, 0, [](void* textThread) 
+	{ 
+		while (true)
+		{
+			Sleep(100);
+			((TextThread*)textThread)->FlushSentenceBuffer();
+		}
+		return (DWORD)0; 
+	}, this, 0, nullptr);
 }
 
 TextThread::~TextThread()
 {
 	EnterCriticalSection(&ttCs);
-	KillTimer(dummyWindow, (UINT_PTR)this);
 	LeaveCriticalSection(&ttCs);
 	DeleteCriticalSection(&ttCs);
 }
@@ -45,9 +52,10 @@ std::wstring TextThread::GetStore()
 	return storage;
 }
 
-void TextThread::AddSentence()
+void TextThread::FlushSentenceBuffer()
 {
 	TT_LOCK;
+	if (timestamp - GetTickCount() < 250 || sentenceBuffer.size() == 0) return; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
 	{
@@ -80,12 +88,7 @@ void TextThread::AddText(const BYTE *con, int len)
 {
 	TT_LOCK;
 	sentenceBuffer.insert(sentenceBuffer.end(), con, con + len);
-	SetTimer(dummyWindow, (UINT_PTR)this, 250, // TODO: Let user change delay before sentenceBuffer is flushed
-		[](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
-	{
-		KillTimer(hWnd, idEvent);
-		((TextThread*)idEvent)->AddSentence();
-	});
+	timestamp = GetTickCount();
 }
 
 // EOF

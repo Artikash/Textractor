@@ -42,7 +42,7 @@ public:
 
 	void Clear();
 	void AddText(const BYTE *con, int len);
-	void AddSentence();
+	void FlushSentenceBuffer();
 	void AddSentence(std::wstring sentence);	
 
 private:
@@ -52,7 +52,9 @@ private:
 	std::wstring storage;
 
 	ThreadParameter tp;
+	HANDLE flushThread;
 	unsigned int threadNumber;
+	DWORD timestamp;
 	DWORD status;
 };
 
