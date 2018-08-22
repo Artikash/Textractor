@@ -36,7 +36,7 @@ namespace Host
 	DLLEXPORT void Close()
 	{
 		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
-#ifdef _DEBUG
+#ifdef _DEBUG // Check memory leaks
 		HOST_LOCK;
 		OnRemove = [](TextThread* textThread) { delete textThread; };
 		for (auto i : processRecordsByIds) UnregisterProcess(i.first);

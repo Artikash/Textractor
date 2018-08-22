@@ -33,11 +33,6 @@ DWORD processStartAddress,
       processStopAddress;
 
 enum { HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook) };
-//#define MAX_HOOK (HOOK_BUFFER_SIZE/sizeof(TextHook))
-DWORD hook_buff_len = HOOK_BUFFER_SIZE;
-
-namespace { FilterRange _filter[IHF_FILTER_CAPACITY]; }
-FilterRange *filter = _filter;
 
 WCHAR hm_section[0x100];
 HANDLE hSection;
