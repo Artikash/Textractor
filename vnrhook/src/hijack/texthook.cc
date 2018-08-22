@@ -449,7 +449,7 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 	TextHook* hook = (TextHook*)threadParam;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	unsigned int changeCount = 0;
-	int dataLen = 0;
+	int dataLen = 1;
 	const char* currentAddress = (char*)hook->hp.address;
 	while (true)
 	{
