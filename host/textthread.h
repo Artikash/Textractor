@@ -45,9 +45,9 @@ public:
 	void AddSentence(std::wstring sentence);	
 
 private:
-	bool FlushSentenceBuffer();
+	bool Flush();
 
-	std::vector<char> sentenceBuffer;
+	std::vector<char> buffer;
 	std::wstring storage;
 	std::recursive_mutex ttMutex;
 	HANDLE deletionEvent;

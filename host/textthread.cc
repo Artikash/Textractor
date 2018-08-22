@@ -14,7 +14,7 @@
 
 TextThread::TextThread(ThreadParameter tp, DWORD status) :
 	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
-	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100), FlushSentenceBuffer()); }),
+	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100), Flush()); }),
 	timestamp(GetTickCount()),
 	Output(nullptr),
 	tp(tp),
@@ -35,30 +35,24 @@ std::wstring TextThread::GetStore()
 	return storage;
 }
 
-bool TextThread::FlushSentenceBuffer()
+bool TextThread::Flush()
 {
 	TT_LOCK;
 	if (status == -1UL) return false;
-	if (timestamp - GetTickCount() < 250 || sentenceBuffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
+	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
 	{
-		sentence = std::wstring((wchar_t*)sentenceBuffer.data(), sentenceBuffer.size() / 2);
-	}
-	else if (status & USING_UTF8)
-	{
-		wchar_t* converted = new wchar_t[sentenceBuffer.size()];
-		sentence = std::wstring(converted, MultiByteToWideChar(CP_UTF8, 0, sentenceBuffer.data(), sentenceBuffer.size(), converted, sentenceBuffer.size()));
-		delete[] converted;
+		sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
 	}
 	else
 	{
-		wchar_t* converted = new wchar_t[sentenceBuffer.size()];
-		sentence = std::wstring(converted, MultiByteToWideChar(932, 0, sentenceBuffer.data(), sentenceBuffer.size(), converted, sentenceBuffer.size()));
+		wchar_t* converted = new wchar_t[buffer.size()];
+		sentence = std::wstring(converted, MultiByteToWideChar(status & USING_UTF8 ? CP_UTF8 : 932, 0, buffer.data(), buffer.size(), converted, buffer.size()));
 		delete[] converted;
 	}
 	AddSentence(sentence);
-	sentenceBuffer.clear();
+	buffer.clear();
 	return true;
 }
 
@@ -72,7 +66,7 @@ void TextThread::AddSentence(std::wstring sentence)
 void TextThread::AddText(const BYTE *con, int len)
 {
 	TT_LOCK;
-	sentenceBuffer.insert(sentenceBuffer.end(), con, con + len);
+	buffer.insert(buffer.end(), con, con + len);
 	timestamp = GetTickCount();
 }
 

@@ -83,6 +83,7 @@ MainWindow::~MainWindow()
 	settings.open(QIODevice::ReadWrite | QIODevice::Truncate);
 	QDataStream writer(&settings);
 	writer << this->geometry();
+	Host::Close();
 	delete ui;
 }
 

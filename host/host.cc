@@ -147,7 +147,6 @@ namespace Host
 
 void DispatchText(ThreadParameter tp, const BYTE* text, int len)
 {
-	// jichi 2/27/2013: When PID is zero, the text comes from console, which I don't need
 	if (!text || len <= 0) return;
 	HOST_LOCK;
 	TextThread *it;
