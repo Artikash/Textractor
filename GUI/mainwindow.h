@@ -43,10 +43,12 @@ private slots:
 	void on_rmvExtenButton_clicked();
 
 private:
+	QString TextThreadString(TextThread* thread);
+	ThreadParameter ParseTextThreadString(QString textThreadString);
+	DWORD GetSelectedProcessId();
 	void ReloadExtensions();
 	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
-	DWORD GetSelectedProcessId();
 
 	Ui::MainWindow *ui;
 	QComboBox* processCombo;

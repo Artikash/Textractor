@@ -1,7 +1,6 @@
 #include "misc.h"
 #include "../vnrhook/include/const.h"
 #include <QRegExp>
-#include <QStringList>
 #include <Psapi.h>
 
 QString GetFullModuleName(DWORD processId, HMODULE module)

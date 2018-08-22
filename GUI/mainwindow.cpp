@@ -1,47 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QCoreApplication>
-#include "QTextBrowser"
-#include "QMessageBox"
-#include "QComboBox"
-#include "QLineEdit"
-#include "QInputDialog"
-#include <QCursor>
-#include <Qt>
-#include <QPlainTextEdit>
-#include <QDateTime>
-#include <QFileDialog>
-#include <unordered_set>
-#include <map>
-#include <unordered_map>
-#include <Windows.h>
-#include <qdebug.h>
-#include <Psapi.h>
 #include "extensions.h"
-#include "../vnrhook/include/const.h"
 #include "misc.h"
-
-QString ProcessString(DWORD processId)
-{
-	return QString("%1: %2").arg(QString::number(processId), GetModuleName(processId));
-}
-
-QString TextThreadString(TextThread* thread)
-{
-	ThreadParameter tp = thread->GetThreadParameter();
-	return QString("%1:0x%2:0x%3:0x%4: ").arg(
-		QString::number(tp.pid).toUpper(),
-		QString::number(tp.hook, 16).toUpper(),
-		QString::number(tp.retn, 16).toUpper(),
-		QString::number(tp.spl, 16).toUpper()
-	);
-}
-
-ThreadParameter ParseTextThreadString(QString textThreadString)
-{
-	QStringList threadParam = textThreadString.split(":");
-	return { threadParam[0].toUInt(), threadParam[1].toULongLong(nullptr, 0), threadParam[2].toULongLong(nullptr, 0), threadParam[3].toULongLong(nullptr, 0) };
-}
+#include "../vnrhook/include/const.h"
+#include <QCoreApplication>
+#include <QInputDialog>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -89,7 +53,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::AddProcess(unsigned int processId)
 {
-	processCombo->addItem(ProcessString(processId));
+	processCombo->addItem(QString::number(processId) + ": " + GetModuleName(processId));
 	QFile file("SavedHooks.txt");
 	if (!file.open(QIODevice::ReadOnly)) return;
 	QString processName = GetFullModuleName(processId);
@@ -150,6 +114,28 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 	}
 }
 
+QString MainWindow::TextThreadString(TextThread* thread)
+{
+	ThreadParameter tp = thread->GetThreadParameter();
+	return QString("%1:%2:%3:%4: ").arg(
+		QString::number(tp.pid),
+		QString::number(tp.hook, 16),
+		QString::number(tp.retn, 16),
+		QString::number(tp.spl, 16)
+	).toUpper();
+}
+
+ThreadParameter MainWindow::ParseTextThreadString(QString textThreadString)
+{
+	QStringList threadParam = textThreadString.split(":");
+	return { threadParam[0].toUInt(), threadParam[1].toULongLong(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16) };
+}
+
+DWORD MainWindow::GetSelectedProcessId()
+{
+	return processCombo->currentText().split(":")[0].toULong();
+}
+
 void MainWindow::ReloadExtensions()
 {
 	extenCombo->clear();
@@ -171,23 +157,18 @@ std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread
 
 QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 {
-	std::unordered_set<DWORD> addresses;
+	QSet<DWORD> addresses;
 	QVector<HookParam> hooks;
 	for (int i = 0; i < ttCombo->count(); ++i)
 	{
 		ThreadParameter tp = ParseTextThreadString(ttCombo->itemText(i));
-		if (tp.pid == processId && !addresses.count(tp.hook))
+		if (tp.pid == processId && !addresses.contains(tp.hook))
 		{
 			addresses.insert(tp.hook);
 			hooks.push_back(Host::GetHookParam(tp));
 		}
 	}
 	return hooks;
-}
-
-DWORD MainWindow::GetSelectedProcessId()
-{
-	return processCombo->currentText().split(":")[0].toULong();
 }
 
 void MainWindow::on_attachButton_clicked()
@@ -207,7 +188,7 @@ void MainWindow::on_attachButton_clicked()
 		if (Host::InjectProcess(process.toInt())) return;
 	}
 	else if (Host::InjectProcess(allProcesses[process.toStdWString()])) return;
-	Host::AddConsoleOutput(L"Failed to attach");
+	Host::AddConsoleOutput(L"failed to attach");
 }
 
 void MainWindow::on_detachButton_clicked()
