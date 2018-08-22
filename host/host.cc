@@ -57,16 +57,32 @@ namespace Host
 		FreeLibrary(textHooker);
 
 		if (HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
+		{
+#ifdef _WIN64
+			BOOL invalidProcess = FALSE;
+			IsWow64Process(processHandle, &invalidProcess);
+			if (invalidProcess)
+			{
+				AddConsoleOutput(L"architecture mismatch: try 32 bit NextHooker instead");
+				CloseHandle(processHandle);
+				return false;
+			}
+#endif
 			if (LPVOID remoteData = VirtualAllocEx(processHandle, nullptr, textHookerPathSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
-				if (WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr))
-					if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
-					{
-						WaitForSingleObject(thread, timeout);
-						CloseHandle(thread);
-						VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
-						CloseHandle(processHandle);
-						return true;
-					}
+			{
+				WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr);
+				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
+				{
+					WaitForSingleObject(thread, timeout);
+					CloseHandle(thread);
+					VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
+					CloseHandle(processHandle);
+					return true;
+				}
+				VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
+				CloseHandle(processHandle);
+			}
+		}
 
 		AddConsoleOutput(L"couldn't inject dll");
 		return false;
