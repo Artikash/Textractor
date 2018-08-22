@@ -40,8 +40,6 @@ QString TextThreadString(TextThread* thread)
 ThreadParameter ParseTextThreadString(QString textThreadString)
 {
 	QStringList threadParam = textThreadString.split(":");
-	ThreadParameter tp = {};
-	tp.hook = threadParam[1].toULongLong();
 	return { threadParam[0].toUInt(), threadParam[1].toULongLong(nullptr, 0), threadParam[2].toULongLong(nullptr, 0), threadParam[3].toULongLong(nullptr, 0) };
 }
 
