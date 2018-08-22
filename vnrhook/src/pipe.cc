@@ -31,15 +31,17 @@ DWORD WINAPI PipeManager(LPVOID unused)
 
 		while (::hookPipe == INVALID_HANDLE_VALUE || hostPipe == INVALID_HANDLE_VALUE)
 		{
-			Sleep(STANDARD_WAIT);
 			if (::hookPipe == INVALID_HANDLE_VALUE)
 			{
 				::hookPipe = CreateFileW(ITH_TEXT_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 			}
 			if (hostPipe == INVALID_HANDLE_VALUE)
 			{
-				hostPipe = CreateFileW(ITH_COMMAND_PIPE, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+				hostPipe = CreateFileW(ITH_COMMAND_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+				DWORD mode = PIPE_READMODE_MESSAGE;
+				SetNamedPipeHandleState(hostPipe, &mode, NULL, NULL);
 			}
+			Sleep(STANDARD_WAIT);
 		}
 
 		*(DWORD*)buffer = GetCurrentProcessId();
