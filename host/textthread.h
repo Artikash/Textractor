@@ -47,14 +47,15 @@ public:
 private:
 	bool FlushSentenceBuffer();
 
-	ThreadOutputCallback Output;
 	std::vector<char> sentenceBuffer;
 	std::wstring storage;
-
-	ThreadParameter tp;
 	std::recursive_mutex ttMutex;
+	HANDLE deletionEvent;
 	std::thread flushThread;
+	
 	DWORD timestamp;
+	ThreadOutputCallback Output;
+	ThreadParameter tp;
 	DWORD status;
 };
 

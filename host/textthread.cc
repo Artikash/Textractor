@@ -13,17 +13,20 @@
 #define TT_LOCK std::lock_guard<std::recursive_mutex> ttLocker(ttMutex) // Synchronized scope for accessing private data
 
 TextThread::TextThread(ThreadParameter tp, DWORD status) :
-	status(status),
+	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
+	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100), FlushSentenceBuffer()); }),
 	timestamp(GetTickCount()),
 	Output(nullptr),
 	tp(tp),
-	flushThread([&]() { while (Sleep(25), FlushSentenceBuffer()); })
+	status(status)
 {}
 
 TextThread::~TextThread()
 {
 	status = -1UL;
+	SetEvent(deletionEvent);
 	flushThread.join();
+	CloseHandle(deletionEvent);
 }
 
 std::wstring TextThread::GetStore()
