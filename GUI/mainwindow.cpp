@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 
 	ReloadExtensions();
-	Host::AddConsoleOutput(L"NextHooker beta v2.1.3 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v2.1.4 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
