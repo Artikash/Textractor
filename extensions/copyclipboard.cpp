@@ -13,7 +13,7 @@ extern "C"
 	*/
 	__declspec(dllexport) const wchar_t* OnNewSentence(const wchar_t* sentence, const InfoForExtension* miscInfo)
 	{
-		if (GetProperty("current select", miscInfo) && GetProperty("text number", miscInfo) > 0)
+		if (GetProperty("current select", miscInfo) && GetProperty("hook address", miscInfo) != -1)
 		{
 			HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (wcslen(sentence) + 1) * sizeof(wchar_t));
 			memcpy(GlobalLock(hMem), sentence, (wcslen(sentence) + 1) * sizeof(wchar_t));

@@ -210,11 +210,11 @@ QString GenerateHCode(HookParam hp, DWORD processId)
 	if (!(processHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))) return badCode;
 	MEMORY_BASIC_INFORMATION info;
 	if (!VirtualQueryEx(processHandle, (LPCVOID)hp.address, &info, sizeof(info))) return badCode;
-	wchar_t buffer[MAX_PATH];
-	if (!GetModuleFileNameExW(processHandle, (HMODULE)info.AllocationBase, buffer, MAX_PATH)) return badCode;
+	QString moduleName = GetModuleName(processId, (HMODULE)info.AllocationBase);
+	if (moduleName.size() == 0) return badCode;
 	code += QString::number(hp.address - (DWORD)info.AllocationBase, 16) + ":";
 	code = code.toUpper();
-	code += QString::fromWCharArray(wcsrchr(buffer, L'\\') + 1);
+	code += moduleName;
 	return code;
 }
 

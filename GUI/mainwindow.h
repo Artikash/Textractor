@@ -4,10 +4,11 @@
 #include <QMainWindow>
 #include <Windows.h>
 #include <QVector>
+#include <QPlainTextEdit>
+#include <QComboBox>
 #include <unordered_map>
 #include <string>
 #include "../host/host.h"
-#include "hostsignaller.h"
 
 namespace Ui
 {
@@ -23,7 +24,11 @@ public:
 	~MainWindow();
 
 signals:
-	void ThreadOutputReceived(TextThread* thread, QString output);
+	void SigAddProcess(unsigned int processId);
+	void SigRemoveProcess(unsigned int processId);
+	void SigAddThread(TextThread* thread);
+	void SigRemoveThread(TextThread* thread);
+	void SigThreadOutput(TextThread* thread, QString output);
 
 private slots:
 	void AddProcess(unsigned int processId);
@@ -44,9 +49,13 @@ private:
 	void ReloadExtensions();
 	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
+	DWORD GetSelectedProcessId();
 
 	Ui::MainWindow *ui;
-	HostSignaller* hostSignaller;
+	QComboBox* processCombo;
+	QComboBox* ttCombo;
+	QComboBox* extenCombo;
+	QPlainTextEdit* textOutput;
 };
 
 #endif // MAINWINDOW_H

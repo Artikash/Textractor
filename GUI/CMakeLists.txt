@@ -7,7 +7,6 @@ set(RESOURCE_FILES NextHooker.rc NextHooker.ico)
 set(gui_SRCS
 	main.cpp
 	mainwindow.cpp
-	hostsignaller.cpp
 	misc.cpp
     extensions.cpp
 	${RESOURCE_FILES}

@@ -13,7 +13,7 @@ extern "C"
 	*/
 	__declspec(dllexport) const wchar_t* OnNewSentence(const wchar_t* sentence, const InfoForExtension* miscInfo)
 	{
-		if (GetProperty("text number", miscInfo) == 0) return sentence;
+		if (GetProperty("hook address", miscInfo) == -1) return sentence;
 		wchar_t* newSentence = (wchar_t*)malloc((wcslen(sentence) + 6) * sizeof(wchar_t));
 		swprintf(newSentence, wcslen(sentence) + 6, L"%s\r\n", sentence);
 		return newSentence;

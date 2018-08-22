@@ -34,8 +34,7 @@ struct ThreadParameterHasher
 
 namespace Host
 {
-	DLLEXPORT void Open();
-	DLLEXPORT bool Start();
+	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove);
 	DLLEXPORT void Close();
 	DLLEXPORT bool InjectProcess(DWORD pid, DWORD timeout = 5000);
 	DLLEXPORT bool DetachProcess(DWORD pid);
@@ -43,9 +42,10 @@ namespace Host
 	DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name = "");
 	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr);
 	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr);
+	DLLEXPORT HookParam GetHookParam(ThreadParameter tp);
 	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr);
 
-	DLLEXPORT TextThread* GetThread(DWORD number);
+	DLLEXPORT TextThread* GetThread(ThreadParameter tp);
 	DLLEXPORT void AddConsoleOutput(std::wstring text);
 
 	DLLEXPORT void RegisterThreadCreateCallback(ThreadEventCallback cf);
@@ -54,7 +54,7 @@ namespace Host
 	DLLEXPORT void RegisterProcessDetachCallback(ProcessEventCallback cf);
 }
 
-void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE *text, int len);
+void DispatchText(ThreadParameter tp, const BYTE *text, int len);
 void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadParameter cmp);
 void RegisterProcess(DWORD pid, HANDLE hostPipe);
 void UnregisterProcess(DWORD pid);

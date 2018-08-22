@@ -6,44 +6,24 @@
 #endif // _MSC_VER
 
 #include "textthread.h"
+#include <mutex>
 #include "../vnrhook/include/const.h"
 #include "winmutex.h"
 
-#define TT_LOCK CriticalSectionLocker ttLocker(&ttCs) // Synchronized scope for accessing private data
+#define TT_LOCK std::lock_guard<std::recursive_mutex> ttLocker(ttMutex) // Synchronized scope for accessing private data
 
-TextThread::TextThread(ThreadParameter tp, unsigned int threadNumber, DWORD status) :
-	storage(),
-	sentenceBuffer(),
+TextThread::TextThread(ThreadParameter tp, DWORD status) :
 	status(status),
 	timestamp(GetTickCount()),
-	threadNumber(threadNumber),
-	output(nullptr),
-	tp(tp)
-{
-	InitializeCriticalSection(&ttCs);
-	flushThread = CreateThread(nullptr, 0, [](void* textThread) 
-	{ 
-		while (true)
-		{
-			Sleep(100);
-			((TextThread*)textThread)->FlushSentenceBuffer();
-		}
-		return (DWORD)0; 
-	}, this, 0, nullptr);
-}
+	Output(nullptr),
+	tp(tp),
+	flushThread([&]() { while (Sleep(25), FlushSentenceBuffer()); })
+{}
 
 TextThread::~TextThread()
 {
-	EnterCriticalSection(&ttCs);
-	LeaveCriticalSection(&ttCs);
-	DeleteCriticalSection(&ttCs);
-}
-
-void TextThread::Clear()
-{
-	TT_LOCK;
-	storage.clear();
-	storage.shrink_to_fit();
+	status = -1UL;
+	flushThread.join();
 }
 
 std::wstring TextThread::GetStore()
@@ -52,10 +32,11 @@ std::wstring TextThread::GetStore()
 	return storage;
 }
 
-void TextThread::FlushSentenceBuffer()
+bool TextThread::FlushSentenceBuffer()
 {
 	TT_LOCK;
-	if (timestamp - GetTickCount() < 250 || sentenceBuffer.size() == 0) return; // TODO: let user change delay before sentence is flushed
+	if (status == -1UL) return false;
+	if (timestamp - GetTickCount() < 250 || sentenceBuffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
 	{
@@ -75,12 +56,13 @@ void TextThread::FlushSentenceBuffer()
 	}
 	AddSentence(sentence);
 	sentenceBuffer.clear();
+	return true;
 }
 
 void TextThread::AddSentence(std::wstring sentence)
 {
 	TT_LOCK;
-	if (output) sentence = output(this, sentence);
+	if (Output) sentence = Output(this, sentence);
 	storage.append(sentence);
 }
 

@@ -10,14 +10,14 @@
 
 void CreateNewPipe()
 {
-	CloseHandle(CreateThread(nullptr, 0, [](auto) 
+	std::thread([]()
 	{
 		HANDLE hookPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
-		HANDLE hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, 0, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
+		HANDLE hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
 		ConnectNamedPipe(hookPipe, nullptr);
 
 		// jichi 9/27/2013: why recursion?
-		// Artikash 5/20/2018: To create a new pipe for another process
+		// Artikash 5/20/2018: Easy way to create a new pipe for another process
 		CreateNewPipe();
 
 		BYTE buffer[PIPE_BUFFER_SIZE + 1] = {};
@@ -44,10 +44,13 @@ void CreateNewPipe()
 					Host::AddConsoleOutput(A2W((LPCSTR)(buffer + sizeof(DWORD) * 2))); // Text
 					break;
 				}
-			else DispatchText(processId,
-				*(DWORD*)buffer, // Hook address
-				*(DWORD*)(buffer + sizeof(DWORD)), // Return address
-				*(DWORD*)(buffer + sizeof(DWORD) * 2), // Split
+			else DispatchText(
+				{ 
+					processId,
+					*(DWORD*)buffer, // Hook address
+					*(DWORD*)(buffer + sizeof(DWORD)), // Return address
+					*(DWORD*)(buffer + sizeof(DWORD) * 2) // Split
+				},
 				buffer + HEADER_SIZE, // Data
 				bytesRead - HEADER_SIZE // Data size
 			);
@@ -58,9 +61,7 @@ void CreateNewPipe()
 		UnregisterProcess(processId);
 		CloseHandle(hookPipe);
 		CloseHandle(hostPipe);
-		return (DWORD)0;
-	}, 
-		nullptr, 0, nullptr));
+	}).detach();
 }
 
 // EOF

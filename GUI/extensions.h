@@ -12,10 +12,11 @@ std::map<int, QString> LoadExtensions();
 std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo);
 struct InfoForExtension
 {
-	char* propertyName;
-	int propertyValue;
-	InfoForExtension* nextProperty;
+	~InfoForExtension() { if (nextProperty) delete nextProperty; };
+	const char* propertyName = "";
+	int propertyValue = 0;
+	InfoForExtension* nextProperty = nullptr;
 };
-typedef const wchar_t*(*ExtensionFunction)(const wchar_t*, const InfoForExtension*);
+typedef wchar_t*(*ExtensionFunction)(const wchar_t*, const InfoForExtension*);
 
 #endif // EXTENSIONS_H

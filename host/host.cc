@@ -5,51 +5,41 @@
 #include "host.h"
 #include "pipe.h"
 #include "winmutex.h"
+#include <mutex>
+#include <thread>
 #include <atlbase.h>
 #include "../vnrhook/include/const.h"
 #include "../vnrhook/include/defs.h"
 #include "../vnrhook/include/types.h"
 #include <unordered_map>
 
-HANDLE preventDuplicationMutex;
+std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
+std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
-std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams(10);
-std::unordered_map<DWORD, ProcessRecord> processRecordsByIds(2);
+std::recursive_mutex hostMutex;
 
-CRITICAL_SECTION hostCs;
+ThreadEventCallback OnCreate, OnRemove;
+ProcessEventCallback OnAttach, OnDetach;
 
-ThreadEventCallback onCreate(nullptr), onRemove(nullptr);
-ProcessEventCallback onAttach(nullptr), onDetach(nullptr);
+DWORD DUMMY[100];
 
-WORD nextThreadNumber(0);
-
-#define HOST_LOCK CriticalSectionLocker hostLocker(&hostCs) // Synchronized scope for accessing private data
+#define HOST_LOCK std::lock_guard<std::recursive_mutex> hostLocker(hostMutex) // Synchronized scope for accessing private data
 
 namespace Host
 {
-	DLLEXPORT bool Start()
-	{
-		InitializeCriticalSection(&hostCs);
-		return true;
-	}
 
-	DLLEXPORT void Open()
+	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
 	{
-		TextThread* console = textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, nextThreadNumber++, USING_UNICODE);
-		if (onCreate) onCreate(console);
+		std::tie(OnAttach, OnDetach, OnCreate, OnRemove) = { onAttach, onDetach, onCreate, onRemove };
+		OnCreate(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, USING_UNICODE));
 		CreateNewPipe();
 	}
 
 	DLLEXPORT void Close()
 	{
 		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
-		//EnterCriticalSection(&hostCs);
-		//DestroyWindow(dummyWindow);
-		//RemoveThreads([](auto one, auto two) { return true; }, {});
-		////for (auto i : processRecordsByIds) UnregisterProcess(i.first); // Artikash 7/24/2018 FIXME: This segfaults since UnregisterProcess invalidates the iterator
-		//LeaveCriticalSection(&hostCs);
-		//DeleteCriticalSection(&hostCs);
-		//CloseHandle(preventDuplicationMutex);
+		HOST_LOCK;
+		for (auto i : processRecordsByIds) UnregisterProcess(i.first);
 	}
 
 	DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
@@ -87,8 +77,7 @@ namespace Host
 	DLLEXPORT bool DetachProcess(DWORD processId)
 	{
 		DWORD command = HOST_COMMAND_DETACH;
-		DWORD unused;
-		return WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), &unused, nullptr);
+		return WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
 	DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name)
@@ -97,8 +86,7 @@ namespace Host
 		*(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
 		*(HookParam*)(buffer + sizeof(DWORD)) = hp;
 		if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
-		DWORD unused;
-		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), &unused, nullptr);
+		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), DUMMY, nullptr);
 	}
 
 	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
@@ -106,8 +94,7 @@ namespace Host
 		BYTE buffer[sizeof(DWORD) * 2] = {};
 		*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
 		*(DWORD*)(buffer + sizeof(DWORD)) = addr;
-		DWORD unused;
-		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) * 2, &unused, nullptr);
+		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) * 2, DUMMY, nullptr);
 	}
 
 	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr)
@@ -123,6 +110,8 @@ namespace Host
 				ret = hooks[i].hp;
 		return ret;
 	}
+
+	DLLEXPORT HookParam GetHookParam(ThreadParameter tp) { return GetHookParam(tp.pid, tp.hook); }
 
 	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr)
 	{
@@ -143,13 +132,10 @@ namespace Host
 		return std::wstring(A2W(buffer.c_str()));
 	}
 
-	DLLEXPORT TextThread* GetThread(DWORD number)
+	DLLEXPORT TextThread* GetThread(ThreadParameter tp)
 	{
 		HOST_LOCK;
-		for (auto i : textThreadsByParams)
-			if (i.second->Number() == number)
-				return i.second;
-		return nullptr;
+		return textThreadsByParams[tp];
 	}
 
 	DLLEXPORT void AddConsoleOutput(std::wstring text)
@@ -158,24 +144,20 @@ namespace Host
 		textThreadsByParams[{ 0, -1UL, -1UL, -1UL }]->AddSentence(std::wstring(text));
 	}
 
-	DLLEXPORT void RegisterThreadCreateCallback(ThreadEventCallback cf) { onCreate = cf; }
-	DLLEXPORT void RegisterThreadRemoveCallback(ThreadEventCallback cf) { onRemove = cf; }
-	DLLEXPORT void RegisterProcessAttachCallback(ProcessEventCallback cf) { onAttach = cf; }
-	DLLEXPORT void RegisterProcessDetachCallback(ProcessEventCallback cf) { onDetach = cf; }
+	DLLEXPORT void RegisterThreadCreateCallback(ThreadEventCallback cf) { OnCreate = cf; }
+	DLLEXPORT void RegisterThreadRemoveCallback(ThreadEventCallback cf) { OnRemove = cf; }
+	DLLEXPORT void RegisterProcessAttachCallback(ProcessEventCallback cf) { OnAttach = cf; }
+	DLLEXPORT void RegisterProcessDetachCallback(ProcessEventCallback cf) { OnDetach = cf; }
 }
 
-void DispatchText(DWORD pid, DWORD hook, DWORD retn, DWORD split, const BYTE * text, int len)
+void DispatchText(ThreadParameter tp, const BYTE* text, int len)
 {
 	// jichi 2/27/2013: When PID is zero, the text comes from console, which I don't need
-	if (!text || !pid || len <= 0) return;
+	if (!text || len <= 0) return;
 	HOST_LOCK;
-	ThreadParameter tp = { pid, hook, retn, split };
 	TextThread *it;
 	if ((it = textThreadsByParams[tp]) == nullptr)
-	{
-		it = textThreadsByParams[tp] = new TextThread(tp, nextThreadNumber++, Host::GetHookParam(pid, hook).type);
-		if (onCreate) onCreate(it);
-	}
+		OnCreate(it = textThreadsByParams[tp] = new TextThread(tp, Host::GetHookParam(tp).type));
 	it->AddText(text, len);
 }
 
@@ -186,9 +168,8 @@ void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadPara
 	for (auto i : textThreadsByParams)
 		if (RemoveIf(i.first, cmp))
 		{
-			if (onRemove) onRemove(i.second);
+			OnRemove(i.second);
 			//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
-			i.second->Clear(); // Temp workaround to free some memory.
 			removedThreads.push_back(i.first);
 		}
 	for (auto i : removedThreads) textThreadsByParams.erase(i);
@@ -204,7 +185,7 @@ void RegisterProcess(DWORD pid, HANDLE hostPipe)
 	record.process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	record.hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
 	processRecordsByIds[pid] = record;
-	if (onAttach) onAttach(pid);
+	OnAttach(pid);
 }
 
 void UnregisterProcess(DWORD pid)
@@ -216,9 +197,9 @@ void UnregisterProcess(DWORD pid)
 	UnmapViewOfFile(pr.hookman_map);
 	CloseHandle(pr.process_handle);
 	CloseHandle(pr.hookman_section);
-	processRecordsByIds.erase(pid);
+	processRecordsByIds[pid] = {};
 	RemoveThreads([](auto one, auto two) { return one.pid == two.pid; }, { pid, 0, 0, 0 });
-	if (onDetach) onDetach(pid);
+	OnDetach(pid);
 }
 
 // EOF
