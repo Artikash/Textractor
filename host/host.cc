@@ -39,7 +39,9 @@ namespace Host
 	{
 		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
 		HOST_LOCK;
+		OnRemove = [](TextThread* textThread) { delete textThread; };
 		for (auto i : processRecordsByIds) UnregisterProcess(i.first);
+		delete textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
 	}
 
 	DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
