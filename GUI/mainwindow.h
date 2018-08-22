@@ -1,13 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "qtcommon.h"
 #include <QMainWindow>
-#include <Windows.h>
-#include <QVector>
 #include <QPlainTextEdit>
 #include <QComboBox>
-#include <unordered_map>
-#include <string>
 #include "../host/host.h"
 
 namespace Ui

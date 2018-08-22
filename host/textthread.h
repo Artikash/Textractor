@@ -4,12 +4,7 @@
 // 8/23/2013 jichi
 // Branch: ITH/TextThread.h, rev 120
 
-#include <Windows.h>
-#include <string>
-#include <vector>
-#include <functional>
-#include <mutex>
-#include <thread>
+#include "common.h"
 
 struct ThreadParameter
 {

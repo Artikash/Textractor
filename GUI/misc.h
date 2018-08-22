@@ -1,9 +1,7 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include <QString>
-#include <unordered_map>
-#include <Windows.h>
+#include "qtcommon.h"
 #include "../host/host.h"
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);

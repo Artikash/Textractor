@@ -1,6 +1,5 @@
 #include "extensions.h"
 #include <shared_mutex>
-#include <map>
 #include <QDir>
 
 std::shared_mutex extenMutex;

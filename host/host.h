@@ -4,13 +4,11 @@
 // 8/23/2013 jichi
 // Branch: ITH/IHF.h, rev 105
 
-#define DLLEXPORT __declspec(dllexport)
-
-#include <Windows.h>
+#include "common.h"
 #include "textthread.h"
-#include <string>
-#include <functional>
 #include "../vnrhook/include/types.h"
+
+#define DLLEXPORT __declspec(dllexport)
 
 struct ProcessRecord
 {

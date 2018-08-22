@@ -6,9 +6,7 @@
 #endif // _MSC_VER
 
 #include "textthread.h"
-#include <mutex>
 #include "../vnrhook/include/const.h"
-#include "winmutex.h"
 
 #define TT_LOCK std::lock_guard<std::recursive_mutex> ttLocker(ttMutex) // Synchronized scope for accessing private data
 

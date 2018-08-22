@@ -1,12 +1,8 @@
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H
 
-#include <Windows.h>
-#include <string>
+#include "qtcommon.h"
 #include <map>
-#include <unordered_map>
-#include <vector>
-#include <QComboBox>
 
 std::map<int, QString> LoadExtensions();
 std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo);

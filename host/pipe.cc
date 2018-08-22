@@ -6,7 +6,6 @@
 #include "host.h"
 #include "../vnrhook/include/defs.h"
 #include "../vnrhook/include/const.h"
-#include <atlbase.h>
 
 void CreateNewPipe()
 {

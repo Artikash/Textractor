@@ -5,13 +5,9 @@
 #include "host.h"
 #include "pipe.h"
 #include "winmutex.h"
-#include <mutex>
-#include <thread>
-#include <atlbase.h>
 #include "../vnrhook/include/const.h"
 #include "../vnrhook/include/defs.h"
 #include "../vnrhook/include/types.h"
-#include <unordered_map>
 
 std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
 std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
