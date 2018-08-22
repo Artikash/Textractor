@@ -33,7 +33,7 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 	wcscpy(sentenceBuffer, sentence.c_str());
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
-	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, new InfoForExtension };
+	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
 	extenMutex.lock_shared();
 	for (auto i : extensions)
 	{

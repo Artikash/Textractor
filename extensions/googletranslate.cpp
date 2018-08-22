@@ -25,6 +25,7 @@ std::wstring GetTranslationUri(const wchar_t* text, unsigned int TKK)
 	a %= 1000000;
 	b ^= a;
 
+	delete[] utf8text;
 	return std::wstring(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tk=") + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + std::wstring(text);
 }
 
