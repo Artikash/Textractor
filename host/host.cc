@@ -30,7 +30,7 @@ namespace Host
 
 	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
 	{
-		std::tie(OnAttach, OnDetach, OnCreate, OnRemove) = { onAttach, onDetach, onCreate, onRemove };
+		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
 		OnCreate(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, USING_UNICODE));
 		CreateNewPipe();
 	}
@@ -143,11 +143,6 @@ namespace Host
 		HOST_LOCK;
 		textThreadsByParams[{ 0, -1UL, -1UL, -1UL }]->AddSentence(std::wstring(text));
 	}
-
-	DLLEXPORT void RegisterThreadCreateCallback(ThreadEventCallback cf) { OnCreate = cf; }
-	DLLEXPORT void RegisterThreadRemoveCallback(ThreadEventCallback cf) { OnRemove = cf; }
-	DLLEXPORT void RegisterProcessAttachCallback(ProcessEventCallback cf) { OnAttach = cf; }
-	DLLEXPORT void RegisterProcessDetachCallback(ProcessEventCallback cf) { OnDetach = cf; }
 }
 
 void DispatchText(ThreadParameter tp, const BYTE* text, int len)

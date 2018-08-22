@@ -5,7 +5,6 @@
 
 std::shared_mutex extenMutex;
 std::map<int, ExtensionFunction> extensions;
-int processing;
 
 std::map<int, QString> LoadExtensions()
 {

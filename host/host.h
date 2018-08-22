@@ -47,11 +47,6 @@ namespace Host
 
 	DLLEXPORT TextThread* GetThread(ThreadParameter tp);
 	DLLEXPORT void AddConsoleOutput(std::wstring text);
-
-	DLLEXPORT void RegisterThreadCreateCallback(ThreadEventCallback cf);
-	DLLEXPORT void RegisterThreadRemoveCallback(ThreadEventCallback cf);
-	DLLEXPORT void RegisterProcessAttachCallback(ProcessEventCallback cf);
-	DLLEXPORT void RegisterProcessDetachCallback(ProcessEventCallback cf);
 }
 
 void DispatchText(ThreadParameter tp, const BYTE *text, int len);
