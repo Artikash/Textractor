@@ -21,7 +21,7 @@ struct HookParam {
   // jichi 8/24/2013: For special hooks.
   typedef void (*text_fun_t)(DWORD esp, HookParam *hp, BYTE index, DWORD *data, DWORD *split, DWORD *len);
 
-  // jichi 10/24/2014: Add filter function. Return the if skip the text
+  // jichi 10/24/2014: Add filter function. Return true if skip the text
   typedef bool (*filter_fun_t)(LPVOID str, DWORD *len, HookParam *hp, BYTE index);
 
   // jichi 10/24/2014: Add generic hook function, return false if stop execution.
@@ -47,29 +47,6 @@ struct HookParam {
 
   // Artikash 8/4/2018: handle for reader thread
   HANDLE readerHandle;
-};
-
-// jichi 6/1/2014: Structure of the esp for extern functions
-struct HookStack
-{
-  // pushad
-  DWORD edi, // -0x24
-        esi, // -0x20
-        ebp, // -0x1c
-        esp, // -0x18
-        ebx, // -0x14
-        edx, // -0x10
-        ecx, // -0xc
-        eax; // -0x8
-  // pushfd
-  DWORD eflags; // -0x4
-  DWORD retaddr; // 0
-  DWORD args[1]; // 0x4
-};
-
-struct SendParam {
-  DWORD type;
-  HookParam hp;
 };
 
 struct Hook { // size: 0x80

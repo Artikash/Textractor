@@ -19,6 +19,8 @@ ProcessEventCallback OnAttach, OnDetach;
 
 DWORD DUMMY[100];
 
+ThreadParameter CONSOLE{ 0, -1UL, -1UL, -1UL };
+
 #define HOST_LOCK std::lock_guard<std::recursive_mutex> hostLocker(hostMutex) // Synchronized scope for accessing private data
 
 namespace Host
@@ -27,17 +29,19 @@ namespace Host
 	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
-		OnCreate(textThreadsByParams[{ 0, -1UL, -1UL, -1UL }] = new TextThread({ 0, -1UL, -1UL, -1UL }, USING_UNICODE));
+		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE, USING_UNICODE));
 		CreateNewPipe();
 	}
 
 	DLLEXPORT void Close()
 	{
 		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
+#ifdef _DEBUG
 		HOST_LOCK;
 		OnRemove = [](TextThread* textThread) { delete textThread; };
 		for (auto i : processRecordsByIds) UnregisterProcess(i.first);
-		delete textThreadsByParams[{ 0, -1UL, -1UL, -1UL }];
+		delete textThreadsByParams[CONSOLE];
+#endif
 	}
 
 	DLLEXPORT bool InjectProcess(DWORD processId, DWORD timeout)
@@ -155,7 +159,7 @@ namespace Host
 	DLLEXPORT void AddConsoleOutput(std::wstring text)
 	{
 		HOST_LOCK;
-		textThreadsByParams[{ 0, -1UL, -1UL, -1UL }]->AddSentence(std::wstring(text));
+		textThreadsByParams[CONSOLE]->AddSentence(std::wstring(text));
 	}
 }
 
