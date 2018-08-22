@@ -448,13 +448,13 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 {
 	TextHook* hook = (TextHook*)threadParam;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
-	char testChar1 = 0, testChar2 = 0; // Artikash 8/20/2018: two testChars in case the first character of the string is the same
 	unsigned int changeCount = 0;
+	int dataLen = 0;
 	const char* currentAddress = (char*)hook->hp.address;
 	while (true)
 	{
-		Sleep(1000);
-		if (testChar1 == *currentAddress && testChar2 == *(currentAddress + 3))
+		Sleep(500);
+		if (memcmp(buffer + HEADER_SIZE, currentAddress, dataLen) == 0)
 		{
 			changeCount = 0;
 			continue;
@@ -466,7 +466,6 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 			break;
 		}
 
-		int dataLen;
 		if (hook->hp.type & USING_UNICODE)
 			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
 		else
@@ -478,9 +477,6 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 		memcpy(buffer + HEADER_SIZE, currentAddress, dataLen);
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
-
-		testChar1 = *currentAddress;
-		testChar2 = *(currentAddress + 3);
 	}
 	hook->ClearHook();
 	return 0;
