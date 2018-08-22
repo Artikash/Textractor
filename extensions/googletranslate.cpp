@@ -80,9 +80,12 @@ extern "C"
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 10000, &bytesRead);
 						// Response formatted as JSON: starts with '[[["'
-						MultiByteToWideChar(CP_UTF8, 0, buffer + 4, (int)((strstr(buffer, "\",\"")) - (buffer + 4)), translation, 10000);
-						message = translation;
-						for (int i = -1; translation[++i];) if (translation[i] == L'\\') translation[i] = 0x200b;
+						if (buffer[0] == '[')
+						{
+							MultiByteToWideChar(CP_UTF8, 0, buffer + 4, (int)((strstr(buffer, "\",\"")) - (buffer + 4)), translation, 10000);
+							message = translation;
+							for (int i = -1; translation[++i];) if (translation[i] == L'\\') translation[i] = 0x200b;
+						}
 					}
 					WinHttpCloseHandle(request);
 				}
