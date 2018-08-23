@@ -9,11 +9,11 @@
 //# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
 #endif // _MSC_VER
 
-#include "src/hijack/texthook.h"
-#include "src/engine/match.h"
-#include "src/except.h"
-#include "src/main.h"
-#include "include/const.h"
+#include "hijack/texthook.h"
+#include "engine/match.h"
+#include "except.h"
+#include "main.h"
+#include "const.h"
 #include "ithsys/ithsys.h"
 #include "disasm/disasm.h"
 //#include "winseh/winseh.h"
@@ -293,9 +293,8 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
       }
       dwCount = GetLength(dwDataBase, dwDataIn);
     }
-
     // jichi 12/25/2013: validate data size
-    if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - HEADER_SIZE)
+    if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam))
       return 0;
 
     if (hp.length_offset == 1) {
@@ -304,27 +303,27 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
         dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
       if (dwCount == 1)
         dwDataIn &= 0xff;
-      *(WORD *)(pbData + HEADER_SIZE) = dwDataIn & 0xffff;
+      *(WORD *)(pbData + sizeof(ThreadParam)) = dwDataIn & 0xffff;
     }
     else
-      ::memcpy(pbData + HEADER_SIZE, (void *)dwDataIn, dwCount);
+      ::memcpy(pbData + sizeof(ThreadParam), (void *)dwDataIn, dwCount);
 
     // jichi 10/14/2014: Add filter function
-    if (hp.filter_fun && !hp.filter_fun(pbData + HEADER_SIZE, &dwCount, &hp, 0) || dwCount <= 0) {
+    if (hp.filter_fun && !hp.filter_fun(pbData + sizeof(ThreadParam), &dwCount, &hp, 0) || dwCount <= 0) {
       return 0;
     }
 
-    *(DWORD *)pbData = dwAddr;
     if (dwType & (NO_CONTEXT|FIXING_SPLIT))
       dwRetn = 0;
 
+	*(ThreadParam*)pbData = { GetCurrentProcessId(), dwAddr, dwRetn, dwSplit };
     *((DWORD *)pbData + 1) = dwRetn;
     *((DWORD *)pbData + 2) = dwSplit;
     if (dwCount) {
 		DWORD unused;
 
       //CliLockPipe();
-	  WriteFile(::hookPipe, pbData, dwCount + HEADER_SIZE, &unused, nullptr);
+	  WriteFile(::hookPipe, pbData, dwCount + sizeof(ThreadParam), &unused, nullptr);
       //CliUnlockPipe();
     }
   return 0;
@@ -454,7 +453,7 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 	while (true)
 	{
 		Sleep(500);
-		if (memcmp(buffer + HEADER_SIZE, currentAddress, dataLen) == 0)
+		if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen) == 0)
 		{
 			changeCount = 0;
 			continue;
@@ -471,12 +470,10 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 		else
 			dataLen = strlen(currentAddress);
 
-		*(DWORD*)buffer = hook->hp.address;
-		*(DWORD*)(buffer + 4) = 0;
-		*(DWORD*)(buffer + 8) = 0;
-		memcpy(buffer + HEADER_SIZE, currentAddress, dataLen);
+		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.address, 0, 0 };
+		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen);
 		DWORD unused;
-		WriteFile(::hookPipe, buffer, dataLen + HEADER_SIZE, &unused, nullptr);
+		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
 	}
 	hook->ClearHook();
 	return 0;

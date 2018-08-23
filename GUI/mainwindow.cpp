@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "extensions.h"
 #include "misc.h"
-#include "../vnrhook/include/const.h"
 #include <QCoreApplication>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -78,9 +77,9 @@ void MainWindow::AddThread(TextThread* thread)
 {
 	ttCombo->addItem(
 		TextThreadString(thread) +
-		QString::fromStdWString(Host::GetHookName(thread->GetThreadParameter().pid, thread->GetThreadParameter().hook)) +
+		QString::fromStdWString(Host::GetHookName(thread->GetThreadParam().pid, thread->GetThreadParam().hook)) +
 		" (" +
-		GenerateCode(Host::GetHookParam(thread->GetThreadParameter()), thread->GetThreadParameter().pid) +
+		GenerateCode(Host::GetHookParam(thread->GetThreadParam()), thread->GetThreadParam().pid) +
 		")"
 	);
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
@@ -116,7 +115,7 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 
 QString MainWindow::TextThreadString(TextThread* thread)
 {
-	ThreadParameter tp = thread->GetThreadParameter();
+	ThreadParam tp = thread->GetThreadParam();
 	return QString("%1:%2:%3:%4: ").arg(
 		QString::number(tp.pid),
 		QString::number(tp.hook, 16),
@@ -125,7 +124,7 @@ QString MainWindow::TextThreadString(TextThread* thread)
 	).toUpper();
 }
 
-ThreadParameter MainWindow::ParseTextThreadString(QString textThreadString)
+ThreadParam MainWindow::ParseTextThreadString(QString textThreadString)
 {
 	QStringList threadParam = textThreadString.split(":");
 	return { threadParam[0].toUInt(), threadParam[1].toULongLong(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16) };
@@ -149,9 +148,9 @@ std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread
 	{
 	{ "current select", (int)ttCombo->currentText().startsWith(TextThreadString(thread)) },
 	{ "text number", 0 },
-	{ "process id", thread->GetThreadParameter().pid },
-	{ "hook address", (int)thread->GetThreadParameter().hook },
-	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParameter().hook >> 32) }
+	{ "process id", thread->GetThreadParam().pid },
+	{ "hook address", (int)thread->GetThreadParam().hook },
+	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParam().hook >> 32) }
 	};
 }
 
@@ -161,7 +160,7 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 	QVector<HookParam> hooks;
 	for (int i = 0; i < ttCombo->count(); ++i)
 	{
-		ThreadParameter tp = ParseTextThreadString(ttCombo->itemText(i));
+		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
 		if (tp.pid == processId && !addresses.contains(tp.hook))
 		{
 			addresses.insert(tp.hook);

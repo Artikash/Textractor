@@ -4,21 +4,33 @@
 
 #include "host.h"
 #include "pipe.h"
-#include "winmutex.h"
-#include "../vnrhook/include/const.h"
-#include "../vnrhook/include/defs.h"
-#include "../vnrhook/include/types.h"
+#include "const.h"
+#include "defs.h"
+#include "../vnrhook/hijack/texthook.h"
 
-
-struct ThreadParameterHasher
+struct ProcessRecord
 {
-	size_t operator()(const ThreadParameter& tp) const
-	{
-		return std::hash<__int64>()(tp.pid << 6) + std::hash<__int64>()(tp.hook) + std::hash<__int64>()(tp.retn) + std::hash<__int64>()(tp.spl);
-	}
+	HANDLE processHandle;
+	HANDLE sectionMutex;
+	HANDLE section;
+	LPVOID sectionMap;
+	HANDLE hostPipe;
 };
 
-std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
+// Artikash 5/31/2018: required for unordered_map to work with struct key
+template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<__int64>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
+bool operator==(const ThreadParam& one, const ThreadParam& two) { return memcmp(&one, &two, sizeof(ThreadParam)) == 0; }
+
+// Artikash 7/20/2018: similar to std::lock guard but use Winapi objects for cross process comms
+class MutexLocker
+{
+	HANDLE mutex;
+public:
+	MutexLocker(HANDLE mutex) : mutex(mutex) { WaitForSingleObject(mutex, 0); }
+	~MutexLocker() { if (mutex != INVALID_HANDLE_VALUE && mutex != nullptr) ReleaseMutex(mutex); }
+};
+
+std::unordered_map<ThreadParam, TextThread*> textThreadsByParams;
 std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
 std::recursive_mutex hostMutex;
@@ -28,7 +40,7 @@ ProcessEventCallback OnAttach, OnDetach;
 
 DWORD DUMMY[100];
 
-ThreadParameter CONSOLE{ 0, -1UL, -1UL, -1UL };
+ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL };
 
 #define HOST_LOCK std::lock_guard<std::recursive_mutex> hostLocker(hostMutex) // Synchronized scope for accessing private data
 
@@ -38,7 +50,7 @@ namespace Host
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
 		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE, USING_UNICODE));
-		CreateNewPipe();
+		CreatePipe();
 	}
 
 	DLLEXPORT void Close()
@@ -102,25 +114,20 @@ namespace Host
 
 	DLLEXPORT bool DetachProcess(DWORD processId)
 	{
-		DWORD command = HOST_COMMAND_DETACH;
+		int command = HOST_COMMAND_DETACH;
 		return WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
 	DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name)
 	{
-		BYTE buffer[PIPE_BUFFER_SIZE] = {};
-		*(DWORD*)buffer = HOST_COMMAND_NEW_HOOK;
-		*(HookParam*)(buffer + sizeof(DWORD)) = hp;
-		if (name.size()) strcpy((char*)buffer + sizeof(DWORD) + sizeof(HookParam), name.c_str());
-		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) + sizeof(HookParam) + name.size(), DUMMY, nullptr);
+		auto info = InsertHookCmd(hp, name);
+		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
 	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
 	{
-		BYTE buffer[sizeof(DWORD) * 2] = {};
-		*(DWORD*)buffer = HOST_COMMAND_REMOVE_HOOK;
-		*(DWORD*)(buffer + sizeof(DWORD)) = addr;
-		return WriteFile(processRecordsByIds[pid].hostPipe, buffer, sizeof(DWORD) * 2, DUMMY, nullptr);
+		auto info = RemoveHookCmd(addr);
+		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
 	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr)
@@ -130,14 +137,14 @@ namespace Host
 		ProcessRecord pr = processRecordsByIds[pid];
 		if (pr.sectionMap == nullptr) return ret;
 		MutexLocker locker(pr.sectionMutex);
-		const Hook* hooks = (const Hook*)pr.sectionMap;
+		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
 			if ((DWORD)hooks[i].Address() == addr)
 				ret = hooks[i].hp;
 		return ret;
 	}
 
-	DLLEXPORT HookParam GetHookParam(ThreadParameter tp) { return GetHookParam(tp.pid, tp.hook); }
+	DLLEXPORT HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
 
 	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr)
 	{
@@ -147,7 +154,7 @@ namespace Host
 		ProcessRecord pr = processRecordsByIds[pid];
 		if (pr.sectionMap == nullptr) return L"";
 		MutexLocker locker(pr.sectionMutex);
-		const Hook* hooks = (const Hook*)pr.sectionMap;
+		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
 			if ((DWORD)hooks[i].Address() == addr)
 			{
@@ -158,7 +165,7 @@ namespace Host
 		return std::wstring(A2W(buffer.c_str()));
 	}
 
-	DLLEXPORT TextThread* GetThread(ThreadParameter tp)
+	DLLEXPORT TextThread* GetThread(ThreadParam tp)
 	{
 		HOST_LOCK;
 		return textThreadsByParams[tp];
@@ -171,7 +178,7 @@ namespace Host
 	}
 }
 
-void DispatchText(ThreadParameter tp, const BYTE* text, int len)
+void DispatchText(ThreadParam tp, const BYTE* text, int len)
 {
 	if (!text || len <= 0) return;
 	HOST_LOCK;
@@ -181,10 +188,10 @@ void DispatchText(ThreadParameter tp, const BYTE* text, int len)
 	it->AddText(text, len);
 }
 
-void RemoveThreads(bool(*RemoveIf)(ThreadParameter, ThreadParameter), ThreadParameter cmp)
+void RemoveThreads(bool(*RemoveIf)(ThreadParam, ThreadParam), ThreadParam cmp)
 {
 	HOST_LOCK;
-	std::vector<ThreadParameter> removedThreads;
+	std::vector<ThreadParam> removedThreads;
 	for (auto i : textThreadsByParams)
 		if (RemoveIf(i.first, cmp))
 		{

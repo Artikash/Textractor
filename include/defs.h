@@ -3,16 +3,6 @@
 // vnrhook/defs.h
 // 8/23/2013 jichi
 
-// DLL files
-
-//#define ITH_SERVER_DLL      L"vnrsrv.dll"
-//#define ITH_CLIENT_DLL      L"vnrcli.dll"
-//#define ITH_CLIENT_XP_DLL   L"vnrclixp.dll"
-////#define ITH_CLIENT_UX_DLL   L"vnrcliux.dll"
-//#define ITH_ENGINE_DLL      L"vnreng.dll"
-//#define ITH_ENGINE_XP_DLL   L"vnrengxp.dll"
-//#define ITH_ENGINE_UX_DLL   L"vnrengux.dll"
-
 #define ITH_DLL     L"vnrhook.dll"
 
 // Pipes

@@ -1,16 +1,13 @@
 // textthread.cc
 // 8/24/2013 jichi
 // Branch IHF/TextThread.cpp, rev 133
-#ifdef _MSC_VER
-# pragma warning (disable:4100)   // C4100: unreference formal parameter
-#endif // _MSC_VER
 
 #include "textthread.h"
-#include "../vnrhook/include/const.h"
+#include "const.h"
 
 #define TT_LOCK std::lock_guard<std::recursive_mutex> ttLocker(ttMutex) // Synchronized scope for accessing private data
 
-TextThread::TextThread(ThreadParameter tp, DWORD status) :
+TextThread::TextThread(ThreadParam tp, DWORD status) :
 	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
 	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100), Flush()); }),
 	timestamp(GetTickCount()),

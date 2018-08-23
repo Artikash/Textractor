@@ -7,21 +7,21 @@
 # pragma warning (disable:4819)
 #endif // _MSC_VER
 
-#include "src/engine/engine.h"
+#include "engine/engine.h"
 #include "ntdll/ntdll.h"
-#include "src/engine/match.h"
-#include "src/engine/hookdefs.h"
-#include "src/util/util.h"
-#include "src/main.h"
-#include "src/engine/mono/funcinfo.h"
-#include "src/engine/ppsspp/funcinfo.h"
-#include "src/except.h"
+#include "engine/match.h"
+#include "util/util.h"
+#include "main.h"
+#include "engine/mono/funcinfo.h"
+#include "engine/ppsspp/funcinfo.h"
+#include "except.h"
 #include "ithsys/ithsys.h"
 #include "memdbg/memsearch.h"
 #include "disasm/disasm.h"
 #include "cpputil/cppcstring.h"
 #include "mono/monoobject.h"
 #include "growl.h"
+#include "const.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
 #include <string>
@@ -38,50 +38,6 @@
 
 enum { VNR_TEXT_CAPACITY = 1500 }; // estimated max number of bytes allowed in VNR, slightly larger than VNR's text limit (1000)
 
-#ifdef DEBUG
-# include "src/util/growl.h"
-//# include "uniquemap.h"
-//# include "uniquemap.cc"
-namespace { // unnamed debug functions
-// jichi 12/17/2013: Copied from int TextHook::GetLength(DWORD base, DWORD in)
-int GetHookDataLength(const HookParam &hp, DWORD base, DWORD in)
-{
-  if (CC_UNLIKELY(!base))
-    return 0;
-  int len;
-  switch (hp.length_offset) {
-  default: // jichi 12/26/2013: I should not put this default branch to the end
-    len = *((int *)base + hp.length_offset);
-    if (len >= 0) {
-      if (hp.type & USING_UNICODE)
-        len <<= 1;
-      break;
-    }
-    else if (len != -1)
-      break;
-    //len == -1 then continue to case 0.
-  case 0:
-    if (hp.type & USING_UNICODE)
-      len = wcslen((LPCWSTR)in) << 1;
-    else
-      len = strlen((LPCSTR)in);
-    break;
-  case 1:
-    if (hp.type & USING_UNICODE)
-      len = 2;
-    else {
-      if (hp.type & BIG_ENDIAN)
-        in >>= 8;
-      len = LeadByteTable[in&0xff];  //Slightly faster than IsDBCSLeadByte
-    }
-    break;
-  }
-  // jichi 12/25/2013: This function originally return -1 if failed
-  //return len;
-  return max(0, len);
-}
-} // unnamed
-#endif // DEBUG
 
 namespace { // unnamed helpers
 

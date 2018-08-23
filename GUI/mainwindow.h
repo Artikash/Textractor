@@ -44,7 +44,7 @@ private slots:
 
 private:
 	QString TextThreadString(TextThread* thread);
-	ThreadParameter ParseTextThreadString(QString textThreadString);
+	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();
 	void ReloadExtensions();
 	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);

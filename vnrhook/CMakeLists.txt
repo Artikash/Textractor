@@ -2,50 +2,27 @@ include_directories(.)
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
 set(vnrhook_src
-  include/const.h
-  include/defs.h
-  include/types.h
-  src/main.cc
-  src/main.h
-  src/pipe.cc
-  src/util/ithsys/ithsys.cc
-  src/hijack/texthook.cc
+  main.cc
+  pipe.cc
+  util/ithsys/ithsys.cc
+  hijack/texthook.cc
 )
 else()
 set(vnrhook_src
-  include/const.h
-  include/defs.h
-  include/types.h
-  src/except.h
-  src/main.cc
-  src/main.h
-  src/pipe.cc
-  src/engine/engine.cc
-  src/engine/engine.h
-  src/engine/hookdefs.h
-  src/engine/match.cc
-  src/engine/match.h
-  src/engine/pchooks.cc
-  src/engine/pchooks.h
-  src/engine/mono/funcinfo.h
-  src/engine/mono/types.h
-  src/engine/ppsspp/funcinfo.h
-  src/hijack/texthook.cc
-  src/hijack/texthook.h
-  src/util/growl.h
-  src/util/util.cc
-  src/util/util.h
-  src/util/ithsys/ithsys.cc
-  src/util/disasm/disasm.cc
-  src/util/memdbg/memdbg.h
-  src/util/memdbg/memsearch.cc
-  src/util/memdbg/memsearch.h
-  src/util/mono/monoobject.h
-  src/util/mono/monotype.h
+  main.cc
+  pipe.cc
+  engine/engine.cc
+  engine/match.cc
+  engine/pchooks.cc
+  hijack/texthook.cc
+  util/util.cc
+  util/ithsys/ithsys.cc
+  util/disasm/disasm.cc
+  util/memdbg/memsearch.cc
 )
 endif()
 
-include_directories(src/util)
+include_directories(util)
 
 add_library(vnrhook SHARED ${vnrhook_src})
 

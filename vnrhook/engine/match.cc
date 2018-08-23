@@ -7,13 +7,13 @@
 //# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
 #endif // _MSC_VER
 
-#include "src/engine/match.h"
-#include "src/engine/engine.h"
-#include "src/engine/pchooks.h"
-#include "src/util/growl.h"
-#include "src/util/util.h"
-#include "src/main.h"
-#include "src/except.h"
+#include "engine/match.h"
+#include "engine/engine.h"
+#include "engine/pchooks.h"
+#include "util/growl.h"
+#include "util/util.h"
+#include "main.h"
+#include "except.h"
 #include "ithsys/ithsys.h"
 
 //#define ConsoleOutput(...)  (void)0     // jichi 8/18/2013: I don't need ConsoleOutput

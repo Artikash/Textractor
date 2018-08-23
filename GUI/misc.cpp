@@ -1,5 +1,5 @@
 #include "misc.h"
-#include "../vnrhook/include/const.h"
+#include "const.h"
 #include <QRegExp>
 #include <Psapi.h>
 

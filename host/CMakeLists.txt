@@ -1,8 +1,4 @@
 set(vnrhost_src
-  host.h
-  pipe.h
-  textthread.h
-  winmutex.h
   host.cc
   pipe.cc
   textthread.cc

@@ -3,7 +3,7 @@
 // Branch: ITH_Engine/engine.cpp, revision 133
 // See: http://ja.wikipedia.org/wiki/プロジェクト:美少女ゲーム系/ゲームエンジン
 
-#include "src/util/util.h"
+#include "util/util.h"
 #include "ithsys/ithsys.h"
 
 namespace { // unnamed

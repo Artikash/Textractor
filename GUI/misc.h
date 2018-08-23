@@ -2,7 +2,7 @@
 #define MISC_H
 
 #include "qtcommon.h"
-#include "../host/host.h"
+#include "pipe.h"
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);
 QString GetModuleName(DWORD processId, HMODULE module = NULL);
