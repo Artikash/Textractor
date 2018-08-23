@@ -124,13 +124,13 @@ namespace Host
 		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
-	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr)
+	DLLEXPORT bool RemoveHook(DWORD pid, unsigned __int64 addr)
 	{
 		auto info = RemoveHookCmd(addr);
 		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
-	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr)
+	DLLEXPORT HookParam GetHookParam(DWORD pid, unsigned __int64 addr)
 	{
 		HOST_LOCK;
 		HookParam ret = {};
@@ -139,14 +139,14 @@ namespace Host
 		MutexLocker locker(pr.sectionMutex);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if ((DWORD)hooks[i].Address() == addr)
+			if (hooks[i].Address() == addr)
 				ret = hooks[i].hp;
 		return ret;
 	}
 
 	DLLEXPORT HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
 
-	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr)
+	DLLEXPORT std::wstring GetHookName(DWORD pid, unsigned __int64 addr)
 	{
 		if (pid == 0) return L"Console";
 		HOST_LOCK;
@@ -156,7 +156,7 @@ namespace Host
 		MutexLocker locker(pr.sectionMutex);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if ((DWORD)hooks[i].Address() == addr)
+			if (hooks[i].Address() == addr)
 			{
 				buffer.resize(hooks[i].NameLength());
 				ReadProcessMemory(pr.processHandle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);

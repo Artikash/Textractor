@@ -109,7 +109,7 @@ DWORD NewHook(const HookParam &hp, LPCSTR lpname, DWORD flag)
 	}
 	return 0;
 }
-DWORD RemoveHook(DWORD addr)
+DWORD RemoveHook(unsigned __int64 addr)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
 		if (::hookman[i].Address() == addr) {

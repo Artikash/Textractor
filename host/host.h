@@ -20,10 +20,10 @@ namespace Host
 	DLLEXPORT bool DetachProcess(DWORD pid);
 
 	DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name = "");
-	DLLEXPORT bool RemoveHook(DWORD pid, DWORD addr);
-	DLLEXPORT HookParam GetHookParam(DWORD pid, DWORD addr);
+	DLLEXPORT bool RemoveHook(DWORD pid, unsigned __int64 addr);
+	DLLEXPORT HookParam GetHookParam(DWORD pid, unsigned __int64 addr);
 	DLLEXPORT HookParam GetHookParam(ThreadParam tp);
-	DLLEXPORT std::wstring GetHookName(DWORD pid, DWORD addr);
+	DLLEXPORT std::wstring GetHookName(DWORD pid, unsigned __int64 addr);
 
 	DLLEXPORT TextThread* GetThread(ThreadParam tp);
 	DLLEXPORT void AddConsoleOutput(std::wstring text);

@@ -21,7 +21,7 @@ DWORD DUMMY[100];
 
 void CreatePipe()
 {
-	std::thread([]()
+	CreateThread(nullptr, 0, [](LPVOID unused)
 	{
 		enum { STANDARD_WAIT = 50 };
 		while (::running)
@@ -86,7 +86,8 @@ void CreatePipe()
 			CloseHandle(hostPipe);
 		}
 		FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
-	}).detach();
+		return (DWORD)0;
+	}, nullptr, 0, nullptr);
 }
 
 void ConsoleOutput(LPCSTR text)
@@ -107,7 +108,7 @@ void NotifyHookInsert(HookParam hp, LPCSTR name)
 	//return;
 }
 
-void NotifyHookRemove(DWORD addr)
+void NotifyHookRemove(unsigned __int64 addr)
 {
 	auto info = HookRemovedNotif(addr);
 	WriteFile(::hookPipe, &info, sizeof(info), DUMMY, nullptr);
