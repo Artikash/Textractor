@@ -9,6 +9,15 @@
 #include "../vnrhook/include/defs.h"
 #include "../vnrhook/include/types.h"
 
+
+struct ThreadParameterHasher
+{
+	size_t operator()(const ThreadParameter& tp) const
+	{
+		return std::hash<__int64>()(tp.pid << 6) + std::hash<__int64>()(tp.hook) + std::hash<__int64>()(tp.retn) + std::hash<__int64>()(tp.spl);
+	}
+};
+
 std::unordered_map<ThreadParameter, TextThread*, ThreadParameterHasher> textThreadsByParams;
 std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
@@ -25,7 +34,6 @@ ThreadParameter CONSOLE{ 0, -1UL, -1UL, -1UL };
 
 namespace Host
 {
-
 	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
@@ -120,9 +128,9 @@ namespace Host
 		HOST_LOCK;
 		HookParam ret = {};
 		ProcessRecord pr = processRecordsByIds[pid];
-		if (pr.hookman_map == nullptr) return ret;
-		MutexLocker locker(pr.hookman_mutex);
-		const Hook* hooks = (const Hook*)pr.hookman_map;
+		if (pr.sectionMap == nullptr) return ret;
+		MutexLocker locker(pr.sectionMutex);
+		const Hook* hooks = (const Hook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
 			if ((DWORD)hooks[i].Address() == addr)
 				ret = hooks[i].hp;
@@ -137,14 +145,14 @@ namespace Host
 		HOST_LOCK;
 		std::string buffer = "";
 		ProcessRecord pr = processRecordsByIds[pid];
-		if (pr.hookman_map == nullptr) return L"";
-		MutexLocker locker(pr.hookman_mutex);
-		const Hook* hooks = (const Hook*)pr.hookman_map;
+		if (pr.sectionMap == nullptr) return L"";
+		MutexLocker locker(pr.sectionMutex);
+		const Hook* hooks = (const Hook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
 			if ((DWORD)hooks[i].Address() == addr)
 			{
 				buffer.resize(hooks[i].NameLength());
-				ReadProcessMemory(pr.process_handle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
+				ReadProcessMemory(pr.processHandle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
 			}
 		USES_CONVERSION;
 		return std::wstring(A2W(buffer.c_str()));
@@ -192,10 +200,10 @@ void RegisterProcess(DWORD pid, HANDLE hostPipe)
 	HOST_LOCK;
 	ProcessRecord record;
 	record.hostPipe = hostPipe;
-	record.hookman_section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
-	record.hookman_map = MapViewOfFile(record.hookman_section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
-	record.process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	record.hookman_mutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
+	record.section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
+	record.sectionMap = MapViewOfFile(record.section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
+	record.processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	record.sectionMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
 	processRecordsByIds[pid] = record;
 	OnAttach(pid);
 }
@@ -205,10 +213,10 @@ void UnregisterProcess(DWORD pid)
 	HOST_LOCK;
 	ProcessRecord pr = processRecordsByIds[pid];
 	if (!pr.hostPipe) return;
-	CloseHandle(pr.hookman_mutex);
-	UnmapViewOfFile(pr.hookman_map);
-	CloseHandle(pr.process_handle);
-	CloseHandle(pr.hookman_section);
+	CloseHandle(pr.sectionMutex);
+	UnmapViewOfFile(pr.sectionMap);
+	CloseHandle(pr.processHandle);
+	CloseHandle(pr.section);
 	processRecordsByIds[pid] = {};
 	RemoveThreads([](auto one, auto two) { return one.pid == two.pid; }, { pid, 0, 0, 0 });
 	OnDetach(pid);

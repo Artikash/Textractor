@@ -12,23 +12,15 @@
 
 struct ProcessRecord
 {
-	HANDLE process_handle;
-	HANDLE hookman_mutex;
-	HANDLE hookman_section;
-	LPVOID hookman_map;
+	HANDLE processHandle;
+	HANDLE sectionMutex;
+	HANDLE section;
+	LPVOID sectionMap;
 	HANDLE hostPipe;
 };
 
 typedef std::function<void(DWORD)> ProcessEventCallback;
 typedef std::function<void(TextThread*)> ThreadEventCallback;
-
-struct ThreadParameterHasher
-{
-	size_t operator()(const ThreadParameter& tp) const
-	{
-		return std::hash<__int64>()(tp.pid << 6) + std::hash<__int64>()(tp.hook) + std::hash<__int64>()(tp.retn) + std::hash<__int64>()(tp.spl);
-	}
-};
 
 namespace Host
 {
