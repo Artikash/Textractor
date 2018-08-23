@@ -212,6 +212,11 @@ void MainWindow::on_hookButton_clicked()
 void MainWindow::on_unhookButton_clicked()
 {
 	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
+	if (hooks.size() == 0)
+	{
+		Host::AddConsoleOutput(L"no hooks detected");
+		return;
+	}
 	QStringList hookList;
 	for (auto i : hooks) hookList.push_back(
 				QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), i.address)) +
