@@ -65,7 +65,7 @@ void CreatePipe()
 				case HOST_COMMAND_NEW_HOOK:
 				{
 					auto info = *(InsertHookCmd*)buffer;
-					NewHook(info.hp, info.name);
+					NewHook(info.hp, info.name, 0);
 				}
 				break;
 				case HOST_COMMAND_REMOVE_HOOK:

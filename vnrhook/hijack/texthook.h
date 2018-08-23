@@ -15,6 +15,7 @@ extern DWORD trigger;
 
 // jichi 9/25/2013: This class will be used by NtMapViewOfSectionfor
 // interprocedure communication, where constructor/destructor will NOT work.
+
 class TextHook
 {
 	int InsertHookCode();
@@ -25,11 +26,11 @@ class TextHook
 	int RemoveReadCode();
 	int SetHookName(LPCSTR name);
 public:
+	HookParam hp;
 	LPSTR hook_name;
 	int name_length;
 	BYTE recover[0x68 - sizeof(HookParam)];
 	BYTE original[0x10];
-	HookParam hp;
 
 	unsigned __int64 Address() const { return hp.address; }
 	DWORD Type() const { return hp.type; }

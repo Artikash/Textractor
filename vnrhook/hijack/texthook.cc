@@ -16,6 +16,7 @@
 #include "const.h"
 #include "ithsys/ithsys.h"
 #include "disasm/disasm.h"
+#include "growl.h"
 //#include "winseh/winseh.h"
 
 //#define ConsoleOutput(...)   (void)0    // jichi 9/17/2013: I don't need this ><
@@ -317,8 +318,6 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
       dwRetn = 0;
 
 	*(ThreadParam*)pbData = { GetCurrentProcessId(), dwAddr, dwRetn, dwSplit };
-    *((DWORD *)pbData + 1) = dwRetn;
-    *((DWORD *)pbData + 2) = dwSplit;
     if (dwCount) {
 		DWORD unused;
 
@@ -432,7 +431,7 @@ int TextHook::UnsafeInsertHookCode()
       }
     }
   }
-  
+
   DWORD old;
   LPVOID addr = (void*)hp.address;
   VirtualProtect(addr, sizeof(inst), PAGE_EXECUTE_READWRITE, &old);
