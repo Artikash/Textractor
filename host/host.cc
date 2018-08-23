@@ -19,7 +19,7 @@ struct ProcessRecord
 
 // Artikash 5/31/2018: required for unordered_map to work with struct key
 template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<__int64>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
-bool operator==(const ThreadParam& one, const ThreadParam& two) { return memcmp(&one, &two, sizeof(ThreadParam)) == 0; }
+bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
 
 // Artikash 7/20/2018: similar to std::lock guard but use Winapi objects for cross process comms
 class MutexLocker

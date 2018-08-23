@@ -448,12 +448,12 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 	TextHook* hook = (TextHook*)threadParam;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	unsigned int changeCount = 0;
-	int dataLen = 1;
+	int dataLen = 0;
 	const char* currentAddress = (char*)hook->hp.address;
 	while (true)
 	{
 		Sleep(500);
-		if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen) == 0)
+		if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1) == 0)
 		{
 			changeCount = 0;
 			continue;
@@ -471,7 +471,7 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 			dataLen = strlen(currentAddress);
 
 		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.address, 0, 0 };
-		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen);
+		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
 	}
