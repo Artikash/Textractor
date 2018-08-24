@@ -8,7 +8,7 @@
 // - Clean up this file
 // - Reduce global variables. Use namespaces or singleton classes instead.
 #include "common.h"
-#include "pipe.h"
+#include "types.h"
 
 extern int currentHook;
 extern DWORD trigger;

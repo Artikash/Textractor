@@ -3,8 +3,6 @@
 #include "common.h"
 #include "const.h"
 
-void CreatePipe();
-
 // jichi 3/7/2014: Add guessed comment
 struct HookParam 
 {
@@ -32,13 +30,16 @@ struct HookParam
 	HANDLE readerHandle; // Artikash 8/4/2018: handle for reader thread
 };
 
-struct ThreadParam // From hook
+
+struct ThreadParam // From hook, used internally by host as well
 {
 	DWORD pid; // jichi: 5/11/2014: The process ID
 	unsigned __int64 hook; // Artikash 6/6/2018: The insertion address of the hook
 	unsigned __int64 retn; // jichi 5/11/2014: The return address of the hook
 	unsigned __int64 spl;  // jichi 5/11/2014: the processed split value of the hook paramete
 };
+// Artikash 5/31/2018: required for unordered_map to work with struct key
+template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<__int64>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
 
 struct InsertHookCmd // From host
 {
@@ -68,3 +69,5 @@ struct HookRemovedNotif // From hook
 	int command = HOST_NOTIFICATION_RMVHOOK;
 	unsigned __int64 address;
 };
+
+typedef std::lock_guard<std::recursive_mutex> LOCK;

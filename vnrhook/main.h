@@ -5,7 +5,7 @@
 // Branch: ITH/IHF_DLL.h, rev 66
 
 #include "common.h"
-#include "pipe.h"
+#include "types.h"
 
 void ConsoleOutput(LPCSTR text); // jichi 12/25/2013: Used to return length of sent text
 void NotifyHookInsert(HookParam hp, LPCSTR name);

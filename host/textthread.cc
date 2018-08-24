@@ -5,8 +5,6 @@
 #include "textthread.h"
 #include "const.h"
 
-#define TT_LOCK std::lock_guard<std::recursive_mutex> ttLocker(ttMutex) // Synchronized scope for accessing private data
-
 TextThread::TextThread(ThreadParam tp, DWORD status) :
 	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
 	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); }),
@@ -25,13 +23,13 @@ TextThread::~TextThread()
 
 std::wstring TextThread::GetStore()
 {
-	TT_LOCK;
+	LOCK ttLock(ttMutex);
 	return storage;
 }
 
 bool TextThread::Flush()
 {
-	TT_LOCK;
+	LOCK ttLock(ttMutex);
 	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
@@ -51,14 +49,14 @@ bool TextThread::Flush()
 
 void TextThread::AddSentence(std::wstring sentence)
 {
-	TT_LOCK;
+	LOCK ttLock(ttMutex);
 	if (Output) sentence = Output(this, sentence);
 	storage.append(sentence);
 }
 
 void TextThread::AddText(const BYTE *con, int len)
 {
-	TT_LOCK;
+	LOCK ttLock(ttMutex);
 	buffer.insert(buffer.end(), con, con + len);
 	timestamp = GetTickCount();
 }

@@ -7,7 +7,7 @@
 # pragma warning (disable:4100)   // C4100: unreference formal parameter
 #endif // _MSC_VER
 
-#include "pipe.h"
+#include "types.h"
 #include "main.h"
 #include "hijack/texthook.h"
 #include "engine/match.h"
