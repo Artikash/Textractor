@@ -9,7 +9,7 @@
 
 TextThread::TextThread(ThreadParam tp, DWORD status) :
 	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
-	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100), Flush()); }),
+	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); }),
 	timestamp(GetTickCount()),
 	Output(nullptr),
 	tp(tp),
@@ -18,7 +18,6 @@ TextThread::TextThread(ThreadParam tp, DWORD status) :
 
 TextThread::~TextThread()
 {
-	status = -1UL;
 	SetEvent(deletionEvent);
 	flushThread.join();
 	CloseHandle(deletionEvent);
@@ -33,7 +32,6 @@ std::wstring TextThread::GetStore()
 bool TextThread::Flush()
 {
 	TT_LOCK;
-	if (status == -1UL) return false;
 	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)

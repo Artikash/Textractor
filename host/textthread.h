@@ -28,11 +28,12 @@ private:
 
 	std::vector<char> buffer;
 	std::wstring storage;
+
 	std::recursive_mutex ttMutex;
 	HANDLE deletionEvent;
 	std::thread flushThread;
-	
 	DWORD timestamp;
+
 	ThreadOutputCallback Output;
 	ThreadParam tp;
 	DWORD status;
