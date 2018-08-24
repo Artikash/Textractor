@@ -30,7 +30,6 @@ struct HookParam
 	HANDLE readerHandle; // Artikash 8/4/2018: handle for reader thread
 };
 
-
 struct ThreadParam // From hook, used internally by host as well
 {
 	DWORD pid; // jichi: 5/11/2014: The process ID
@@ -40,6 +39,7 @@ struct ThreadParam // From hook, used internally by host as well
 };
 // Artikash 5/31/2018: required for unordered_map to work with struct key
 template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<__int64>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
+static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
 
 struct InsertHookCmd // From host
 {

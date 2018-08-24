@@ -6,6 +6,7 @@
 #include "const.h"
 #include "defs.h"
 #include "../vnrhook/hijack/texthook.h"
+#include <atlbase.h> // A2W
 
 namespace
 {
@@ -21,7 +22,6 @@ namespace
 	ThreadEventCallback OnCreate, OnRemove;
 	ProcessEventCallback OnAttach, OnDetach;
 
-	bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
 	std::unordered_map<ThreadParam, TextThread*> textThreadsByParams;
 	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
@@ -201,22 +201,22 @@ namespace Host
 		return false;
 	}
 
-	bool DetachProcess(DWORD processId)
+	void DetachProcess(DWORD processId)
 	{
 		int command = HOST_COMMAND_DETACH;
-		return WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
-	bool InsertHook(DWORD pid, HookParam hp, std::string name)
+	void InsertHook(DWORD pid, HookParam hp, std::string name)
 	{
 		auto info = InsertHookCmd(hp, name);
-		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
+		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
-	bool RemoveHook(DWORD pid, unsigned __int64 addr)
+	void RemoveHook(DWORD pid, unsigned __int64 addr)
 	{
 		auto info = RemoveHookCmd(addr);
-		return WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
+		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
 	HookParam GetHookParam(DWORD pid, unsigned __int64 addr)
