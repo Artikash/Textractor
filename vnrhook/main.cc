@@ -32,6 +32,8 @@ hFile,
 hMutex,
 hmMutex;
 
+void CreatePipe();
+
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
 {
 	switch (fdwReason) 

@@ -7,31 +7,23 @@
 #include "common.h"
 #include "textthread.h"
 
-#define DLLEXPORT __declspec(dllexport)
-
 typedef std::function<void(DWORD)> ProcessEventCallback;
 typedef std::function<void(TextThread*)> ThreadEventCallback;
 
 namespace Host
 {
-	DLLEXPORT void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove);
-	DLLEXPORT void Close();
-	DLLEXPORT bool InjectProcess(DWORD pid, DWORD timeout = 5000);
-	DLLEXPORT bool DetachProcess(DWORD pid);
+	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove);
+	void Close();
+	bool InjectProcess(DWORD pid, DWORD timeout = 5000);
+	bool DetachProcess(DWORD pid);
 
-	DLLEXPORT bool InsertHook(DWORD pid, HookParam hp, std::string name = "");
-	DLLEXPORT bool RemoveHook(DWORD pid, unsigned __int64 addr);
-	DLLEXPORT HookParam GetHookParam(DWORD pid, unsigned __int64 addr);
-	DLLEXPORT HookParam GetHookParam(ThreadParam tp);
-	DLLEXPORT std::wstring GetHookName(DWORD pid, unsigned __int64 addr);
+	bool InsertHook(DWORD pid, HookParam hp, std::string name = "");
+	bool RemoveHook(DWORD pid, unsigned __int64 addr);
+	HookParam GetHookParam(DWORD pid, unsigned __int64 addr);
+	HookParam GetHookParam(ThreadParam tp);
+	std::wstring GetHookName(DWORD pid, unsigned __int64 addr);
 
-	DLLEXPORT TextThread* GetThread(ThreadParam tp);
-	DLLEXPORT void AddConsoleOutput(std::wstring text);
+	TextThread* GetThread(ThreadParam tp);
+	void AddConsoleOutput(std::wstring text);
 }
-
-void DispatchText(ThreadParam tp, const BYTE *text, int len);
-void RemoveThreads(bool(*RemoveIf)(ThreadParam, ThreadParam), ThreadParam cmp);
-void RegisterProcess(DWORD pid, HANDLE hostPipe);
-void UnregisterProcess(DWORD pid);
-
 // EOF

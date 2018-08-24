@@ -5,7 +5,7 @@
 // Branch: ITH/TextThread.h, rev 120
 
 #include "common.h"
-#include "pipe.h"
+#include "types.h"
 
 
 class TextThread
@@ -13,9 +13,9 @@ class TextThread
 	typedef std::function<std::wstring(TextThread*, std::wstring)> ThreadOutputCallback;
 public:
 	TextThread(ThreadParam tp, DWORD status);
-	virtual ~TextThread();
+	~TextThread();
 
-	virtual std::wstring GetStore();
+	std::wstring GetStore();
 	ThreadParam GetThreadParam() { return tp; }
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }

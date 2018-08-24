@@ -1,6 +1,5 @@
 set(vnrhost_src
   host.cc
-  pipe.cc
   textthread.cc
 )
 
