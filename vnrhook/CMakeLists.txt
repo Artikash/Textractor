@@ -48,6 +48,7 @@ target_compile_options(vnrhook PRIVATE
 set(vnrhook_libs
   ntdll.lib
   Version.lib
+  minhook
 )
 
 target_link_libraries(vnrhook ${vnrhook_libs})
