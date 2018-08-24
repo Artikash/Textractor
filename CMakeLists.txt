@@ -6,6 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${MODULE_DIR})
 project(NextHooker)
 
 add_compile_options(
+  /std:c++17
   #/Zc:auto # config.pri
   /wd4819 # config.pri
   /MP

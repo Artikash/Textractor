@@ -38,7 +38,7 @@ DWORD Hash(QString module)
 	return hash;
 }
 
-HookParam ParseRCode(QString RCode)
+std::optional<HookParam> ParseRCode(QString RCode)
 {
 	HookParam hp = {};
 	hp.type |= DIRECT_READ;
@@ -68,7 +68,7 @@ HookParam ParseRCode(QString RCode)
 	return hp;
 }
 
-HookParam ParseHCode(QString HCode)
+std::optional<HookParam> ParseHCode(QString HCode)
 {
 	HookParam hp = {};
 	switch (HCode.at(0).unicode())
@@ -145,7 +145,7 @@ HookParam ParseHCode(QString HCode)
 	return hp;
 }
 
-HookParam ParseCode(QString code)
+std::optional<HookParam> ParseCode(QString code)
 {
 	code = code.toUpper();
 	if (code.startsWith("/H")) return ParseHCode(code.remove(0, 2));

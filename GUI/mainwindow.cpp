@@ -63,7 +63,7 @@ void MainWindow::AddProcess(unsigned int processId)
 		{
 			QStringList hooks = allProcesses.at(i).split(" , ");
 			for (int j = 1; j < hooks.length(); ++j)
-				Host::InsertHook(processId, ParseCode(hooks.at(j)));
+				Host::InsertHook(processId, ParseCode(hooks.at(j)).value_or(HookParam()));
 			return;
 		}
 }
@@ -200,13 +200,8 @@ void MainWindow::on_hookButton_clicked()
 	bool ok;
 	QString hookCode = QInputDialog::getText(this, "Add Hook", CodeInfoDump, QLineEdit::Normal, "", &ok);
 	if (!ok) return;
-	HookParam toInsert = ParseCode(hookCode);
-	if (toInsert.type == 0 && toInsert.length_offset == 0)
-	{
-		Host::AddConsoleOutput(L"invalid code");
-		return;
-	}
-	Host::InsertHook(GetSelectedProcessId(), ParseCode(hookCode));
+	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
+	else Host::AddConsoleOutput(L"invalid code");
 }
 
 void MainWindow::on_unhookButton_clicked()
