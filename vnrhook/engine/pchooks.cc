@@ -123,7 +123,7 @@ void PcHooks::hookGDIPlusFunctions()
 {
   HMODULE hModule = ::GetModuleHandleA("gdiplus.dll");
   if (!hModule) {
-    ConsoleOutput("not loaded");
+    ConsoleOutput("gdi+: not loaded");
     return;
   }
 

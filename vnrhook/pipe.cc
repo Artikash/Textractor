@@ -7,7 +7,7 @@
 # pragma warning (disable:4100)   // C4100: unreference formal parameter
 #endif // _MSC_VER
 
-#include "types.h"
+#include "pipe.h"
 #include "main.h"
 #include "hijack/texthook.h"
 #include "engine/match.h"
@@ -52,7 +52,7 @@ void CreatePipe()
 			ReleaseMutex(pipeAcquisitionMutex);
 			CloseHandle(pipeAcquisitionMutex);
 
-			ConsoleOutput("vnrcli:WaitForPipe: pipe connected");
+			ConsoleOutput("NextHooker: pipe connected");
 #ifdef _WIN64
 			ConsoleOutput("Hooks don't work on x64, only read codes work. Engine disabled.");
 #else
@@ -71,9 +71,7 @@ void CreatePipe()
 				case HOST_COMMAND_REMOVE_HOOK:
 				{
 					auto info = *(RemoveHookCmd*)buffer;
-					for (int i = 0; i < MAX_HOOK; ++i)
-						if (::hookman[i].Address() == info.address)
-							::hookman[i].ClearHook();
+					RemoveHook(info.address);
 				}
 				break;
 				case HOST_COMMAND_DETACH:
@@ -94,18 +92,6 @@ void ConsoleOutput(LPCSTR text)
 {
 	auto info = ConsoleOutputNotif(text);
 	WriteFile(::hookPipe, &info, strlen(text) + sizeof(info), DUMMY, nullptr);
-}
-
-void NotifyHookInsert(HookParam hp, LPCSTR name)
-{
-    //BYTE buffer[PIPE_BUFFER_SIZE];
-    //*(DWORD*)buffer = HOST_NOTIFICATION;
-    //*(DWORD*)(buffer + sizeof(DWORD)) = HOST_NOTIFICATION_NEWHOOK;
-	//*(HookParam*)(buffer + sizeof(DWORD) * 2) = hp;
-	//strcpy((char*)buffer + sizeof(DWORD) * 2 + sizeof(HookParam), name);
-	//DWORD unused;
-	//WriteFile(::hookPipe, buffer, strlen(name) + sizeof(DWORD) * 2 + sizeof(HookParam), &unused, nullptr);
-	//return;
 }
 
 void NotifyHookRemove(unsigned __int64 addr)

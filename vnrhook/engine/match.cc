@@ -22,13 +22,12 @@ enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
 
 // - Global variables -
 
+DWORD processStartAddress, processStopAddress;
+
 namespace Engine {
 
 WCHAR *processName, // cached
       processPath[MAX_PATH]; // cached
-
-DWORD process_base,
-      process_limit;
 
 //LPVOID trigger_addr;
 trigger_fun_t trigger_fun_;
@@ -85,7 +84,7 @@ bool DeterminePCEngine()
 
   // PC games
   PcHooks::hookGDIFunctions();
-  EnableGDIPlusHooks();
+  PcHooks::hookGDIPlusFunctions();
   return false;
 }
 
@@ -866,8 +865,6 @@ bool DetermineEngineType()
   seh_with_eh(ExceptHandler,
       found = UnsafeDetermineEngineType());
 #endif // ITH_HAS_SEH
-  if (::GDIPlusHooksEnabled())
-    PcHooks::hookGDIPlusFunctions();
   if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
     PcHooks::hookLstrFunctions();
     PcHooks::hookCharNextFunctions();
@@ -890,6 +887,15 @@ void Hijack()
 	if (hijacked) return;
 	GetModuleFileNameW(nullptr, processPath, MAX_PATH);
 	processName = wcsrchr(processPath, L'\\') + 1;
+
+	::processStartAddress = ::processStopAddress = (DWORD)GetModuleHandleW(nullptr);
+	MEMORY_BASIC_INFORMATION info;
+	do
+	{
+		VirtualQuery((void*)::processStopAddress, &info, sizeof(info));
+		::processStopAddress = (DWORD)info.BaseAddress + info.RegionSize;
+	} while (info.Protect > PAGE_NOACCESS);
+	processStopAddress -= info.RegionSize;
 
 	DetermineEngineType();
 	hijacked = true;

@@ -7,6 +7,9 @@
 #include "defs.h"
 #include "../vnrhook/hijack/texthook.h"
 
+
+bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
+
 namespace
 {
 	struct ProcessRecord
@@ -21,7 +24,6 @@ namespace
 	ThreadEventCallback OnCreate, OnRemove;
 	ProcessEventCallback OnAttach, OnDetach;
 
-	bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
 	std::unordered_map<ThreadParam, TextThread*> textThreadsByParams;
 	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
@@ -228,7 +230,7 @@ namespace Host
 		WaitForSingleObject(pr.sectionMutex, 0);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].Address() == addr)
+			if (hooks[i].hp.address == addr)
 				ret = hooks[i].hp;
 		ReleaseMutex(pr.sectionMutex);
 		return ret;
@@ -246,10 +248,10 @@ namespace Host
 		WaitForSingleObject(pr.sectionMutex, 0);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].Address() == addr)
+			if (hooks[i].hp.address == addr)
 			{
-				buffer.resize(hooks[i].NameLength());
-				ReadProcessMemory(pr.processHandle, hooks[i].Name(), &buffer[0], hooks[i].NameLength(), nullptr);
+				buffer.resize(hooks[i].name_length);
+				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, &buffer[0], hooks[i].name_length, nullptr);
 			}
 		ReleaseMutex(pr.sectionMutex);
 		USES_CONVERSION;
