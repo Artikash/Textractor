@@ -58,12 +58,12 @@ void MainWindow::AddProcess(unsigned int processId)
 	QString processName = GetFullModuleName(processId);
 	QString allData = file.readAll();
 	QStringList allProcesses = allData.split("\r", QString::SkipEmptyParts);
-	for (int i = allProcesses.length() - 1; i >= 0; --i)
-		if (allProcesses.at(i).contains(processName))
+	for (int i = allProcesses.size() - 1; i >= 0; --i)
+		if (allProcesses[i].contains(processName))
 		{
-			QStringList hooks = allProcesses.at(i).split(" , ");
-			for (int j = 1; j < hooks.length(); ++j)
-				Host::InsertHook(processId, ParseCode(hooks.at(j)).value_or(HookParam()));
+			QStringList hooks = allProcesses[i].split(" , ");
+			for (int j = 1; j < hooks.size(); ++j)
+				Host::InsertHook(processId, ParseCode(hooks[j]).value_or(HookParam()));
 			return;
 		}
 }
@@ -244,12 +244,9 @@ void MainWindow::on_ttCombo_activated(int index)
 void MainWindow::on_addExtenButton_clicked()
 {
 	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension dll", "C:\\", "Extensions (*.dll)");
-	if (!extenFileName.length()) return;
+	if (!extenFileName.size()) return;
 	QString extenName = extenFileName.split("/")[extenFileName.split("/").count() - 1];
-	extenName.chop(4);
-	QString copyTo = QString::number(extenCombo->itemText(extenCombo->count() - 1).split(":")[0].toInt() + 1) + "_" +
-			extenName +
-			"_nexthooker_extension.dll";
+	QString copyTo = QString::number(extenCombo->itemText(extenCombo->count() - 1).split(":")[0].toInt() + 1) + "_" + extenName;
 	QFile::copy(extenFileName, copyTo);
 	ReloadExtensions();
 }
@@ -257,7 +254,7 @@ void MainWindow::on_addExtenButton_clicked()
 void MainWindow::on_rmvExtenButton_clicked()
 {
 	if (extenCombo->currentText().size() == 0) return;
-	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + "_nexthooker_extension.dll";
+	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + ".dll";
 	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
 	QFile::remove(extenFileName);
 	ReloadExtensions();

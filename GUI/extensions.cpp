@@ -11,15 +11,14 @@ std::map<int, QString> LoadExtensions()
 	std::map<int, QString> extensionNames;
 	QStringList files = QDir().entryList();
 	for (auto file : files)
-		if (file.endsWith("_nexthooker_extension.dll"))
+		if (file.split("_").size() > 1 && file.split("_")[0].toInt() && file.endsWith(".dll"))
 			if (GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence") ||
 				GetProcAddress(LoadLibraryW(file.toStdWString().c_str()), "OnNewSentence"))
 			{
-				QString extensionNumber = file.split("_")[0];
-				newExtensions[extensionNumber.toInt()] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence");
-				file.chop(sizeof("_nexthooker_extension.dll") - 1);
-				file.remove(0, extensionNumber.length() + 1);
-				extensionNames[extensionNumber.toInt()] = file;
+				int extensionNumber = file.split("_")[0].toInt();
+				newExtensions[extensionNumber] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence");
+				file.chop(sizeof("dll"));
+				extensionNames[extensionNumber] = file.split("_")[1];
 			}
 	extenMutex.lock();
 	extensions = newExtensions;
