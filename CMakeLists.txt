@@ -33,5 +33,6 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 add_subdirectory(host)
 add_subdirectory(GUI)
+add_subdirectory(minhook)
 add_subdirectory(vnrhook)
 add_subdirectory(extensions)

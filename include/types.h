@@ -25,8 +25,6 @@ struct HookParam
 	filter_fun_t filter_fun;
 	hook_fun_t hook_fun;
 
-	BYTE hook_len, // ?
-		recover_len; // ?
 	HANDLE readerHandle; // Artikash 8/4/2018: handle for reader thread
 };
 
