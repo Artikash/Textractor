@@ -24,7 +24,7 @@ public:
 	void AddSentence(std::wstring sentence);	
 
 private:
-	bool Flush();
+	void Flush();
 
 	std::vector<char> buffer;
 	std::wstring storage;

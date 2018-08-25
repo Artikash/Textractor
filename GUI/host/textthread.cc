@@ -27,10 +27,10 @@ std::wstring TextThread::GetStore()
 	return storage;
 }
 
-bool TextThread::Flush()
+void TextThread::Flush()
 {
 	LOCK ttLock(ttMutex);
-	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return true; // TODO: let user change delay before sentence is flushed
+	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
 	{
@@ -44,7 +44,6 @@ bool TextThread::Flush()
 	}
 	AddSentence(sentence);
 	buffer.clear();
-	return true;
 }
 
 void TextThread::AddSentence(std::wstring sentence)
