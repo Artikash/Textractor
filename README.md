@@ -56,6 +56,7 @@ GPL v3
 - ITH updating by [Andys](https://github.com/AndyScull)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
 - NextHooker creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 
 ## Special Thanks
