@@ -5,7 +5,7 @@
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QComboBox>
-#include "../host/host.h"
+#include "host/host.h"
 
 namespace Ui
 {

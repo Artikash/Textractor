@@ -8,9 +8,6 @@
 #include "../vnrhook/hijack/texthook.h"
 #include <atlbase.h> // A2W
 
-
-bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
-
 namespace
 {
 	struct ProcessRecord

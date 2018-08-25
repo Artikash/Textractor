@@ -9,9 +9,11 @@ set(gui_SRCS
 	mainwindow.cpp
 	misc.cpp
     extensions.cpp
+	host/host.cc
+	host/textthread.cc
 	${RESOURCE_FILES}
 )
 add_executable(${PROJECT_NAME} WIN32 ${gui_SRCS})
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets vnrhost)
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
 
 install_qt5_libs(${PROJECT_NAME})
