@@ -29,7 +29,7 @@ public:
 	HookParam hp;
 	LPSTR hook_name;
 	int name_length;
-	BYTE trampoline[80];
+	BYTE trampoline[120];
 
 	bool InsertHook();
 	void InitHook(const HookParam &hp, LPCSTR name = 0, WORD set_flag = 0);

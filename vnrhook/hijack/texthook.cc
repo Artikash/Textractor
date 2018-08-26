@@ -25,8 +25,8 @@ TextHook *hookman;
 
 // - Unnamed helpers -
 
-#ifndef _WIN64
 namespace { // unnamed
+#ifndef _WIN64
 
 	const BYTE common_hook[] = {
 	  0x9c, // pushfd
@@ -78,9 +78,49 @@ namespace { // unnamed
 			retn    // jichi 12/13/2013: return near, see: http://stackoverflow.com/questions/1396909/ret-retn-retf-how-to-use-them
 		}
 	}
-
+#else
+	const BYTE common_hook[] = {
+	0x9c, // push rflags
+	0x50, // push rax
+	0x53, // push rbx
+	0x51, // push rcx
+	0x52, // push rdx
+	0x54, // push rsp
+	0x55, // push rbp
+	0x56, // push rsi
+	0x57, // push rdi
+	0x41, 0x50, // push r8
+	0x41, 0x51, // push r9
+	0x41, 0x52, // push r10
+	0x41, 0x53, // push r11
+	0x41, 0x54, // push r12
+	0x41, 0x55, // push r13
+	0x41, 0x56, // push r14
+	0x41, 0x57, // push r15
+	0x48, 0x8b, 0xd4, // mov rdx,rsp
+	0x48, 0xb9, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // mov rcx, ?? ; pointer to TextHook
+	0xff, 0x15, 0x02, 0x0, 0x0, 0x0, 0xeb, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // call TextHook::Send
+	0x41, 0x5f, // pop r15
+	0x41, 0x5e, // pop r14
+	0x41, 0x5d, // pop r13
+	0x41, 0x5c, // pop r12
+	0x41, 0x5b, // pop r11
+	0x41, 0x5a, // pop r10
+	0x41, 0x59, // pop r9
+	0x41, 0x58, // pop r8
+	0x5f, // pop rdi
+	0x5e, // pop rsi
+	0x5d, // pop rbp
+	0x5c, // pop rsp
+	0x5a, // pop rdx
+	0x59, // pop rcx
+	0x5b, // pop rbx
+	0x58, // pop rax
+	0x9d, // pop rflags
+	0xff, 0x25, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 // jmp @original
+	};
+#endif
 } // unnamed namespace
-#endif // _WIN32
 
 // - TextHook methods -
 
@@ -234,6 +274,15 @@ bool TextHook::UnsafeInsertHookCode()
 	memcpy(trampoline + 10, &thisPtr, sizeof(void*));
 	memcpy(trampoline + 15, &funcPtr, sizeof(void*));
 	memcpy(trampoline + sizeof(common_hook), &dist, sizeof(dist));
+
+	//BYTE* original;
+	//MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original);
+	//memcpy(trampoline, common_hook, sizeof(common_hook));
+	//void* thisPtr = (void*)this;
+	//memcpy(trampoline + 30, &thisPtr, sizeof(void*));
+	//auto sendPtr = (void(TextHook::*)(void*))&TextHook::Send;
+	//memcpy(trampoline + 46, &sendPtr, sizeof(sendPtr));
+	//memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
 
 	if (MH_EnableHook((void*)hp.address) != MH_OK) return false;
 
