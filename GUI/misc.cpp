@@ -133,7 +133,7 @@ namespace
 		HCode.remove(0, 1);
 		QRegExp address("^([\\dA-F]+):?");
 		if (address.indexIn(HCode) == -1) return {};
-		hp.address = address.cap(1).toInt(nullptr, 16);
+		hp.address = address.cap(1).toULongLong(nullptr, 16);
 		HCode.remove(address.cap(0));
 		if (HCode.length())
 		{
