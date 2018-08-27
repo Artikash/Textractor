@@ -264,7 +264,13 @@ bool TextHook::UnsafeInsertHookCode()
 	}
 
 	BYTE* original;
-	if (MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original) != MH_OK) return false;
+	if (int err = MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original))
+		if (err == MH_ERROR_ALREADY_CREATED) RemoveHook(hp.address);
+		else
+		{
+			ConsoleOutput(("NextHooker: UnsafeInsertHookCode: FAILED: error " + std::to_string(err)).c_str());
+			return false;
+		}
 
 	void* thisPtr = (void*)this;
 	void* funcPtr = (void*)((BYTE*)ProcessHook - (BYTE*)(trampoline + 19));
@@ -290,15 +296,26 @@ bool TextHook::UnsafeInsertHookCode()
 }
 #endif // _WIN32
 
-DWORD WINAPI ReaderThread(LPVOID threadParam)
+DWORD WINAPI ReaderThread(LPVOID hookPtr)
 {
-	TextHook* hook = (TextHook*)threadParam;
+	TextHook* hook = (TextHook*)hookPtr;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	unsigned int changeCount = 0;
 	int dataLen = 0;
-	const char* currentAddress = (char*)hook->hp.address;
+	const void* currentAddress = (void*)hook->hp.address;
 	while (true)
 	{
+		if (!IthGetMemoryRange((void*)hook->hp.address, nullptr, nullptr))
+		{
+			ConsoleOutput("NextHooker: can't read desired address");
+			break;
+		}
+		if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.address + hook->hp.index);
+		if (!IthGetMemoryRange(currentAddress, nullptr, nullptr))
+		{
+			ConsoleOutput("NextHooker: can't read desired address");
+			break;
+		}
 		Sleep(500);
 		if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1) == 0)
 		{
@@ -308,20 +325,20 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 		if (++changeCount > 10)
 		{
 			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
-			ConsoleOutput("NextHooker: remove read code");
 			break;
 		}
 
 		if (hook->hp.type & USING_UNICODE)
 			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
 		else
-			dataLen = strlen(currentAddress);
+			dataLen = strlen((const char*)currentAddress);
 
 		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.address, 0, 0 };
 		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
 	}
+	ConsoleOutput("NextHooker: remove read code");
 	hook->ClearHook();
 	return 0;
 }
@@ -329,11 +346,6 @@ DWORD WINAPI ReaderThread(LPVOID threadParam)
 bool TextHook::InsertReadCode()
 {
 	RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
-	if (!IthGetMemoryRange((LPCVOID)hp.address, 0, 0))
-	{
-		ConsoleOutput("NextHooker:InsertReadCode failed: cannot access read address");
-		return false;
-	}
 	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
 	return true;
 }

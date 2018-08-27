@@ -12,7 +12,7 @@ struct HookParam
 	typedef bool(*hook_fun_t)(DWORD esp, HookParam *hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
 
 	unsigned __int64 address; // absolute or relative address
-	short offset, // offset of the data in the memory
+	int offset, // offset of the data in the memory
 		index, // deref_offset1
 		split, // offset of the split character
 		split_index; // deref_offset2

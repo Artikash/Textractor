@@ -58,10 +58,13 @@ namespace
 			return {};
 		}
 		RCode.remove(0, 1);
-		QRegExp stringGap("^\\-?[\\dA-F]+");
-		if (stringGap.indexIn(RCode) == -1) return {};
-		hp.offset = stringGap.cap(0).toInt(nullptr, 16);
-		RCode.remove(0, stringGap.cap(0).length());
+		QRegExp stringGap("^\\*(\\-?[\\dA-F]+)");
+		if (stringGap.indexIn(RCode) != -1)
+		{
+			hp.index = stringGap.cap(1).toInt(nullptr, 16);
+			RCode.remove(0, stringGap.cap(0).length());
+			hp.type |= DATA_INDIRECT;
+		}
 		if (RCode.at(0).unicode() != L'@') return {};
 		RCode.remove(0, 1);
 		QRegExp address("[\\dA-F]+$");
