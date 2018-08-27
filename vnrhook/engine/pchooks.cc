@@ -106,8 +106,8 @@ void PcHooks::hookGDIFunctions()
   NEW_HOOK(TabbedTextOutW,         s_arg4, 0,s_arg1,0, USING_UNICODE|USING_STRING, 5)
   NEW_HOOK(GetCharABCWidthsW,      s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
   NEW_HOOK(GetCharABCWidthsFloatW, s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(GetCharWidth32A,        s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(GetCharWidthFloatA,     s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(GetCharWidth32W,        s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(GetCharWidthFloatW,     s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
 
   // user32.dll
   NEW_HOOK(DrawTextA,              s_arg2, 0,s_arg1,0, USING_STRING,  3) // int DrawText(HDC hDC, LPCTSTR lpchText, int nCount, LPRECT lpRect, UINT uFormat);
