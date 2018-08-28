@@ -264,11 +264,11 @@ bool TextHook::UnsafeInsertHookCode()
 	}
 
 	BYTE* original;
-	if (int err = MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original))
+	if (MH_STATUS err = MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original))
 		if (err == MH_ERROR_ALREADY_CREATED) RemoveHook(hp.address);
 		else
 		{
-			ConsoleOutput(("NextHooker: UnsafeInsertHookCode: FAILED: error " + std::to_string(err)).c_str());
+			ConsoleOutput(("NextHooker: UnsafeInsertHookCode: FAILED: error " + std::string(MH_StatusToString(err))).c_str());
 			return false;
 		}
 
