@@ -8707,15 +8707,10 @@ void SpecialHookWolf2(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *spl
   }
 }
 
-#if 0
+#if 1
 // jichi 6/11/2015: See embed translation source code
 bool InsertWolf2Hook()
 {
-  ULONG processStartAddress, processStopAddress;
-  if (!FillRange(processName,&startAddress, &stopAddress)) { // need accurate stopAddress
-    ConsoleOutput("vnreng:WolfRPG2: failed to get memory range");
-    return false;
-  }
   ULONG addr = MemDbg::findCallerAddressAfterInt3((ULONG)::CharNextA, processStartAddress, processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:WolfRPG2: failed to find target function");
@@ -8736,7 +8731,7 @@ bool InsertWolf2Hook()
 
 bool InsertWolfHook()
 {
-  return InsertOldWolfHook();
+  return InsertOldWolfHook(), InsertWolf2Hook();
 }
 
 bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
