@@ -33,7 +33,7 @@ namespace
 	void DispatchText(ThreadParam tp, const BYTE* text, int len)
 	{
 		if (!text || len <= 0) return;
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		TextThread *it;
 		if ((it = textThreadsByParams[tp]) == nullptr)
 			OnCreate(it = textThreadsByParams[tp] = new TextThread(tp, Host::GetHookParam(tp).type));
@@ -42,7 +42,7 @@ namespace
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		std::vector<ThreadParam> removedThreads;
 		for (auto i : textThreadsByParams)
 			if (removeIf(i.first))
@@ -56,7 +56,7 @@ namespace
 
 	void RegisterProcess(DWORD pid, HANDLE hostPipe)
 	{
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		ProcessRecord record;
 		record.hostPipe = hostPipe;
 		record.section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
@@ -69,7 +69,7 @@ namespace
 
 	void UnregisterProcess(DWORD pid)
 	{
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		ProcessRecord pr = processRecordsByIds[pid];
 		if (!pr.hostPipe) return;
 		CloseHandle(pr.sectionMutex);
@@ -148,7 +148,7 @@ namespace Host
 	{
 		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
 #ifdef _DEBUG // Check memory leaks
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		OnRemove = [](TextThread* textThread) { delete textThread; };
 		for (auto i : processRecordsByIds) UnregisterProcess(i.first);
 		delete textThreadsByParams[CONSOLE];
@@ -223,7 +223,7 @@ namespace Host
 
 	HookParam GetHookParam(DWORD pid, unsigned __int64 addr)
 	{
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		HookParam ret = {};
 		ProcessRecord pr = processRecordsByIds[pid];
 		if (pr.sectionMap == nullptr) return ret;
@@ -241,7 +241,7 @@ namespace Host
 	std::wstring GetHookName(DWORD pid, unsigned __int64 addr)
 	{
 		if (pid == 0) return L"Console";
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		std::string buffer = "";
 		ProcessRecord pr = processRecordsByIds[pid];
 		if (pr.sectionMap == nullptr) return L"";
@@ -260,14 +260,13 @@ namespace Host
 
 	TextThread* GetThread(ThreadParam tp)
 	{
-		LOCK hostLock(hostMutex);
+		LOCK(hostMutex);
 		return textThreadsByParams[tp];
 	}
 
 	void AddConsoleOutput(std::wstring text)
 	{
-		LOCK hostLock(hostMutex);
-		textThreadsByParams[CONSOLE]->AddSentence(std::wstring(text));
+		GetThread(CONSOLE)->AddSentence(std::wstring(text));
 	}
 }
 

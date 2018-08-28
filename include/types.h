@@ -68,4 +68,4 @@ struct HookRemovedNotif // From hook
 	unsigned __int64 address;
 };
 
-typedef std::lock_guard<std::recursive_mutex> LOCK;
+#define LOCK(mutex) std::lock_guard<std::recursive_mutex> lock(mutex)
