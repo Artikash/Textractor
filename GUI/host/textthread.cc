@@ -9,6 +9,7 @@ TextThread::TextThread(ThreadParam tp, DWORD status) : tp(tp), status(status) {}
 
 TextThread::~TextThread()
 {
+	LOCK(ttMutex);
 	SetEvent(deletionEvent);
 	flushThread.join();
 	CloseHandle(deletionEvent);
