@@ -373,7 +373,7 @@ void TextHook::RemoveReadCode()
 void TextHook::ClearHook()
 {
 	WaitForSingleObject(hmMutex, 0);
-	ConsoleOutput("NextHooker:RemoveHook: enter");
+	if (hook_name) ConsoleOutput(("NextHooker: removing hook: " + std::string(hook_name)).c_str());
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(hp.address);
