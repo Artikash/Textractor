@@ -27,7 +27,6 @@ void TextThread::Flush()
 	{
 		LOCK(ttMutex);
 		if (buffer.size() < 400 && (timestamp - GetTickCount() < 250 || buffer.size() == 0)) return; // TODO: let user change delay before sentence is flushed
-		std::wstring sentence;
 		if (status & USING_UNICODE)
 		{
 			sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
