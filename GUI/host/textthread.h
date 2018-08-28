@@ -28,11 +28,11 @@ private:
 
 	std::vector<char> buffer;
 	std::wstring storage;
-
 	std::recursive_mutex ttMutex;
-	HANDLE deletionEvent;
-	std::thread flushThread;
-	DWORD timestamp;
+
+	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
+	std::thread flushThread = std::thread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); });
+	DWORD timestamp = GetTickCount();
 
 	ThreadOutputCallback Output;
 	ThreadParam tp;

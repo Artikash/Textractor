@@ -119,6 +119,8 @@ namespace
 				default:
 				{
 					ThreadParam tp = *(ThreadParam*)buffer;
+					buffer[bytesRead] = 0;
+					buffer[bytesRead + 1] = 0;
 					DispatchText(tp, buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;

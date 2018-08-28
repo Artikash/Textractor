@@ -5,14 +5,7 @@
 #include "textthread.h"
 #include "const.h"
 
-TextThread::TextThread(ThreadParam tp, DWORD status) :
-	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
-	flushThread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); }),
-	timestamp(GetTickCount()),
-	Output(nullptr),
-	tp(tp),
-	status(status)
-{}
+TextThread::TextThread(ThreadParam tp, DWORD status) : tp(tp), status(status) {}
 
 TextThread::~TextThread()
 {
@@ -30,7 +23,7 @@ std::wstring TextThread::GetStore()
 void TextThread::Flush()
 {
 	LOCK ttLock(ttMutex);
-	if (timestamp - GetTickCount() < 250 || buffer.size() == 0) return; // TODO: let user change delay before sentence is flushed
+	if (buffer.size() < 400 && (timestamp - GetTickCount() < 250 || buffer.size() == 0)) return; // TODO: let user change delay before sentence is flushed
 	std::wstring sentence;
 	if (status & USING_UNICODE)
 	{
@@ -43,6 +36,7 @@ void TextThread::Flush()
 		delete[] converted;
 	}
 	AddSentence(sentence);
+	memset(buffer.data(), 0, buffer.size());
 	buffer.clear();
 }
 
@@ -56,6 +50,8 @@ void TextThread::AddSentence(std::wstring sentence)
 void TextThread::AddText(const BYTE *con, int len)
 {
 	LOCK ttLock(ttMutex);
+	// Artikash 8/27/2018: add repetition filter
+	if (len > 6 && buffer.data() && (strstr(buffer.data(), (const char*)con) || wcsstr((const wchar_t*)buffer.data(), (const wchar_t*)con))) return;
 	buffer.insert(buffer.end(), con, con + len);
 	timestamp = GetTickCount();
 }
