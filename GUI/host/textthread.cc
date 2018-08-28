@@ -35,15 +35,17 @@ void TextThread::Flush()
 		sentence = std::wstring(converted, MultiByteToWideChar(status & USING_UTF8 ? CP_UTF8 : 932, 0, buffer.data(), buffer.size(), converted, buffer.size()));
 		delete[] converted;
 	}
+	ttMutex.unlock();
 	AddSentence(sentence);
+	ttMutex.lock();
 	memset(buffer.data(), 0, buffer.size());
 	buffer.clear();
 }
 
 void TextThread::AddSentence(std::wstring sentence)
 {
-	LOCK ttLock(ttMutex);
 	if (Output) sentence = Output(this, sentence);
+	LOCK ttLock(ttMutex);
 	storage.append(sentence);
 }
 
