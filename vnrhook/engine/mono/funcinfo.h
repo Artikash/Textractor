@@ -4,6 +4,7 @@
 // 12/26/2014
 // https://github.com/mono/mono/blob/master/mono/metadata/object.h
 // http://api.xamarin.com/index.aspx?link=xhtml%3Adeploy%2Fmono-api-string.html
+// http://docs.go-mono.com/index.aspx?link=xhtml%3Adeploy%2Fmono-api-string.html
 
 //#include "ith/import/mono/types.h"
 
@@ -44,12 +45,15 @@ struct MonoFunction {
     { "mono_string_to_utf8", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
   , { "mono_string_to_utf8_checked", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
   , { "mono_string_to_utf16", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
+  , { "mono_string_intern", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
+  , { "mono_string_is_interned", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
+  , { "mono_string_hash", 0, 0, USING_UNICODE, SpecialHookMonoString } \
   , { "mono_utf8_from_external", 1, 0, USING_STRING|USING_UTF8, nullptr } \
   , { "mono_string_from_utf16", 1, 0, USING_UNICODE, nullptr } \
   , { "mono_string_new_utf16", 2, 3, USING_UNICODE, nullptr } \
   , { "mono_unicode_from_external", 1, 0, USING_UNICODE, nullptr } \
-  , { "mono_unicode_to_external", 1, 0, USING_UNICODE, nullptr }
-  //, { "mono_string_new", 2, 0, USING_STRING|USING_UTF8, nullptr }
-  //, { "mono_string_new_wrapper", 1, 0, USING_STRING|USING_UTF8, nullptr }
+  , { "mono_unicode_to_external", 1, 0, USING_UNICODE, nullptr } \
+  , { "mono_string_new", 2, 0, USING_STRING|USING_UTF8, nullptr } \
+  , { "mono_string_new_wrapper", 1, 0, USING_STRING|USING_UTF8, nullptr }
 
 // EOF
