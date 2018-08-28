@@ -28,8 +28,7 @@ void CreatePipe()
 		{
 			DWORD count = 0;
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
-			HANDLE hostPipe = ::hookPipe = INVALID_HANDLE_VALUE,
-				pipeAcquisitionMutex = CreateMutexW(nullptr, TRUE, ITH_GRANTPIPE_MUTEX);
+			HANDLE hostPipe = ::hookPipe = INVALID_HANDLE_VALUE;
 
 			while (::hookPipe == INVALID_HANDLE_VALUE || hostPipe == INVALID_HANDLE_VALUE)
 			{
@@ -48,9 +47,6 @@ void CreatePipe()
 
 			*(DWORD*)buffer = GetCurrentProcessId();
 			WriteFile(::hookPipe, buffer, sizeof(DWORD), &count, nullptr);
-
-			ReleaseMutex(pipeAcquisitionMutex);
-			CloseHandle(pipeAcquisitionMutex);
 
 			ConsoleOutput("NextHooker: pipe connected");
 #ifdef _WIN64

@@ -17,6 +17,5 @@
 // Mutex
 
 #define ITH_HOOKMAN_MUTEX_      L"VNR_HOOKMAN_" // ITH_HOOKMAN_%d
-#define ITH_GRANTPIPE_MUTEX     L"VNR_GRANT_PIPE" // ITH_GRANT_PIPE
 
 // EOF
