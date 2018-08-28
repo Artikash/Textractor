@@ -68,4 +68,15 @@ struct HookRemovedNotif // From hook
 	unsigned __int64 address;
 };
 
-typedef std::lock_guard<std::recursive_mutex> LOCK;
+// Artikash 8/28/2018: similar to std::recursive_mutex but uses WinAPI for better performance
+class WinMutex
+{
+	CRITICAL_SECTION cs;
+public:
+	WinMutex() { InitializeCriticalSection(&cs); };
+	~WinMutex() { EnterCriticalSection(&cs); LeaveCriticalSection(&cs); DeleteCriticalSection(&cs); };
+	void lock() { EnterCriticalSection(&cs); };
+	void unlock() { LeaveCriticalSection(&cs); };
+};
+
+typedef std::lock_guard<WinMutex> LOCK;

@@ -28,7 +28,7 @@ private:
 
 	std::vector<char> buffer;
 	std::wstring storage;
-	std::recursive_mutex ttMutex;
+	WinMutex ttMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); });

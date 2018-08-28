@@ -25,7 +25,7 @@ namespace
 	std::unordered_map<ThreadParam, TextThread*> textThreadsByParams;
 	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
-	std::recursive_mutex hostMutex;
+	WinMutex hostMutex;
 
 	DWORD DUMMY[100];
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL };
