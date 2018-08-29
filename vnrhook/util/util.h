@@ -22,6 +22,8 @@ bool CheckFile(LPCWSTR name);
 
 bool SearchResourceString(LPCWSTR str);
 
+DWORD SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect = PAGE_EXECUTE);
+
 } // namespace Util
 
 // EOF

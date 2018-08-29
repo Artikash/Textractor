@@ -3,8 +3,11 @@
 // Branch: ITH_Engine/engine.cpp, revision 133
 // See: http://ja.wikipedia.org/wiki/プロジェクト:美少女ゲーム系/ゲームエンジン
 
+#include "common.h"
 #include "util/util.h"
 #include "ithsys/ithsys.h"
+#include "main.h"
+#include "growl.h"
 
 namespace { // unnamed
 
@@ -279,6 +282,35 @@ bool Util::SearchResourceString(LPCWSTR str)
     }
   }
   return false;
+}
+
+DWORD Util::SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect)
+{
+	std::vector<std::pair<DWORD, DWORD>> validMemory;
+	for (BYTE* probe = NULL; (DWORD)probe < 0x80000000;) // end of user memory space
+	{
+		MEMORY_BASIC_INFORMATION info = {};
+		if (!VirtualQuery(probe, &info, sizeof(info)))
+		{
+			probe += 0x1000;
+			continue;
+		}
+		else
+		{
+			if (info.Protect > protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (DWORD)info.BaseAddress, info.RegionSize });
+			probe += info.RegionSize;
+		}
+	}
+
+	for (auto memory : validMemory)
+		// Artikash 7/14/2018: not sure, but I think this could throw read access violation if I dont subtract search_length
+		for (int i = 0; i < memory.second - length; ++i)
+			for (int j = 0; j <= length; ++j)
+				if (j == length) return memory.first + i; // not sure about this algorithm...
+				else if (*((BYTE*)memory.first + i + j) != *(bytes + j) && *(bytes + j) != 0x11) break; // 0x11 = wildcard
+
+
+	return 0;
 }
 
 // EOF
