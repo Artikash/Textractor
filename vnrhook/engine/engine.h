@@ -91,6 +91,7 @@ bool InsertApricoTHook();       // Apricot: arc.a*
 bool InsertArtemisHook();       // Artemis Engine: *.pfs
 bool InsertAtelierHook();       // Atelier Kaguya: message.dat
 bool InsertBGIHook();           // BGI: BGI.*
+bool InsertBaldrHook();         // Baldr Sky "Zero"
 bool InsertBootupHook();        // Bootup: Bootup.dat
 bool InsertC4Hook();            // C4: C4.EXE or XEX.EXE
 bool InsertCaramelBoxHook();    // Caramel: *.bin

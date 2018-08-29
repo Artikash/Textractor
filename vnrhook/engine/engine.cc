@@ -2095,6 +2095,26 @@ bool InsertBGI3Hook()
 bool InsertBGIHook()
 { return InsertBGI2Hook() ||  InsertBGI1Hook(); }
 
+// Artikash 8/28/2018: reimplement baldr sky zero hook. see ok123's post https://web.archive.org/web/20140815231753/http://9gal.com/read.php?tid=411756
+bool InsertBaldrHook()
+{
+	const BYTE ins[] = { 0x90,0xff,0x50,0x3c,0x83,0xc4,0x20,0x8b,0x45,0xec };
+	DWORD addr = Util::SearchMemory(ins, sizeof(ins));
+	if (!addr) {
+		ConsoleOutput("NextHooker: BALDR failed: could not find instructions");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = 4;
+	hp.type = NO_CONTEXT | USING_STRING | USING_UNICODE; // 0x403
+	ConsoleOutput("NextHooker: INSERT BALDR");
+	NewHook(hp, "BALDR");
+
+	return true;
+}
+
 /********************************************************************************************
 Reallive hook:
   Process name is reallive.exe or reallive*.exe.
@@ -16454,6 +16474,7 @@ bool InsertMonoHooks()
   if (!h)
     return false;
 
+  InsertBaldrHook(); //Artikash 8/28/2018: insert for all mono games: maybe itll work for more than baldr sky zero?
   bool ret = false;
 
   // mono_unichar2* mono_string_to_utf16       (MonoString *s);
