@@ -12465,6 +12465,8 @@ static bool InsertNewPal1Hook()
   HookParam hp = {};
   hp.address = addr;
   hp.offset = 4 * 2; // arg2
+  hp.length_offset = 0;
+  hp.type = USING_STRING;
   ConsoleOutput("vnreng: INSERT Pal1");
   NewHook(hp, "Pal");
   return true;
@@ -12492,6 +12494,8 @@ static bool InsertNewPal2Hook()
   HookParam hp = {};
   hp.address = addr;
   hp.offset = 4 * 2; // arg2
+  hp.length_offset = 0;
+  hp.type = USING_STRING;
   ConsoleOutput("vnreng: INSERT Pal2");
   NewHook(hp, "Pal");
   return true;
