@@ -84,7 +84,10 @@ void RemoveHook(unsigned __int64 addr)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
 		if (abs((long long)(::hookman[i].hp.address - addr)) < 9)
+		{
 			::hookman[i].ClearHook();
+			return;
+		}
 }
 
 void SwitchTrigger(DWORD t)

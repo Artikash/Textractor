@@ -264,8 +264,13 @@ bool TextHook::UnsafeInsertHookCode()
 	}
 
 	BYTE* original;
+	insert:
 	if (MH_STATUS err = MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original))
-		if (err == MH_ERROR_ALREADY_CREATED) RemoveHook(hp.address);
+		if (err == MH_ERROR_ALREADY_CREATED)
+		{
+			RemoveHook(hp.address);
+			goto insert; // FIXME: i'm too lazy to do this properly right now...
+		}
 		else
 		{
 			ConsoleOutput(("NextHooker: UnsafeInsertHookCode: FAILED: error " + std::string(MH_StatusToString(err))).c_str());
@@ -362,6 +367,7 @@ void TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 void TextHook::RemoveHookCode()
 {
 	MH_DisableHook((void*)hp.address);
+	MH_RemoveHook((void*)hp.address);
 }
 
 void TextHook::RemoveReadCode()
@@ -379,9 +385,6 @@ void TextHook::ClearHook()
 	NotifyHookRemove(hp.address);
 	if (hook_name) delete[] hook_name;
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
-	//if (current_available>this)
-	//  current_available = this;
-	currentHook--;
 	ConsoleOutput("NextHooker:RemoveHook: leave");
 	ReleaseMutex(hmMutex);
 }
