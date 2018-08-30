@@ -85,6 +85,9 @@ bool DeterminePCEngine()
   // PC games
   PcHooks::hookGDIFunctions();
   PcHooks::hookGDIPlusFunctions();
+  const char check[] = "sdffffffkjldfjlhjweiumxnvq1204tergdmnxcq1111111111111111111111408t03kxjb40";
+  __try { Util::SearchMemory((const BYTE*)check, sizeof(check)); } // Not too sure about the stability of this guy
+  __except (1) { ConsoleOutput("NextHooker threw while searching memory (NextHooker will likely still work fine, but please let Artikash know this happened!)"); }
   return false;
 }
 
