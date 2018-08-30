@@ -58,6 +58,7 @@ namespace
 			return {};
 		}
 		RCode.remove(0, 1);
+		if (RCode.at(0).unicode() == L'0') RCode.remove(0, 1);
 		QRegExp stringGap("^\\*(\\-?[\\dA-F]+)");
 		if (stringGap.indexIn(RCode) != -1)
 		{
