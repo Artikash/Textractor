@@ -16458,7 +16458,7 @@ static void SpecialHookMonoString(DWORD esp_base, HookParam *hp, BYTE, DWORD *da
         break;
     if (!s)
       s = hp->address;
-    *split = s;
+    if (hp->type & USING_SPLIT) *split = s;
   }
 }
 
