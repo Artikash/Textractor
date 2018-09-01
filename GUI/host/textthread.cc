@@ -54,8 +54,6 @@ void TextThread::AddSentence(std::wstring sentence)
 void TextThread::AddText(const BYTE *con, int len)
 {
 	LOCK(ttMutex);
-	// Artikash 8/27/2018: add repetition filter
-	if (len > 6 && buffer.data() && (strstr(buffer.data(), (const char*)con) || wcsstr((const wchar_t*)buffer.data(), (const wchar_t*)con))) return;
 	buffer.insert(buffer.end(), con, con + len);
 	timestamp = GetTickCount();
 }

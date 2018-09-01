@@ -1,46 +1,60 @@
 #include "extensions.h"
+#include <set>
+#include <mutex>
 #include <algorithm>
-#include <cwctype>
 
-std::wstring remove_side_spaces(const std::wstring& str)
+bool RemoveRepeatedChars(std::wstring& sentence)
 {
-	auto begin = std::find_if_not(str.begin(), str.end(), std::iswspace);
-	if (begin == str.end()) return L"";
-	auto end = std::find_if_not(str.rbegin(), str.rend(), std::iswspace);
-	return std::wstring(begin, end.base());
+	unsigned int repeatNumber = 0;
+	wchar_t prevChar = sentence[0];
+	for (auto i : sentence)
+		if (i == prevChar) repeatNumber++;
+		else break;
+	if (repeatNumber == 1) return false;
+
+	for (int i = 0; i < sentence.size(); i += repeatNumber)
+		for (int j = i; j < sentence.size(); ++j)
+			if (sentence[j] != sentence[i])
+				if ((j - i) % repeatNumber != 0) return false;
+				else break;
+
+	// Removes every repeatNumber'th character.
+	sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [&](const wchar_t& c) {return (&c - &*sentence.begin()) % repeatNumber != 0; }), sentence.end());
+	return true;
 }
 
-extern "C"
+bool RemoveCyclicRepeats(std::wstring& sentence)
 {
-	/**
-	* Param sentence: pointer to sentence received by NextHooker (UTF-16).
-	* You should not modify this sentence. If you want NextHooker to receive a modified sentence, copy it into your own buffer and return that.
-	* Param miscInfo: pointer to start of singly linked list containing misc info about the sentence.
-	* Return value: pointer to sentence NextHooker takes for future processing and display.
-	* Return 'sentence' unless you created a new sentence/buffer as mentioned above.
-	* NextHooker will display the sentence after all extensions have had a chance to process and/or modify it.
-	* THIS FUNCTION MAY BE RUN SEVERAL TIMES CONCURRENTLY: PLEASE ENSURE THAT IT IS THREAD SAFE!
-	*/
-	__declspec(dllexport) const wchar_t* OnNewSentence(const wchar_t* sentence, const InfoForExtension* miscInfo)
+	unsigned int realLength = 6; // If the first 6 characters appear later on, there's probably a repetition issue.
+	if (sentence.size() < realLength) return false;
+	wchar_t realSentence[2000] = {};
+	memcpy(realSentence, sentence.c_str(), realLength * sizeof(wchar_t));
+	while (wcsstr(sentence.c_str() + realLength, realSentence))
 	{
-		std::wstring sentenceStr = remove_side_spaces(std::wstring(sentence));
-		unsigned long repeatNumber = 0;
-		wchar_t prevChar = sentenceStr[0];
-		for (auto i : sentenceStr)
-			if (i == prevChar) repeatNumber++;
-			else break;
-
-		for (int i = 0; i < sentenceStr.size(); i += repeatNumber)
-			for (int j = i; j < sentenceStr.size(); ++j)
-				if (sentenceStr[j] != sentenceStr[i])
-					if ((j - i) % repeatNumber != 0) return sentence;
-					else break;
-
-		if (repeatNumber == 1) return sentence;
-		sentenceStr.erase(std::remove_if(sentenceStr.begin(), sentenceStr.end(), [&](const wchar_t& c) {return (&c - &*sentenceStr.begin()) % repeatNumber != 0; }), sentenceStr.end());
-
-		wchar_t* newSentence = (wchar_t*)malloc((sentenceStr.size() + 2) * sizeof(wchar_t));
-		wcscpy(newSentence, sentenceStr.c_str());
-		return newSentence;
+		realSentence[realLength] = sentence[realLength];
+		if (++realLength >= 2000) return false;
 	}
+	if (realLength > 7)
+	{
+		sentence = std::wstring(realSentence);
+		RemoveCyclicRepeats(sentence);
+		return true;
+	}
+	return false;
+}
+
+bool RemoveRepeatedSentences(std::wstring& sentence, int threadHandle)
+{
+	static std::set<std::pair<int, std::wstring>> seenSentences;
+	static std::mutex m;
+	std::lock_guard<std::mutex> l(m);
+	if (seenSentences.count({ threadHandle, sentence }) != 0) throw std::exception();
+	seenSentences.insert({ threadHandle, sentence });
+	return false;
+}
+
+bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
+{
+	if (GetProperty("hook address", miscInfo) == -1) return false;
+	return RemoveRepeatedChars(sentence) | RemoveCyclicRepeats(sentence) | RemoveRepeatedSentences(sentence, GetProperty("thread handle", miscInfo));
 }

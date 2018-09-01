@@ -30,84 +30,69 @@ std::wstring GetTranslationUri(const wchar_t* text, unsigned int TKK)
 	return std::wstring(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tk=") + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + std::wstring(text);
 }
 
-extern "C"
+bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 {
-	/**
-	* Param sentence: pointer to sentence received by NextHooker (UTF-16).
-	* You should not modify this sentence. If you want NextHooker to receive a modified sentence, copy it into your own buffer and return that.
-	* Param miscInfo: pointer to start of singly linked list containing misc info about the sentence.
-	* Return value: pointer to sentence NextHooker takes for future processing and display.
-	* Return 'sentence' unless you created a new sentence/buffer as mentioned above.
-	* NextHooker will display the sentence after all extensions have had a chance to process and/or modify it.
-	* THIS FUNCTION MAY BE RUN SEVERAL TIMES CONCURRENTLY: PLEASE ENSURE THAT IT IS THREAD SAFE!
-	*/
-	__declspec(dllexport) const wchar_t* OnNewSentence(const wchar_t* sentence, const InfoForExtension* miscInfo)
+	static HINTERNET internet = NULL;
+	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 NextHooker", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+	static unsigned int TKK = 0;
+
+	std::wstring translation(L"");
+
+	if (GetProperty("hook address", miscInfo) == -1) return false;
+
+	if (internet)
 	{
-		static HINTERNET internet = NULL;
-		if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 NextHooker", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-		static unsigned int TKK = 0;
-		
-		wchar_t error[] = L"Error while translating.";
-		std::wstring translation(L"");
-		const wchar_t* message = error;
-
-		if (wcslen(sentence) > 2000 || GetProperty("hook address", miscInfo) == -1) return sentence;
-
-		if (internet)
-		{
-			if (!TKK)
-				if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-				{
-					if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
-					{
-						if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-						{
-							DWORD bytesRead;
-							char buffer[100000] = {}; // Google Translate page is ~64kb
-							WinHttpReceiveResponse(request, NULL);
-							WinHttpReadData(request, buffer, 100000, &bytesRead);
-							TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
-						}
-						WinHttpCloseHandle(request);
-					}
-					WinHttpCloseHandle(connection);
-				}
-
+		if (!TKK)
 			if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
 			{
-				if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", GetTranslationUri(sentence, TKK).c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
+				if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
 				{
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
 						DWORD bytesRead;
-						char buffer[10000] = {};
+						char buffer[100000] = {}; // Google Translate page is ~64kb
 						WinHttpReceiveResponse(request, NULL);
-						WinHttpReadData(request, buffer, 10000, &bytesRead);
-						// Response formatted as JSON: starts with '[[["'
-						if (buffer[0] == '[')
-						{
-							wchar_t wbuffer[10000] = {};
-							MultiByteToWideChar(CP_UTF8, 0, (char*)buffer, -1, wbuffer, 10000);
-							std::wstring response(wbuffer);
-							std::wregex translationFinder(L"\\[\"(.*?)\",[n\"]");
-							std::wsmatch results;
-							while (std::regex_search(response, results, translationFinder))
-							{
-								translation += std::wstring(results[1]) + L" ";
-								response = results.suffix().str();
-							}
-							for (auto& c : translation) if (c == L'\\') c = 0x200b;
-							message = translation.c_str();
-						}
+						WinHttpReadData(request, buffer, 100000, &bytesRead);
+						TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
 					}
 					WinHttpCloseHandle(request);
 				}
 				WinHttpCloseHandle(connection);
 			}
-		}
 
-		wchar_t* newSentence = (wchar_t*)malloc((wcslen(sentence) + 3 + wcslen(message)) * sizeof(wchar_t));
-		swprintf(newSentence, wcslen(sentence) + 3 + wcslen(message), L"%s%s%s", sentence, L"\r\n", message);
-		return newSentence;
+		if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+		{
+			if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", GetTranslationUri(sentence.c_str(), TKK).c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
+			{
+				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+				{
+					DWORD bytesRead;
+					char buffer[10000] = {};
+					WinHttpReceiveResponse(request, NULL);
+					WinHttpReadData(request, buffer, 10000, &bytesRead);
+					// Response formatted as JSON: starts with '[[["'
+					if (buffer[0] == '[')
+					{
+						wchar_t wbuffer[10000] = {};
+						MultiByteToWideChar(CP_UTF8, 0, (char*)buffer, -1, wbuffer, 10000);
+						std::wstring response(wbuffer);
+						std::wregex translationFinder(L"\\[\"(.*?)\",[n\"]");
+						std::wsmatch results;
+						while (std::regex_search(response, results, translationFinder))
+						{
+							translation += std::wstring(results[1]) + L" ";
+							response = results.suffix().str();
+						}
+						for (auto& c : translation) if (c == L'\\') c = 0x200b;
+					}
+				}
+				WinHttpCloseHandle(request);
+			}
+			WinHttpCloseHandle(connection);
+		}
 	}
+
+	if (translation == L"") translation = L"Error while translating.";
+	sentence += L"\r\n" + translation;
+	return true;
 }
