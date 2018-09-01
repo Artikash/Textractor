@@ -7,7 +7,6 @@
 #include "common.h"
 #include "types.h"
 
-
 class TextThread
 {
 	typedef std::function<std::wstring(TextThread*, std::wstring)> ThreadOutputCallback;
@@ -20,7 +19,7 @@ public:
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }
 
-	void AddText(const BYTE *con, int len);
+	void AddText(const BYTE* data, int len);
 	void AddSentence(std::wstring sentence);	
 
 private:

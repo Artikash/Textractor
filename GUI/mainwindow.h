@@ -50,7 +50,7 @@ private:
 	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
-	Ui::MainWindow *ui;
+	Ui::MainWindow* ui;
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
 	QComboBox* extenCombo;

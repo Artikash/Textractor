@@ -51,10 +51,10 @@ void TextThread::AddSentence(std::wstring sentence)
 	storage.append(sentence);
 }
 
-void TextThread::AddText(const BYTE *con, int len)
+void TextThread::AddText(const BYTE* data, int len)
 {
 	LOCK(ttMutex);
-	buffer.insert(buffer.end(), con, con + len);
+	buffer.insert(buffer.end(), data, data + len);
 	timestamp = GetTickCount();
 }
 
