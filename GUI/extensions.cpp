@@ -26,7 +26,7 @@ std::map<int, QString> LoadExtensions()
 	return extensionNames;
 }
 
-std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo)
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int> miscInfo)
 {
 	wchar_t* sentenceBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy(sentenceBuffer, sentence.c_str());
@@ -34,15 +34,19 @@ std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
 	extenMutex.lock_shared();
-	for (auto i : extensions)
+	try
 	{
-		wchar_t* prev = sentenceBuffer;
-		sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
-		if (sentenceBuffer != prev) free((void*)prev);
+		for (auto i : extensions)
+		{
+			wchar_t* prev = sentenceBuffer;
+			sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+			if (sentenceBuffer != prev) free((void*)prev);
+		}
 	}
+	catch (...) { sentenceBuffer[0] = 0; }
 	extenMutex.unlock_shared();
 	delete miscInfoLinkedList;
-	std::wstring newSentence = std::wstring(sentenceBuffer);
+	sentence = std::wstring(sentenceBuffer);
 	free((void*)sentenceBuffer);
-	return newSentence;
+	return sentence.size() > 0;
 }

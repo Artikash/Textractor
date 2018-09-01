@@ -84,9 +84,11 @@ void MainWindow::AddThread(TextThread* thread)
 	);
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
 	{
-		output = DispatchSentenceToExtensions(output, GetInfoForExtensions(thread));
-		output += L"\r\n";
-		emit SigThreadOutput(thread, QString::fromStdWString(output));
+		if (DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
+		{
+			output += L"\r\n";
+			emit SigThreadOutput(thread, QString::fromStdWString(output));
+		}
 		return output;
 	});
 }
@@ -150,7 +152,8 @@ std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread
 	{ "text number", 0 },
 	{ "process id", thread->GetThreadParam().pid },
 	{ "hook address", (int)thread->GetThreadParam().hook },
-	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParam().hook >> 32) }
+	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParam().hook >> 32) },
+	{ "text handle", (int)thread }
 	};
 }
 

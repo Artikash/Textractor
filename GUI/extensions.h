@@ -5,7 +5,7 @@
 #include <map>
 
 std::map<int, QString> LoadExtensions();
-std::wstring DispatchSentenceToExtensions(std::wstring sentence, std::unordered_map<std::string, int> miscInfo);
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int> miscInfo);
 struct InfoForExtension
 {
 	~InfoForExtension() { if (nextProperty) delete nextProperty; };
