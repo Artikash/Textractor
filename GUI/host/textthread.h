@@ -30,7 +30,7 @@ private:
 	std::recursive_mutex ttMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
-	std::thread flushThread = std::thread([&]() { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); });
+	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); });
 	DWORD timestamp = GetTickCount();
 
 	ThreadOutputCallback Output;

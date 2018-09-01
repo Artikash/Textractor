@@ -77,13 +77,13 @@ namespace
 		CloseHandle(pr.processHandle);
 		CloseHandle(pr.section);
 		processRecordsByIds[pid] = {};
-		RemoveThreads([=](ThreadParam tp) { return tp.pid == pid; });
+		RemoveThreads([&](ThreadParam tp) { return tp.pid == pid; });
 		OnDetach(pid);
 	}
 
 	void StartPipe()
 	{
-		std::thread([]()
+		std::thread([]
 		{
 			HANDLE hookPipe = CreateNamedPipeW(ITH_TEXT_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
 			HANDLE hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
@@ -106,7 +106,7 @@ namespace
 				case HOST_NOTIFICATION_RMVHOOK:
 				{
 					auto info = *(HookRemovedNotif*)buffer;
-					RemoveThreads([=](ThreadParam tp) { return tp.pid == processId && tp.hook == info.address; });
+					RemoveThreads([&](ThreadParam tp) { return tp.pid == processId && tp.hook == info.address; });
 				}
 				break;
 				case HOST_NOTIFICATION_TEXT:
@@ -264,10 +264,7 @@ namespace Host
 		return textThreadsByParams[tp];
 	}
 
-	void AddConsoleOutput(std::wstring text)
-	{
-		GetThread(CONSOLE)->AddSentence(std::wstring(text));
-	}
+	void AddConsoleOutput(std::wstring text) { GetThread(CONSOLE)->AddSentence(std::wstring(text)); }
 }
 
 // EOF
