@@ -23,7 +23,7 @@ int GetProperty(const char* propertyName, const InfoForExtension* miscInfo)
 }
 
 /**
-	* Param sentence: entence received by NextHooker (UTF-16).
+	* Param sentence: sentence received by NextHooker (UTF-16).
 	* Param miscInfo: pointer to start of singly linked list containing misc info about the sentence.
 	* Return value: whether the sentence was modified.
 	* NextHooker will display the sentence after all extensions have had a chance to process and/or modify it.
