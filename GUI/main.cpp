@@ -20,7 +20,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 
 int main(int argc, char *argv[])
 {
-	AddVectoredExceptionHandler(1, ExceptionHandler);
+	SetUnhandledExceptionFilter(ExceptionHandler);
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
