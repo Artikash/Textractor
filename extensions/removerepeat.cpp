@@ -56,5 +56,5 @@ bool RemoveRepeatedSentences(std::wstring& sentence, int threadHandle)
 bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 {
 	if (GetProperty("hook address", miscInfo) == -1) return false;
-	return RemoveRepeatedChars(sentence) | RemoveCyclicRepeats(sentence) | RemoveRepeatedSentences(sentence, GetProperty("thread handle", miscInfo));
+	return RemoveRepeatedChars(sentence) | RemoveCyclicRepeats(sentence) | RemoveRepeatedSentences(sentence, GetProperty("text handle", miscInfo));
 }
