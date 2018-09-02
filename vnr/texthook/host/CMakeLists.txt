@@ -54,7 +54,7 @@ target_compile_options(vnrhost PRIVATE
 target_link_libraries(vnrhost
   ithsys
   profile
-  ${WDK_HOME}/lib/wxp/i386/ntdll.lib
+  ntdll.lib
 )
 
 target_compile_definitions(vnrhost

@@ -99,7 +99,7 @@ target_link_libraries(${PROJECT_NAME}
   profile
   vnrhost
   ithsys
-  ${WDK_HOME}/lib/wxp/i386/ntdll.lib
+  ntdll.lib
   comctl32.lib
   psapi.lib
 )

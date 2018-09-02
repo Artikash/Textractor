@@ -93,7 +93,7 @@ target_compile_options(vnrhook PRIVATE
 
 set(vnrhook_libs
   ithsys
-  ${WDK_HOME}/lib/wxp/i386/ntdll.lib
+  ntdll.lib
   Version.lib
 )
 
