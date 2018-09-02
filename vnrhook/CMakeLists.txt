@@ -1,4 +1,4 @@
-include_directories(.)
+include_directories(. util)
 
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
 set(vnrhook_src
@@ -22,7 +22,7 @@ set(vnrhook_src
 )
 endif()
 
-include_directories(util)
+add_subdirectory(libminhook)
 
 add_library(vnrhook SHARED ${vnrhook_src})
 

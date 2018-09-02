@@ -32,6 +32,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Build)
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 add_subdirectory(GUI)
-add_subdirectory(minhook)
 add_subdirectory(vnrhook)
 add_subdirectory(extensions)
