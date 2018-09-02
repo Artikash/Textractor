@@ -5732,7 +5732,7 @@ int GetShinaRioVersion()
       fname[len -1] = 'i';
       fname[len -2] = 'n';
       fname[len -3] = 'i';
-      hFile = CreateFileW(fname, FILE_READ_DATA, FILE_SHARE_READ, nullptr, FILE_OPEN, FILE_ATTRIBUTE_NORMAL, nullptr);
+      hFile = CreateFileW(fname, FILE_READ_DATA, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
   }
 
@@ -5765,7 +5765,7 @@ bool InsertShinaHook()
     hp.text_fun = SpecialHookShina2;
     hp.type = USING_STRING;
     ConsoleOutput("vnreng: INSERT ShinaRio > 2.47");
-    NewHook(hp, "ShinaRio");
+   // NewHook(hp, "ShinaRio");
     //RegisterEngineType(ENGINE_SHINA);
     return true;
 

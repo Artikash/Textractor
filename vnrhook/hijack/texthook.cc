@@ -350,7 +350,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 
 bool TextHook::InsertReadCode()
 {
-	RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
+	//RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
 	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
 	return true;
 }
