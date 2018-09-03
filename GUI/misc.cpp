@@ -224,7 +224,9 @@ namespace
 			code += "V";
 		else
 			code += "S";
-		code += QString::number(hp.offset, 16);
+		if (hp.type & DATA_INDIRECT)
+			code += "*" + QString::number(hp.index, 16);
+		//code += QString::number(hp.offset, 16);
 		code += "@";
 		code += QString::number(hp.address, 16);
 		return code.toUpper();
