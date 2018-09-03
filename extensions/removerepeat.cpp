@@ -37,6 +37,7 @@ bool RemoveCyclicRepeats(std::wstring& sentence)
 	if (realLength > 7)
 	{
 		sentence = std::wstring(realSentence);
+		sentence.pop_back();
 		RemoveCyclicRepeats(sentence);
 		return true;
 	}
