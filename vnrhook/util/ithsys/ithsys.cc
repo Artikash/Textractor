@@ -60,13 +60,13 @@ DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_
 
 DWORD IthGetMemoryRange(LPCVOID mem, DWORD *base, DWORD *size)
 {
-	MEMORY_BASIC_INFORMATION info;
+	MEMORY_BASIC_INFORMATION info = {};
 	VirtualQuery(mem, &info, sizeof(info));
 	if (base)
 		*base = (DWORD)info.BaseAddress;
 	if (size)
 		*size = info.RegionSize;
-	return info.Protect;
+	return info.Protect > PAGE_NOACCESS;
 }
 
 inline DWORD GetHash(LPSTR str)
