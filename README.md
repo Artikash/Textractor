@@ -34,11 +34,11 @@ You should then be able to simply open the folder in Visual Studio, and build. R
 
 ## Project Architecture
 
-The GUI links to vnrhost.dll (created from the host folder) which injects vnrhook.dll (created from the vnrhook folder) into the target process and connects to it via 2 pipe files.<br>
-vnrhost writes to hostPipe, vnrhook writes to hookPipe (duh?)<br>
+The host (see GUI/host folder) injects vnrhook.dll (created from the vnrhook folder) into the target process and connects to it via 2 pipe files.<br>
+Host writes to hostPipe, vnrhook writes to hookPipe (duh?)<br>
 vnrhook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
 Additional information about hooks is shared through a file view (a.k.a. section object) that is mapped to a reference to the Hook class.<br>
-The text that vnrhost receives through the pipe is then processed a little before being dispatched back to the GUI and displayed.
+The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI and displayed.
 
 ## Contributing
 
@@ -51,13 +51,13 @@ GPL v3
 
 ## Developers
 
-- ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
+- NextHooker creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine making by [jichi](https://archive.is/prJwr)
 - ITH updating by [Andys](https://github.com/AndyScull)
-- ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
 - MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
-- NextHooker creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 
 ## Special Thanks
 
