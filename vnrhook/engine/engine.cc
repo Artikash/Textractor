@@ -4612,7 +4612,7 @@ bool InsertAliceHook()
     InsertAliceHook2(addr);
     return true;
   }
-  ConsoleOutput("vnreng:AliceHook: failed");
+  //ConsoleOutput("vnreng:AliceHook: failed");
   return false;
 }
 
@@ -5759,13 +5759,42 @@ int GetShinaRioVersion()
 bool InsertShinaHook()
 {
   int ver = GetShinaRioVersion();
-  if (ver >= 48) { // v2.48, v2.49
+  if (ver >= 50) {
+	  SwitchTrigger(true);
+	  trigger_fun_ = [](LPVOID addr, DWORD, DWORD stack) 
+	  {
+		  bool ret = false;
+		  if (addr != ::GetGlyphOutlineA) return false;
+		  for (int i = 0; i < 75; ++i) 
+		  {
+			  // Address of text is somewhere on stack in call to GetGlyphOutlineA. Search for it.
+			  DWORD* addr = (DWORD*)stack + i;
+			  //ConsoleOutput(std::to_string((DWORD)*addr).c_str());
+			  if (IthGetMemoryRange((DWORD*)*addr, nullptr, nullptr))
+			  {
+				  if (strlen((char*)*addr) > 9)
+				  {
+					  HookParam hp = {};
+					  hp.type = DIRECT_READ;
+					  hp.address = *addr;
+					  ConsoleOutput("NextHooker: insert ShinaRio dynamic");
+					  NewHook(hp, "ShinaRio3");
+					  ret = true;
+				  }
+			  };
+		  }
+		  return ret; 
+	  };
+	  ConsoleOutput("NextHooker: ShinaRio 2.50+: adding trigger");
+	  return true;
+  }
+  else if (ver >= 48) { // v2.48, v2.49
     HookParam hp = {};
     hp.address = (DWORD)::GetTextExtentPoint32A;
     hp.text_fun = SpecialHookShina2;
     hp.type = USING_STRING;
     ConsoleOutput("vnreng: INSERT ShinaRio > 2.47");
-   // NewHook(hp, "ShinaRio");
+    NewHook(hp, "ShinaRio");
     //RegisterEngineType(ENGINE_SHINA);
     return true;
 
