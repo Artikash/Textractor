@@ -41,6 +41,32 @@ enum { VNR_TEXT_CAPACITY = 1500 }; // estimated max number of bytes allowed in V
 
 namespace { // unnamed helpers
 
+	template <void* funcA, void* funcW> bool StackSearchingTrigger(LPVOID funcAddr, DWORD, DWORD stack)
+	{
+		bool ret = false;
+		if (funcAddr != funcA && funcAddr != funcW) return false;
+		for (int i = 0; i < 100; ++i)
+		{
+			// Address of text is somewhere on stack in call to func. Search for it.
+			DWORD addr = *((DWORD*)stack + i);
+			//ConsoleOutput(std::to_string((DWORD)*addr).c_str());
+			if (IthGetMemoryRange((void*)addr, nullptr, nullptr))
+			{
+				if (strlen((char*)addr) > 9)
+				{
+					HookParam hp = {};
+					hp.type = DIRECT_READ;
+					if (funcAddr == funcW) hp.type |= USING_UNICODE;
+					hp.address = addr;
+					ConsoleOutput("NextHooker: triggered: adding dynamic reader");
+					NewHook(hp, "READ");
+					ret = true;
+				}
+			};
+		}
+		return ret;
+	}
+
 int PPSSPP_VERSION[4] = { 0, 9, 8, 0 }; // 0.9.8 by default
 
 enum : DWORD {
@@ -5761,30 +5787,7 @@ bool InsertShinaHook()
   int ver = GetShinaRioVersion();
   if (ver >= 50) {
 	  SwitchTrigger(true);
-	  trigger_fun_ = [](LPVOID addr, DWORD, DWORD stack) 
-	  {
-		  bool ret = false;
-		  if (addr != ::GetGlyphOutlineA) return false;
-		  for (int i = 0; i < 75; ++i) 
-		  {
-			  // Address of text is somewhere on stack in call to GetGlyphOutlineA. Search for it.
-			  DWORD* addr = (DWORD*)stack + i;
-			  //ConsoleOutput(std::to_string((DWORD)*addr).c_str());
-			  if (IthGetMemoryRange((DWORD*)*addr, nullptr, nullptr))
-			  {
-				  if (strlen((char*)*addr) > 9)
-				  {
-					  HookParam hp = {};
-					  hp.type = DIRECT_READ;
-					  hp.address = *addr;
-					  ConsoleOutput("NextHooker: insert ShinaRio dynamic");
-					  NewHook(hp, "ShinaRio3");
-					  ret = true;
-				  }
-			  };
-		  }
-		  return ret; 
-	  };
+	  trigger_fun_ = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
 	  ConsoleOutput("NextHooker: ShinaRio 2.50+: adding trigger");
 	  return true;
   }
@@ -10260,7 +10263,8 @@ bool InsertTyranobuilderHook()
 		0x66, 0x8b, 0x08, // mov cx,[eax]
 		0x8d, 0x40, 0x02 // lea eax,[eax + 02]; Hook here!
 	};
-	DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	//DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	DWORD addr = Util::SearchMemory(bytes, sizeof(bytes));
 	if (!addr)
 	{
 		ConsoleOutput("NextHooker: Tyranobuilder: pattern not found");
@@ -10272,7 +10276,6 @@ bool InsertTyranobuilderHook()
 	hp.length_offset = 1;
 	hp.offset = pusha_ecx_off - 4;
 	hp.split = pusha_esi_off - 4;
-	hp.index = 0x8;
 
 	ConsoleOutput("NextHooker: INSERT Tyranobuilder");
 	NewHook(hp, "Tyranobuilder");
