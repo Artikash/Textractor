@@ -16,9 +16,8 @@ static QString CodeInfoDump =
 /H{A|B|W|S|Q|V}[N]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module]\r\n\
 OR\r\n\
 Enter read code\r\n\
-/R{S|Q|V}{0|*deref_offset}@addr\r\n\
+/R{S|Q|V}[*deref_offset|0]@addr\r\n\
 All numbers in hexadecimal\r\n\
-Use 0 for string_gap if string is in same location every time\r\n\
 A/B: Shift-JIS char little/big endian\r\n\
 W: UTF-16 char\r\n\
 S/Q/V: Shift-JIS/UTF-16/UTF-8 string\r\n\
