@@ -3,11 +3,12 @@
 
 #include "qtcommon.h"
 #include "types.h"
+#include <QHash>
 #include <optional>
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);
 QString GetModuleName(DWORD processId, HMODULE module = NULL);
-std::unordered_map<std::wstring, DWORD> GetAllProcesses();
+QMultiHash<QString, DWORD> GetAllProcesses();
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
 

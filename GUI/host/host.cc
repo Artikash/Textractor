@@ -89,14 +89,14 @@ namespace
 			HANDLE hostPipe = CreateNamedPipeW(ITH_COMMAND_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, MAXDWORD, NULL);
 			ConnectNamedPipe(hookPipe, nullptr);
 
-			// jichi 9/27/2013: why recursion?
-			// Artikash 5/20/2018: Easy way to create a new pipe for another process
-			StartPipe();
-
 			BYTE buffer[PIPE_BUFFER_SIZE + 1] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
 			RegisterProcess(processId, hostPipe);
+
+			// jichi 9/27/2013: why recursion?
+			// Artikash 5/20/2018: Easy way to create a new pipe for another process
+			StartPipe();
 
 			while (ReadFile(hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
 				switch (*(int*)buffer)

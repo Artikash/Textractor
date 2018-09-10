@@ -175,22 +175,17 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 
 void MainWindow::on_attachButton_clicked()
 {
-	std::unordered_map<std::wstring, DWORD> allProcesses = GetAllProcesses();
-	QStringList processList;
-	for (auto i : allProcesses)
-		processList.push_back(QString::fromStdWString(i.first));
+	QMultiHash<QString, DWORD> allProcesses = GetAllProcesses();
+	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
 	QString process = QInputDialog::getItem(this, "Select Process",
-		"If you don't see the process you want to inject, try running with admin rights\r\nYou can just type in the process id if you know it",
+		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id if you know it",
 		processList, 0, true, &ok);
 	if (!ok) return;
-	if (process.toInt())
-	{
-		if (Host::InjectProcess(process.toInt())) return;
-	}
-	else if (Host::InjectProcess(allProcesses[process.toStdWString()])) return;
-	Host::AddConsoleOutput(L"failed to attach");
+	if (process.toInt()) ok &= Host::InjectProcess(process.toInt());
+	else for (auto i : allProcesses.values(process)) ok &= Host::InjectProcess(i);
+	if (!ok) Host::AddConsoleOutput(L"failed to attach");
 }
 
 void MainWindow::on_detachButton_clicked()

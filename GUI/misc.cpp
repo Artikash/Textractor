@@ -18,15 +18,15 @@ QString GetModuleName(DWORD processId, HMODULE module)
 	return fullName.remove(0, fullName.lastIndexOf("\\") + 1);
 }
 
-std::unordered_map<std::wstring, DWORD> GetAllProcesses()
+QMultiHash<QString, DWORD> GetAllProcesses()
 {
 	DWORD allProcessIds[0x1000];
 	DWORD spaceUsed;
-	std::unordered_map<std::wstring, DWORD> ret;
+	QMultiHash<QString, DWORD> ret;
 	if (!EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed)) return ret;
 	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
 		if (GetModuleName(allProcessIds[i]).size())
-			ret[GetModuleName(allProcessIds[i]).toStdWString()] = allProcessIds[i];
+			ret.insert(GetModuleName(allProcessIds[i]), allProcessIds[i]);
 	return ret;
 }
 

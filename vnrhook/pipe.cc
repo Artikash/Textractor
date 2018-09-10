@@ -36,7 +36,7 @@ void CreatePipe()
 				{
 					::hookPipe = CreateFileW(ITH_TEXT_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 				}
-				if (hostPipe == INVALID_HANDLE_VALUE)
+				if (::hookPipe != INVALID_HANDLE_VALUE && hostPipe == INVALID_HANDLE_VALUE)
 				{
 					hostPipe = CreateFileW(ITH_COMMAND_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 					DWORD mode = PIPE_READMODE_MESSAGE;
