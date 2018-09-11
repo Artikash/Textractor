@@ -385,7 +385,6 @@ void TextHook::ClearHook()
 	NotifyHookRemove(hp.address);
 	if (hook_name) delete[] hook_name;
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
-	ConsoleOutput("NextHooker:RemoveHook: leave");
 	ReleaseMutex(hmMutex);
 }
 
