@@ -284,6 +284,26 @@ bool Util::SearchResourceString(LPCWSTR str)
   return false;
 }
 
+namespace
+{
+	DWORD SafeSearchMemory(DWORD startAddr, DWORD endAddr, const BYTE* bytes, unsigned short length)
+	{
+		__try
+		{
+			for (int i = 0; i < endAddr - startAddr - length; ++i)
+				for (int j = 0; j <= length; ++j)
+					if (j == length) return startAddr + i; // not sure about this algorithm...
+					else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != 0x11) break; // 0x11 = wildcard
+		} 
+		__except (1)
+		{
+			ConsoleOutput("NextHooker: SearchMemory ERROR (NextHooker will likely still work fine, but please let Artikash know if this happens a lot!)");
+			return 0;
+		}
+		return 0;
+	}
+}
+
 DWORD Util::SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect)
 {
 	std::vector<std::pair<DWORD, DWORD>> validMemory;
@@ -303,12 +323,8 @@ DWORD Util::SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect
 	}
 
 	for (auto memory : validMemory)
-		// Artikash 7/14/2018: not sure, but I think this could throw read access violation if I dont subtract search_length
-		for (int i = 0; i < memory.second - length; ++i)
-			for (int j = 0; j <= length; ++j)
-				if (j == length) return memory.first + i; // not sure about this algorithm...
-				else if (*((BYTE*)memory.first + i + j) != *(bytes + j) && *(bytes + j) != 0x11) break; // 0x11 = wildcard
-
+		if (DWORD ret = SafeSearchMemory(memory.first, memory.first + memory.second, bytes, length))
+			return ret;
 
 	return 0;
 }

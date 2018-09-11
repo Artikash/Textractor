@@ -86,8 +86,7 @@ bool DeterminePCEngine()
   PcHooks::hookGDIFunctions();
   PcHooks::hookGDIPlusFunctions();
   const char check[] = "sdffffffkjldfjlhjweiumxnvq1204tergdmnxcq1111111111111111111111408t03kxjb40";
-  __try { Util::SearchMemory((const BYTE*)check, sizeof(check)); } // Not too sure about the stability of this guy
-  __except (1) { ConsoleOutput("NextHooker: SearchMemory ERROR (NextHooker will likely still work fine, but please let Artikash know if this happens a lot!)"); }
+  Util::SearchMemory((const BYTE*)check, sizeof(check)); // Not too sure about the stability of this guy, so test it here
   return false;
 }
 
