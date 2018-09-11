@@ -17,7 +17,6 @@
 #include "pipe.h"
 #include "const.h"
 #include "ithsys/ithsys.h"
-#include "disasm/disasm.h"
 #include "growl.h"
 #include <Psapi.h>
 
