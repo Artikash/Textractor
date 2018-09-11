@@ -87,7 +87,7 @@ bool DeterminePCEngine()
   PcHooks::hookGDIPlusFunctions();
   const char check[] = "sdffffffkjldfjlhjweiumxnvq1204tergdmnxcq1111111111111111111111408t03kxjb40";
   __try { Util::SearchMemory((const BYTE*)check, sizeof(check)); } // Not too sure about the stability of this guy
-  __except (1) { ConsoleOutput("NextHooker threw while searching memory (NextHooker will likely still work fine, but please let Artikash know this happened!)"); }
+  __except (1) { ConsoleOutput("NextHooker: SearchMemory ERROR (NextHooker will likely still work fine, but please let Artikash know if this happens a lot!)"); }
   return false;
 }
 
@@ -489,13 +489,6 @@ bool DetermineEngineByProcessName()
     return true;
   }
 
-  // jichi 10/3/2013: FIXME: Does not work
-  // Raise C0000005 even with admin priv
-  //if (wcsstr(str, L"bsz")) { // BALDRSKY ZERO
-  //  InsertBaldrHook();
-  //  return true;
-  //}
-
   if (wcsstr(processName, L"SAISYS") || Util::CheckFile(L"SaiSys.exe")) { // jichi 4/19/2014: Marine Heart
     InsertMarineHeartHook();
     return true;
@@ -558,8 +551,8 @@ bool DetermineEngineOther()
     return true;
   }
 
-  // Artikash 7/16/2018: Uses libuv: likely Tyranobuilder - sample game https://vndb.org/v22975
-  if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime"))
+  // Artikash 7/16/2018: Uses node/libuv: likely Tyranobuilder - sample game https://vndb.org/v22975
+  if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime") || GetModuleHandleW(L"node.dll"))
   {
 	  InsertTyranobuilderHook();
 	  return true;
@@ -850,7 +843,7 @@ bool UnsafeDetermineEngineType()
     || DetermineEngineByProcessName()
     || DetermineEngineOther()
     || DetermineEngineAtLast()
-    //|| DetermineEngineGeneric()
+    || DetermineEngineGeneric()
     || DetermineNoEngine()
   ;
 }

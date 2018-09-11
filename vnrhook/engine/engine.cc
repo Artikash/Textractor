@@ -8,7 +8,6 @@
 #endif // _MSC_VER
 
 #include "engine/engine.h"
-#include "ntdll/ntdll.h"
 #include "engine/match.h"
 #include "util/util.h"
 #include "main.h"
@@ -5763,11 +5762,10 @@ int GetShinaRioVersion()
   }
 
   if (hFile != INVALID_HANDLE_VALUE)  {
-    IO_STATUS_BLOCK ios;
     //char *buffer,*version;//,*ptr;
     enum { BufferSize = 0x40 };
     char buffer[BufferSize];
-    ReadFile(hFile, buffer, BufferSize, nullptr, nullptr);
+    ReadFile(hFile, buffer, BufferSize, (DWORD*)buffer, nullptr);
     CloseHandle(hFile);
     if (buffer[0] == '[') {
       buffer[0x3f] = 0; // jichi 8/24/2013: prevent strstr from overflow
@@ -8842,33 +8840,7 @@ AkabeiSoft2Try hook:
 
 ********************************************************************************************/
 namespace { // unnamed
-MEMORY_WORKING_SET_LIST *GetWorkingSet()
-{
-  DWORD len,retl;
-  NTSTATUS status;
-  LPVOID buffer = 0;
-  len = 0x4000;
-  status = NtAllocateVirtualMemory(GetCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-  if (!NT_SUCCESS(status)) return 0;
-  status = NtQueryVirtualMemory(GetCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
-  if (status == STATUS_INFO_LENGTH_MISMATCH) {
-    len = *(DWORD*)buffer;
-    len = ((len << 2) & 0xfffff000) + 0x4000;
-    retl = 0;
-    NtFreeVirtualMemory(GetCurrentProcess(), &buffer, &retl, MEM_RELEASE);
-    buffer = 0;
-    status = NtAllocateVirtualMemory(GetCurrentProcess(), &buffer, 0, &len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
-    if (!NT_SUCCESS(status)) return 0;
-    status = NtQueryVirtualMemory(GetCurrentProcess(), 0, MemoryWorkingSetList, buffer, len, &retl);
-    if (!NT_SUCCESS(status)) return 0;
-    return (MEMORY_WORKING_SET_LIST*)buffer;
-  } else {
-    retl = 0;
-    NtFreeVirtualMemory(GetCurrentProcess(), &buffer, &retl, MEM_RELEASE);
-    return 0;
-  }
 
-}
 typedef struct _NSTRING
 {
   PVOID vfTable;
@@ -8897,67 +8869,32 @@ void SpecialHookAB2Try(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *sp
   }
 }
 
-BOOL FindCharacteristInstruction(MEMORY_WORKING_SET_LIST *list)
+BOOL FindCharacteristInstruction()
 {
-  DWORD base, size;
-  DWORD i, j, k, addr, retl;
-  NTSTATUS status;
-  ::qsort(&list->WorkingSetList, list->NumberOfPages, 4, cmp);
-  base = list->WorkingSetList[0];
-  size = 0x1000;
-  for (i = 1; i < list->NumberOfPages; i++) {
-    if ((list->WorkingSetList[i] & 2) == 0)
-      continue;
-    if (list->WorkingSetList[i] >> 31)
-      break;
-    if (base + size == list->WorkingSetList[i])
-      size += 0x1000;
-    else {
-      if (size > 0x2000) {
-        addr = base & ~0xfff;
-        status = NtQueryVirtualMemory(GetCurrentProcess(),(PVOID)addr,
-            MemorySectionName,text_buffer_prev,0x1000,&retl);
-        if (!NT_SUCCESS(status)) {
-          k = addr + size - 4;
-          for (j = addr; j < k; j++) {
-            if (*(DWORD*)j == 0x5044b70f) {
-              if (*(WORD*)(j + 4) == 0x890c) { // movzx eax, word ptr [edx*2 + eax + 0xC]; wchar = string[i];
-                HookParam hp = {};
-                hp.address = j;
-                hp.text_fun = SpecialHookAB2Try;
-                hp.type = USING_STRING|NO_CONTEXT|USING_UNICODE;
-                ConsoleOutput("vnreng: INSERT AB2Try");
-                NewHook(hp, "AB2Try");
-                //ConsoleOutput("Please adjust text speed to fastest/immediate.");
-                //RegisterEngineType(ENGINE_AB2T);
-                return TRUE;
-              }
-            }
-          }
-        }
-      }
-      size = 0x1000;
-      base = list->WorkingSetList[i];
-    }
-  }
+	const BYTE bytes[] = { 0x0F, 0xB7, 0x44, 0x50, 0x0C, 0x89 };
+	if (DWORD addr = Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE))
+	{
+		//GROWL_DWORD(addr);
+		HookParam hp = {};
+		hp.address = addr;
+		hp.text_fun = SpecialHookAB2Try;
+		hp.type = USING_STRING | NO_CONTEXT | USING_UNICODE;
+		ConsoleOutput("vnreng: INSERT AB2Try");
+		NewHook(hp, "AB2Try");
+		//ConsoleOutput("Please adjust text speed to fastest/immediate.");
+		//RegisterEngineType(ENGINE_AB2T);
+		return TRUE;
+	}
   return FALSE;
 }
 } // unnamed namespace
 bool InsertAB2TryHook()
 {
-  MEMORY_WORKING_SET_LIST *list = GetWorkingSet();
-  if (!list) {
-    ConsoleOutput("vnreng:AB2Try: cannot find working list");
-    return false;
-  }
-  bool ret = FindCharacteristInstruction(list);
+	bool ret = FindCharacteristInstruction();
   if (ret)
     ConsoleOutput("vnreng:AB2Try: found characteristic sequence");
   else
-    ConsoleOutput("vnreng:AB2Try: cannot find characteristic sequence");
-  //L"Make sure you have start the game and have seen some text on the screen.");
-  DWORD size = 0;
-  NtFreeVirtualMemory(GetCurrentProcess(), (PVOID *)&list, &size, MEM_RELEASE);
+    ConsoleOutput("vnreng:AB2Try: cannot find characteristic sequence. Make sure you have start the game and have seen some text on the screen.");
   return ret;
 }
 

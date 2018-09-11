@@ -297,7 +297,7 @@ DWORD Util::SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect
 		}
 		else
 		{
-			if (info.Protect > protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (DWORD)info.BaseAddress, info.RegionSize });
+			if (info.Protect >= protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (DWORD)info.BaseAddress, info.RegionSize });
 			probe += info.RegionSize;
 		}
 	}
