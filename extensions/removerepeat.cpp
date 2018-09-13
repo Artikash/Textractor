@@ -1,7 +1,6 @@
 #include "extensions.h"
 #include <set>
 #include <mutex>
-#include <algorithm>
 
 bool RemoveRepeatedChars(std::wstring& sentence)
 {
@@ -18,44 +17,46 @@ bool RemoveRepeatedChars(std::wstring& sentence)
 				if ((j - i) % repeatNumber != 0) return false;
 				else break;
 
-	// Removes every repeatNumber'th character.
-	sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [&](const wchar_t& c) {return (&c - &*sentence.begin()) % repeatNumber != 0; }), sentence.end());
+	std::wstring newSentence = L"";
+	for (int i = 0; i < sentence.size(); ++i) if (i % repeatNumber == 0) newSentence.push_back(sentence[i]);
+	sentence = newSentence;
 	return true;
 }
 
 bool RemoveCyclicRepeats(std::wstring& sentence)
 {
-	unsigned int realLength = 6; // If the first 6 characters appear later on, there's probably a repetition issue.
-	if (sentence.size() < realLength) return false;
-	wchar_t realSentence[2000] = {};
-	memcpy(realSentence, sentence.c_str(), realLength * sizeof(wchar_t));
-	while (wcsstr(sentence.c_str() + realLength, realSentence))
+	unsigned int junkLength = 0;
+	wchar_t junk[2000] = {};
+	while (wcsstr(sentence.c_str() + junkLength, junk))
 	{
-		realSentence[realLength] = sentence[realLength];
-		if (++realLength >= 2000) return false;
+		junk[junkLength] = sentence[junkLength];
+		if (++junkLength >= 2000) return false;
 	}
-	if (realLength > 7)
+	if (--junkLength >= 5) // If the first 5 characters appear later on, there's probably a repetition issue.
 	{
-		sentence = std::wstring(realSentence);
-		sentence.pop_back();
+		sentence = std::wstring(sentence.c_str() + junkLength);
 		RemoveCyclicRepeats(sentence);
 		return true;
 	}
 	return false;
 }
 
-bool RemoveRepeatedSentences(std::wstring& sentence, int threadHandle)
+bool RemoveRepeatedSentences(std::wstring& sentence, int handle)
 {
 	static std::set<std::pair<int, std::wstring>> seenSentences;
 	static std::mutex m;
 	std::lock_guard<std::mutex> l(m);
-	if (seenSentences.count({ threadHandle, sentence }) != 0) throw std::exception();
-	seenSentences.insert({ threadHandle, sentence });
+	if (seenSentences.count({ handle, sentence }) != 0) throw std::exception();
+	seenSentences.insert({ handle, sentence });
 	return false;
 }
 
 bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 {
 	if (GetProperty("hook address", miscInfo) == -1) return false;
-	return RemoveRepeatedChars(sentence) | RemoveCyclicRepeats(sentence) | RemoveRepeatedSentences(sentence, GetProperty("text handle", miscInfo));
+	bool ret = false;
+	ret |= RemoveRepeatedChars(sentence);
+	ret |= RemoveCyclicRepeats(sentence);
+	ret |= RemoveRepeatedSentences(sentence, GetProperty("text handle", miscInfo));
+	return ret;
 }
