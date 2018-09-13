@@ -550,10 +550,10 @@ bool DetermineEngineOther()
     return true;
   }
 
-  // Artikash 7/16/2018: Uses node/libuv: likely Tyranobuilder - sample game https://vndb.org/v22975
+  // Artikash 7/16/2018: Uses node/libuv: likely v8 - sample game https://vndb.org/v22975
   if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime") || GetModuleHandleW(L"node.dll"))
   {
-	  InsertTyranobuilderHook();
+	  InsertV8Hook();
 	  return true;
   }
 
