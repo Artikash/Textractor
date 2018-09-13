@@ -182,10 +182,11 @@ void MainWindow::on_attachButton_clicked()
 	QString process = QInputDialog::getItem(this, "Select Process",
 		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id if you know it",
 		processList, 0, true, &ok);
+	bool injected = false;
 	if (!ok) return;
-	if (process.toInt()) ok &= Host::InjectProcess(process.toInt());
-	else for (auto i : allProcesses.values(process)) ok &= Host::InjectProcess(i);
-	if (!ok) Host::AddConsoleOutput(L"failed to attach");
+	if (process.toInt(nullptr, 0)) injected |= Host::InjectProcess(process.toInt(nullptr, 0));
+	else for (auto i : allProcesses.values(process)) injected |= Host::InjectProcess(i);
+	if (!injected) Host::AddConsoleOutput(L"failed to inject");
 }
 
 void MainWindow::on_detachButton_clicked()
