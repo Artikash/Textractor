@@ -74,7 +74,7 @@ bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 					if (buffer[0] == '[')
 					{
 						wchar_t wbuffer[10000] = {};
-						MultiByteToWideChar(CP_UTF8, 0, (char*)buffer, -1, wbuffer, 10000);
+						MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
 						std::wstring response(wbuffer);
 						std::wregex translationFinder(L"\\[\"(.*?)\",[n\"]");
 						std::wsmatch results;

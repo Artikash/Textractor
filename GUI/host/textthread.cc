@@ -37,7 +37,6 @@ void TextThread::Flush()
 			sentence = std::wstring(converted, MultiByteToWideChar(status & USING_UTF8 ? CP_UTF8 : 932, 0, buffer.data(), buffer.size(), converted, buffer.size()));
 			delete[] converted;
 		}
-		memset(buffer.data(), 0, buffer.size());
 		buffer.clear();
 	}
 	AddSentence(sentence);
