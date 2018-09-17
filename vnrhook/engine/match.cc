@@ -373,7 +373,7 @@ bool DetermineEngineByFile4()
   if (Util::CheckFile(L"bmp.pak") && Util::CheckFile(L"dsetup.dll")) {
     // 1/1/2016 jich: skip izumo4 from studio ego that is not supported by debonosu
     if (Util::CheckFile(L"*izumo4*.exe")) {
-      PcHooks::hookLstrFunctions();
+      PcHooks::hookOtherPcFunctions();
       return true;
     }
     InsertDebonosuHook();
@@ -662,26 +662,26 @@ bool DetermineEngineAtLast()
 
 // jichi 6/1/2014
 // Artikash 9/3/2018 Hook wchar by default
-bool DetermineEngineGeneric()
-{
-  bool ret = false;
-
-  //if (Util::CheckFile(L"AlterEgo.exe")) {
-  //  ConsoleOutput("vnreng: AlterEgo, INSERT WideChar hooks");
-  //  ret = true;
-  //}  else if (Util::CheckFile(L"data\\Sky\\*")) {
-  //  ConsoleOutput("vnreng: TEATIME, INSERT WideChar hooks");
-  //  ret = true;
-  //}
-  ////}  else if (Util::CheckFile(L"image\\*.po2") || Util::CheckFile(L"image\\*.jo2")) {
-  ////  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // はるかかなた
-  ////  ret = true;
-  ////}
-  //if (ret)
-  //  PcHooks::hookWcharFunctions();
-  PcHooks::hookWcharFunctions();
-  return ret;
-}
+//bool DetermineEngineGeneric()
+//{
+//  bool ret = false;
+//
+//  //if (Util::CheckFile(L"AlterEgo.exe")) {
+//  //  ConsoleOutput("vnreng: AlterEgo, INSERT WideChar hooks");
+//  //  ret = true;
+//  //}  else if (Util::CheckFile(L"data\\Sky\\*")) {
+//  //  ConsoleOutput("vnreng: TEATIME, INSERT WideChar hooks");
+//  //  ret = true;
+//  //}
+//  ////}  else if (Util::CheckFile(L"image\\*.po2") || Util::CheckFile(L"image\\*.jo2")) {
+//  ////  ConsoleOutput("vnreng: HarukaKanata, INSERT WideChar hooks"); // はるかかなた
+//  ////  ret = true;
+//  ////}
+//  //if (ret)
+//  //  PcHooks::hookWcharFunctions();
+//  PcHooks::hookWcharFunctions();
+//  return ret;
+//}
 
 bool DetermineNoEngine()
 {
@@ -842,7 +842,6 @@ bool UnsafeDetermineEngineType()
     || DetermineEngineByProcessName()
     || DetermineEngineOther()
     || DetermineEngineAtLast()
-    || DetermineEngineGeneric()
     || DetermineNoEngine()
   ;
 }
@@ -857,8 +856,7 @@ bool DetermineEngineType()
   __except(ExceptHandler((GetExceptionInformation())->ExceptionRecord, 0, 0, 0)) {}
 #endif // ITH_DISABLE_ENGINE
   if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
-    PcHooks::hookLstrFunctions();
-    PcHooks::hookCharNextFunctions();
+    PcHooks::hookOtherPcFunctions();
   } //else
   //  ConsoleOutput("vnreng: found game engine, IGNORE non gui hooks");
   return found;
