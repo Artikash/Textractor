@@ -9,7 +9,8 @@
 
 #include "engine/match.h"
 #include "engine/engine.h"
-#include "engine/pchooks.h"
+#include "engine/native/pchooks.h"
+#include "engine/v8/v8.h"
 #include "util/growl.h"
 #include "util/util.h"
 #include "main.h"

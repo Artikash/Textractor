@@ -13,7 +13,7 @@ set(vnrhook_src
   pipe.cc
   engine/engine.cc
   engine/match.cc
-  engine/pchooks.cc
+  engine/native/pchooks.cc
   hijack/texthook.cc
   util/util.cc
   util/ithsys/ithsys.cc
