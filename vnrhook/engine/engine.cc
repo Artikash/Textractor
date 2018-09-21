@@ -10165,7 +10165,7 @@ bool InsertNexton1Hook()
 *  Sample game: https://vndb.org/v22252: /HWN-8:-1C@233A54:yuika_t.exe
 *  Artikash 9/11/2018: This is more than just Tyranobuilder. It's actually a hook for the V8 JavaScript runtime
 *  Sample game: https://www.freem.ne.jp/win/game/9672: /HQ8@2317A0:Prison.exe This new hook seems more reliable
-*  Nevermind both of those, just hook the v8::String::Write
+*  Nevermind both of those, just hook v8::String::Write https://v8docs.nodesource.com/node-0.8/d2/db3/classv8_1_1_string.html
 */
 void SpecialHookV8String(DWORD dwDatabase, HookParam* hp, BYTE, DWORD* data, DWORD* split, DWORD* len)
 {
@@ -10173,7 +10173,7 @@ void SpecialHookV8String(DWORD dwDatabase, HookParam* hp, BYTE, DWORD* data, DWO
 	DWORD strPtr = *(DWORD*)ecx;
 	*data = strPtr + 0xb;
 	*len = *(short*)(strPtr + 7);
-	if (*len < 12) *len = 0; // To ensure this is caught by cyclic repetition detection, only send with 6+ wide chars
+	if (*len < 12) *split = 1; // To ensure this is caught by cyclic repetition detection, split if there's 6+ wide chars
 	//*split = *(DWORD*)((BYTE*)hp->split + dwDatabase);
 }
 
