@@ -150,7 +150,7 @@ bool InsertTanukiHook();        // Tanuki: *.tak
 bool InsertTaskforce2Hook();    // Taskforce2.exe
 bool InsertTencoHook();         // Tenco: Check.mdx
 bool InsertTriangleHook();      // Triangle: Execle.exe
-bool InsertV8Hook(); // Tyranobuilder: has libuv
+bool InsertV8Hook(HMODULE module); // V8 JavaScript runtime: has mangled v8::String::Write
 bool InsertUnicornHook();       // Gsen18: *.szs|Data/*.szs
 bool InsertWillPlusHook();      // WillPlus: Rio.arc
 bool InsertWolfHook();          // Wolf: Data.wolf

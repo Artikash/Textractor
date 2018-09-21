@@ -10165,104 +10165,27 @@ bool InsertNexton1Hook()
 *  Sample game: https://vndb.org/v22252: /HWN-8:-1C@233A54:yuika_t.exe
 *  Artikash 9/11/2018: This is more than just Tyranobuilder. It's actually a hook for the V8 JavaScript runtime
 *  Sample game: https://www.freem.ne.jp/win/game/9672: /HQ8@2317A0:Prison.exe This new hook seems more reliable
-*  Issue with hook: many garbage text threads. Maybe use another split?
-*  
-*  yuika_t.v8::Locker::IsLocked+2B57 - 56                    - push esi
-*  yuika_t.v8::Locker::IsLocked+2B58 - 8B F3                 - mov esi,ebx
-*  yuika_t.v8::Locker::IsLocked+2B5A - 33 C0                 - xor eax,eax
-*  yuika_t.v8::Locker::IsLocked+2B5C - 2B F7                 - sub esi,edi
-*  yuika_t.v8::Locker::IsLocked+2B5E - 33 D2                 - xor edx,edx
-*  yuika_t.v8::Locker::IsLocked+2B60 - 46                    - inc esi
-*  yuika_t.v8::Locker::IsLocked+2B61 - D1 EE                 - shr esi,1
-*  yuika_t.v8::Locker::IsLocked+2B63 - 3B FB                 - cmp edi,ebx
-*  yuika_t.v8::Locker::IsLocked+2B65 - 0F47 F0               - cmova esi,eax
-*  yuika_t.v8::Locker::IsLocked+2B68 - 85 F6                 - test esi,esi
-*  yuika_t.v8::Locker::IsLocked+2B6A - 74 15                 - je yuika_t.v8::Locker::IsLocked+2B81
-*  yuika_t.v8::Locker::IsLocked+2B6C - 8B 45 0C              - mov eax,[ebp+0C]
-*  yuika_t.v8::Locker::IsLocked+2B6F - 2B F8                 - sub edi,eax
-*  yuika_t.v8::Locker::IsLocked+2B71 - 66 8B 08              - mov cx,[eax]; Moves a wchar into ecx.
-*  yuika_t.v8::Locker::IsLocked+2B74 - 8D 40 02              - lea eax,[eax+02]; Hook here!
-*  yuika_t.v8::Locker::IsLocked+2B77 - 42                    - inc edx
-*  yuika_t.v8::Locker::IsLocked+2B78 - 66 89 4C 07 FE        - mov [edi+eax-02],cx
-*  yuika_t.v8::Locker::IsLocked+2B7D - 3B D6                 - cmp edx,esi; esi holds string length. best split I can find but not ideal...
-*  yuika_t.v8::Locker::IsLocked+2B7F - 72 F0                 - jb yuika_t.v8::Locker::IsLocked+2B71
-*  yuika_t.v8::Locker::IsLocked+2B81 - 5E                    - pop esi
-*  yuika_t.v8::Locker::IsLocked+2B82 - 5F                    - pop edi
-*  yuika_t.v8::Locker::IsLocked+2B83 - 5B                    - pop ebx
-*  yuika_t.v8::Locker::IsLocked+2B84 - 5D                    - pop ebp
-*  yuika_t.v8::Locker::IsLocked+2B85 - C3                    - ret
-*  
-*  Prison.v8::Locker::IsLocked+2B30 - 55                    - push ebp
-*  Prison.v8::Locker::IsLocked+2B31 - 8B EC                 - mov ebp,esp
-*  Prison.v8::Locker::IsLocked+2B33 - 8B 45 10              - mov eax,[ebp+10]
-*  Prison.v8::Locker::IsLocked+2B36 - 53                    - push ebx
-*  Prison.v8::Locker::IsLocked+2B37 - 57                    - push edi
-*  Prison.v8::Locker::IsLocked+2B38 - 8B 7D 08              - mov edi,[ebp+08]
-*  Prison.v8::Locker::IsLocked+2B3B - 8D 0C 00              - lea ecx,[eax+eax]
-*  Prison.v8::Locker::IsLocked+2B3E - 8D 1C 39              - lea ebx,[ecx+edi]
-*  Prison.v8::Locker::IsLocked+2B41 - 83 F8 20              - cmp eax,20 { 32 }
-*  Prison.v8::Locker::IsLocked+2B44 - 7C 11                 - jl Prison.v8::Locker::IsLocked+2B57
-*  Prison.v8::Locker::IsLocked+2B46 - 51                    - push ecx
-*  Prison.v8::Locker::IsLocked+2B47 - FF 75 0C              - push [ebp+0C]
-*  Prison.v8::Locker::IsLocked+2B4A - 57                    - push edi
-*  Prison.v8::Locker::IsLocked+2B4B - E8 10DBFFFF           - call Prison.v8::Locker::IsLocked+660
-*  Prison.v8::Locker::IsLocked+2B50 - 83 C4 0C              - add esp,0C { 12 }
-*  Prison.v8::Locker::IsLocked+2B53 - 5F                    - pop edi
-*  Prison.v8::Locker::IsLocked+2B54 - 5B                    - pop ebx
-*  Prison.v8::Locker::IsLocked+2B55 - 5D                    - pop ebp
-*  Prison.v8::Locker::IsLocked+2B56 - C3                    - ret
-*  Prison.v8::Locker::IsLocked+2B57 - 56                    - push esi
-*  Prison.v8::Locker::IsLocked+2B58 - 8B F3                 - mov esi,ebx
-*  Prison.v8::Locker::IsLocked+2B5A - 33 C0                 - xor eax,eax
-*  Prison.v8::Locker::IsLocked+2B5C - 2B F7                 - sub esi,edi
-*  Prison.v8::Locker::IsLocked+2B5E - 33 D2                 - xor edx,edx
-*  Prison.v8::Locker::IsLocked+2B60 - 46                    - inc esi
-*  Prison.v8::Locker::IsLocked+2B61 - D1 EE                 - shr esi,1
-*  Prison.v8::Locker::IsLocked+2B63 - 3B FB                 - cmp edi,ebx
-*  Prison.v8::Locker::IsLocked+2B65 - 0F47 F0               - cmova esi,eax
-*  Prison.v8::Locker::IsLocked+2B68 - 85 F6                 - test esi,esi
-*  Prison.v8::Locker::IsLocked+2B6A - 74 15                 - je Prison.v8::Locker::IsLocked+2B81
-*  Prison.v8::Locker::IsLocked+2B6C - 8B 45 0C              - mov eax,[ebp+0C]
-*  Prison.v8::Locker::IsLocked+2B6F - 2B F8                 - sub edi,eax
-*  Prison.v8::Locker::IsLocked+2B71 - 66 8B 08              - mov cx,[eax]
-*  Prison.v8::Locker::IsLocked+2B74 - 8D 40 02              - lea eax,[eax+02]
-*  Prison.v8::Locker::IsLocked+2B77 - 42                    - inc edx
-*  Prison.v8::Locker::IsLocked+2B78 - 66 89 4C 07 FE        - mov [edi+eax-02],cx
-*  Prison.v8::Locker::IsLocked+2B7D - 3B D6                 - cmp edx,esi
-*  Prison.v8::Locker::IsLocked+2B7F - 72 F0                 - jb Prison.v8::Locker::IsLocked+2B71
-*  Prison.v8::Locker::IsLocked+2B81 - 5E                    - pop esi
-*  Prison.v8::Locker::IsLocked+2B82 - 5F                    - pop edi
-*  Prison.v8::Locker::IsLocked+2B83 - 5B                    - pop ebx
-*  Prison.v8::Locker::IsLocked+2B84 - 5D                    - pop ebp
-*  Prison.v8::Locker::IsLocked+2B85 - C3                    - ret
+*  Nevermind both of those, just hook the v8::String::Write
 */
-bool InsertV8Hook()
+void SpecialHookV8String(DWORD dwDatabase, HookParam* hp, BYTE, DWORD* data, DWORD* split, DWORD* len)
 {
-	const BYTE bytes[] =
-	{
-		0x2b, 0xf8, // sub edi,edx
-		0x66, 0x8b, 0x08, // mov cx,[eax]
-		0x8d, 0x40, 0x02 // lea eax,[eax + 02]
-	};
-	//DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
-	if(DWORD addr = Util::SearchMemory(bytes, sizeof(bytes)))
-		if (DWORD func = MemDbg::findEnclosingFunctionAfterInt3(addr))
-		{
-			HookParam hp = {};
-			hp.address = func;
-			hp.type = USING_UNICODE | USING_STRING /*| USING_SPLIT*/;
-			hp.length_offset = 3; // wow, this actually is useful
-			hp.offset = 8;
-			hp.split = 0xc;
+	DWORD ecx = *data;
+	DWORD strPtr = *(DWORD*)ecx;
+	*data = strPtr + 0xb;
+	*len = *(short*)(strPtr + 7);
+	//*split = *(DWORD*)((BYTE*)hp->split + dwDatabase);
+}
 
-			ConsoleOutput("NextHooker: INSERT JavaScript (V8)");
-			NewHook(hp, "JavaScript");
-			return true;
-		}
-
-	ConsoleOutput("NextHooker: JavaScript: failed to find hook address");
-	return false;
-
+bool InsertV8Hook(HMODULE module)
+{
+	HookParam hp = {};
+	hp.address = (DWORD)GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z");
+	hp.offset = pusha_ecx_off - 4;
+	hp.split = 0xc;
+	hp.type = USING_UNICODE | USING_STRING;
+	hp.text_fun = SpecialHookV8String;
+	NewHook(hp, "JavaScript");
+	return true;
 }
 
 /**

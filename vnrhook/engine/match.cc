@@ -10,7 +10,6 @@
 #include "engine/match.h"
 #include "engine/engine.h"
 #include "engine/native/pchooks.h"
-#include "engine/v8/v8.h"
 #include "util/growl.h"
 #include "util/util.h"
 #include "main.h"
@@ -78,6 +77,14 @@ bool DeterminePCEngine()
   //  ConsoleOutput("vnreng: IGNORE BALDRSKY ZEROs");
   //  return true;
   //}
+
+  if (GetProcAddress((HMODULE)processStartAddress, "?Write@String@v8@@QBEHPAGHHH@Z")) 
+	  InsertV8Hook((HMODULE)processStartAddress);
+  if (HMODULE module = GetModuleHandleW(L"node.dll"))
+	  InsertV8Hook(module);
+  if (HMODULE module = GetModuleHandleW(L"nw.dll"))
+	  InsertV8Hook(module);
+
   if (::GetModuleHandleA("mono.dll")) {
     InsertMonoHooks();
     return true;
@@ -552,11 +559,11 @@ bool DetermineEngineOther()
   }
 
   // Artikash 7/16/2018: Uses node/libuv: likely v8 - sample game https://vndb.org/v22975
-  if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime") || GetModuleHandleW(L"node.dll"))
-  {
-	  InsertV8Hook();
-	  return true;
-  }
+  //if (GetProcAddress(GetModuleHandleW(nullptr), "uv_uptime") || GetModuleHandleW(L"node.dll"))
+  //{
+	 // InsertV8Hook();
+	 // return true;
+  //}
 
   // jichi 8/24/2013: Move into functions
   // Artikash 6/15/2018: Removed this detection for Abel Software games. IthGetFileInfo no longer works correctly
