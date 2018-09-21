@@ -5,12 +5,12 @@
 #include <map>
 
 std::map<int, QString> LoadExtensions();
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int> miscInfo);
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
 struct InfoForExtension
 {
 	~InfoForExtension() { if (nextProperty) delete nextProperty; };
 	const char* propertyName = "";
-	int propertyValue = 0;
+	int64_t propertyValue = 0;
 	InfoForExtension* nextProperty = nullptr;
 };
 typedef wchar_t*(*ExtensionFunction)(const wchar_t*, const InfoForExtension*);

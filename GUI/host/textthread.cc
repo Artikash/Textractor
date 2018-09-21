@@ -3,9 +3,10 @@
 // Branch IHF/TextThread.cpp, rev 133
 
 #include "textthread.h"
+#include "host.h"
 #include "const.h"
 
-TextThread::TextThread(ThreadParam tp, DWORD status) : tp(tp), status(status) {}
+TextThread::TextThread(ThreadParam tp, DWORD status) : tp(tp), status(status), name(Host::GetHookName(tp.pid, tp.hook)) {}
 
 TextThread::~TextThread()
 {

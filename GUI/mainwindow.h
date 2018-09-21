@@ -47,7 +47,7 @@ private:
 	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();
 	void ReloadExtensions();
-	std::unordered_map<std::string, int> GetInfoForExtensions(TextThread* thread);
+	std::unordered_map<std::string, int64_t> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
 	Ui::MainWindow* ui;

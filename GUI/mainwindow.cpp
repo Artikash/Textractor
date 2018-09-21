@@ -77,9 +77,9 @@ void MainWindow::AddThread(TextThread* thread)
 {
 	ttCombo->addItem(
 		TextThreadString(thread) +
-		QString::fromStdWString(Host::GetHookName(thread->GetThreadParam().pid, thread->GetThreadParam().hook)) +
+		QString::fromStdWString(thread->name) +
 		" (" +
-		GenerateCode(Host::GetHookParam(thread->GetThreadParam()), thread->GetThreadParam().pid) +
+		GenerateCode(Host::GetHookParam(thread->tp), thread->tp.pid) +
 		")"
 	);
 	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
@@ -117,7 +117,7 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 
 QString MainWindow::TextThreadString(TextThread* thread)
 {
-	ThreadParam tp = thread->GetThreadParam();
+	ThreadParam tp = thread->tp;
 	return QString("%1:%2:%3:%4: ").arg(
 		QString::number(tp.pid),
 		QString::number(tp.hook, 16),
@@ -144,16 +144,16 @@ void MainWindow::ReloadExtensions()
 	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
 }
 
-std::unordered_map<std::string, int> MainWindow::GetInfoForExtensions(TextThread* thread)
+std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextThread* thread)
 {
 	return 
 	{
-	{ "current select", (int)ttCombo->currentText().startsWith(TextThreadString(thread)) },
+	{ "current select", (int64_t)ttCombo->currentText().startsWith(TextThreadString(thread)) },
 	{ "text number", 0 },
-	{ "process id", thread->GetThreadParam().pid },
-	{ "hook address", (int)thread->GetThreadParam().hook },
-	{ "hook address (upper 32 bits)", (int)(thread->GetThreadParam().hook >> 32) },
-	{ "text handle", (int)thread }
+	{ "process id", thread->tp.pid },
+	{ "hook address", (int64_t)thread->tp.hook },
+	{ "text handle", (int64_t)thread },
+	{ "text name", (int64_t)thread->name.c_str() }
 	};
 }
 

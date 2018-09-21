@@ -26,7 +26,7 @@ std::map<int, QString> LoadExtensions()
 	return extensionNames;
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int> miscInfo)
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
 {
 	wchar_t* sentenceBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy(sentenceBuffer, sentence.c_str());

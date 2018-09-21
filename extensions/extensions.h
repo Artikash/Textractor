@@ -2,12 +2,13 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <cstdint>
 #include <string>
 
 struct InfoForExtension
 {
 	const char* propertyName;
-	int propertyValue;
+	int64_t propertyValue;
 	InfoForExtension* nextProperty;
 };
 

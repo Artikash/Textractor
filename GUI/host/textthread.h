@@ -15,12 +15,14 @@ public:
 	~TextThread();
 
 	std::wstring GetStore();
-	ThreadParam GetThreadParam() { return tp; }
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }
 
 	void AddText(const BYTE* data, int len);
 	void AddSentence(std::wstring sentence);	
+
+	const std::wstring name;
+	const ThreadParam tp;
 
 private:
 	void Flush();
@@ -34,7 +36,6 @@ private:
 	DWORD timestamp = GetTickCount();
 
 	ThreadOutputCallback Output;
-	ThreadParam tp;
 	DWORD status;
 };
 
