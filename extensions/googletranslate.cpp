@@ -53,7 +53,8 @@ bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 						char buffer[100000] = {}; // Google Translate page is ~64kb
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 100000, &bytesRead);
-						TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
+						if (strstr(buffer, "a\\x3d")) TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
+						else TKK = strtoll(strstr(buffer, "TKK") + 12, nullptr, 10);
 					}
 					WinHttpCloseHandle(request);
 				}
