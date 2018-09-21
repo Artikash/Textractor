@@ -10173,6 +10173,7 @@ void SpecialHookV8String(DWORD dwDatabase, HookParam* hp, BYTE, DWORD* data, DWO
 	DWORD strPtr = *(DWORD*)ecx;
 	*data = strPtr + 0xb;
 	*len = *(short*)(strPtr + 7);
+	if (*len < 12) *len = 0; // To ensure this is caught by cyclic repetition detection, only send with 6+ wide chars
 	//*split = *(DWORD*)((BYTE*)hp->split + dwDatabase);
 }
 
