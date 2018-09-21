@@ -23,7 +23,7 @@ int currentHook = 0, userhookCount = 0;
 DWORD trigger = 0;
 HANDLE hmMutex;
 
-BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID unused)
+BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 {
 	switch (fdwReason) 
 	{

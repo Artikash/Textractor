@@ -21,7 +21,7 @@ DWORD DUMMY[100];
 
 void CreatePipe()
 {
-	CreateThread(nullptr, 0, [](LPVOID unused)
+	CreateThread(nullptr, 0, [](LPVOID)
 	{
 		enum { STANDARD_WAIT = 50 };
 		while (::running)
