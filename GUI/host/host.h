@@ -19,11 +19,11 @@ namespace Host
 	void DetachProcess(DWORD pid);
 
 	void InsertHook(DWORD pid, HookParam hp, std::string name = "");
-	void RemoveHook(DWORD pid, unsigned __int64 addr);
+	void RemoveHook(DWORD pid, uint64_t addr);
 
-	HookParam GetHookParam(DWORD pid, unsigned __int64 addr);
+	HookParam GetHookParam(DWORD pid, uint64_t addr);
 	HookParam GetHookParam(ThreadParam tp);
-	std::wstring GetHookName(DWORD pid, unsigned __int64 addr);
+	std::wstring GetHookName(DWORD pid, uint64_t addr);
 
 	TextThread* GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);

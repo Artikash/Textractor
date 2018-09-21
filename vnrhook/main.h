@@ -9,7 +9,7 @@
 #include "pipe.h"
 
 void NewHook(const HookParam &hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
-void RemoveHook(unsigned __int64 addr);
+void RemoveHook(uint64_t addr);
 void SwitchTrigger(DWORD on);
 
 // EOF

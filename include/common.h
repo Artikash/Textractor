@@ -8,3 +8,4 @@
 #include <functional>
 #include <thread>
 #include <mutex>
+#include <cstdint>

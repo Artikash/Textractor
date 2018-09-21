@@ -80,7 +80,7 @@ void NewHook(const HookParam &hp, LPCSTR lpname, DWORD flag)
 	else ConsoleOutput("NextHooker: too many hooks: can't insert");
 }
 
-void RemoveHook(unsigned __int64 addr)
+void RemoveHook(uint64_t addr)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
 		if (abs((long long)(::hookman[i].hp.address - addr)) < 9)

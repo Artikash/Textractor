@@ -90,7 +90,7 @@ void ConsoleOutput(LPCSTR text)
 	WriteFile(::hookPipe, &info, strlen(text) + sizeof(info), DUMMY, nullptr);
 }
 
-void NotifyHookRemove(unsigned __int64 addr)
+void NotifyHookRemove(uint64_t addr)
 {
 	auto info = HookRemovedNotif(addr);
 	WriteFile(::hookPipe, &info, sizeof(info), DUMMY, nullptr);

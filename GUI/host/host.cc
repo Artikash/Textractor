@@ -168,7 +168,7 @@ namespace Host
 
 		HMODULE textHooker = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
 		wchar_t textHookerPath[MAX_PATH];
-		unsigned int textHookerPathSize = GetModuleFileNameW(textHooker, textHookerPath, MAX_PATH) * 2 + 2;
+		DWORD textHookerPathSize = GetModuleFileNameW(textHooker, textHookerPath, MAX_PATH) * 2 + 2;
 		FreeLibrary(textHooker);
 
 		if (HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
@@ -215,13 +215,13 @@ namespace Host
 		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
-	void RemoveHook(DWORD pid, unsigned __int64 addr)
+	void RemoveHook(DWORD pid, uint64_t addr)
 	{
 		auto info = RemoveHookCmd(addr);
 		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
 	}
 
-	HookParam GetHookParam(DWORD pid, unsigned __int64 addr)
+	HookParam GetHookParam(DWORD pid, uint64_t addr)
 	{
 		LOCK(hostMutex);
 		HookParam ret = {};
@@ -238,7 +238,7 @@ namespace Host
 
 	HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
 
-	std::wstring GetHookName(DWORD pid, unsigned __int64 addr)
+	std::wstring GetHookName(DWORD pid, uint64_t addr)
 	{
 		if (pid == 0) return L"Console";
 		LOCK(hostMutex);
