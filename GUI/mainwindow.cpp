@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 
 	ReloadExtensions();
-	Host::AddConsoleOutput(L"NextHooker beta v3.1.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v3.2.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
@@ -118,7 +118,7 @@ QString MainWindow::TextThreadString(TextThread* thread)
 {
 	ThreadParam tp = thread->tp;
 	return QString("%1:%2:%3:%4:%5: ").arg(
-		QString::number(thread->handle, 16).toUpper(),
+		QString::number(thread->handle, 16),
 		QString::number(tp.pid, 16),
 		QString::number(tp.hook, 16),
 		QString::number(tp.retn, 16),
