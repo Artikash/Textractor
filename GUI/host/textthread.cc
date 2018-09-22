@@ -6,7 +6,7 @@
 #include "host.h"
 #include "const.h"
 
-TextThread::TextThread(ThreadParam tp, DWORD status) : tp(tp), status(status), name(Host::GetHookName(tp.pid, tp.hook)) {}
+TextThread::TextThread(ThreadParam tp, DWORD status) : handle(ThreadCounter++), name(Host::GetHookName(tp.pid, tp.hook)), tp(tp), status(status) {}
 
 TextThread::~TextThread()
 {

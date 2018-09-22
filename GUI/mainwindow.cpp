@@ -51,7 +51,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::AddProcess(unsigned int processId)
 {
-	processCombo->addItem(QString::number(processId) + ": " + GetModuleName(processId));
+	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
 	QFile file("SavedHooks.txt");
 	if (!file.open(QIODevice::ReadOnly)) return;
 	QString processName = GetFullModuleName(processId);
@@ -69,7 +69,7 @@ void MainWindow::AddProcess(unsigned int processId)
 
 void MainWindow::RemoveProcess(unsigned int processId)
 {
-	processCombo->removeItem(processCombo->findText(QString::number(processId) + ":", Qt::MatchStartsWith));
+	processCombo->removeItem(processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
 }
 
 void MainWindow::AddThread(TextThread* thread)
@@ -118,23 +118,23 @@ QString MainWindow::TextThreadString(TextThread* thread)
 {
 	ThreadParam tp = thread->tp;
 	return QString("%1:%2:%3:%4:%5: ").arg(
-		QString::number(tp.pid),
+		QString::number(thread->handle, 16).toUpper(),
+		QString::number(tp.pid, 16),
 		QString::number(tp.hook, 16),
 		QString::number(tp.retn, 16),
-		QString::number(tp.spl, 16),
-		QString::number((int64_t)thread, 16)
+		QString::number(tp.spl, 16)
 	).toUpper();
 }
 
 ThreadParam MainWindow::ParseTextThreadString(QString textThreadString)
 {
 	QStringList threadParam = textThreadString.split(":");
-	return { threadParam[0].toUInt(), threadParam[1].toULongLong(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16) };
+	return { threadParam[1].toUInt(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16), threadParam[4].toULongLong(nullptr, 16) };
 }
 
 DWORD MainWindow::GetSelectedProcessId()
 {
-	return processCombo->currentText().split(":")[0].toULong();
+	return processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
 void MainWindow::ReloadExtensions()
@@ -148,11 +148,11 @@ std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextTh
 {
 	return 
 	{
-	{ "current select", (int64_t)ttCombo->currentText().startsWith(TextThreadString(thread)) },
-	{ "text number", 0 },
+	{ "current select", ttCombo->currentText().startsWith(TextThreadString(thread)) },
+	{ "text number", thread->handle },
 	{ "process id", thread->tp.pid },
-	{ "hook address", (int64_t)thread->tp.hook },
-	{ "text handle", (int64_t)thread },
+	{ "hook address", thread->tp.hook },
+	{ "text handle", thread->handle },
 	{ "text name", (int64_t)thread->name.c_str() }
 	};
 }

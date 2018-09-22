@@ -15,16 +15,17 @@ public:
 	~TextThread();
 
 	std::wstring GetStore();
+	void AddText(const BYTE* data, int len);
+	void AddSentence(std::wstring sentence);
 
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }
 
-	void AddText(const BYTE* data, int len);
-	void AddSentence(std::wstring sentence);	
-
+	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
 
-	inline static unsigned FlushDelay = 250; // flush every 250ms by default
+	inline static int FlushDelay = 250; // flush every 250ms by default
+	inline static int ThreadCounter = 0;
 
 private:
 	void Flush();
