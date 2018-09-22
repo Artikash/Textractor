@@ -5,6 +5,7 @@
 #include <QCoreApplication>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -12,12 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	QFile settings("NHWindow");
-	settings.open(QIODevice::ReadOnly);
-	QDataStream reader(&settings);
-	QRect rect;
-	reader >> rect;
-	if (rect.bottom()) this->setGeometry(rect);
+	QSettings settings("NextHooker.ini", QSettings::IniFormat);
+	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
+	// TODO: add GUI for changing this
+	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush Delay").toUInt();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
@@ -42,10 +41,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	QFile settings("NHWindow");
-	settings.open(QIODevice::ReadWrite | QIODevice::Truncate);
-	QDataStream writer(&settings);
-	writer << this->geometry();
+	QSettings settings("NextHooker.ini", QSettings::IniFormat);
+	settings.setValue("Window", this->geometry());
+	settings.setValue("Flush_Delay", TextThread::FlushDelay);
+	settings.sync();
 	Host::Close();
 	delete ui;
 }
@@ -118,11 +117,12 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 QString MainWindow::TextThreadString(TextThread* thread)
 {
 	ThreadParam tp = thread->tp;
-	return QString("%1:%2:%3:%4: ").arg(
+	return QString("%1:%2:%3:%4:%5: ").arg(
 		QString::number(tp.pid),
 		QString::number(tp.hook, 16),
 		QString::number(tp.retn, 16),
-		QString::number(tp.spl, 16)
+		QString::number(tp.spl, 16),
+		QString::number((int64_t)thread, 16)
 	).toUpper();
 }
 

@@ -24,7 +24,7 @@ public:
 	const std::wstring name;
 	const ThreadParam tp;
 
-	inline static unsigned flushDelay = 250; // flush every 250ms by default
+	inline static unsigned FlushDelay = 250; // flush every 250ms by default
 
 private:
 	void Flush();
