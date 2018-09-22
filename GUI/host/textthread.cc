@@ -27,17 +27,9 @@ void TextThread::Flush()
 	std::wstring sentence;
 	{
 		LOCK(ttMutex);
-		if (buffer.size() < 400 && (GetTickCount() - timestamp < 250 || buffer.size() == 0)) return; // TODO: let user change delay before sentence is flushed
-		if (status & USING_UNICODE)
-		{
-			sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
-		}
-		else
-		{
-			wchar_t* converted = new wchar_t[buffer.size()];
-			sentence = std::wstring(converted, MultiByteToWideChar(status & USING_UTF8 ? CP_UTF8 : 932, 0, buffer.data(), buffer.size(), converted, buffer.size()));
-			delete[] converted;
-		}
+		if (buffer.size() < 400 && (GetTickCount() - timestamp < flushDelay || buffer.size() == 0)) return; // TODO: let user change delay before sentence is flushed
+		if (status & USING_UNICODE) sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
+		else sentence = ToWString(buffer.data(), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
 		buffer.clear();
 	}
 	AddSentence(sentence);

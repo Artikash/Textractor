@@ -28,4 +28,12 @@ namespace Host
 	TextThread* GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
 }
+
+inline std::wstring ToWString(const char* text, UINT encoding)
+{
+	std::wstring ret(strlen(text), 0);
+	ret.resize(MultiByteToWideChar(encoding, 0, text, -1, ret.data(), ret.size()));
+	return ret;
+}
+
 // EOF

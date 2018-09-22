@@ -6,7 +6,6 @@
 #include "const.h"
 #include "defs.h"
 #include "../vnrhook/hijack/texthook.h"
-#include <atlbase.h> // A2W
 
 namespace
 {
@@ -116,8 +115,7 @@ namespace
 				case HOST_NOTIFICATION_TEXT:
 				{
 					auto info = *(ConsoleOutputNotif*)buffer;
-					USES_CONVERSION;
-					Host::AddConsoleOutput(A2W(info.message));
+					Host::AddConsoleOutput(ToWString(info.message, CP_UTF8));
 				}
 				break;
 				default:
@@ -255,11 +253,10 @@ namespace Host
 			if (hooks[i].hp.address == addr)
 			{
 				buffer.resize(hooks[i].name_length);
-				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, &buffer[0], hooks[i].name_length, nullptr);
+				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, buffer.data(), hooks[i].name_length, nullptr);
 			}
 		ReleaseMutex(pr.sectionMutex);
-		USES_CONVERSION;
-		return std::wstring(A2W(buffer.c_str()));
+		return ToWString(buffer.c_str(), CP_UTF8);
 	}
 
 	TextThread* GetThread(ThreadParam tp)
