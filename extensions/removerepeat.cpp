@@ -51,12 +51,12 @@ bool RemoveRepeatedSentences(std::wstring& sentence, int handle)
 	return false;
 }
 
-bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
+bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (GetProperty("hook address", miscInfo) == -1) return false;
+	if (sentenceInfo["hook address"] == -1) return false;
 	bool ret = false;
 	ret |= RemoveRepeatedChars(sentence);
 	ret |= RemoveCyclicRepeats(sentence);
-	ret |= RemoveRepeatedSentences(sentence, GetProperty("text handle", miscInfo));
+	ret |= RemoveRepeatedSentences(sentence, sentenceInfo["text handle"]);
 	return ret;
 }

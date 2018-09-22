@@ -30,7 +30,7 @@ std::wstring GetTranslationUri(const wchar_t* text, unsigned int TKK)
 	return std::wstring(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tk=") + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + std::wstring(text);
 }
 
-bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
+bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	static HINTERNET internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 NextHooker", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
@@ -38,7 +38,7 @@ bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
 
 	std::wstring translation(L"");
 
-	if (GetProperty("hook address", miscInfo) == -1) return false;
+	if (sentenceInfo["hook address"] == -1) return false;
 
 	if (internet)
 	{

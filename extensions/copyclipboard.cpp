@@ -1,8 +1,8 @@
 #include "extensions.h"
 
-bool ProcessSentence(std::wstring& sentence, const InfoForExtension* miscInfo)
+bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (GetProperty("current select", miscInfo) && GetProperty("hook address", miscInfo) != -1)
+	if (sentenceInfo["current select"] == 1 && sentenceInfo["hook address"] != -1)
 	{
 		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (sentence.size() + 2) * sizeof(wchar_t));
 		memcpy(GlobalLock(hMem), sentence.c_str(), (sentence.size() + 2) * sizeof(wchar_t));
