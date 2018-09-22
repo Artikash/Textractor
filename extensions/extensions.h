@@ -13,7 +13,7 @@ struct InfoForExtension
 };
 
 // Traverses linked list to find info.
-int GetProperty(const char* propertyName, const InfoForExtension* miscInfo)
+int54_t GetProperty(const char* propertyName, const InfoForExtension* miscInfo)
 {
 	const InfoForExtension* miscInfoTraverser = miscInfo;
 	while (miscInfoTraverser != nullptr)

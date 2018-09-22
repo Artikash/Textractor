@@ -28,8 +28,15 @@ void TextThread::Flush()
 	{
 		LOCK(ttMutex);
 		if (buffer.size() < 400 && (GetTickCount() - timestamp < FlushDelay || buffer.size() == 0)) return;
-		if (status & USING_UNICODE) sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
-		else sentence = ToWString(buffer.data(), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
+		if (status & USING_UNICODE)
+		{
+			sentence = std::wstring((wchar_t*)buffer.data(), buffer.size() / 2);
+		}
+		else
+		{
+			buffer.push_back(0); // Null terminate
+			sentence = ToWString(buffer.data(), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
+		}
 		buffer.clear();
 	}
 	AddSentence(sentence);
