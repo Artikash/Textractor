@@ -41,7 +41,7 @@ static bool operator==(const ThreadParam& one, const ThreadParam& two) { return 
 
 struct InsertHookCmd // From host
 {
-	InsertHookCmd(HookParam hp, std::string name = "") : hp(hp) { strncpy(this->name, name.c_str(), 500); };
+	InsertHookCmd(HookParam hp, std::string name = "") : hp(hp) { strcpy_s<MESSAGE_SIZE>(this->name, name.c_str()); };
 	int command = HOST_COMMAND_NEW_HOOK;
 	HookParam hp;
 	char name[MESSAGE_SIZE] = {};
@@ -56,7 +56,7 @@ struct RemoveHookCmd // From host
 
 struct ConsoleOutputNotif // From hook
 {
-	ConsoleOutputNotif(std::string message = "") { strncpy(this->message, message.c_str(), 500); };
+	ConsoleOutputNotif(std::string message = "") { strcpy_s<MESSAGE_SIZE>(this->message, message.c_str()); };
 	int command = HOST_NOTIFICATION_TEXT;
 	char message[MESSAGE_SIZE] = {};
 };

@@ -4,7 +4,7 @@
 
 bool RemoveRepeatedChars(std::wstring& sentence)
 {
-	unsigned int repeatNumber = 0;
+	int repeatNumber = 0;
 	wchar_t prevChar = sentence[0];
 	for (auto i : sentence)
 		if (i == prevChar) repeatNumber++;
@@ -25,7 +25,7 @@ bool RemoveRepeatedChars(std::wstring& sentence)
 
 bool RemoveCyclicRepeats(std::wstring& sentence)
 {
-	unsigned int junkLength = 0;
+	int junkLength = 0;
 	wchar_t junk[2000] = {};
 	while (wcsstr(sentence.c_str() + junkLength, junk))
 	{
@@ -41,9 +41,9 @@ bool RemoveCyclicRepeats(std::wstring& sentence)
 	return false;
 }
 
-bool RemoveRepeatedSentences(std::wstring& sentence, int handle)
+bool RemoveRepeatedSentences(std::wstring& sentence, int64_t handle)
 {
-	static std::set<std::pair<int, std::wstring>> seenSentences;
+	static std::set<std::pair<int64_t, std::wstring>> seenSentences;
 	static std::mutex m;
 	std::lock_guard<std::mutex> l(m);
 	if (seenSentences.count({ handle, sentence }) != 0) throw std::exception();

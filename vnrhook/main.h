@@ -12,4 +12,9 @@ void NewHook(const HookParam &hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 void RemoveHook(uint64_t addr);
 void SwitchTrigger(DWORD on);
 
+#define ITH_RAISE  (*(int*)0 = 0) // raise C000005, for debugging only
+#define ITH_TRY    __try
+#define ITH_EXCEPT __except(EXCEPTION_EXECUTE_HANDLER)
+#define ITH_WITH_SEH(...) ITH_TRY { __VA_ARGS__; } ITH_EXCEPT {}
+
 // EOF

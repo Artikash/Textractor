@@ -13,7 +13,6 @@
 #include "main.h"
 #include "engine/mono/funcinfo.h"
 #include "engine/ppsspp/funcinfo.h"
-#include "except.h"
 #include "ithsys/ithsys.h"
 #include "memdbg/memsearch.h"
 #include "disasm/disasm.h"

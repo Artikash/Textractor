@@ -12,7 +12,6 @@
 #include "hijack/texthook.h"
 #include "MinHook.h"
 #include "engine/match.h"
-#include "except.h"
 #include "main.h"
 #include "pipe.h"
 #include "const.h"

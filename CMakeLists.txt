@@ -7,20 +7,12 @@ project(NextHooker)
 
 add_compile_options(
   /std:c++17
-  #/Zc:auto # config.pri
-  /wd4819 # config.pri
   /MP
-  /GS-
 )
 
 add_definitions(
-  /D_SECURE_SCL=0 # config.pri
-  /D_SCL_SECURE_NO_WARNINGS # config.pri
-  /D_CRT_SECURE_NO_WARNINGS # config.pri
   /DUNICODE # config.pri
   /D_UNICODE
-  /D_CRT_NON_CONFORMING_SWPRINTFS # common.pri
-  /DITH_HAS_CRT
 )
 
 include_directories(include)

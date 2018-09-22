@@ -13,7 +13,6 @@
 #include "util/growl.h"
 #include "util/util.h"
 #include "main.h"
-#include "except.h"
 #include "ithsys/ithsys.h"
 
 //#define ConsoleOutput(...)  (void)0     // jichi 8/18/2013: I don't need ConsoleOutput

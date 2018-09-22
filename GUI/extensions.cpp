@@ -29,7 +29,7 @@ std::map<int, QString> LoadExtensions()
 bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
 {
 	wchar_t* sentenceBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
-	wcscpy(sentenceBuffer, sentence.c_str());
+	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
