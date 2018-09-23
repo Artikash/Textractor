@@ -4,16 +4,18 @@
 
 LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 {
-	std::wstringstream errorMsg;
-	errorMsg << std::uppercase << std::hex;
-	errorMsg << L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl;
-	errorMsg << L"Error address: " << (DWORD)exception->ExceptionRecord->ExceptionAddress << std::endl;
 	MEMORY_BASIC_INFORMATION info = {};
 	VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
-	wchar_t name[MAX_PATH] = {};
-	GetModuleFileNameW((HMODULE)info.AllocationBase, name, MAX_PATH);
-	errorMsg << L"Error in module: " << name << std::endl;
-	errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[1];
+	wchar_t moduleName[MAX_PATH] = {};
+	GetModuleFileNameW((HMODULE)info.AllocationBase, moduleName, MAX_PATH);
+
+	std::wstringstream errorMsg;
+	errorMsg << 
+		std::uppercase << std::hex <<
+		L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl <<
+		L"Error address: " << (DWORD)exception->ExceptionRecord->ExceptionAddress << std::endl <<
+		L"Error in module: " << moduleName << std::endl <<
+		L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[1];
 	MessageBoxW(NULL, errorMsg.str().c_str(), L"NextHooker ERROR", MB_ICONERROR);
 	return EXCEPTION_CONTINUE_SEARCH;
 }
