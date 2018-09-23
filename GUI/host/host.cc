@@ -115,7 +115,7 @@ namespace
 				case HOST_NOTIFICATION_TEXT:
 				{
 					auto info = *(ConsoleOutputNotif*)buffer;
-					Host::AddConsoleOutput(ToWString(info.message, CP_UTF8));
+					Host::AddConsoleOutput(StringToWideString(info.message, CP_UTF8));
 				}
 				break;
 				default:
@@ -256,7 +256,7 @@ namespace Host
 				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, buffer.data(), hooks[i].name_length, nullptr);
 			}
 		ReleaseMutex(pr.sectionMutex);
-		return ToWString(buffer.c_str(), CP_UTF8);
+		return StringToWideString(buffer.c_str(), CP_UTF8);
 	}
 
 	TextThread* GetThread(ThreadParam tp)

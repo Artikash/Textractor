@@ -29,10 +29,10 @@ namespace Host
 	void AddConsoleOutput(std::wstring text);
 }
 
-inline std::wstring ToWString(const char* text, UINT encoding)
+inline std::wstring StringToWideString(const std::string& text, UINT encoding)
 {
-	std::wstring ret(strlen(text), 0);
-	ret.resize(MultiByteToWideChar(encoding, 0, text, -1, ret.data(), ret.capacity()));
+	std::wstring ret(text.size(), 0);
+	ret.resize(MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.capacity()));
 	return ret;
 }
 

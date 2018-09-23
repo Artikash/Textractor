@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	QSettings settings("NextHooker.ini", QSettings::IniFormat);
 	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
 	// TODO: add GUI for changing this
-	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush Delay").toUInt();
+	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush_Delay").toUInt();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 
 	ReloadExtensions();
-	Host::AddConsoleOutput(L"NextHooker beta v3.2.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
+	Host::AddConsoleOutput(L"NextHooker beta v3.2.1 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/NextHooker");
 }
 
 MainWindow::~MainWindow()
