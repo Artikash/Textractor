@@ -25,6 +25,7 @@ bool RemoveRepeatedChars(std::wstring& sentence)
 
 bool RemoveCyclicRepeats(std::wstring& sentence)
 {
+	if (sentence == L"") throw std::exception();
 	int junkLength = 0;
 	wchar_t junk[2000] = {};
 	while (wcsstr(sentence.c_str() + junkLength, junk))
