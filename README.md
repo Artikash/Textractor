@@ -27,7 +27,8 @@ Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVN
 
 ## Extensions
 
-See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.
+See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.<br>
+See the extensions folder and my [Extensions project](https://github.com/Artikash/Extensions) for examples of what extensions can do. 
 
 ## Compiling
 
@@ -44,7 +45,7 @@ The text that the host receives through the pipe is then processed a little befo
 
 ## Contributing
 
-All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase; I know it's messy and undercommented.<br>
+All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).
 
 ## License
