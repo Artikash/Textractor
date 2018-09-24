@@ -5,18 +5,16 @@
 #include <QCoreApplication>
 #include <QInputDialog>
 #include <QFileDialog>
-#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-
-	QSettings settings("NextHooker.ini", QSettings::IniFormat);
 	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
-	// TODO: add GUI for changing this
-	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush_Delay").toUInt();
+	// TODO: add GUI for changing these
+	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush_Delay").toInt();
+	if (settings.contains("Max_Buffer_Size")) TextThread::MaxBufferSize = settings.value("Max_Buffer_Size").toInt();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
@@ -41,9 +39,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	QSettings settings("NextHooker.ini", QSettings::IniFormat);
 	settings.setValue("Window", this->geometry());
 	settings.setValue("Flush_Delay", TextThread::FlushDelay);
+	settings.setValue("Max_Buffer_Size", TextThread::MaxBufferSize);
 	settings.sync();
 	Host::Close();
 	delete ui;

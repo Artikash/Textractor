@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QComboBox>
+#include <QSettings>
 #include "host/host.h"
 
 namespace Ui
@@ -51,6 +52,7 @@ private:
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
 	Ui::MainWindow* ui;
+	QSettings settings = QSettings("NextHooker.ini", QSettings::IniFormat);
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
 	QComboBox* extenCombo;

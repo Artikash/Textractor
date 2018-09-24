@@ -25,6 +25,7 @@ public:
 	const ThreadParam tp;
 
 	inline static int FlushDelay = 250; // flush every 250ms by default
+	inline static int MaxBufferSize = 500; 
 	inline static int ThreadCounter = 0;
 
 private:
@@ -35,7 +36,7 @@ private:
 	std::recursive_mutex ttMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
-	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 100) == WAIT_TIMEOUT) Flush(); });
+	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
 	DWORD timestamp = GetTickCount();
 
 	ThreadOutputCallback Output;
