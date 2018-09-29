@@ -31,7 +31,7 @@ namespace Host
 
 inline std::wstring StringToWideString(const std::string& text, UINT encoding)
 {
-	std::wstring ret(text.size(), 0);
+	std::wstring ret(text.size() + 1, 0);
 	ret.resize(MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.capacity()));
 	return ret;
 }
