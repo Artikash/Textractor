@@ -1,14 +1,10 @@
 # Textractor
 
-
-
 ## Overview
 
-*Textractor* (a.k.a. *NextHooker*) is an open-source x86/x64 text hooker for Windows.
+**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).
 
 ![How it looks](https://media.discordapp.net/attachments/330538905072041994/486629608456847360/unknown.png?width=1083&height=353)
-
-GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)'s ITHVNR.
 
 ## Downloads
 
@@ -18,12 +14,11 @@ Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVN
 
 ## Features
 
-- Open-source
+- Highly extensible
 - x64 supported (x64 version only works with x64 programs)
 - Hook text using /H "hook" codes (most AGTH codes supported)
 - Directly read text using /R "read" codes ([Guide](https://www.youtube.com/watch?v=AcEgjCoww5w))
-- Auto hook many engines (including some not supported by VNR!)
-- Extensions
+- Auto hook many game engines (including some not supported by VNR!)
 
 ## Extensions
 
