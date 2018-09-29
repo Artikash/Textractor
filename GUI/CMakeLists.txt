@@ -2,7 +2,7 @@ include(QtUtils)
 msvc_registry_search()
 find_qt5(Core Widgets)
 
-set(RESOURCE_FILES NextHooker.rc NextHooker.ico)
+set(RESOURCE_FILES Textractor.rc Textractor.ico)
 add_compile_options(/GL)
 # Populate a CMake variable with the sources
 set(gui_SRCS

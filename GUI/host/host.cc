@@ -148,7 +148,7 @@ namespace Host
 
 	void Close()
 	{
-		// Artikash 7/25/2018: This is only called when NextHooker is closed, at which point Windows should free everything itself...right?
+		// Artikash 7/25/2018: This is only called when Textractor is closed, at which point Windows should free everything itself...right?
 #ifdef _DEBUG // Check memory leaks
 		LOCK(hostMutex);
 		OnRemove = [](TextThread* textThread) { delete textThread; };
@@ -180,7 +180,7 @@ namespace Host
 			IsWow64Process(processHandle, &invalidProcess);
 			if (invalidProcess)
 			{
-				AddConsoleOutput(L"architecture mismatch: try 32 bit NextHooker instead");
+				AddConsoleOutput(L"architecture mismatch: try 32 bit Textractor instead");
 				CloseHandle(processHandle);
 				return false;
 			}

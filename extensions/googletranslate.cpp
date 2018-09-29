@@ -41,7 +41,7 @@ std::wstring GetTranslationUri(const wchar_t* text, unsigned int TKK)
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	static HINTERNET internet = NULL;
-	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 NextHooker", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 	static unsigned int TKK = 0;
 
 	std::wstring translation;

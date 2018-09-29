@@ -297,7 +297,7 @@ namespace
 		} 
 		__except (1)
 		{
-			ConsoleOutput("NextHooker: SearchMemory ERROR (NextHooker will likely still work fine, but please let Artikash know if this happens a lot!)");
+			ConsoleOutput("Textractor: SearchMemory ERROR (Textractor will likely still work fine, but please let Artikash know if this happens a lot!)");
 			return 0;
 		}
 		return 0;

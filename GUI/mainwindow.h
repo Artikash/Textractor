@@ -52,7 +52,7 @@ private:
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
 	Ui::MainWindow* ui;
-	QSettings settings = QSettings("NextHooker.ini", QSettings::IniFormat);
+	QSettings settings = QSettings("Textractor.ini", QSettings::IniFormat);
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
 	QComboBox* extenCombo;

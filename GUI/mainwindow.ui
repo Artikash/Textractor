@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>NextHooker</string>
+   <string>Textractor</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QObject

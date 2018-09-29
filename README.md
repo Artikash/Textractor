@@ -1,10 +1,10 @@
-# NextHooker
+# Textractor
 
 
 
 ## Overview
 
-*NextHooker* is an open-source x86/x64 text hooker for Windows.
+*Textractor* is an open-source x86/x64 text hooker for Windows.
 
 ![How it looks](https://media.discordapp.net/attachments/330538905072041994/486629608456847360/unknown.png?width=1083&height=353)
 
@@ -12,7 +12,7 @@ Basically, GUI text hooker based on [Stomp](http://www.hongfire.com/forum/showth
 
 ## Downloads
 
-Releases of NextHooker can be found [here](https://github.com/Artikash/NextHooker/releases)
+Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases)
 
 Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVNR/releases).
 
@@ -32,8 +32,8 @@ See the extensions folder and my [Extensions project](https://github.com/Artikas
 
 ## Compiling
 
-Before compiling *NextHooker*, you should get Visual Studio with CMake and ATL support, as well as Qt version 5.11<br>
-You should then be able to simply open the folder in Visual Studio, and build. Run Build/NextHooker.exe
+Before compiling *Textractor*, you should get Visual Studio with CMake and ATL support, as well as Qt version 5.11<br>
+You should then be able to simply open the folder in Visual Studio, and build. Run Build/Textractor.exe
 
 ## Project Architecture
 
@@ -54,7 +54,7 @@ GPL v3
 
 ## Developers
 
-- NextHooker creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- Textractor creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 - ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine making by [jichi](https://archive.is/prJwr)

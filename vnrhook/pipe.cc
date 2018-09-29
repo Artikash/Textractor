@@ -48,7 +48,7 @@ void CreatePipe()
 			*(DWORD*)buffer = GetCurrentProcessId();
 			WriteFile(::hookPipe, buffer, sizeof(DWORD), &count, nullptr);
 
-			ConsoleOutput("NextHooker: pipe connected");
+			ConsoleOutput("Textractor: pipe connected");
 #ifdef _WIN64
 			ConsoleOutput("Hooks don't work on x64, only read codes work. Engine disabled.");
 #else

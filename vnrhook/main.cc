@@ -70,14 +70,14 @@ void NewHook(const HookParam &hp, LPCSTR lpname, DWORD flag)
 	if (++currentHook < MAX_HOOK) 
 	{
 		if (name[0] == '\0') name = "UserHook" + std::to_string(userhookCount++);
-		ConsoleOutput(("NextHooker: try inserting hook: " + name).c_str());
+		ConsoleOutput(("Textractor: try inserting hook: " + name).c_str());
 
 		// jichi 7/13/2014: This function would raise when too many hooks added
 		::hookman[currentHook].InitHook(hp, name.c_str(), flag);
-		if (::hookman[currentHook].InsertHook()) ConsoleOutput(("NextHooker: inserted hook: " + name).c_str());
-		else ConsoleOutput("NextHooker:WARNING: failed to insert hook");
+		if (::hookman[currentHook].InsertHook()) ConsoleOutput(("Textractor: inserted hook: " + name).c_str());
+		else ConsoleOutput("Textractor:WARNING: failed to insert hook");
 	}
-	else ConsoleOutput("NextHooker: too many hooks: can't insert");
+	else ConsoleOutput("Textractor: too many hooks: can't insert");
 }
 
 void RemoveHook(uint64_t addr)

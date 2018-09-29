@@ -16,7 +16,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 		L"Error address: " << (DWORD)exception->ExceptionRecord->ExceptionAddress << std::endl <<
 		L"Error in module: " << moduleName << std::endl <<
 		L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[1];
-	MessageBoxW(NULL, errorMsg.str().c_str(), L"NextHooker ERROR", MB_ICONERROR);
+	MessageBoxW(NULL, errorMsg.str().c_str(), L"Textractor ERROR", MB_ICONERROR);
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 

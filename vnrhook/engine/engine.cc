@@ -56,7 +56,7 @@ namespace { // unnamed helpers
 					hp.type = DIRECT_READ;
 					if (funcAddr == funcW) hp.type |= USING_UNICODE;
 					hp.address = addr;
-					ConsoleOutput("NextHooker: triggered: adding dynamic reader");
+					ConsoleOutput("Textractor: triggered: adding dynamic reader");
 					NewHook(hp, "READ");
 					ret = true;
 				}
@@ -2125,7 +2125,7 @@ bool InsertBaldrHook()
 	const BYTE ins[] = { 0x90,0xff,0x50,0x3c,0x83,0xc4,0x20,0x8b,0x45,0xec };
 	DWORD addr = Util::SearchMemory(ins, sizeof(ins));
 	if (!addr) {
-		ConsoleOutput("NextHooker: BALDR failed: could not find instructions");
+		ConsoleOutput("Textractor: BALDR failed: could not find instructions");
 		return false;
 	}
 
@@ -2133,7 +2133,7 @@ bool InsertBaldrHook()
 	hp.address = addr;
 	hp.offset = 4;
 	hp.type = NO_CONTEXT | USING_STRING | USING_UNICODE; // 0x403
-	ConsoleOutput("NextHooker: INSERT BALDR");
+	ConsoleOutput("Textractor: INSERT BALDR");
 	NewHook(hp, "BALDR");
 
 	return true;
@@ -5785,7 +5785,7 @@ bool InsertShinaHook()
   if (ver >= 50) {
 	  SwitchTrigger(true);
 	  trigger_fun_ = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
-	  ConsoleOutput("NextHooker: ShinaRio 2.50+: adding trigger");
+	  ConsoleOutput("Textractor: ShinaRio 2.50+: adding trigger");
 	  return true;
   }
   else if (ver >= 48) { // v2.48, v2.49
@@ -7768,7 +7768,7 @@ bool InsertQLIE3Hook()
 	};
 	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
 	if (!addr) {
-		ConsoleOutput("NextHooker:QLIE3: pattern not found");
+		ConsoleOutput("Textractor:QLIE3: pattern not found");
 		//ConsoleOutput("Not QLIE2");
 		return false;
 	}
@@ -7780,7 +7780,7 @@ bool InsertQLIE3Hook()
 	hp.split = pusha_edi_off - 4;
 	hp.address = addr;
 
-	ConsoleOutput("NextHooker: INSERT QLIE3");
+	ConsoleOutput("Textractor: INSERT QLIE3");
 	NewHook(hp, "QLiE3");
 	//ConsoleOutput("QLIE2");
 	return true;
@@ -9342,7 +9342,7 @@ static bool InsertNewWillPlusHook()
 		hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
 		hp.offset = pusha_ecx_off - 4;
 		hp.index = 0;
-		ConsoleOutput("NextHooker: INSERT New WillPlus (ADVHD) hook");
+		ConsoleOutput("Textractor: INSERT New WillPlus (ADVHD) hook");
 		NewHook(hp, "WillPlus2");
 		return true;
 	}
@@ -16130,7 +16130,7 @@ bool InsertAIRNovelHook()
 		DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), base, base + 0x200000); // Artikash 7/14/2018: Probably big enough
 		if (!addr)
 		{
-			ConsoleOutput("NextHooker: AIRNovel: pattern not found");
+			ConsoleOutput("Textractor: AIRNovel: pattern not found");
 			return false;
 		}
 		HookParam hp = {};
@@ -16153,7 +16153,7 @@ bool InsertAIRNovelHook()
 		//		memcmp((char*)str, "app:/", 5); 
 		//};
 
-		ConsoleOutput("NextHooker: INSERT AIRNovel");
+		ConsoleOutput("Textractor: INSERT AIRNovel");
 		NewHook(hp, "AIRNovel");
 		return true;
 	}
@@ -16434,7 +16434,7 @@ bool InsertRenpyHook()
 	hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"python27"), "PyUnicodeUCS2_Format");
 	if (!hp.address)
 	{
-		ConsoleOutput("NextHooker: Ren'py failed: failed to find python27.dll or PyUnicodeUCS2_Format");
+		ConsoleOutput("Textractor: Ren'py failed: failed to find python27.dll or PyUnicodeUCS2_Format");
 		return false;
 	}
 	hp.offset = 4;

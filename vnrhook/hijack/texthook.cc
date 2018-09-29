@@ -257,7 +257,7 @@ bool TextHook::UnsafeInsertHookCode()
 	if (hp.module && (hp.type & MODULE_OFFSET))  // Map hook offset to real address.
 	{
 		if (DWORD base = GetModuleBase(hp.module)) hp.address += base;
-		else return ConsoleOutput("NextHooker: UnsafeInsertHookCode: FAILED: module not present"), false;
+		else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: module not present"), false;
 		hp.type &= ~MODULE_OFFSET;
 	}
 
@@ -271,7 +271,7 @@ bool TextHook::UnsafeInsertHookCode()
 		}
 		else
 		{
-			ConsoleOutput(("NextHooker: UnsafeInsertHookCode: FAILED: error " + std::string(MH_StatusToString(err))).c_str());
+			ConsoleOutput(("Textractor: UnsafeInsertHookCode: FAILED: error " + std::string(MH_StatusToString(err))).c_str());
 			return false;
 		}
 
@@ -310,13 +310,13 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 	{
 		if (!IthGetMemoryRange((void*)hook->hp.address, nullptr, nullptr))
 		{
-			ConsoleOutput("NextHooker: can't read desired address");
+			ConsoleOutput("Textractor: can't read desired address");
 			break;
 		}
 		if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.address + hook->hp.index);
 		if (!IthGetMemoryRange(currentAddress, nullptr, nullptr))
 		{
-			ConsoleOutput("NextHooker: can't read desired address");
+			ConsoleOutput("Textractor: can't read desired address");
 			break;
 		}
 		Sleep(500);
@@ -327,7 +327,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 		}
 		if (++changeCount > 10)
 		{
-			ConsoleOutput("NextHooker: memory constantly changing, useless to read");
+			ConsoleOutput("Textractor: memory constantly changing, useless to read");
 			break;
 		}
 
@@ -341,7 +341,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
 	}
-	ConsoleOutput("NextHooker: remove read code");
+	ConsoleOutput("Textractor: remove read code");
 	hook->ClearHook();
 	return 0;
 }
@@ -377,7 +377,7 @@ void TextHook::RemoveReadCode()
 void TextHook::ClearHook()
 {
 	WaitForSingleObject(hmMutex, 0);
-	if (hook_name) ConsoleOutput(("NextHooker: removing hook: " + std::string(hook_name)).c_str());
+	if (hook_name) ConsoleOutput(("Textractor: removing hook: " + std::string(hook_name)).c_str());
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(hp.address);
