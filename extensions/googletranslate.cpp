@@ -26,8 +26,16 @@ std::wstring GetTranslationUri(const wchar_t* text, unsigned int TKK)
 	a %= 1000000;
 	b ^= a;
 
+	std::wstring encodedText;
+	for (int i = 0; utf8text[i];)
+	{
+		wchar_t utf8char[3] = {};
+		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)utf8text[i++]);
+		encodedText += L"%" + std::wstring(utf8char);
+	}
+
 	delete[] utf8text;
-	return std::wstring(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tk=") + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + std::wstring(text);
+	return std::wstring(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tk=") + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + std::wstring(encodedText);
 }
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
@@ -36,7 +44,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 NextHooker", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 	static unsigned int TKK = 0;
 
-	std::wstring translation(L"");
+	std::wstring translation;
 
 	if (sentenceInfo["hook address"] == -1) return false;
 
