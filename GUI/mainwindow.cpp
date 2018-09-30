@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 
 	ReloadExtensions();
-	Host::AddConsoleOutput(L"Textractor beta v3.2.1 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(L"Textractor beta v3.2.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
 }
 
 MainWindow::~MainWindow()
