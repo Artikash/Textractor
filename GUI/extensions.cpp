@@ -20,20 +20,20 @@ std::map<int, QString> LoadExtensions()
 				file.chop(sizeof("dll"));
 				extensionNames[extensionNumber] = file.split("_")[1];
 			}
-	extenMutex.lock();
+	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
 	extensions = newExtensions;
-	extenMutex.unlock();
 	return extensionNames;
 }
 
 bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
 {
+	bool success = true;
 	wchar_t* sentenceBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
-	extenMutex.lock_shared();
+	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
 	try
 	{
 		for (auto i : extensions)
@@ -43,10 +43,9 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 			if (sentenceBuffer != prev) free((void*)prev);
 		}
 	}
-	catch (...) { sentenceBuffer[0] = 0; }
-	extenMutex.unlock_shared();
-	delete miscInfoLinkedList;
+	catch (...) { success = false; }
 	sentence = std::wstring(sentenceBuffer);
 	free((void*)sentenceBuffer);
-	return sentence.size() > 0;
+	delete miscInfoLinkedList;
+	return success;
 }
