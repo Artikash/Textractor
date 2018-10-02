@@ -1,5 +1,7 @@
 # Textractor
 
+[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
+
 ## Overview
 
 **Textractor** (a.k.a. NextHooker) is an open-source x86/x64 text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).
