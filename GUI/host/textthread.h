@@ -10,6 +10,7 @@
 class TextThread
 {
 	typedef std::function<std::wstring(TextThread*, std::wstring)> ThreadOutputCallback;
+
 public:
 	TextThread(ThreadParam tp, DWORD status);
 	~TextThread();
@@ -17,7 +18,6 @@ public:
 	std::wstring GetStore();
 	void AddText(const BYTE* data, int len);
 	void AddSentence(std::wstring sentence);
-
 	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }
 
 	const int64_t handle;
@@ -31,13 +31,11 @@ public:
 private:
 	void Flush();
 
-	std::vector<char> buffer;
+	std::wstring buffer;
 	std::wstring storage;
 	std::recursive_mutex ttMutex;
-
-	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
-	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
-	DWORD timestamp = GetTickCount();
+	std::thread flusher = std::thread([] {});
+	HANDLE cancelFlushEvent = CreateEventW(nullptr, TRUE, TRUE, NULL);
 
 	ThreadOutputCallback Output;
 	DWORD status;

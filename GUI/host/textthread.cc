@@ -10,10 +10,9 @@ TextThread::TextThread(ThreadParam tp, DWORD status) : handle(ThreadCounter++), 
 
 TextThread::~TextThread()
 {
-	SetEvent(deletionEvent);
-	flushThread.join();
-	CloseHandle(deletionEvent);
-	LOCK(ttMutex);
+	SetEvent(cancelFlushEvent);
+	flusher.join();
+	CloseHandle(cancelFlushEvent);
 }
 
 std::wstring TextThread::GetStore()
@@ -27,10 +26,7 @@ void TextThread::Flush()
 	std::wstring sentence;
 	{
 		LOCK(ttMutex);
-		if (buffer.size() < MaxBufferSize && (GetTickCount() - timestamp < FlushDelay || buffer.size() < 2)) return;
-		sentence = status & USING_UNICODE 
-			? std::wstring((wchar_t*)buffer.data(), buffer.size() / 2) 
-			: StringToWideString(std::string(buffer.data(), buffer.size()), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
+		sentence = buffer;
 		buffer.clear();
 	}
 	AddSentence(sentence);
@@ -46,9 +42,19 @@ void TextThread::AddSentence(std::wstring sentence)
 
 void TextThread::AddText(const BYTE* data, int len)
 {
+	if (buffer.size() > MaxBufferSize) Flush();
+	SetEvent(cancelFlushEvent);
+	flusher.join();
+	flusher = std::thread([&]
+	{
+		ResetEvent(cancelFlushEvent);
+		WaitForSingleObject(cancelFlushEvent, FlushDelay);
+		Flush();
+	});
 	LOCK(ttMutex);
-	buffer.insert(buffer.end(), data, data + len);
-	timestamp = GetTickCount();
+	buffer += status & USING_UNICODE
+		? std::wstring((wchar_t*)data, len / 2)
+		: StringToWideString(std::string((char*)data, len), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
 }
 
 // EOF
