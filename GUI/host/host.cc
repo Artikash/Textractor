@@ -144,6 +144,7 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
+		TextThread::Prefilter = (int(*)(wchar_t*, const wchar_t*))GetProcAddress(LoadLibraryW(L"0_Prefilter.dll"), "OnNewData");
 		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE, USING_UNICODE));
 		StartPipe();
 	}

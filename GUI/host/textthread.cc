@@ -47,6 +47,7 @@ void TextThread::AddText(const BYTE* data, int len)
 		? std::wstring((wchar_t*)data, len / 2)
 		: StringToWideString(std::string((char*)data, len), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
 	LOCK(ttMutex);
+	if (Prefilter) wData.resize(Prefilter(wData.data(), storage.c_str()));
 	buffer.append(wData);
 	timestamp = GetTickCount();
 }

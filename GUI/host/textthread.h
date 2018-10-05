@@ -24,6 +24,7 @@ public:
 	const std::wstring name;
 	const ThreadParam tp;
 
+	inline static int(*Prefilter)(wchar_t*, const wchar_t*) = nullptr;
 	inline static int FlushDelay = 250; // flush every 250ms by default
 	inline static int MaxBufferSize = 200; 
 	inline static int ThreadCounter = 0;
