@@ -48,8 +48,7 @@ void TextThread::AddText(const BYTE* data, int len)
 	flusher = std::thread([&]
 	{
 		ResetEvent(cancelFlushEvent);
-		WaitForSingleObject(cancelFlushEvent, FlushDelay);
-		Flush();
+		if (WaitForSingleObject(cancelFlushEvent, FlushDelay) == WAIT_TIMEOUT) Flush();
 	});
 	LOCK(ttMutex);
 	buffer += status & USING_UNICODE
