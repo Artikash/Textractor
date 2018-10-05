@@ -35,7 +35,9 @@ namespace
 		LOCK(hostMutex);
 		TextThread *it;
 		if ((it = textThreadsByParams[tp]) == nullptr)
-			OnCreate(it = textThreadsByParams[tp] = new TextThread(tp, Host::GetHookParam(tp).type));
+			if (TextThread::ThreadCounter < MAX_THREAD_COUNT)
+				OnCreate(it = textThreadsByParams[tp] = new TextThread(tp, Host::GetHookParam(tp).type));
+			else return Host::AddConsoleOutput(L"too many text threads: stopping");
 		it->AddText(text, len);
 	}
 

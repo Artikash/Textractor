@@ -4,7 +4,7 @@
 // 8/23/2013 jichi
 // Branch: ITH/common.h, rev 128
 
-enum { MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 0x1000, SHIFT_JIS = 932 };
+enum { MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 0x1000, SHIFT_JIS = 932, MAX_THREAD_COUNT };
 
 // jichi 375/2014: Add offset of pusha/pushad
 // http://faydoc.tripod.com/cpu/pushad.htm
