@@ -28,7 +28,7 @@ std::map<int, QString> LoadExtensions()
 bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
 {
 	bool success = true;
-	wchar_t* sentenceBuffer = (wchar_t*)malloc((sentence.size() + 1) * sizeof(wchar_t));
+	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
@@ -40,12 +40,12 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 		{
 			wchar_t* prev = sentenceBuffer;
 			sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
-			if (sentenceBuffer != prev) free((void*)prev);
+			if (sentenceBuffer != prev) HeapFree(GetProcessHeap(), 0, prev);
 		}
 	}
 	catch (...) { success = false; }
 	sentence = std::wstring(sentenceBuffer);
-	free((void*)sentenceBuffer);
+	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	delete miscInfoLinkedList;
 	return success;
 }
