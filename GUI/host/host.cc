@@ -26,7 +26,7 @@ namespace
 
 	std::recursive_mutex hostMutex;
 
-	DWORD DUMMY[100];
+	DWORD DUMMY[1];
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL };
 
 	void DispatchText(ThreadParam tp, const BYTE* text, int len)
@@ -141,10 +141,9 @@ namespace
 
 namespace Host
 {
-	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove)
+	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output)
 	{
-		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove;
-		TextThread::Prefilter = (int(*)(wchar_t*, const wchar_t*))GetProcAddress(LoadLibraryW(L"0_Prefilter.dll"), "OnNewData");
+		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
 		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE, USING_UNICODE));
 		StartPipe();
 	}
@@ -216,14 +215,14 @@ namespace Host
 
 	void InsertHook(DWORD pid, HookParam hp, std::string name)
 	{
-		auto info = InsertHookCmd(hp, name);
-		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
+		auto command = InsertHookCmd(hp, name);
+		WriteFile(processRecordsByIds[pid].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
 	void RemoveHook(DWORD pid, uint64_t addr)
 	{
-		auto info = RemoveHookCmd(addr);
-		WriteFile(processRecordsByIds[pid].hostPipe, &info, sizeof(info), DUMMY, nullptr);
+		auto command = RemoveHookCmd(addr);
+		WriteFile(processRecordsByIds[pid].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
 	HookParam GetHookParam(DWORD pid, uint64_t addr)
@@ -268,7 +267,7 @@ namespace Host
 		return textThreadsByParams[tp];
 	}
 
-	void AddConsoleOutput(std::wstring text) { GetThread(CONSOLE)->AddSentence(std::wstring(text)); }
+	void AddConsoleOutput(std::wstring text) { GetThread(CONSOLE)->AddSentence(text); }
 }
 
 // EOF

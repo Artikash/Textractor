@@ -9,25 +9,26 @@
 
 class TextThread
 {
-	typedef std::function<std::wstring(TextThread*, std::wstring)> ThreadOutputCallback;
-
 public:
+	typedef std::function<bool(TextThread*, std::wstring&)> OutputCallback;
+
+	inline static OutputCallback Output;
+	inline static std::function<void(wchar_t* buffer, const wchar_t* storage)> Filter = nullptr;
+
+	inline static int FlushDelay = 250; // flush every 250ms by default
+	inline static int MaxBufferSize = 200;
+	inline static int ThreadCounter = 0;
+
 	TextThread(ThreadParam tp, DWORD status);
 	~TextThread();
 
-	std::wstring GetStore();
+	std::wstring GetStorage();
 	void AddText(const BYTE* data, int len);
 	void AddSentence(std::wstring sentence);
-	void RegisterOutputCallBack(ThreadOutputCallback cb) { Output = cb; }
 
 	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
-
-	inline static int(*Prefilter)(wchar_t*, const wchar_t*) = nullptr;
-	inline static int FlushDelay = 250; // flush every 250ms by default
-	inline static int MaxBufferSize = 200; 
-	inline static int ThreadCounter = 0;
 
 private:
 	void Flush();
@@ -35,13 +36,11 @@ private:
 	std::wstring buffer;
 	std::wstring storage;
 	std::recursive_mutex ttMutex;
+	DWORD status;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
 	DWORD timestamp = GetTickCount();
-
-	ThreadOutputCallback Output;
-	DWORD status;
 };
 
 // EOF

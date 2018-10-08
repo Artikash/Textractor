@@ -22,15 +22,15 @@ public:
 	~MainWindow();
 
 signals:
-	void SigAddProcess(unsigned int processId);
-	void SigRemoveProcess(unsigned int processId);
+	void SigAddProcess(unsigned processId);
+	void SigRemoveProcess(unsigned processId);
 	void SigAddThread(TextThread* thread);
 	void SigRemoveThread(TextThread* thread);
 	void SigThreadOutput(TextThread* thread, QString output);
 
 private slots:
-	void AddProcess(unsigned int processId);
-	void RemoveProcess(unsigned int processId);
+	void AddProcess(unsigned processId);
+	void RemoveProcess(unsigned processId);
 	void AddThread(TextThread* thread);
 	void RemoveThread(TextThread* thread);
 	void ThreadOutput(TextThread* thread, QString output);
@@ -44,6 +44,7 @@ private slots:
 	void on_rmvExtenButton_clicked();
 
 private:
+	bool ProcessThreadOutput(TextThread* thread, std::wstring& output);
 	QString TextThreadString(TextThread* thread);
 	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();

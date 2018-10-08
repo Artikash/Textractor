@@ -30,7 +30,8 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](DWORD processId) { emit SigAddProcess(processId); },
 		[&](DWORD processId) { emit SigRemoveProcess(processId); },
 		[&](TextThread* thread) { emit SigAddThread(thread); },
-		[&](TextThread* thread) { emit SigRemoveThread(thread); }
+		[&](TextThread* thread) { emit SigRemoveThread(thread); },
+		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
 
 	ReloadExtensions();
@@ -47,7 +48,7 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
-void MainWindow::AddProcess(unsigned int processId)
+void MainWindow::AddProcess(unsigned processId)
 {
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
 	QFile file("SavedHooks.txt");
@@ -65,7 +66,7 @@ void MainWindow::AddProcess(unsigned int processId)
 		}
 }
 
-void MainWindow::RemoveProcess(unsigned int processId)
+void MainWindow::RemoveProcess(unsigned processId)
 {
 	processCombo->removeItem(processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
 }
@@ -79,15 +80,6 @@ void MainWindow::AddThread(TextThread* thread)
 		GenerateCode(Host::GetHookParam(thread->tp), thread->tp.pid) +
 		")"
 	);
-	thread->RegisterOutputCallBack([&](TextThread* thread, std::wstring output)
-	{
-		if (DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
-		{
-			output += L"\r\n";
-			emit SigThreadOutput(thread, QString::fromStdWString(output));
-		}
-		return output;
-	});
 }
 
 void MainWindow::RemoveThread(TextThread* thread)
@@ -110,6 +102,17 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 		textOutput->insertPlainText(output);
 		textOutput->moveCursor(QTextCursor::End);
 	}
+}
+
+bool MainWindow::ProcessThreadOutput(TextThread* thread, std::wstring& output)
+{
+	if (DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
+	{
+		output += L"\r\n";
+		emit SigThreadOutput(thread, QString::fromStdWString(output));
+		return true;
+	}
+	return false;
 }
 
 QString MainWindow::TextThreadString(TextThread* thread)
@@ -234,7 +237,7 @@ void MainWindow::on_saveButton_clicked()
 
 void MainWindow::on_ttCombo_activated(int index)
 {
-	textOutput->setPlainText(QString::fromStdWString(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStore()));
+	textOutput->setPlainText(QString::fromStdWString(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStorage()));
 	textOutput->moveCursor(QTextCursor::End);
 }
 

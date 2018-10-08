@@ -15,7 +15,7 @@ TextThread::~TextThread()
 	CloseHandle(deletionEvent);
 }
 
-std::wstring TextThread::GetStore()
+std::wstring TextThread::GetStorage()
 {
 	LOCK(ttMutex);
 	return storage;
@@ -36,19 +36,20 @@ void TextThread::Flush()
 void TextThread::AddSentence(std::wstring sentence)
 {
 	// Dispatch to extensions occurs here. Don't hold mutex! Extensions might take a while!
-	if (Output) sentence = Output(this, sentence);
-	LOCK(ttMutex);
-	storage.append(sentence);
+	if (Output(this, sentence))
+	{
+		LOCK(ttMutex);
+		storage += sentence;
+	}
 }
 
 void TextThread::AddText(const BYTE* data, int len)
 {
-	std::wstring wData = status & USING_UNICODE
+	LOCK(ttMutex);
+	buffer += status & USING_UNICODE
 		? std::wstring((wchar_t*)data, len / 2)
 		: StringToWideString(std::string((char*)data, len), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
-	LOCK(ttMutex);
-	if (Prefilter) wData.resize(Prefilter(wData.data(), storage.c_str()));
-	buffer.append(wData);
+	if (Filter) Filter(buffer.data(), storage.c_str());
 	timestamp = GetTickCount();
 }
 
