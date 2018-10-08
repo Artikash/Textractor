@@ -18,9 +18,10 @@ std::map<int, QString> LoadExtensions()
 				int extensionNumber = file.split("_")[0].toInt();
 				newExtensions[extensionNumber] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence");
 				file.chop(sizeof("dll"));
-				extensionNames[extensionNumber] = file.split("_")[1];
+				file.remove(0, file.indexOf("_") + 1);
+				extensionNames[extensionNumber] = file;
 			}
-	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
+	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
 	extensions = newExtensions;
 	return extensionNames;
 }
