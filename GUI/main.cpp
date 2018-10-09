@@ -10,13 +10,22 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 	GetModuleFileNameW((HMODULE)info.AllocationBase, moduleName, MAX_PATH);
 
 	std::wstringstream errorMsg;
-	errorMsg << 
-		std::uppercase << std::hex <<
+	errorMsg << std::uppercase << std::hex <<
 		L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl <<
-		L"Error address: " << (DWORD)exception->ExceptionRecord->ExceptionAddress << std::endl <<
-		L"Error in module: " << moduleName << std::endl <<
-		L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[1];
+		L"Error address: " << (uint64_t)exception->ExceptionRecord->ExceptionAddress << std::endl <<
+		L"Error in module: " << moduleName << std::endl;
+
+#ifndef _WIN64
+	// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
+	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
+		errorMsg << "Additional info: " << ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8 << std::endl;
+	else
+#endif
+	for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
+		errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
+
 	MessageBoxW(NULL, errorMsg.str().c_str(), L"Textractor ERROR", MB_ICONERROR);
+
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
