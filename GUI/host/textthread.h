@@ -13,8 +13,8 @@ public:
 	typedef std::function<bool(TextThread*, std::wstring&)> OutputCallback;
 
 	inline static OutputCallback Output;
-	inline static std::function<void(wchar_t* buffer, const wchar_t* storage)> Filter = nullptr;
 
+	inline static std::wstring filter = L"";
 	inline static int FlushDelay = 250; // flush every 250ms by default
 	inline static int MaxBufferSize = 200;
 	inline static int ThreadCounter = 0;

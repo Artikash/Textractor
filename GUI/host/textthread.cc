@@ -5,6 +5,7 @@
 #include "textthread.h"
 #include "host.h"
 #include "const.h"
+#include <regex>
 
 TextThread::TextThread(ThreadParam tp, DWORD status) : handle(ThreadCounter++), name(Host::GetHookName(tp.pid, tp.hook)), tp(tp), status(status) {}
 
@@ -35,6 +36,7 @@ void TextThread::Flush()
 
 void TextThread::AddSentence(std::wstring sentence)
 {
+	sentence = std::regex_replace(sentence, std::wregex(filter), L"");
 	// Dispatch to extensions occurs here. Don't hold mutex! Extensions might take a while!
 	if (Output(this, sentence))
 	{
@@ -49,7 +51,6 @@ void TextThread::AddText(const BYTE* data, int len)
 	buffer += status & USING_UNICODE
 		? std::wstring((wchar_t*)data, len / 2)
 		: StringToWideString(std::string((char*)data, len), status & USING_UTF8 ? CP_UTF8 : SHIFT_JIS);
-	if (Filter) Filter(buffer.data(), storage.c_str());
 	timestamp = GetTickCount();
 }
 
