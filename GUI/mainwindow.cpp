@@ -13,8 +13,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
 	// TODO: add GUI for changing these
-	if (settings.contains("Flush_Delay")) TextThread::FlushDelay = settings.value("Flush_Delay").toInt();
-	if (settings.contains("Max_Buffer_Size")) TextThread::MaxBufferSize = settings.value("Max_Buffer_Size").toInt();
+	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
+	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
@@ -41,8 +41,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
 	settings.setValue("Window", this->geometry());
-	settings.setValue("Flush_Delay", TextThread::FlushDelay);
-	settings.setValue("Max_Buffer_Size", TextThread::MaxBufferSize);
+	settings.setValue("Flush_Delay", TextThread::flushDelay);
+	settings.setValue("Max_Buffer_Size", TextThread::maxBufferSize);
 	settings.sync();
 	Host::Close();
 	delete ui;

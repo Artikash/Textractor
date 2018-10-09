@@ -7,7 +7,7 @@
 #include "const.h"
 #include <regex>
 
-TextThread::TextThread(ThreadParam tp, DWORD status) : handle(ThreadCounter++), name(Host::GetHookName(tp.pid, tp.hook)), tp(tp), status(status) {}
+TextThread::TextThread(ThreadParam tp, DWORD status) : handle(threadCounter++), name(Host::GetHookName(tp.pid, tp.hook)), tp(tp), status(status) {}
 
 TextThread::~TextThread()
 {
@@ -27,7 +27,7 @@ void TextThread::Flush()
 	std::wstring sentence;
 	{
 		LOCK(ttMutex);
-		if (buffer.size() < MaxBufferSize && (GetTickCount() - timestamp < FlushDelay || buffer.size() < 2)) return;
+		if (buffer.size() < maxBufferSize && GetTickCount() - timestamp < flushDelay) return;
 		sentence = buffer;
 		buffer.clear();
 	}
