@@ -19,7 +19,6 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 	// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
 	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363 && exception->ExceptionRecord->ExceptionInformation[2])
 		errorMsg << "Additional info: " << ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8 << std::endl;
-	else
 #endif
 	for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 		errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
@@ -35,6 +34,5 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
-
 	return a.exec();
 }

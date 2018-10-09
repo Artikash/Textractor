@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	// TODO: add GUI for changing these
 	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
 	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
-	if (settings.contains("Filter")) TextThread::filter = settings.value("Filter").toString().toStdWString().c_str();
+	if (settings.contains("Filter")) TextThread::filter = settings.value("Filter").toString().toStdWString();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
