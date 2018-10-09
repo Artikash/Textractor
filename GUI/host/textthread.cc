@@ -27,6 +27,7 @@ void TextThread::Flush()
 	std::wstring sentence;
 	{
 		LOCK(ttMutex);
+		if (buffer.size() == 0) return;
 		if (buffer.size() < maxBufferSize && GetTickCount() - timestamp < flushDelay) return;
 		sentence = buffer;
 		buffer.clear();
