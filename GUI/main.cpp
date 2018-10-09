@@ -17,7 +17,7 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 
 #ifndef _WIN64
 	// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
-	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
+	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363 && exception->ExceptionRecord->ExceptionInformation[2])
 		errorMsg << "Additional info: " << ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8 << std::endl;
 	else
 #endif
