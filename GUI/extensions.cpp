@@ -35,16 +35,13 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
 	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
-	try
+	for (auto i : extensions)
 	{
-		for (auto i : extensions)
-		{
-			wchar_t* prev = sentenceBuffer;
-			sentenceBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
-			if (sentenceBuffer != prev) HeapFree(GetProcessHeap(), 0, prev);
-		}
+		wchar_t* nextBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+		if (nextBuffer == nullptr) { success = false; break; }
+		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
+		sentenceBuffer = nextBuffer;
 	}
-	catch (...) { success = false; }
 	sentence = std::wstring(sentenceBuffer);
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	delete miscInfoLinkedList;
