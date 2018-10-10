@@ -141,8 +141,7 @@ DWORD MainWindow::GetSelectedProcessId()
 void MainWindow::ReloadExtensions()
 {
 	extenCombo->clear();
-	std::map<int, QString> extensions = LoadExtensions();
-	for (auto i : extensions) extenCombo->addItem(QString::number(i.first) + ": " + i.second);
+	for (auto extension : LoadExtensions()) extenCombo->addItem(QString::number(extension.number) + ": " + extension.name);
 }
 
 std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextThread* thread)

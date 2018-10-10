@@ -2,17 +2,25 @@
 #define EXTENSIONS_H
 
 #include "qtcommon.h"
-#include <map>
+#include <set>
 
-std::map<int, QString> LoadExtensions();
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
 struct InfoForExtension
 {
-	~InfoForExtension() { if (nextProperty) delete nextProperty; };
-	const char* propertyName = "";
-	int64_t propertyValue = 0;
-	InfoForExtension* nextProperty = nullptr;
+	const char* name;
+	int64_t value;
+	InfoForExtension* next;
+	~InfoForExtension() { if (next) delete next; };
 };
-typedef wchar_t*(*ExtensionFunction)(const wchar_t*, const InfoForExtension*);
+
+struct Extension
+{
+	int number;
+	QString name;
+	wchar_t*(*callback)(const wchar_t*, const InfoForExtension*);
+	bool operator<(const Extension& other) const { return number < other.number; }
+};
+
+std::set<Extension> LoadExtensions();
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
 
 #endif // EXTENSIONS_H

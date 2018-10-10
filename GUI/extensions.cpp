@@ -2,28 +2,34 @@
 #include <shared_mutex>
 #include <QDir>
 
-std::shared_mutex extenMutex;
-std::map<int, ExtensionFunction> extensions;
-
-std::map<int, QString> LoadExtensions()
+std::optional<Extension> LoadExtension(QString file)
 {
-	std::map<int, ExtensionFunction> newExtensions;
-	std::map<int, QString> extensionNames;
+	// Extension file format: {NUMBER}_{NAME}.dll and exports "OnNewSentence"
+	QRegularExpressionMatch parsedFile = QRegularExpression("^(\\d+)_(.+).dll$").match(file);
+	if (!parsedFile.hasMatch()) return {};
+
+	HMODULE module = GetModuleHandleW(file.toStdWString().c_str());
+	if (!module) module = LoadLibraryW(file.toStdWString().c_str());
+	if (!module) return {};
+
+	auto callback = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))GetProcAddress(module, "OnNewSentence");
+	if (!callback) return {};
+
+	return Extension{ parsedFile.captured(1).toInt(), parsedFile.captured(2), callback };
+}
+
+std::shared_mutex extenMutex;
+std::set<Extension> extensions;
+
+std::set<Extension> LoadExtensions()
+{
+	std::set<Extension> newExtensions;
 	QStringList files = QDir().entryList();
 	for (auto file : files)
-		if (file.split("_").size() > 1 && file.split("_")[0].toInt() && file.endsWith(".dll"))
-			if (GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence") ||
-				GetProcAddress(LoadLibraryW(file.toStdWString().c_str()), "OnNewSentence"))
-			{
-				int extensionNumber = file.split("_")[0].toInt();
-				newExtensions[extensionNumber] = (ExtensionFunction)GetProcAddress(GetModuleHandleW(file.toStdWString().c_str()), "OnNewSentence");
-				file.chop(sizeof("dll"));
-				file.remove(0, file.indexOf("_") + 1);
-				extensionNames[extensionNumber] = file;
-			}
+		if (auto extension = LoadExtension(file)) newExtensions.insert(extension.value());
+
 	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
-	extensions = newExtensions;
-	return extensionNames;
+	return extensions = newExtensions;
 }
 
 bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
@@ -31,19 +37,21 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 	bool success = true;
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
-	InfoForExtension* miscInfoLinkedList = new InfoForExtension;
-	InfoForExtension* miscInfoTraverser = miscInfoLinkedList;
-	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->nextProperty = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
+
+	InfoForExtension miscInfoLinkedList{ "", 0, nullptr };
+	InfoForExtension* miscInfoTraverser = &miscInfoLinkedList;
+	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
+
 	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
-	for (auto i : extensions)
+	for (auto extension : extensions)
 	{
-		wchar_t* nextBuffer = i.second(sentenceBuffer, miscInfoLinkedList);
+		wchar_t* nextBuffer = extension.callback(sentenceBuffer, &miscInfoLinkedList);
 		if (nextBuffer == nullptr) { success = false; break; }
 		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 		sentenceBuffer = nextBuffer;
 	}
 	sentence = std::wstring(sentenceBuffer);
+
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
-	delete miscInfoLinkedList;
 	return success;
 }
