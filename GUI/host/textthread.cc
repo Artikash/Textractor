@@ -37,7 +37,6 @@ void TextThread::Flush()
 
 void TextThread::AddSentence(std::wstring sentence)
 {
-	sentence = std::regex_replace(sentence, std::wregex(filter), L"");
 	// Dispatch to extensions occurs here. Don't hold mutex! Extensions might take a while!
 	if (Output(this, sentence))
 	{

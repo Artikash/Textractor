@@ -14,7 +14,6 @@ public:
 
 	inline static OutputCallback Output;
 
-	inline static std::wstring filter = L"";
 	inline static int flushDelay = 250; // flush every 250ms by default
 	inline static int maxBufferSize = 200;
 	inline static int threadCounter = 0;
