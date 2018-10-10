@@ -7,15 +7,12 @@ std::optional<Extension> LoadExtension(QString file)
 	// Extension file format: {NUMBER}_{NAME}.dll and exports "OnNewSentence"
 	QRegularExpressionMatch parsedFile = QRegularExpression("^(\\d+)_(.+).dll$").match(file);
 	if (!parsedFile.hasMatch()) return {};
-
 	HMODULE module = GetModuleHandleW(file.toStdWString().c_str());
 	if (!module) module = LoadLibraryW(file.toStdWString().c_str());
 	if (!module) return {};
-
-	auto callback = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))GetProcAddress(module, "OnNewSentence");
+	FARPROC callback = GetProcAddress(module, "OnNewSentence");
 	if (!callback) return {};
-
-	return Extension{ parsedFile.captured(1).toInt(), parsedFile.captured(2), callback };
+	return Extension{ parsedFile.captured(1).toInt(), parsedFile.captured(2), (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback };
 }
 
 std::shared_mutex extenMutex;
@@ -27,7 +24,6 @@ std::set<Extension> LoadExtensions()
 	QStringList files = QDir().entryList();
 	for (auto file : files)
 		if (auto extension = LoadExtension(file)) newExtensions.insert(extension.value());
-
 	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
 	return extensions = newExtensions;
 }

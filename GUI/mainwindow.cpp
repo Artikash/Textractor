@@ -54,14 +54,12 @@ void MainWindow::AddProcess(unsigned processId)
 	QFile file("SavedHooks.txt");
 	if (!file.open(QIODevice::ReadOnly)) return;
 	QString processName = GetFullModuleName(processId);
-	QString allData = file.readAll();
-	QStringList allProcesses = allData.split("\r", QString::SkipEmptyParts);
-	for (int i = allProcesses.size() - 1; i >= 0; --i)
-		if (allProcesses[i].contains(processName))
+	QStringList allProcesses = QString(file.readAll()).split("\r", QString::SkipEmptyParts);
+	for (auto hooks = allProcesses.rbegin(); hooks != allProcesses.rend(); ++hooks)
+		if (hooks->contains(processName))
 		{
-			QStringList hooks = allProcesses[i].split(" , ");
-			for (int j = 1; j < hooks.size(); ++j)
-				Host::InsertHook(processId, ParseCode(hooks[j]).value_or(HookParam()));
+			for (auto hook : hooks->split(" , "))
+				if (auto hp = ParseCode(hook)) Host::InsertHook(processId, hp.value());
 			return;
 		}
 }
@@ -185,7 +183,7 @@ void MainWindow::on_attachButton_clicked()
 	bool injected = false;
 	if (!ok) return;
 	if (process.toInt(nullptr, 0)) injected |= Host::InjectProcess(process.toInt(nullptr, 0));
-	else for (auto i : allProcesses.values(process)) injected |= Host::InjectProcess(i);
+	else for (auto processId : allProcesses.values(process)) injected |= Host::InjectProcess(processId);
 	if (!injected) Host::AddConsoleOutput(L"failed to inject");
 }
 
@@ -206,17 +204,14 @@ void MainWindow::on_hookButton_clicked()
 void MainWindow::on_unhookButton_clicked()
 {
 	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
-	if (hooks.size() == 0)
-	{
-		Host::AddConsoleOutput(L"no hooks detected");
-		return;
-	}
+	if (hooks.size() == 0) return Host::AddConsoleOutput(L"no hooks detected");
 	QStringList hookList;
-	for (auto i : hooks) hookList.push_back(
-				QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), i.address)) +
-				": " +
-				GenerateCode(i, GetSelectedProcessId())
-			);
+	for (auto hook : hooks) 
+		hookList.push_back(
+			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hook.address)) +
+			": " +
+			GenerateCode(hook, GetSelectedProcessId())
+		);
 	bool ok;
 	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
 	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).address);
@@ -226,9 +221,9 @@ void MainWindow::on_saveButton_clicked()
 {
 	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
 	QString hookList = GetFullModuleName(GetSelectedProcessId());
-	for (auto i : hooks)
-		if (!(i.type & HOOK_ENGINE))
-			hookList += " , " + GenerateCode(i, GetSelectedProcessId());
+	for (auto hook : hooks)
+		if (!(hook.type & HOOK_ENGINE))
+			hookList += " , " + GenerateCode(hook, GetSelectedProcessId());
 	QFile file("SavedHooks.txt");
 	if (!file.open(QIODevice::Append | QIODevice::Text)) return;
 	file.write((hookList + "\r\n").toUtf8());

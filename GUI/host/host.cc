@@ -52,7 +52,7 @@ namespace
 				//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
 				removedThreads.push_back(i.first);
 			}
-		for (auto i : removedThreads) textThreadsByParams.erase(i);
+		for (auto thread : removedThreads) textThreadsByParams.erase(thread);
 	}
 
 	void RegisterProcess(DWORD pid, HANDLE hostPipe)
