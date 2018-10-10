@@ -33,7 +33,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo);
 	* You should not modify this sentence. If you want Textractor to receive a modified sentence, copy it into your own buffer and return that.
 	* Please allocate the buffer using HeapAlloc() and not new[] or malloc() or something else: Textractor uses HeapFree() to free it.
 	* Param miscInfo: pointer to start of singly linked list containing misc info about the sentence.
-	* Return value: pointer to sentence Textractor takes for future processing and display. If nullptr, Textractor will 'eat' the sentence.
+	* Return value: pointer to sentence Textractor takes for future processing and display. If nullptr, Textractor will destroy the sentence.
 	* Return 'sentence' unless you created a new sentence/buffer as mentioned above.
 	* Textractor will display the sentence after all extensions have had a chance to process and/or modify it.
 	* THIS FUNCTION MAY BE RUN SEVERAL TIMES CONCURRENTLY: PLEASE ENSURE THAT IT IS THREAD SAFE!
