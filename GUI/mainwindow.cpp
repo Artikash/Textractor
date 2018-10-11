@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 
 	ReloadExtensions();
-	Host::AddConsoleOutput(L"Textractor beta v3.2.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(L"Textractor beta v3.3.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
 }
 
 MainWindow::~MainWindow()
@@ -178,7 +178,7 @@ void MainWindow::on_attachButton_clicked()
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
 	QString process = QInputDialog::getItem(this, "Select Process",
-		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id if you know it",
+		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id",
 		processList, 0, true, &ok);
 	bool injected = false;
 	if (!ok) return;
