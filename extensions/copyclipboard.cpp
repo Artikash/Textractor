@@ -1,4 +1,4 @@
-#include "extensions.h"
+#include "extension.h"
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {

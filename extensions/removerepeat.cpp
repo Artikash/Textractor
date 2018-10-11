@@ -1,4 +1,4 @@
-#include "extensions.h"
+#include "extension.h"
 #include <set>
 #include <mutex>
 
@@ -25,7 +25,7 @@ bool RemoveRepeatedChars(std::wstring& sentence)
 
 bool RemoveCyclicRepeats(std::wstring& sentence)
 {
-	if (sentence == L"") throw InvalidSentence();
+	if (sentence == L"") Skip();
 	int junkLength = 0;
 	wchar_t junk[2000] = {};
 	while (wcsstr(sentence.c_str() + junkLength, junk))
@@ -47,7 +47,7 @@ bool RemoveRepeatedSentences(std::wstring& sentence, int64_t handle)
 	static std::set<std::pair<int64_t, std::wstring>> seenSentences;
 	static std::mutex m;
 	std::lock_guard<std::mutex> l(m);
-	if (seenSentences.count({ handle, sentence }) != 0) throw InvalidSentence();
+	if (seenSentences.count({ handle, sentence }) != 0) Skip();
 	seenSentences.insert({ handle, sentence });
 	return false;
 }
