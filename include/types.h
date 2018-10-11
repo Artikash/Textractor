@@ -11,12 +11,14 @@ struct HookParam
 	typedef bool(*filter_fun_t)(LPVOID str, DWORD *len, HookParam *hp, BYTE index); // jichi 10/24/2014: Add filter function. Return true if skip the text
 	typedef bool(*hook_fun_t)(DWORD esp, HookParam *hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
 
-	uint64_t address; // absolute or relative address
+	uint64_t insertion_address; // absolute address
+	uint64_t address; // absolute or relative address (not changed by TextHook)
 	int offset, // offset of the data in the memory
 		index, // deref_offset1
 		split, // offset of the split character
 		split_index; // deref_offset2
-	DWORD module; // hash of the module
+	wchar_t module[MAX_MODULE_SIZE];
+	char function[MAX_MODULE_SIZE];
 	DWORD type; // flags
 	WORD length_offset; // index of the string length
 	DWORD user_value; // 7/20/2014: jichi additional parameters for PSP games
@@ -24,8 +26,6 @@ struct HookParam
 	text_fun_t text_fun;
 	filter_fun_t filter_fun;
 	hook_fun_t hook_fun;
-
-	HANDLE readerHandle; // Artikash 8/4/2018: handle for reader thread
 };
 
 struct ThreadParam // From hook, used internally by host as well

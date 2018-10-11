@@ -234,7 +234,7 @@ namespace Host
 		WaitForSingleObject(pr.sectionMutex, 0);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].hp.address == addr)
+			if (hooks[i].hp.insertion_address == addr)
 				ret = hooks[i].hp;
 		ReleaseMutex(pr.sectionMutex);
 		return ret;
@@ -252,7 +252,7 @@ namespace Host
 		WaitForSingleObject(pr.sectionMutex, 0);
 		const TextHook* hooks = (const TextHook*)pr.sectionMap;
 		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].hp.address == addr)
+			if (hooks[i].hp.insertion_address == addr)
 			{
 				buffer.resize(hooks[i].name_length);
 				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, buffer.data(), hooks[i].name_length, nullptr);

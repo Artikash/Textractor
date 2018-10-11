@@ -13,7 +13,7 @@ QString GenerateCode(HookParam hp, DWORD processId);
 
 static QString CodeInfoDump =
 "Enter hook code\r\n\
-/H{A|B|W|S|Q|V}[N]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module]\r\n\
+/H{A|B|W|S|Q|V}[N]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n\
 OR\r\n\
 Enter read code\r\n\
 /R{S|Q|V}[*deref_offset|0]@addr\r\n\

@@ -4,7 +4,7 @@
 // 8/23/2013 jichi
 // Branch: ITH/common.h, rev 128
 
-enum { MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 0x1000, SHIFT_JIS = 932, MAX_THREAD_COUNT };
+enum { MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 0x1000, SHIFT_JIS = 932, MAX_THREAD_COUNT = 250, MAX_MODULE_SIZE = 120 };
 
 // jichi 375/2014: Add offset of pusha/pushad
 // http://faydoc.tripod.com/cpu/pushad.htm
@@ -50,8 +50,8 @@ enum HookParamType : unsigned long
 	DATA_INDIRECT = 0x8,
 	USING_SPLIT = 0x10, // aware of split time?
 	SPLIT_INDIRECT = 0x20,
-	MODULE_OFFSET = 0x40, // do hash module, and the address is relative to module
-	//FUNCTION_OFFSET   = 0x80,    // do hash function, and the address is relative to funccion
+	MODULE_OFFSET = 0x40, // address is relative to module
+	FUNCTION_OFFSET = 0x80,    // address is relative to function
 	USING_UTF8 = 0x100,
 	NO_CONTEXT = 0x400,
 	HOOK_EMPTY = 0x800,

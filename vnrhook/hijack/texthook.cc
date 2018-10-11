@@ -40,29 +40,6 @@ namespace { // unnamed
 	  0xe9  // jmp @original
 	};
 
-	DWORD Hash(std::wstring module)
-	{
-		DWORD hash = 0;
-		for (auto i : module) hash = _rotr(hash, 7) + i;
-		return hash;
-	}
-
-	//copy original instruction
-	//jmp back
-	DWORD GetModuleBase(DWORD hash)
-	{
-		HMODULE allModules[1000];
-		DWORD size;
-		EnumProcessModules(GetCurrentProcess(), allModules, sizeof(allModules), &size);
-		wchar_t name[MAX_PATH];
-		for (int i = 0; i < size / sizeof(HMODULE); ++i)
-		{
-			GetModuleFileNameW(allModules[i], name, MAX_PATH);
-			_wcslwr(name);
-			if (Hash(wcsrchr(name, L'\\') + 1) == hash) return (DWORD)allModules[i];
-		}
-		return 0;
-	}
 
 	__declspec(naked) // jichi 10/2/2013: No prolog and epilog
 		int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to ensure normal execution even bad hook inserted.
@@ -76,6 +53,7 @@ namespace { // unnamed
 			retn    // jichi 12/13/2013: return near, see: http://stackoverflow.com/questions/1396909/ret-retn-retf-how-to-use-them
 		}
 	}
+
 #else
 	const BYTE common_hook[] = {
 	0x9c, // push rflags
@@ -160,7 +138,7 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 	BYTE pbData[PIPE_BUFFER_SIZE];
 	DWORD dwType = hp.type;
 
-	dwAddr = hp.address;
+	dwAddr = hp.insertion_address;
 
 	/** jichi 12/24/2014
 	 *  @param  addr  function address
@@ -254,19 +232,19 @@ bool TextHook::InsertHookCode()
 
 bool TextHook::UnsafeInsertHookCode()
 {
-	if (hp.module && (hp.type & MODULE_OFFSET))  // Map hook offset to real address.
-	{
-		if (DWORD base = GetModuleBase(hp.module)) hp.address += base;
+	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address.
+		if (hp.type & FUNCTION_OFFSET)
+			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
+			else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: function not present"), false;
+		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
 		else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: module not present"), false;
-		hp.type &= ~MODULE_OFFSET;
-	}
 
 	BYTE* original;
 	insert:
-	if (MH_STATUS err = MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original))
+	if (MH_STATUS err = MH_CreateHook((void*)hp.insertion_address, (void*)trampoline, (void**)&original))
 		if (err == MH_ERROR_ALREADY_CREATED)
 		{
-			RemoveHook(hp.address);
+			RemoveHook(hp.insertion_address);
 			goto insert; // FIXME: i'm too lazy to do this properly right now...
 		}
 		else
@@ -293,7 +271,7 @@ bool TextHook::UnsafeInsertHookCode()
 	//memcpy(trampoline + 46, &sendPtr, sizeof(sendPtr));
 	//memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
 
-	if (MH_EnableHook((void*)hp.address) != MH_OK) return false;
+	if (MH_EnableHook((void*)hp.insertion_address) != MH_OK) return false;
 
 	return true;
 }
@@ -305,15 +283,15 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	unsigned int changeCount = 0;
 	int dataLen = 0;
-	const void* currentAddress = (void*)hook->hp.address;
+	const void* currentAddress = (void*)hook->hp.insertion_address;
 	while (true)
 	{
-		if (!IthGetMemoryRange((void*)hook->hp.address, nullptr, nullptr))
+		if (!IthGetMemoryRange((void*)hook->hp.insertion_address, nullptr, nullptr))
 		{
 			ConsoleOutput("Textractor: can't read desired address");
 			break;
 		}
-		if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.address + hook->hp.index);
+		if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
 		if (!IthGetMemoryRange(currentAddress, nullptr, nullptr))
 		{
 			ConsoleOutput("Textractor: can't read desired address");
@@ -336,7 +314,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 		else
 			dataLen = strlen((const char*)currentAddress);
 
-		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.address, 0, 0 };
+		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 };
 		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
 		DWORD unused;
 		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
@@ -349,7 +327,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 bool TextHook::InsertReadCode()
 {
 	//RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
-	hp.readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
+	readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
 	return true;
 }
 
@@ -357,6 +335,7 @@ void TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 {
 	WaitForSingleObject(hmMutex, 0);
 	hp = h;
+	hp.insertion_address = hp.address;
 	hp.type |= set_flag;
 	if (name && name != hook_name) SetHookName(name);
 	ReleaseMutex(hmMutex);
@@ -364,14 +343,14 @@ void TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
 
 void TextHook::RemoveHookCode()
 {
-	MH_DisableHook((void*)hp.address);
-	MH_RemoveHook((void*)hp.address);
+	MH_DisableHook((void*)hp.insertion_address);
+	MH_RemoveHook((void*)hp.insertion_address);
 }
 
 void TextHook::RemoveReadCode()
 {
-	TerminateThread(hp.readerHandle, 0);
-	CloseHandle(hp.readerHandle);
+	TerminateThread(readerHandle, 0);
+	CloseHandle(readerHandle);
 }
 
 void TextHook::ClearHook()
@@ -380,7 +359,7 @@ void TextHook::ClearHook()
 	if (hook_name) ConsoleOutput(("Textractor: removing hook: " + std::string(hook_name)).c_str());
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
-	NotifyHookRemove(hp.address);
+	NotifyHookRemove(hp.insertion_address);
 	if (hook_name) delete[] hook_name;
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
 	ReleaseMutex(hmMutex);

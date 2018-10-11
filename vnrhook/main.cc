@@ -49,7 +49,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	{
 		::running = false;
 		MH_Uninitialize();
-		for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++) if (man->hp.address) man->ClearHook();
+		for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++) if (man->hp.insertion_address) man->ClearHook();
 		//if (ith_has_section)
 		UnmapViewOfFile(::hookman);
 
@@ -83,7 +83,7 @@ void NewHook(const HookParam &hp, LPCSTR lpname, DWORD flag)
 void RemoveHook(uint64_t addr)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
-		if (abs((long long)(::hookman[i].hp.address - addr)) < 9)
+		if (abs((long long)(::hookman[i].hp.insertion_address - addr)) < 9)
 		{
 			::hookman[i].ClearHook();
 			return;

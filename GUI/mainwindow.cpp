@@ -157,7 +157,7 @@ std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextTh
 
 QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 {
-	QSet<DWORD> addresses;
+	QSet<uint64_t> addresses;
 	QVector<HookParam> hooks;
 	for (int i = 0; i < ttCombo->count(); ++i)
 	{
@@ -208,13 +208,13 @@ void MainWindow::on_unhookButton_clicked()
 	QStringList hookList;
 	for (auto hook : hooks) 
 		hookList.push_back(
-			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hook.address)) +
+			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hook.insertion_address)) +
 			": " +
 			GenerateCode(hook, GetSelectedProcessId())
 		);
 	bool ok;
 	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
-	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).address);
+	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).insertion_address);
 }
 
 void MainWindow::on_saveButton_clicked()

@@ -30,6 +30,7 @@ public:
 	LPSTR hook_name;
 	int name_length;
 	BYTE trampoline[120];
+	HANDLE readerHandle;
 
 	bool InsertHook();
 	void InitHook(const HookParam &hp, LPCSTR name = 0, WORD set_flag = 0);
