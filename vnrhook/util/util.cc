@@ -3,7 +3,6 @@
 // Branch: ITH_Engine/engine.cpp, revision 133
 // See: http://ja.wikipedia.org/wiki/プロジェクト:美少女ゲーム系/ゲームエンジン
 
-#include "common.h"
 #include "util/util.h"
 #include "ithsys/ithsys.h"
 #include "main.h"
@@ -286,7 +285,7 @@ bool Util::SearchResourceString(LPCWSTR str)
 
 namespace
 {
-	DWORD SafeSearchMemory(DWORD startAddr, DWORD endAddr, const BYTE* bytes, unsigned short length)
+	uint64_t SafeSearchMemory(uint64_t startAddr, uint64_t endAddr, const BYTE* bytes, short length)
 	{
 		__try
 		{
@@ -295,7 +294,7 @@ namespace
 					if (j == length) return startAddr + i; // not sure about this algorithm...
 					else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != 0x11) break; // 0x11 = wildcard
 		} 
-		__except (1)
+		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
 			ConsoleOutput("Textractor: SearchMemory ERROR (Textractor will likely still work fine, but please let Artikash know if this happens a lot!)");
 			return 0;
@@ -304,29 +303,32 @@ namespace
 	}
 }
 
-DWORD Util::SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect)
+std::vector<uint64_t> Util::SearchMemory(const BYTE* bytes, short length, DWORD protect)
 {
-	std::vector<std::pair<DWORD, DWORD>> validMemory;
-	for (BYTE* probe = NULL; (DWORD)probe < 0x80000000;) // end of user memory space
+	std::vector<std::pair<uint64_t, uint64_t>> validMemory;
+	for (BYTE* probe = NULL; (uint64_t)probe < 0x80000000;) // end of user memory space
 	{
 		MEMORY_BASIC_INFORMATION info = {};
 		if (!VirtualQuery(probe, &info, sizeof(info)))
 		{
-			probe += 0x1000;
+			probe += 0x1000; // page size
 			continue;
 		}
 		else
 		{
-			if (info.Protect >= protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (DWORD)info.BaseAddress, info.RegionSize });
+			if (info.Protect >= protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (uint64_t)info.BaseAddress, info.RegionSize });
 			probe += info.RegionSize;
 		}
 	}
 
+	std::vector<uint64_t> ret;
 	for (auto memory : validMemory)
-		if (DWORD ret = SafeSearchMemory(memory.first, memory.first + memory.second, bytes, length))
-			return ret;
+		for (uint64_t addr = memory.first; true;)
+			if (addr = SafeSearchMemory(addr, memory.first + memory.second, bytes, length))
+				ret.push_back(addr++);
+			else break;
 
-	return 0;
+	return ret;
 }
 
 // EOF

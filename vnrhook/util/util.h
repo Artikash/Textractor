@@ -3,7 +3,7 @@
 // util.h
 // 8/23/2013 jichi
 
-#include <Windows.h>
+#include "common.h"
 
 namespace Util {
 
@@ -22,7 +22,7 @@ bool CheckFile(LPCWSTR name);
 
 bool SearchResourceString(LPCWSTR str);
 
-DWORD SearchMemory(const BYTE* bytes, unsigned short length, DWORD protect = PAGE_EXECUTE);
+std::vector<uint64_t> SearchMemory(const BYTE* bytes, short length, DWORD protect = PAGE_EXECUTE);
 
 } // namespace Util
 

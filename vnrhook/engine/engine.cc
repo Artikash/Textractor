@@ -2123,20 +2123,20 @@ bool InsertBGIHook()
 bool InsertBaldrHook()
 {
 	const BYTE ins[] = { 0x90,0xff,0x50,0x3c,0x83,0xc4,0x20,0x8b,0x45,0xec };
-	DWORD addr = Util::SearchMemory(ins, sizeof(ins));
-	if (!addr) {
-		ConsoleOutput("Textractor: BALDR failed: could not find instructions");
-		return false;
+	for (auto addr : Util::SearchMemory(ins, sizeof(ins)))
+	{
+		HookParam hp = {};
+		hp.address = addr;
+		hp.offset = 4;
+		hp.type = NO_CONTEXT | USING_STRING | USING_UNICODE; // 0x403
+		ConsoleOutput("Textractor: INSERT BALDR");
+		NewHook(hp, "BALDR");
+
+		return true;
 	}
 
-	HookParam hp = {};
-	hp.address = addr;
-	hp.offset = 4;
-	hp.type = NO_CONTEXT | USING_STRING | USING_UNICODE; // 0x403
-	ConsoleOutput("Textractor: INSERT BALDR");
-	NewHook(hp, "BALDR");
-
-	return true;
+	ConsoleOutput("Textractor: BALDR failed: could not find instructions");
+	return false;
 }
 
 /********************************************************************************************
@@ -8871,7 +8871,7 @@ void SpecialHookAB2Try(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *sp
 BOOL FindCharacteristInstruction()
 {
 	const BYTE bytes[] = { 0x0F, 0xB7, 0x44, 0x50, 0x0C, 0x89 };
-	if (DWORD addr = Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE))
+	for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE))
 	{
 		//GROWL_DWORD(addr);
 		HookParam hp = {};
@@ -9321,6 +9321,7 @@ bool InsertWillPlusWHook()
 */
 static bool InsertNewWillPlusHook()
 {
+	bool found = false;
 	const BYTE characteristicInstructions[] = 
 	{ 
 		0xc2, 0x08, 0, // ret 0008; Seems to always be ret 8 before the hookable function. not sure why, not sure if stable.
@@ -9333,10 +9334,11 @@ static bool InsertNewWillPlusHook()
 		0x81, 0xec, XX4, // sub esp,?
 		0xa1, XX4, // mov eax,[?]
 		0x33, 0xc5, // xor eax,ebp
-		0x89, 0x45, 0xec // mov [ebp-14],eax; not sure if 0x14 is stable
+		//0x89, 0x45, 0xec // mov [ebp-14],eax; not sure if 0x14 is stable
 	};
-	if (DWORD addr = Util::SearchMemory(characteristicInstructions, sizeof(characteristicInstructions)))
+	for (auto addr : Util::SearchMemory(characteristicInstructions, sizeof(characteristicInstructions)))
 	{
+		//GROWL_DWORD(addr);
 		HookParam hp = {};
 		hp.address = addr + 3;
 		hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
@@ -9344,10 +9346,10 @@ static bool InsertNewWillPlusHook()
 		hp.index = 0;
 		ConsoleOutput("Textractor: INSERT New WillPlus (ADVHD) hook");
 		NewHook(hp, "WillPlus2");
-		return true;
+		found = true;
 	}
-	ConsoleOutput("New WillPlus: failed to find instructions");
-	return false;
+	if (!found) ConsoleOutput("New WillPlus: failed to find instructions");
+	return found;
 }
 
 } // unnamed namespace
