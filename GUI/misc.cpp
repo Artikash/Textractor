@@ -63,9 +63,6 @@ namespace
 			RCode.remove(0, deref.captured(0).length());
 		}
 
-		if (RCode.at(0).unicode() != L'@') return {};
-		RCode.remove(0, 1);
-
 		// @addr
 		QRegularExpressionMatch address = QRegularExpression("^@([[:xdigit:]]+)$").match(RCode);
 		if (!address.hasMatch()) return {};
