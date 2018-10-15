@@ -2,6 +2,14 @@
 #include <sstream>
 #include <QApplication>
 
+char* GetCppExceptionInfo(EXCEPTION_POINTERS* exception)
+{
+	// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
+	// Not very reliable so use __try
+	__try { return ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8; }
+	__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
+}
+
 LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 {
 	MEMORY_BASIC_INFORMATION info = {};
@@ -15,11 +23,9 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
 		L"Error address: " << (uint64_t)exception->ExceptionRecord->ExceptionAddress << std::endl <<
 		L"Error in module: " << moduleName << std::endl;
 
-#ifndef _WIN64
-	// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
-	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363 && exception->ExceptionRecord->ExceptionInformation[2])
-		errorMsg << "Additional info: " << ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8 << std::endl;
-#endif
+	if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
+		errorMsg << "Additional info: " << GetCppExceptionInfo(exception) << std::endl;
+
 	for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 		errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
 
