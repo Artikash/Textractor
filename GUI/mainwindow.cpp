@@ -26,6 +26,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this, &MainWindow::SigAddThread, this, &MainWindow::AddThread);
 	connect(this, &MainWindow::SigRemoveThread, this, &MainWindow::RemoveThread);
 	connect(this, &MainWindow::SigThreadOutput, this, &MainWindow::ThreadOutput);
+
+	ReloadExtensions();
+
 	Host::Start(
 		[&](DWORD processId) { emit SigAddProcess(processId); },
 		[&](DWORD processId) { emit SigRemoveProcess(processId); },
@@ -33,9 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](TextThread* thread) { emit SigRemoveThread(thread); },
 		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
-
-	ReloadExtensions();
-	Host::AddConsoleOutput(L"Textractor beta v3.3.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(L"Textractor beta v3.3.1 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
 }
 
 MainWindow::~MainWindow()
