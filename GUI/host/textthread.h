@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "types.h"
+#include <unordered_set>
 
 class TextThread
 {
@@ -34,6 +35,7 @@ private:
 
 	std::wstring buffer;
 	std::wstring storage;
+	std::unordered_set<wchar_t> repeatingChars;
 	std::recursive_mutex ttMutex;
 	DWORD status;
 
