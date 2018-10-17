@@ -51,3 +51,16 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	return success;
 }
+
+void UnloadExtension(int extenNumber)
+{
+	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	if (extensions.find({ extenNumber }) == extensions.end()) return;
+	QString extenFileName = QString::number(extenNumber) + "_" + extensions.find({ extenNumber })->name + ".dll";
+	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
+	QString removedFileName = extenFileName;
+	removedFileName.remove(0, removedFileName.indexOf("_"));
+	QFile::remove(removedFileName);
+	if (!QFile::rename(extenFileName, removedFileName)) QFile::remove(extenFileName);
+	extensions.erase(extensions.find({ extenNumber }));
+}

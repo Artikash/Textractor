@@ -22,5 +22,6 @@ struct Extension
 
 std::set<Extension> LoadExtensions();
 bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
+void UnloadExtension(int extenNumber);
 
 #endif // EXTENSIONS_H

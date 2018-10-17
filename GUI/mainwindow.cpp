@@ -248,11 +248,6 @@ void MainWindow::on_addExtenButton_clicked()
 void MainWindow::on_rmvExtenButton_clicked()
 {
 	if (extenCombo->currentText().size() == 0) return;
-	QString extenFileName = extenCombo->currentText().split(":")[0] + "_" + extenCombo->currentText().split(": ")[1] + ".dll";
-	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
-	QString removedFileName = extenFileName;
-	removedFileName.remove(0, removedFileName.indexOf("_"));
-	QFile::remove(removedFileName);
-	QFile::rename(extenFileName, removedFileName);
+	UnloadExtension(extenCombo->currentText().split(":")[0].toInt());
 	ReloadExtensions();
 }
