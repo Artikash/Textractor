@@ -2,7 +2,8 @@
 #include <winhttp.h>
 #include <regex>
 #include <QInputDialog>
-#include <QSettings>
+#include <QApplication>
+#include <QThread>
 
 QStringList languages
 {
@@ -52,49 +53,56 @@ QStringList languages
 	"Polish: pl",
 	"Portuguese: pt"
 };
-QString translateFrom;
-QString translateTo;
-
-QString GetLanguage(QString prompt)
-{
-	bool ok;
-	QString ret = QInputDialog::getItem(nullptr, prompt, prompt, languages, 0, false, &ok);
-	if (!ok) ret = "English: en";
-	return ret.split(" ")[1];
-}
-
-std::wstring GetTranslationUri(std::wstring text)
-{
-	return ("/ttranslate?from=" + translateFrom + "&to=" + translateTo + "&text=").toStdWString() + text;
-}
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	static bool languagesLoaded = false;
-	if (!languagesLoaded)
-	{
-		languages.sort();
-		QSettings translateSettings("Bing Translation.ini", QSettings::IniFormat);
-		if (translateSettings.contains("Translate_From")) translateFrom = translateSettings.value("Translate_From").toString();
-		else translateSettings.setValue("Translate_From", translateFrom = GetLanguage("What language should Bing translate from?"));
-		if (translateSettings.contains("Translate_To")) translateTo = translateSettings.value("Translate_To").toString();
-		else translateSettings.setValue("Translate_To", translateTo = GetLanguage("What language should Bing translate to?"));
-		translateSettings.sync();
-		languagesLoaded = true;
-	}
-
 	static HINTERNET internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
-	std::wstring translation;
+	static std::wstring translateTo;
+	if (translateTo == L"" && QApplication::instance()->thread() == QThread::currentThread())
+	{
+		languages.sort();
+		bool ok;
+		QString language = QInputDialog::getItem(nullptr, "Select Language", "What language should Bing translate to?", languages, 0, false, &ok);
+		if (!ok) language = "English: en";
+		translateTo = language.split(" ")[1].toStdWString();
+	}
 
 	if (sentenceInfo["hook address"] == -1 || sentenceInfo["current select"] != 1) return false;
+
+	std::wstring translation;
+	std::wstring translateFrom;
 
 	if (internet)
 	{
 		if (HINTERNET connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
 		{
-			if (HINTERNET request = WinHttpOpenRequest(connection, L"POST", (GetTranslationUri(sentence)).c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
+			if (HINTERNET request = WinHttpOpenRequest(
+				connection, L"POST", 
+				(L"/tdetect?text=" + sentence).c_str(),
+				NULL, NULL, NULL,
+				WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE
+			))
+			{
+				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+				{
+					DWORD bytesRead;
+					char buffer[10000] = {};
+					WinHttpReceiveResponse(request, NULL);
+					WinHttpReadData(request, buffer, 10000, &bytesRead);
+					translateFrom = std::wstring(buffer, buffer + bytesRead);
+				}
+				WinHttpCloseHandle(request);
+			}
+
+			if (HINTERNET request = WinHttpOpenRequest(
+				connection, 
+				L"POST", 
+				(L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + sentence).c_str(), 
+				NULL, NULL, NULL, 
+				WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE
+			))
 			{
 				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 				{
