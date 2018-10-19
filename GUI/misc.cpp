@@ -201,7 +201,7 @@ namespace
 			MEMORY_BASIC_INFORMATION info;
 			if (!VirtualQueryEx(processHandle, (LPCVOID)hp.address, &info, sizeof(info))) goto fin;
 			QString moduleName = GetModuleName(processId, (HMODULE)info.AllocationBase);
-			if (moduleName.size() == 0) goto fin;
+			if (moduleName == "") goto fin;
 			hp.type |= MODULE_OFFSET;
 			hp.address -= (uint64_t)info.AllocationBase;
 			wcscpy_s<MAX_MODULE_SIZE>(hp.module, moduleName.toStdWString().c_str());

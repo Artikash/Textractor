@@ -54,13 +54,46 @@ QStringList languages
 	"Portuguese: pt"
 };
 
-bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
+// This function detects language and puts it in translateFrom if it's empty
+std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstring translateTo)
 {
 	static HINTERNET internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
+	std::wstring translation;
+	if (internet)
+	{
+		std::wstring location = translateFrom.empty()
+			? L"/tdetect?text=" + text
+			: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + text;
+		if (HINTERNET connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+		{
+			if (HINTERNET request = WinHttpOpenRequest(connection, L"POST", location.c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
+			{
+				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+				{
+					DWORD bytesRead;
+					char buffer[10000] = {};
+					WinHttpReceiveResponse(request, NULL);
+					WinHttpReadData(request, buffer, 10000, &bytesRead);
+					wchar_t wbuffer[10000] = {};
+					MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
+					if (translateFrom.empty()) translateFrom = wbuffer;
+					// Response formatted as JSON: translation starts with :" and ends with "}
+					if (std::wcmatch results; std::regex_search(wbuffer, results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
+				}
+				WinHttpCloseHandle(request);
+			}
+			WinHttpCloseHandle(connection);
+		}
+	}
+	return translation;
+}
+
+bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
+{
 	static std::wstring translateTo;
-	if (translateTo == L"" && QApplication::instance()->thread() == QThread::currentThread())
+	if (translateTo.empty() && QApplication::instance()->thread() == QThread::currentThread())
 	{
 		languages.sort();
 		bool ok;
@@ -73,59 +106,10 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	std::wstring translation;
 	std::wstring translateFrom;
-
-	if (internet)
-	{
-		if (HINTERNET connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-		{
-			if (HINTERNET request = WinHttpOpenRequest(
-				connection, L"POST", 
-				(L"/tdetect?text=" + sentence).c_str(),
-				NULL, NULL, NULL,
-				WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE
-			))
-			{
-				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-				{
-					DWORD bytesRead;
-					char buffer[10000] = {};
-					WinHttpReceiveResponse(request, NULL);
-					WinHttpReadData(request, buffer, 10000, &bytesRead);
-					translateFrom = std::wstring(buffer, buffer + bytesRead);
-				}
-				WinHttpCloseHandle(request);
-			}
-
-			if (HINTERNET request = WinHttpOpenRequest(
-				connection, 
-				L"POST", 
-				(L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + sentence).c_str(), 
-				NULL, NULL, NULL, 
-				WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE
-			))
-			{
-				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-				{
-					DWORD bytesRead;
-					char buffer[10000] = {};
-					WinHttpReceiveResponse(request, NULL);
-					WinHttpReadData(request, buffer, 10000, &bytesRead);
-					// Response formatted as JSON: starts with '{'
-					if (buffer[0] == '{')
-					{
-						wchar_t wbuffer[10000] = {};
-						MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
-						if (std::wcmatch results; std::regex_search(wbuffer, results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
-						for (auto& c : translation) if (c == L'\\') c = 0x200b;
-					}
-				}
-				WinHttpCloseHandle(request);
-			}
-			WinHttpCloseHandle(connection);
-		}
-	}
-
-	if (translation == L"") translation = L"Error while translating.";
+	Translate(sentence, translateFrom, translateTo);
+	translation = Translate(sentence, translateFrom, translateTo);
+	for (auto& c : translation) if (c == L'\\') c = 0x200b;
+	if (translation.empty()) translation = L"Error while translating.";
 	sentence += L"\r\n" + translation;
 	return true;
 }

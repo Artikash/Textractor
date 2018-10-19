@@ -205,7 +205,7 @@ void MainWindow::on_hookButton_clicked()
 void MainWindow::on_unhookButton_clicked()
 {
 	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
-	if (hooks.size() == 0) return Host::AddConsoleOutput(L"no hooks detected");
+	if (hooks.empty()) return Host::AddConsoleOutput(L"no hooks detected");
 	QStringList hookList;
 	for (auto hook : hooks) 
 		hookList.push_back(
@@ -248,7 +248,7 @@ void MainWindow::on_addExtenButton_clicked()
 
 void MainWindow::on_rmvExtenButton_clicked()
 {
-	if (extenCombo->currentText().size() == 0) return;
+	if (extenCombo->currentText() == "") return;
 	UnloadExtension(extenCombo->currentText().split(":")[0].toInt());
 	ReloadExtensions();
 }
