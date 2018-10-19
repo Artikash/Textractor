@@ -10,6 +10,7 @@ set(gui_SRCS
 	mainwindow.cpp
 	misc.cpp
     extensions.cpp
+	tests.cpp
 	host/host.cc
 	host/textthread.cc
 	${RESOURCE_FILES}
