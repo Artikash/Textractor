@@ -1,4 +1,5 @@
-build/
+Build/
 Builds/
 *.vs/
+*.vscode/
 *.pro.user
