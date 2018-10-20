@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](TextThread* thread) { emit SigRemoveThread(thread); },
 		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
-	Host::AddConsoleOutput(L"Textractor beta v3.3.1 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(L"Textractor beta v3.3.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
 }
 
 MainWindow::~MainWindow()
