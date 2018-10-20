@@ -16633,6 +16633,89 @@ bool InsertRenpyHook()
 	return true;
 }
 
+
+/**
+ *  jichi 4/21/2014: Mono (Unity3D)
+ *  See (ok123): http://sakuradite.com/topic/214
+ *  Pattern: 33DB66390175
+ *
+ *  FIXME: This approach won't work before mono is loaded into the memory.
+ *
+ *  Example: /HWN-8*0:3C@ mono.dll search 33DB66390175
+ *  - length_offset: 1
+ *  - module: 1690566707 = 0x64c40033
+ *  - off: 4294967284 = 0xfffffff4 = -0xc
+ *  - split: 60 = 0x3c
+ *  - type: 1114 = 0x45a
+ *
+ *  Function starts:
+ *  1003b818  /$ 55             push ebp
+ *  1003b819  |. 8bec           mov ebp,esp
+ *  1003b81b  |. 51             push ecx
+ *  1003b81c  |. 807d 10 00     cmp byte ptr ss:[ebp+0x10],0x0
+ *  1003b820  |. 8b50 08        mov edx,dword ptr ds:[eax+0x8]
+ *  1003b823  |. 53             push ebx
+ *  1003b824  |. 8b5d 08        mov ebx,dword ptr ss:[ebp+0x8]
+ *  1003b827  |. 56             push esi
+ *  1003b828  |. 8b75 0c        mov esi,dword ptr ss:[ebp+0xc]
+ *  1003b82b  |. 57             push edi
+ *  1003b82c  |. 8d78 0c        lea edi,dword ptr ds:[eax+0xc]
+ *  1003b82f  |. 897d 08        mov dword ptr ss:[ebp+0x8],edi
+ *  1003b832  |. 74 44          je short mono.1003b878
+ *  1003b834  |. 2bf2           sub esi,edx
+ *  1003b836  |. 03f1           add esi,ecx
+ *  1003b838  |. 894d 10        mov dword ptr ss:[ebp+0x10],ecx
+ *  1003b83b  |. 8975 08        mov dword ptr ss:[ebp+0x8],esi
+ *  1003b83e  |. 3bce           cmp ecx,esi
+ *  1003b840  |. 7f 67          jg short mono.1003b8a9
+ *  1003b842  |. 8d4c4b 0c      lea ecx,dword ptr ds:[ebx+ecx*2+0xc]
+ *  1003b846  |> 0fb707         /movzx eax,word ptr ds:[edi]
+ *  1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
+ *  1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
+ *  1003b84e  |. 75 16          |jnz short mono.1003b866
+ *  1003b850  |. 8bf1           |mov esi,ecx
+ *  1003b852  |> 43             |/inc ebx
+ *  1003b853  |. 83c6 02        ||add esi,0x2
+ *  1003b856  |. 3bda           ||cmp ebx,edx
+ *  1003b858  |. 74 19          ||je short mono.1003b873
+ *  1003b85a  |. 66:8b06        ||mov ax,word ptr ds:[esi]
+ *  1003b85d  |. 66:3b045f      ||cmp ax,word ptr ds:[edi+ebx*2]
+ *  1003b861  |.^74 ef          |\je short mono.1003b852
+ *  1003b863  |. 8b75 08        |mov esi,dword ptr ss:[ebp+0x8]
+ *  1003b866  |> ff45 10        |inc dword ptr ss:[ebp+0x10]
+ *  1003b869  |. 83c1 02        |add ecx,0x2
+ *  1003b86c  |. 3975 10        |cmp dword ptr ss:[ebp+0x10],esi
+ *  1003b86f  |.^7e d5          \jle short mono.1003b846
+ */
+bool InsertMonoHook()
+{
+
+	// Instruction pattern: 90FF503C83C4208B45EC
+	const BYTE ins[] = {
+	  0x33,0xdb,      // 1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
+	  0x66,0x39,0x01, // 1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
+	  0x75 //,0x16    // 1003b84e  |. 75 16          |jnz short mono.1003b866
+	};
+	bool found = false;
+	for (auto addr : Util::SearchMemory(ins, sizeof(ins)/*,PAGE_EXECUTE_READWRITE*/))
+	{
+		HookParam hp = {};
+		hp.address = addr;
+		//hp.module = module;
+		hp.length_offset = 1;
+		hp.offset = -0xc;
+		hp.split = 0x3c;
+		//hp.type = NO_CONTEXT|USING_SPLIT|MODULE_OFFSET|USING_UNICODE|DATA_INDIRECT; // 0x45a;
+		hp.type = NO_CONTEXT | USING_SPLIT | USING_UNICODE | DATA_INDIRECT;
+
+		ConsoleOutput("vnreng: INSERT Mono");
+		NewHook(hp, "Mono");
+		found = true;
+	}
+	if (!found) ConsoleOutput("vnreng:Mono: pattern not found");
+	return found;
+}
+
 /** jichi 12/26/2014 Mono
  *  Sample game: [141226] ハ�レ�めいと
  */
@@ -16670,7 +16753,8 @@ bool InsertMonoHooks()
   if (!h)
     return false;
 
-  InsertBaldrHook(); //Artikash 8/28/2018: insert for all mono games: maybe itll work for more than baldr sky zero?
+  InsertBaldrHook(); // Artikash 8/28/2018: insert for all mono games: maybe itll work for more than baldr sky zero?
+  InsertMonoHook(); // Artikash 10/20/2018: dunno why this was removed, works for some stuff so readd
   bool ret = false;
 
   // mono_unichar2* mono_string_to_utf16       (MonoString *s);
@@ -21611,114 +21695,5 @@ bool InsertAlchemist3PSPHook()
 
   ConsoleOutput("vnreng: Alchemist3 PSP: leave");
   return addr;
-}
-#endif // 0
-
-
-#if 0 // jichi 4/21/2014: Disabled as this does not work before mono.dll is loaded
-
-static HMODULE WaitForModuleReady(const char *name, int retryCount = 100, int sleepInterval = 100) // retry for 10 seconds
-{
-  for (int i = 0; i < retryCount; i++) {
-    if (HMODULE h = ::GetModuleHandleA(name))
-      return h;
-    ::Sleep(sleepInterval);
-  }
-  return nullptr;
-}
-
-/**
- *  jichi 4/21/2014: Mono (Unity3D)
- *  See (ok123): http://sakuradite.com/topic/214
- *  Pattern: 33DB66390175
- *
- *  FIXME: This approach won't work before mono is loaded into the memory.
- *
- *  Example: /HWN-8*0:3C@ mono.dll search 33DB66390175
- *  - length_offset: 1
- *  - module: 1690566707 = 0x64c40033
- *  - off: 4294967284 = 0xfffffff4 = -0xc
- *  - split: 60 = 0x3c
- *  - type: 1114 = 0x45a
- *
- *  Function starts:
- *  1003b818  /$ 55             push ebp
- *  1003b819  |. 8bec           mov ebp,esp
- *  1003b81b  |. 51             push ecx
- *  1003b81c  |. 807d 10 00     cmp byte ptr ss:[ebp+0x10],0x0
- *  1003b820  |. 8b50 08        mov edx,dword ptr ds:[eax+0x8]
- *  1003b823  |. 53             push ebx
- *  1003b824  |. 8b5d 08        mov ebx,dword ptr ss:[ebp+0x8]
- *  1003b827  |. 56             push esi
- *  1003b828  |. 8b75 0c        mov esi,dword ptr ss:[ebp+0xc]
- *  1003b82b  |. 57             push edi
- *  1003b82c  |. 8d78 0c        lea edi,dword ptr ds:[eax+0xc]
- *  1003b82f  |. 897d 08        mov dword ptr ss:[ebp+0x8],edi
- *  1003b832  |. 74 44          je short mono.1003b878
- *  1003b834  |. 2bf2           sub esi,edx
- *  1003b836  |. 03f1           add esi,ecx
- *  1003b838  |. 894d 10        mov dword ptr ss:[ebp+0x10],ecx
- *  1003b83b  |. 8975 08        mov dword ptr ss:[ebp+0x8],esi
- *  1003b83e  |. 3bce           cmp ecx,esi
- *  1003b840  |. 7f 67          jg short mono.1003b8a9
- *  1003b842  |. 8d4c4b 0c      lea ecx,dword ptr ds:[ebx+ecx*2+0xc]
- *  1003b846  |> 0fb707         /movzx eax,word ptr ds:[edi]
- *  1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
- *  1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
- *  1003b84e  |. 75 16          |jnz short mono.1003b866
- *  1003b850  |. 8bf1           |mov esi,ecx
- *  1003b852  |> 43             |/inc ebx
- *  1003b853  |. 83c6 02        ||add esi,0x2
- *  1003b856  |. 3bda           ||cmp ebx,edx
- *  1003b858  |. 74 19          ||je short mono.1003b873
- *  1003b85a  |. 66:8b06        ||mov ax,word ptr ds:[esi]
- *  1003b85d  |. 66:3b045f      ||cmp ax,word ptr ds:[edi+ebx*2]
- *  1003b861  |.^74 ef          |\je short mono.1003b852
- *  1003b863  |. 8b75 08        |mov esi,dword ptr ss:[ebp+0x8]
- *  1003b866  |> ff45 10        |inc dword ptr ss:[ebp+0x10]
- *  1003b869  |. 83c1 02        |add ecx,0x2
- *  1003b86c  |. 3975 10        |cmp dword ptr ss:[ebp+0x10],esi
- *  1003b86f  |.^7e d5          \jle short mono.1003b846
- */
-bool InsertMonoHook()
-{
-  enum { module = 0x64c40033 }; // hash of "mono.dll"
-  DWORD base = Util::FindModuleBase(module);
-  if (!base && WaitForModuleReady("mono.dll"))
-    base = Util::FindModuleBase(module);
-
-  if (!base) {
-    ConsoleOutput("vnreng:Mono: module not found");
-    return false;
-  }
-
-  // Instruction pattern: 90FF503C83C4208B45EC
-  const BYTE ins[] = {
-    0x33,0xdb,      // 1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
-    0x66,0x39,0x01, // 1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
-    0x75 //,0x16    // 1003b84e  |. 75 16          |jnz short mono.1003b866
-  };
-  enum { addr_offset = 0 }; // no offset
-  enum { range = 0x50000 }; // larger than relative addresses = 0x3b849
-  ULONG reladdr = SearchPattern(base, range, ins, sizeof(ins));
-  //reladdr = 0x3b849;
-  GROWL(reladdr);
-  if (!reladdr) {
-    ConsoleOutput("vnreng:Mono: pattern not found");
-    return false;
-  }
-
-  HookParam hp = {};
-  hp.address = base + reladdr + addr_offset;
-  //hp.module = module;
-  hp.length_offset = 1;
-  hp.offset = -0xc;
-  hp.split = 0x3c;
-  //hp.type = NO_CONTEXT|USING_SPLIT|MODULE_OFFSET|USING_UNICODE|DATA_INDIRECT; // 0x45a;
-  hp.type = NO_CONTEXT|USING_SPLIT|USING_UNICODE|DATA_INDIRECT;
-
-  ConsoleOutput("vnreng: INSERT Mono");
-  NewHook(hp, "Mono");
-  return true;
 }
 #endif // 0
