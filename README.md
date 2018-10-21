@@ -10,7 +10,9 @@
 
 ## Downloads
 
-Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).
+Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases). 
+
+Additional extensions for Textractor can be found [here](https://github.com/Artikash/Extensions/releases).
 
 Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVNR/releases).
 
@@ -29,8 +31,8 @@ See the extensions folder and my [Extensions project](https://github.com/Artikas
 
 ## Compiling
 
-Before compiling *Textractor*, you should get Visual Studio with CMake and ATL support, as well as Qt version 5.11<br>
-You should then be able to simply open the folder in Visual Studio, and build. Run Build/Textractor.exe.
+Before compiling *Textractor*, you should get Visual Studio with CMake support, as well as Qt version 5.11<br>
+You should then be able to simply open the folder in Visual Studio, and build. Run Textractor.exe.
 
 ## Project Architecture
 
