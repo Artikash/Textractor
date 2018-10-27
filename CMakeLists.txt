@@ -36,7 +36,7 @@ add_compile_options(
   /wd4819 # config.pri
   /MP
   /GS-
-#  $<$<CONFIG:Release>:/MT>
+  $<$<CONFIG:RelWithDebInfo>:/MT>
 #  $<$<CONFIG:Debug>:/MTd>
 )
 
