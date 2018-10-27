@@ -82,10 +82,9 @@ const wchar_t* ErrorNoAttach=L"No process attached.";
 //profile.cpp
 const wchar_t* ErrorMonitor=L"Can't monitor process.";
 //utility.cpp
-const wchar_t* InitMessage=L"Copyright (C) 2010-2012  kaosu <qiupf2000@gmail.com>\r\n\
-Copyright (C) 2015 zorkzero <zorkzero@hotmail.com>\r\n\
-Source code <https://code.google.com/p/interactive-text-hooker/>\r\n\
-General discussion <https://groups.google.com/forum/?fromgroups#!forum/interactive-text-hooker>";
+const wchar_t* InitMessage=L"Current developer: Artikash (akashmozumdar@gmail.com)\r\n\
+Former developers: kaosu, jichi, Andys, Stomp, mireado\r\n\
+Source code: https://github.com/Artikash/Textractor/tree/ithvnr-verbose";
 const wchar_t* BackgroundMsg=L"Type \":h\" or \":help\" for help.";
 const wchar_t* ErrorLinkExist=L"Link exist.";
 const wchar_t* ErrorCylicLink=L"Link failed. No cyclic link allowed.";
