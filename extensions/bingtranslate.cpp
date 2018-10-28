@@ -2,57 +2,78 @@
 #include <winhttp.h>
 #include <regex>
 #include <QInputDialog>
-#include <QApplication>
-#include <QThread>
+#include <QTimer>
 
 QStringList languages
 {
 	"English: en",
-	"Japanese: ja",
-	"Hebrew: he",
 	"Arabic: ar",
-	"Hindi: hi",
-	"Romanian: ro",
 	"Bosnian: bs-Latn",
-	"Russian: ru",
 	"Bulgarian: bg",
-	"Hungarian: hu",
-	"Serbian: sr-Cyrl",
 	"Catalan: ca",
-	"Indonesian: id",
 	"Chinese(Simplified): zh-CHS",
-	"Italian: it",
-	"Slovak: sk",
 	"Chinese(Traditional): zh-CHT",
-	"Slovenian: sl",
 	"Croatian: hr",
-	"Klingon: tlh", // Wait what? Apparently Bing supports this???????
-	"Spanish: es",
 	"Czech: cs",
-	"Swedish: sv",
 	"Danish: da",
-	"Korean: ko",
-	"Thai: th",
 	"Dutch: nl",
-	"Latvian: lv",
-	"Turkish: tr",
-	"Lithuanian: lt",
-	"Ukranian: uk",
 	"Estonian: et",
-	"Malay: ms",
-	"Urdu: ur",
 	"Finnish: fi",
-	"Maltese: mt",
-	"Vietnamese: vi",
 	"French: fr",
-	"Norwegian: no",
-	"Welsh: cy",
 	"German: de",
-	"Persian: fa",
 	"Greek: el",
+	"Hebrew: he",
+	"Hindi: hi",
+	"Hungarian: hu",
+	"Indonesian: id",
+	"Italian: it",
+	"Japanese: ja",
+	"Klingon: tlh",
+	"Korean: ko",
+	"Latvian: lv",
+	"Lithuanian: lt",
+	"Malay: ms",
+	"Maltese: mt",
+	"Norwegian: no",
+	"Persian: fa",
 	"Polish: pl",
-	"Portuguese: pt"
+	"Portuguese: pt",
+	"Romanian: ro",
+	"Russian: ru",
+	"Serbian: sr-Cyrl",
+	"Slovak: sk",
+	"Slovenian: sl",
+	"Spanish: es",
+	"Swedish: sv",
+	"Thai: th",
+	"Turkish: tr",
+	"Ukranian: uk",
+	"Urdu: ur",
+	"Vietnamese: vi",
+	"Welsh: cy"
 };
+
+std::wstring translateTo;
+
+BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	{
+		QTimer::singleShot(0, []
+		{
+			translateTo = QInputDialog::getItem(nullptr, "Select Language", "What language should Bing translate to?", languages, 0, false).split(" ")[1].toStdWString();
+		});
+	}
+	break;
+	case DLL_PROCESS_DETACH:
+	{
+	}
+	break;
+	}
+	return TRUE;
+}
 
 // This function detects language and puts it in translateFrom if it's empty
 std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstring translateTo)
@@ -92,16 +113,6 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	static std::wstring translateTo;
-	if (translateTo.empty() && QApplication::instance()->thread() == QThread::currentThread())
-	{
-		languages.sort();
-		bool ok;
-		QString language = QInputDialog::getItem(nullptr, "Select Language", "What language should Bing translate to?", languages, 0, false, &ok);
-		if (!ok) language = "English: en";
-		translateTo = language.split(" ")[1].toStdWString();
-	}
-
 	if (sentenceInfo["hook address"] == -1 || sentenceInfo["current select"] != 1) return false;
 
 	std::wstring translation;
