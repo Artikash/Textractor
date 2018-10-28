@@ -2,11 +2,11 @@
 #define MAINWINDOW_H
 
 #include "qtcommon.h"
+#include "host/host.h"
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QComboBox>
 #include <QSettings>
-#include "host/host.h"
 
 namespace Ui
 {
@@ -41,6 +41,7 @@ private slots:
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
 	void on_addExtenButton_clicked();
+	void on_moveExtenButton_clicked();
 	void on_rmvExtenButton_clicked();
 
 private:

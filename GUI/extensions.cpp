@@ -1,34 +1,46 @@
 #include "extensions.h"
-#include <shared_mutex>
-#include <QDir>
 
-std::optional<Extension> LoadExtension(QString file)
+static std::optional<Extension> LoadExtension(QString extenName)
 {
-	// Extension file format: {NUMBER}_{NAME}.dll and exports "OnNewSentence"
-	QRegularExpressionMatch parsedFile = QRegularExpression("^(\\d+)_(.+).dll$").match(file);
-	if (!parsedFile.hasMatch()) return {};
-	HMODULE module = GetModuleHandleW(file.toStdWString().c_str());
-	if (!module) module = LoadLibraryW(file.toStdWString().c_str());
+	// Extension is dll and exports "OnNewSentence"
+	HMODULE module = GetModuleHandleW(extenName.toStdWString().c_str());
+	if (!module) module = LoadLibraryW(extenName.toStdWString().c_str());
 	if (!module) return {};
 	FARPROC callback = GetProcAddress(module, "OnNewSentence");
 	if (!callback) return {};
-	return Extension{ parsedFile.captured(1).toInt(), parsedFile.captured(2), (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback };
+	return Extension{ extenName, (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback };
 }
 
-std::shared_mutex extenMutex;
-std::set<Extension> extensions;
-
-std::set<Extension> LoadExtensions()
+void Extension::Load(QString extenName)
 {
-	std::set<Extension> newExtensions;
-	QStringList files = QDir().entryList();
-	for (auto file : files)
-		if (auto extension = LoadExtension(file)) newExtensions.insert(extension.value());
 	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
-	return extensions = newExtensions;
+	if (auto extension = LoadExtension(extenName)) extensions.push_back(extension.value());
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
+void Extension::SendToBack(QString extenName)
+{
+	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	Extension* extenIter = std::find_if(extensions.begin(), extensions.end(), [&](Extension extension) { return extension.name == extenName; });
+	Extension extension = *extenIter;
+	extensions.erase(extenIter);
+	extensions.push_back(extension);
+}
+
+void Extension::Unload(QString extenName)
+{
+	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	extensions.erase(std::find_if(extensions.begin(), extensions.end(), [&](Extension extension) { return extension.name == extenName; }));
+	FreeLibrary(GetModuleHandleW(extenName.toStdWString().c_str()));
+}
+
+QVector<QString> Extension::GetNames()
+{
+	QVector<QString> ret;
+	for (auto extension : extensions) ret.push_back(extension.name);
+	return ret;
+}
+
+bool Extension::DispatchSentence(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
 {
 	bool success = true;
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
@@ -50,17 +62,4 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	return success;
-}
-
-void UnloadExtension(int extenNumber)
-{
-	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
-	if (extensions.find({ extenNumber }) == extensions.end()) return;
-	QString extenFileName = QString::number(extenNumber) + "_" + extensions.find({ extenNumber })->name + ".dll";
-	FreeLibrary(GetModuleHandleW(extenFileName.toStdWString().c_str()));
-	QString removedFileName = extenFileName;
-	removedFileName.remove(0, removedFileName.indexOf("_"));
-	QFile::remove(removedFileName);
-	if (!QFile::rename(extenFileName, removedFileName)) QFile::remove(extenFileName);
-	extensions.erase(extensions.find({ extenNumber }));
 }

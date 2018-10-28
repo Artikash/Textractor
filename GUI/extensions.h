@@ -2,7 +2,7 @@
 #define EXTENSIONS_H
 
 #include "qtcommon.h"
-#include <set>
+#include <shared_mutex>
 
 struct InfoForExtension
 {
@@ -12,16 +12,21 @@ struct InfoForExtension
 	~InfoForExtension() { if (next) delete next; };
 };
 
-struct Extension
+class Extension
 {
-	int number;
-	QString name;
-	wchar_t*(*callback)(const wchar_t*, const InfoForExtension*);
-	bool operator<(const Extension& other) const { return number < other.number; }
-};
+public:
+	static bool DispatchSentence(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
+	static void Load(QString extenName);
+	static void SendToBack(QString extenName);
+	static void Unload(QString extenName);
+	static QVector<QString> GetNames();
 
-std::set<Extension> LoadExtensions();
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo);
-void UnloadExtension(int extenNumber);
+	QString name;
+	wchar_t* (*callback)(const wchar_t*, const InfoForExtension*);
+
+private:
+	inline static std::shared_mutex extenMutex;
+	inline static QVector<Extension> extensions;
+};
 
 #endif // EXTENSIONS_H

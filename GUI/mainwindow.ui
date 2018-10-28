@@ -217,6 +217,13 @@ QPushButton, QComboBox
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="moveExtenButton">
+            <property name="text">
+             <string>Move extension</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="rmvExtenButton">
             <property name="text">
              <string>Remove extension</string>

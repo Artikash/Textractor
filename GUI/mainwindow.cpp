@@ -11,23 +11,35 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
-	// TODO: add GUI for changing these
-	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
-	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	extenCombo = findChild<QComboBox*>("extenCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
 
+	QFile extenSaveFile("Extensions.txt");
+	if (extenSaveFile.exists())
+	{
+		extenSaveFile.open(QIODevice::ReadOnly);
+		for (auto extenName : QString(extenSaveFile.readAll()).split(">")) Extension::Load(extenName);
+	}
+	else
+	{
+		for (auto file : QDir().entryList())
+			if (file.endsWith(".dll") && file != "vnrhook.dll") Extension::Load(file.left(file.lastIndexOf(".dll")));
+	}
+	ReloadExtensions();
+
+	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
+	// TODO: add GUI for changing these
+	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
+	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
+
 	connect(this, &MainWindow::SigAddProcess, this, &MainWindow::AddProcess);
 	connect(this, &MainWindow::SigRemoveProcess, this, &MainWindow::RemoveProcess);
 	connect(this, &MainWindow::SigAddThread, this, &MainWindow::AddThread);
 	connect(this, &MainWindow::SigRemoveThread, this, &MainWindow::RemoveThread);
 	connect(this, &MainWindow::SigThreadOutput, this, &MainWindow::ThreadOutput);
-
-	ReloadExtensions();
 
 	Host::Start(
 		[&](DWORD processId) { emit SigAddProcess(processId); },
@@ -53,7 +65,7 @@ void MainWindow::AddProcess(unsigned processId)
 {
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
 	QFile file("SavedHooks.txt");
-	if (!file.open(QIODevice::ReadOnly)) return;
+	file.open(QIODevice::ReadOnly);
 	QString processName = GetFullModuleName(processId);
 	QStringList allProcesses = QString(file.readAll()).split("\r", QString::SkipEmptyParts);
 	for (auto hooks = allProcesses.rbegin(); hooks != allProcesses.rend(); ++hooks)
@@ -105,7 +117,7 @@ void MainWindow::ThreadOutput(TextThread* thread, QString output)
 
 bool MainWindow::ProcessThreadOutput(TextThread* thread, std::wstring& output)
 {
-	if (DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
+	if (Extension::DispatchSentence(output, GetInfoForExtensions(thread)))
 	{
 		output += L"\r\n";
 		emit SigThreadOutput(thread, QString::fromStdWString(output));
@@ -140,7 +152,13 @@ DWORD MainWindow::GetSelectedProcessId()
 void MainWindow::ReloadExtensions()
 {
 	extenCombo->clear();
-	for (auto extension : LoadExtensions()) extenCombo->addItem(QString::number(extension.number) + ": " + extension.name);
+	QFile extenSaveFile("Extensions.txt");
+	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	for (auto extenName : Extension::GetNames())
+	{
+		extenSaveFile.write((extenName + ">").toUtf8());
+		extenCombo->addItem(extenName);
+	}
 }
 
 std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextThread* thread)
@@ -226,7 +244,7 @@ void MainWindow::on_saveButton_clicked()
 		if (!(hook.type & HOOK_ENGINE))
 			hookList += " , " + GenerateCode(hook, GetSelectedProcessId());
 	QFile file("SavedHooks.txt");
-	if (!file.open(QIODevice::Append | QIODevice::Text)) return;
+	file.open(QIODevice::Append);
 	file.write((hookList + "\r\n").toUtf8());
 }
 
@@ -238,17 +256,25 @@ void MainWindow::on_ttCombo_activated(int index)
 
 void MainWindow::on_addExtenButton_clicked()
 {
-	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension dll", "C:\\", "Extensions (*.dll)");
+	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension", "C:\\", "Extensions (*.dll)");
 	if (!extenFileName.size()) return;
-	QString extenName = extenFileName.split("/")[extenFileName.split("/").count() - 1];
-	QString copyTo = QString::number(extenCombo->itemText(extenCombo->count() - 1).split(":")[0].toInt() + 1) + "_" + extenName;
-	QFile::copy(extenFileName, copyTo);
+	QString extenName = extenFileName.mid(extenFileName.lastIndexOf("/") + 1);
+	QFile::copy(extenFileName, extenName);
+	Extension::Load(extenName.left(extenName.lastIndexOf(".dll")));
 	ReloadExtensions();
+}
+
+void MainWindow::on_moveExtenButton_clicked()
+{
+	if (extenCombo->currentText() == "") return;
+	Extension::SendToBack(extenCombo->currentText());
+	ReloadExtensions();
+	Host::AddConsoleOutput(L"extension sent to back");
 }
 
 void MainWindow::on_rmvExtenButton_clicked()
 {
 	if (extenCombo->currentText() == "") return;
-	UnloadExtension(extenCombo->currentText().split(":")[0].toInt());
+	Extension::Unload(extenCombo->currentText());
 	ReloadExtensions();
 }
