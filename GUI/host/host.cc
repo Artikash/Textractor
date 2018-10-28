@@ -209,7 +209,7 @@ namespace Host
 
 	void DetachProcess(DWORD processId)
 	{
-		int command = HOST_COMMAND_DETACH;
+		auto command = HOST_COMMAND_DETACH;
 		WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
@@ -258,7 +258,7 @@ namespace Host
 				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, buffer.data(), hooks[i].name_length, nullptr);
 			}
 		ReleaseMutex(pr.sectionMutex);
-		return StringToWideString(buffer.c_str(), CP_UTF8);
+		return StringToWideString(buffer, CP_UTF8);
 	}
 
 	TextThread* GetThread(ThreadParam tp)

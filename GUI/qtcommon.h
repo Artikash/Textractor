@@ -2,6 +2,5 @@
 
 #include "common.h"
 #include <QString>
-#include <QStringList>
 #include <QVector>
 #include <QRegularExpression>
