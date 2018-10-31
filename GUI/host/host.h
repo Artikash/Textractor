@@ -8,7 +8,7 @@
 #include "textthread.h"
 
 typedef std::function<void(DWORD)> ProcessEventCallback;
-typedef std::function<void(TextThread*)> ThreadEventCallback;
+typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
 
 namespace Host
 {
@@ -22,10 +22,11 @@ namespace Host
 	void RemoveHook(DWORD pid, uint64_t addr);
 
 	HookParam GetHookParam(DWORD pid, uint64_t addr);
-	HookParam GetHookParam(ThreadParam tp);
+	inline HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
 	std::wstring GetHookName(DWORD pid, uint64_t addr);
+	inline std::wstring GetHookName(ThreadParam tp) { return GetHookName(tp.pid, tp.hook); }
 
-	TextThread* GetThread(ThreadParam tp);
+	std::shared_ptr<TextThread> GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
 }
 

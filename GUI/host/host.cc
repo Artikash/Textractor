@@ -21,7 +21,7 @@ namespace
 	ThreadEventCallback OnCreate, OnRemove;
 	ProcessEventCallback OnAttach, OnDetach;
 
-	std::unordered_map<ThreadParam, TextThread*> textThreadsByParams;
+	std::unordered_map<ThreadParam, std::shared_ptr<TextThread>> textThreadsByParams;
 	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
 
 	std::recursive_mutex hostMutex;
@@ -35,7 +35,7 @@ namespace
 		if (textThreadsByParams[tp] == nullptr)
 		{
 			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"too many text threads: can't create more");
-			OnCreate(textThreadsByParams[tp] = new TextThread(tp));
+			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp));
 		}
 		textThreadsByParams[tp]->AddText(text, len);
 	}
@@ -43,15 +43,12 @@ namespace
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
 		LOCK(hostMutex);
-		std::vector<ThreadParam> removedThreads;
-		for (auto[tp, thread] : textThreadsByParams)
-			if (removeIf(tp))
+		for (auto it = textThreadsByParams.begin(); it != textThreadsByParams.end();)
+			if (auto curr = it++; removeIf(curr->first))
 			{
-				OnRemove(thread);
-				//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
-				removedThreads.push_back(tp);
+				OnRemove(curr->second);
+				textThreadsByParams.erase(curr->first);
 			}
-		for (auto thread : removedThreads) textThreadsByParams.erase(thread);
 	}
 
 	void RegisterProcess(DWORD pid, HANDLE hostPipe)
@@ -143,7 +140,7 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
-		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE));
+		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE));
 		StartPipe();
 	}
 
@@ -152,9 +149,8 @@ namespace Host
 		// Artikash 7/25/2018: This is only called when Textractor is closed, at which point Windows should free everything itself...right?
 #ifdef _DEBUG // Check memory leaks
 		LOCK(hostMutex);
-		OnRemove = [](TextThread* textThread) { delete textThread; };
 		for (auto[pid, pr] : processRecordsByIds) UnregisterProcess(pid);
-		delete textThreadsByParams[CONSOLE];
+		textThreadsByParams.clear();
 #endif
 	}
 
@@ -239,8 +235,6 @@ namespace Host
 		return ret;
 	}
 
-	HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
-
 	std::wstring GetHookName(DWORD pid, uint64_t addr)
 	{
 		if (pid == 0) return L"Console";
@@ -260,7 +254,7 @@ namespace Host
 		return StringToWideString(buffer, CP_UTF8);
 	}
 
-	TextThread* GetThread(ThreadParam tp)
+	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
 	{
 		LOCK(hostMutex);
 		return textThreadsByParams[tp];

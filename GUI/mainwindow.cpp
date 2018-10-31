@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
 	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
 
+	qRegisterMetaType<std::shared_ptr<TextThread>>();
+
 	connect(this, &MainWindow::SigAddProcess, this, &MainWindow::AddProcess);
 	connect(this, &MainWindow::SigRemoveProcess, this, &MainWindow::RemoveProcess);
 	connect(this, &MainWindow::SigAddThread, this, &MainWindow::AddThread);
@@ -44,8 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	Host::Start(
 		[&](DWORD processId) { emit SigAddProcess(processId); },
 		[&](DWORD processId) { emit SigRemoveProcess(processId); },
-		[&](TextThread* thread) { emit SigAddThread(thread); },
-		[&](TextThread* thread) { emit SigRemoveThread(thread); },
+		[&](std::shared_ptr<TextThread> thread) { emit SigAddThread(thread); },
+		[&](std::shared_ptr<TextThread> thread) { emit SigRemoveThread(thread); },
 		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
 	Host::AddConsoleOutput(L"Textractor beta v3.3.2 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
@@ -82,32 +84,31 @@ void MainWindow::RemoveProcess(unsigned processId)
 	processCombo->removeItem(processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
 }
 
-void MainWindow::AddThread(TextThread* thread)
+void MainWindow::AddThread(std::shared_ptr<TextThread> thread)
 {
 	ttCombo->addItem(
-		TextThreadString(thread) +
+		TextThreadString(thread.get()) +
 		QString::fromStdWString(thread->name) +
 		" (" +
-		GenerateCode(Host::GetHookParam(thread->tp), thread->tp.pid) +
+		GenerateCode(thread->hp, thread->tp.pid) +
 		")"
 	);
 }
 
-void MainWindow::RemoveThread(TextThread* thread)
+void MainWindow::RemoveThread(std::shared_ptr<TextThread> thread)
 {
-	int threadIndex = ttCombo->findText(TextThreadString(thread), Qt::MatchStartsWith);
+	int threadIndex = ttCombo->findText(TextThreadString(thread.get()), Qt::MatchStartsWith);
 	if (threadIndex == ttCombo->currentIndex())
 	{
 		ttCombo->setCurrentIndex(0);
 		on_ttCombo_activated(0);
 	}
 	ttCombo->removeItem(threadIndex);
-	delete thread;
 }
 
-void MainWindow::ThreadOutput(TextThread* thread, QString output)
+void MainWindow::ThreadOutput(QString threadString, QString output)
 {
-	if (ttCombo->currentText().startsWith(TextThreadString(thread)))
+	if (ttCombo->currentText().startsWith(threadString))
 	{
 		textOutput->moveCursor(QTextCursor::End);
 		textOutput->insertPlainText(output);
@@ -120,7 +121,7 @@ bool MainWindow::ProcessThreadOutput(TextThread* thread, std::wstring& output)
 	if (Extension::DispatchSentence(output, GetInfoForExtensions(thread)))
 	{
 		output += L"\r\n";
-		emit SigThreadOutput(thread, QString::fromStdWString(output));
+		emit SigThreadOutput(TextThreadString(thread), QString::fromStdWString(output));
 		return true;
 	}
 	return false;

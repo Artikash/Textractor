@@ -13,6 +13,8 @@ namespace Ui
 	class MainWindow;
 }
 
+Q_DECLARE_METATYPE(std::shared_ptr<TextThread>);
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -24,16 +26,16 @@ public:
 signals:
 	void SigAddProcess(unsigned processId);
 	void SigRemoveProcess(unsigned processId);
-	void SigAddThread(TextThread* thread);
-	void SigRemoveThread(TextThread* thread);
-	void SigThreadOutput(TextThread* thread, QString output);
+	void SigAddThread(std::shared_ptr<TextThread>);
+	void SigRemoveThread(std::shared_ptr<TextThread>);
+	void SigThreadOutput(QString threadString, QString output);
 
 private slots:
 	void AddProcess(unsigned processId);
 	void RemoveProcess(unsigned processId);
-	void AddThread(TextThread* thread);
-	void RemoveThread(TextThread* thread);
-	void ThreadOutput(TextThread* thread, QString output);
+	void AddThread(std::shared_ptr<TextThread> thread);
+	void RemoveThread(std::shared_ptr<TextThread> thread);
+	void ThreadOutput(QString threadString, QString output); // this function doesn't take TextThread* because it might be destroyed on pipe thread
 	void on_attachButton_clicked();
 	void on_detachButton_clicked();
 	void on_ttCombo_activated(int index);
