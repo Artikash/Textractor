@@ -6,8 +6,8 @@ bool RemoveRepeatedChars(std::wstring& sentence)
 {
 	int repeatNumber = 0;
 	wchar_t prevChar = sentence[0];
-	for (auto i : sentence)
-		if (i == prevChar) repeatNumber++;
+	for (auto c : sentence)
+		if (c == prevChar) repeatNumber++;
 		else break;
 	if (repeatNumber == 1) return false;
 

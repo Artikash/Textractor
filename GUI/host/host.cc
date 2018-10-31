@@ -44,12 +44,12 @@ namespace
 	{
 		LOCK(hostMutex);
 		std::vector<ThreadParam> removedThreads;
-		for (auto i : textThreadsByParams)
-			if (removeIf(i.first))
+		for (auto[tp, thread] : textThreadsByParams)
+			if (removeIf(tp))
 			{
-				OnRemove(i.second);
+				OnRemove(thread);
 				//delete i.second; // Artikash 7/24/2018: FIXME: Qt GUI updates on another thread, so I can't delete this yet.
-				removedThreads.push_back(i.first);
+				removedThreads.push_back(tp);
 			}
 		for (auto thread : removedThreads) textThreadsByParams.erase(thread);
 	}
@@ -153,7 +153,7 @@ namespace Host
 #ifdef _DEBUG // Check memory leaks
 		LOCK(hostMutex);
 		OnRemove = [](TextThread* textThread) { delete textThread; };
-		for (auto i : processRecordsByIds) UnregisterProcess(i.first);
+		for (auto[pid, pr] : processRecordsByIds) UnregisterProcess(pid);
 		delete textThreadsByParams[CONSOLE];
 #endif
 	}
