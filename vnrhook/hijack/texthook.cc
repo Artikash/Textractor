@@ -232,12 +232,15 @@ bool TextHook::InsertHookCode()
 
 bool TextHook::UnsafeInsertHookCode()
 {
-	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address.
+	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
 		if (hp.type & FUNCTION_OFFSET)
 			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
 			else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: function not present"), false;
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
 		else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: module not present"), false;
+
+	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
+	if (hp.codepage == 0) hp.codepage = SHIFT_JIS; // Use Shift-JIS unless custom encoding was specified
 
 	BYTE* original;
 	insert:

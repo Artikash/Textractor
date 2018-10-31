@@ -20,6 +20,7 @@ struct HookParam
 	wchar_t module[MAX_MODULE_SIZE];
 	char function[MAX_MODULE_SIZE];
 	DWORD type; // flags
+	UINT codepage; // text encoding
 	WORD length_offset; // index of the string length
 	DWORD user_value; // 7/20/2014: jichi additional parameters for PSP games
 

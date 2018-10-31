@@ -31,14 +31,13 @@ namespace
 
 	void DispatchText(ThreadParam tp, const BYTE* text, int len)
 	{
-		if (!text || len <= 0) return;
 		LOCK(hostMutex);
-		TextThread *it;
-		if ((it = textThreadsByParams[tp]) == nullptr)
-			if (textThreadsByParams.size() < MAX_THREAD_COUNT)
-				OnCreate(it = textThreadsByParams[tp] = new TextThread(tp, Host::GetHookParam(tp).type));
-			else return Host::AddConsoleOutput(L"too many text threads: stopping");
-		it->AddText(text, len);
+		if (textThreadsByParams[tp] == nullptr)
+		{
+			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"too many text threads: can't create more");
+			OnCreate(textThreadsByParams[tp] = new TextThread(tp));
+		}
+		textThreadsByParams[tp]->AddText(text, len);
 	}
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
@@ -144,7 +143,7 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
-		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE, USING_UNICODE));
+		OnCreate(textThreadsByParams[CONSOLE] = new TextThread(CONSOLE));
 		StartPipe();
 	}
 

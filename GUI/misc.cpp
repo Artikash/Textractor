@@ -53,6 +53,14 @@ namespace
 		}
 		RCode.remove(0, 1);
 
+		// [codepage#]
+		QRegularExpressionMatch codepage = QRegularExpression("^([0-9]+)#").match(RCode);
+		if (codepage.hasMatch())
+		{
+			hp.codepage = codepage.captured(1).toInt();
+			RCode.remove(0, codepage.captured(0).length());
+		}
+
 		// [*deref_offset|0]
 		if (RCode.at(0).unicode() == L'0') RCode.remove(0, 1); // Legacy
 		QRegularExpressionMatch deref = QRegularExpression("^\\*(\\-?[[:xdigit:]]+)").match(RCode);
@@ -107,6 +115,14 @@ namespace
 		{
 			hp.type |= NO_CONTEXT;
 			HCode.remove(0, 1);
+		}
+
+		// [codepage#]
+		QRegularExpressionMatch codepage = QRegularExpression("^([0-9]+)#").match(HCode);
+		if (codepage.hasMatch())
+		{
+			hp.codepage = codepage.captured(1).toInt();
+			HCode.remove(0, codepage.captured(0).length());
 		}
 
 		// data_offset
@@ -164,12 +180,31 @@ namespace
 		return hp;
 	}
 
+	QString GenerateRCode(HookParam hp)
+	{
+		QString RCode = "/R";
+		QTextStream codeBuilder(&RCode);
+
+		if (hp.type & USING_UNICODE) codeBuilder << "Q";
+		else if (hp.type & USING_UTF8) codeBuilder << "V";
+		else codeBuilder << "S";
+
+		if (hp.codepage != SHIFT_JIS && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+
+		codeBuilder.setIntegerBase(16);
+		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
+
+		if (hp.type & DATA_INDIRECT) codeBuilder << "*" << hp.index;
+
+		codeBuilder << "@" << hp.address;
+
+		return RCode;
+	}
+
 	QString GenerateHCode(HookParam hp, DWORD processId)
 	{
 		QString HCode = "/H";
 		QTextStream codeBuilder(&HCode);
-		codeBuilder.setIntegerBase(16);
-		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
 
 		if (hp.type & USING_UNICODE)
 		{
@@ -184,6 +219,11 @@ namespace
 			else codeBuilder << "B";
 		}
 		if (hp.type & NO_CONTEXT) codeBuilder << "N";
+
+		if (hp.codepage != SHIFT_JIS && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+
+		codeBuilder.setIntegerBase(16);
+		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
 
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
@@ -213,24 +253,6 @@ namespace
 		if (hp.type & FUNCTION_OFFSET) codeBuilder << ":" << hp.function;
 
 		return HCode;
-	}
-
-	QString GenerateRCode(HookParam hp)
-	{
-		QString RCode = "/R";
-		QTextStream codeBuilder(&RCode);
-		codeBuilder.setIntegerBase(16);
-		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
-
-		if (hp.type & USING_UNICODE) codeBuilder << "Q";
-		else if (hp.type & USING_UTF8) codeBuilder << "V";
-		else codeBuilder << "S";
-
-		if (hp.type & DATA_INDIRECT) codeBuilder << "*" << hp.index;
-
-		codeBuilder << "@" << hp.address;
-
-		return RCode;
 	}
 }
 

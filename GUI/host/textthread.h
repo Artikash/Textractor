@@ -19,7 +19,7 @@ public:
 	inline static int maxBufferSize = 200;
 	inline static int threadCounter = 0;
 
-	TextThread(ThreadParam tp, DWORD status);
+	TextThread(ThreadParam tp);
 	~TextThread();
 
 	std::wstring GetStorage();
@@ -29,6 +29,7 @@ public:
 	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
+	const HookParam hp;
 
 private:
 	void Flush();
@@ -36,8 +37,7 @@ private:
 	std::wstring buffer;
 	std::wstring storage;
 	std::unordered_set<wchar_t> repeatingChars;
-	std::recursive_mutex ttMutex;
-	DWORD status;
+	std::recursive_mutex threadMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
