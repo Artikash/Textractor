@@ -15,15 +15,15 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output);
 	void Close();
 
-	bool InjectProcess(DWORD pid, DWORD timeout = 5000);
-	void DetachProcess(DWORD pid);
+	bool InjectProcess(DWORD processId, DWORD timeout = 5000);
+	void DetachProcess(DWORD processId);
 
-	void InsertHook(DWORD pid, HookParam hp, std::string name = "");
-	void RemoveHook(DWORD pid, uint64_t addr);
+	void InsertHook(DWORD processId, HookParam hp, std::string name = "");
+	void RemoveHook(DWORD processId, uint64_t addr);
 
-	HookParam GetHookParam(DWORD pid, uint64_t addr);
+	HookParam GetHookParam(DWORD processId, uint64_t addr);
 	inline HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
-	std::wstring GetHookName(DWORD pid, uint64_t addr);
+	std::wstring GetHookName(DWORD processId, uint64_t addr);
 	inline std::wstring GetHookName(ThreadParam tp) { return GetHookName(tp.pid, tp.hook); }
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp);

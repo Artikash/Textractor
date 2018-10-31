@@ -21,7 +21,7 @@ HANDLE hSection;
 bool running;
 int currentHook = 0, userhookCount = 0;
 DWORD trigger = 0;
-HANDLE hmMutex;
+std::unique_ptr<WinMutex> sectionMutex;
 
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 {
@@ -29,7 +29,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		::hmMutex = CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId())).c_str());
+		sectionMutex = std::make_unique<WinMutex>(ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId()));
 		if (GetLastError() == ERROR_ALREADY_EXISTS) return FALSE;
 		DisableThreadLibraryCalls(hModule);
 
@@ -55,7 +55,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 
 		CloseHandle(::hookPipe);
 		CloseHandle(hSection);
-		CloseHandle(hmMutex);
 		//} ITH_EXCEPT {}
 	}
 	break;

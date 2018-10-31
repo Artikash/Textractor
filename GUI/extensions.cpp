@@ -1,4 +1,5 @@
 #include "extensions.h"
+#include "types.h"
 
 static std::optional<Extension> LoadExtension(QString extenName)
 {
@@ -13,13 +14,13 @@ static std::optional<Extension> LoadExtension(QString extenName)
 
 void Extension::Load(QString extenName)
 {
-	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	LOCK(extenMutex);
 	if (auto extension = LoadExtension(extenName)) extensions.push_back(extension.value());
 }
 
 void Extension::SendToBack(QString extenName)
 {
-	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	LOCK(extenMutex);
 	Extension* extenIter = std::find_if(extensions.begin(), extensions.end(), [&](Extension extension) { return extension.name == extenName; });
 	Extension extension = *extenIter;
 	extensions.erase(extenIter);
@@ -28,13 +29,14 @@ void Extension::SendToBack(QString extenName)
 
 void Extension::Unload(QString extenName)
 {
-	std::unique_lock<std::shared_mutex> extenLock(extenMutex);
+	LOCK(extenMutex);
 	extensions.erase(std::find_if(extensions.begin(), extensions.end(), [&](Extension extension) { return extension.name == extenName; }));
 	FreeLibrary(GetModuleHandleW(extenName.toStdWString().c_str()));
 }
 
 QVector<QString> Extension::GetNames()
 {
+	std::shared_lock sharedLock(extenMutex);
 	QVector<QString> ret;
 	for (auto extension : extensions) ret.push_back(extension.name);
 	return ret;
@@ -50,7 +52,7 @@ bool Extension::DispatchSentence(std::wstring& sentence, std::unordered_map<std:
 	InfoForExtension* miscInfoTraverser = &miscInfoLinkedList;
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
 
-	std::shared_lock<std::shared_mutex> extenLock(extenMutex);
+	std::shared_lock sharedLock(extenMutex);
 	for (auto extension : extensions)
 	{
 		wchar_t* nextBuffer = extension.callback(sentenceBuffer, &miscInfoLinkedList);

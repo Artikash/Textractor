@@ -9,20 +9,45 @@
 
 namespace
 {
-	struct ProcessRecord
+	class ProcessRecord
 	{
-		HANDLE processHandle;
-		HANDLE sectionMutex;
+	public:
+		ProcessRecord(DWORD processId, HANDLE hostPipe) :
+			hostPipe(hostPipe),
+			section(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
+			sectionMap(MapViewOfFile(section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
+			sectionMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
+		{}
+
+		~ProcessRecord()
+		{
+			UnmapViewOfFile(sectionMap);
+			CloseHandle(section);
+		}
+
+		TextHook GetHook(uint64_t addr)
+		{
+			if (sectionMap == nullptr) return {};
+			LOCK(sectionMutex);
+			auto hooks = (const TextHook*)sectionMap;
+			for (int i = 0; i < MAX_HOOK; ++i)
+				if (hooks[i].hp.insertion_address == addr) return hooks[i];
+			return {};
+		}
+
+		HANDLE hostPipe;
+
+	private:
 		HANDLE section;
 		LPVOID sectionMap;
-		HANDLE hostPipe;
+		WinMutex sectionMutex;
 	};
 
 	ThreadEventCallback OnCreate, OnRemove;
 	ProcessEventCallback OnAttach, OnDetach;
 
 	std::unordered_map<ThreadParam, std::shared_ptr<TextThread>> textThreadsByParams;
-	std::unordered_map<DWORD, ProcessRecord> processRecordsByIds;
+	std::unordered_map<DWORD, std::unique_ptr<ProcessRecord>> processRecordsByIds;
 
 	std::recursive_mutex hostMutex;
 
@@ -51,31 +76,19 @@ namespace
 			}
 	}
 
-	void RegisterProcess(DWORD pid, HANDLE hostPipe)
+	void RegisterProcess(DWORD processId, HANDLE hostPipe)
 	{
 		LOCK(hostMutex);
-		ProcessRecord record;
-		record.hostPipe = hostPipe;
-		record.section = OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(pid)).c_str());
-		record.sectionMap = MapViewOfFile(record.section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2); // jichi 1/16/2015: Changed to half to hook section size
-		record.processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-		record.sectionMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(pid)).c_str());
-		processRecordsByIds[pid] = record;
-		OnAttach(pid);
+		processRecordsByIds.insert({ processId, std::make_unique<ProcessRecord>(processId, hostPipe) });
+		OnAttach(processId);
 	}
 
-	void UnregisterProcess(DWORD pid)
+	void UnregisterProcess(DWORD processId)
 	{
+		OnDetach(processId);
 		LOCK(hostMutex);
-		ProcessRecord pr = processRecordsByIds[pid];
-		if (!pr.hostPipe) return;
-		CloseHandle(pr.sectionMutex);
-		UnmapViewOfFile(pr.sectionMap);
-		CloseHandle(pr.processHandle);
-		CloseHandle(pr.section);
-		processRecordsByIds[pid] = {};
-		RemoveThreads([&](ThreadParam tp) { return tp.pid == pid; });
-		OnDetach(pid);
+		processRecordsByIds.erase(processId);
+		RemoveThreads([&](ThreadParam tp) { return tp.pid == processId; });
 	}
 
 	void StartPipe()
@@ -149,7 +162,7 @@ namespace Host
 		// Artikash 7/25/2018: This is only called when Textractor is closed, at which point Windows should free everything itself...right?
 #ifdef _DEBUG // Check memory leaks
 		LOCK(hostMutex);
-		for (auto[pid, pr] : processRecordsByIds) UnregisterProcess(pid);
+		processRecordsByIds.clear();
 		textThreadsByParams.clear();
 #endif
 	}
@@ -204,54 +217,37 @@ namespace Host
 
 	void DetachProcess(DWORD processId)
 	{
+		LOCK(hostMutex);
 		auto command = HOST_COMMAND_DETACH;
-		WriteFile(processRecordsByIds[processId].hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
-	void InsertHook(DWORD pid, HookParam hp, std::string name)
+	void InsertHook(DWORD processId, HookParam hp, std::string name)
 	{
+		LOCK(hostMutex);
 		auto command = InsertHookCmd(hp, name);
-		WriteFile(processRecordsByIds[pid].hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
-	void RemoveHook(DWORD pid, uint64_t addr)
+	void RemoveHook(DWORD processId, uint64_t addr)
 	{
+		LOCK(hostMutex);
 		auto command = RemoveHookCmd(addr);
-		WriteFile(processRecordsByIds[pid].hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
 	}
 
-	HookParam GetHookParam(DWORD pid, uint64_t addr)
+	HookParam GetHookParam(DWORD processId, uint64_t addr)
 	{
+		if (processId == 0) return {};
 		LOCK(hostMutex);
-		HookParam ret = {};
-		ProcessRecord pr = processRecordsByIds[pid];
-		if (pr.sectionMap == nullptr) return ret;
-		WaitForSingleObject(pr.sectionMutex, 0);
-		const TextHook* hooks = (const TextHook*)pr.sectionMap;
-		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].hp.insertion_address == addr)
-				ret = hooks[i].hp;
-		ReleaseMutex(pr.sectionMutex);
-		return ret;
+		return processRecordsByIds.at(processId)->GetHook(addr).hp;
 	}
 
-	std::wstring GetHookName(DWORD pid, uint64_t addr)
+	std::wstring GetHookName(DWORD processId, uint64_t addr)
 	{
-		if (pid == 0) return L"Console";
+		if (processId == 0) return L"Console";
 		LOCK(hostMutex);
-		std::string buffer = "";
-		ProcessRecord pr = processRecordsByIds[pid];
-		if (pr.sectionMap == nullptr) return L"";
-		WaitForSingleObject(pr.sectionMutex, 0);
-		const TextHook* hooks = (const TextHook*)pr.sectionMap;
-		for (int i = 0; i < MAX_HOOK; ++i)
-			if (hooks[i].hp.insertion_address == addr)
-			{
-				buffer.resize(hooks[i].name_length);
-				ReadProcessMemory(pr.processHandle, hooks[i].hook_name, buffer.data(), hooks[i].name_length, nullptr);
-			}
-		ReleaseMutex(pr.sectionMutex);
-		return StringToWideString(buffer, CP_UTF8);
+		return StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName, CP_UTF8);
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)

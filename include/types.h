@@ -40,12 +40,22 @@ struct ThreadParam // From hook, used internally by host as well
 template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<int64_t>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
 static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
 
+class WinMutex
+{
+	HANDLE mutex;
+public:
+	WinMutex(std::wstring name) : mutex(CreateMutexW(nullptr, false, name.c_str())) {}
+	~WinMutex() { ReleaseMutex(mutex); CloseHandle(mutex); }
+	void lock() { WaitForSingleObject(mutex, 0); }
+	void unlock() { ReleaseMutex(mutex); }
+};
+
 struct InsertHookCmd // From host
 {
-	InsertHookCmd(HookParam hp, std::string name = "") : hp(hp) { strcpy_s<MESSAGE_SIZE>(this->name, name.c_str()); };
+	InsertHookCmd(HookParam hp, std::string name = "") : hp(hp) { strcpy_s<HOOK_NAME_SIZE>(this->name, name.c_str()); };
 	int command = HOST_COMMAND_NEW_HOOK;
 	HookParam hp;
-	char name[MESSAGE_SIZE] = {};
+	char name[HOOK_NAME_SIZE] = {};
 };
 
 struct RemoveHookCmd // From host
@@ -69,4 +79,4 @@ struct HookRemovedNotif // From hook
 	uint64_t address;
 };
 
-#define LOCK(mutex) std::lock_guard<std::recursive_mutex> lock(mutex)
+#define LOCK(mutex) std::lock_guard lock(mutex)

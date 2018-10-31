@@ -59,8 +59,9 @@ MainWindow::~MainWindow()
 	settings.setValue("Flush_Delay", TextThread::flushDelay);
 	settings.setValue("Max_Buffer_Size", TextThread::maxBufferSize);
 	settings.sync();
-	Host::Close();
 	delete ui;
+
+	Host::Close();
 }
 
 void MainWindow::AddProcess(unsigned processId)

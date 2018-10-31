@@ -102,16 +102,14 @@ namespace { // unnamed
 
 bool TextHook::InsertHook()
 {
-	bool ret = false;
 	//ConsoleOutput("vnrcli:InsertHook: enter");
-	WaitForSingleObject(hmMutex, 0);
-	if (hp.type & DIRECT_READ) ret = InsertReadCode();
+	LOCK(*sectionMutex);
+	if (hp.type & DIRECT_READ) return InsertReadCode();
 #ifndef _WIN64
-	else ret = InsertHookCode();
+	else return InsertHookCode();
 #endif
-	ReleaseMutex(hmMutex);
 	//ConsoleOutput("vnrcli:InsertHook: leave");
-	return ret;
+	return false;
 }
 
 #ifndef _WIN64
@@ -222,16 +220,8 @@ DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
 
 bool TextHook::InsertHookCode()
 {
-	bool ret = false;
 	// jichi 9/17/2013: might raise 0xC0000005 AccessViolationException on win7
-	__try { ret = UnsafeInsertHookCode(); }
-	__except (1) {};
-	return ret;
-}
-
-
-bool TextHook::UnsafeInsertHookCode()
-{
+	// Artikash 10/30/2018: No, I think that's impossible now that I moved to minhook
 	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
 		if (hp.type & FUNCTION_OFFSET)
 			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
@@ -243,7 +233,7 @@ bool TextHook::UnsafeInsertHookCode()
 	if (hp.codepage == 0) hp.codepage = SHIFT_JIS; // Use Shift-JIS unless custom encoding was specified
 
 	BYTE* original;
-	insert:
+insert:
 	if (MH_STATUS err = MH_CreateHook((void*)hp.insertion_address, (void*)trampoline, (void**)&original))
 		if (err == MH_ERROR_ALREADY_CREATED)
 		{
@@ -334,14 +324,13 @@ bool TextHook::InsertReadCode()
 	return true;
 }
 
-void TextHook::InitHook(const HookParam &h, LPCSTR name, WORD set_flag)
+void TextHook::InitHook(const HookParam &h, LPCSTR name, DWORD set_flag)
 {
-	WaitForSingleObject(hmMutex, 0);
+	LOCK(*sectionMutex);
 	hp = h;
 	hp.insertion_address = hp.address;
 	hp.type |= set_flag;
-	if (name && name != hook_name) SetHookName(name);
-	ReleaseMutex(hmMutex);
+	strcpy_s<HOOK_NAME_SIZE>(hookName, name);
 }
 
 void TextHook::RemoveHookCode()
@@ -358,22 +347,12 @@ void TextHook::RemoveReadCode()
 
 void TextHook::ClearHook()
 {
-	WaitForSingleObject(hmMutex, 0);
-	if (hook_name) ConsoleOutput(("Textractor: removing hook: " + std::string(hook_name)).c_str());
+	LOCK(*sectionMutex);
+	ConsoleOutput(("Textractor: removing hook: " + std::string(hookName)).c_str());
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(hp.insertion_address);
-	if (hook_name) delete[] hook_name;
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
-	ReleaseMutex(hmMutex);
-}
-
-void TextHook::SetHookName(LPCSTR name)
-{
-	name_length = strlen(name) + 1;
-	if (hook_name) delete[] hook_name;
-	hook_name = new char[name_length];
-	strcpy(hook_name, name);
 }
 
 int TextHook::GetLength(DWORD base, DWORD in)

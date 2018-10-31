@@ -20,32 +20,28 @@ class TextHook
 {
 	bool InsertHookCode();
 	bool InsertReadCode();
-	bool UnsafeInsertHookCode();
 	DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);
+	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 	void RemoveHookCode();
 	void RemoveReadCode();
-	void SetHookName(LPCSTR name);
 public:
 	HookParam hp;
-	LPSTR hook_name;
-	int name_length;
+	char hookName[HOOK_NAME_SIZE];
 	BYTE trampoline[120];
 	HANDLE readerHandle;
 
 	bool InsertHook();
-	void InitHook(const HookParam &hp, LPCSTR name = 0, WORD set_flag = 0);
+	void InitHook(const HookParam &hp, LPCSTR name, DWORD set_flag);
 	DWORD Send(DWORD dwDataBase, DWORD dwRetn);
 	void ClearHook();
-	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 };
 
 enum { MAX_HOOK = 300 };
 enum { HOOK_SECTION_SIZE = MAX_HOOK * sizeof(TextHook) * 2, HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook) };
 
 extern TextHook *hookman;
-
 extern bool running;
-
-extern HANDLE hookPipe, hmMutex;
+extern HANDLE hookPipe;
+extern std::unique_ptr<WinMutex> sectionMutex;
 
 // EOF
