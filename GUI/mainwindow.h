@@ -43,15 +43,12 @@ private slots:
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
 	void on_addExtenButton_clicked();
-	void on_moveExtenButton_clicked();
-	void on_rmvExtenButton_clicked();
 
 private:
 	bool ProcessThreadOutput(TextThread* thread, std::wstring& output);
 	QString TextThreadString(TextThread* thread);
 	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();
-	void ReloadExtensions();
 	std::unordered_map<std::string, int64_t> GetInfoForExtensions(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
@@ -61,6 +58,7 @@ private:
 	QComboBox* ttCombo;
 	QComboBox* extenCombo;
 	QPlainTextEdit* textOutput;
+	QWidget* extenDialog;
 };
 
 #endif // MAINWINDOW_H

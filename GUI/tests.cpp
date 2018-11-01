@@ -1,4 +1,4 @@
-#include "extensions.h"
+#include "extendialog.h"
 #include "misc.h"
 
 static int TESTS = []

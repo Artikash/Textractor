@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
-#include "extensions.h"
+#include "extendialog.h"
 #include "misc.h"
 #include <QCoreApplication>
 #include <QInputDialog>
@@ -9,7 +9,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
-	ui(new Ui::MainWindow)
+	ui(new Ui::MainWindow),
+	extenDialog(new ExtenDialog(this))
 {
 	ui->setupUi(this);
 
@@ -17,19 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	extenCombo = findChild<QComboBox*>("extenCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
-
-	QFile extenSaveFile("Extensions.txt");
-	if (extenSaveFile.exists())
-	{
-		extenSaveFile.open(QIODevice::ReadOnly);
-		for (auto extenName : QString(extenSaveFile.readAll()).split(">")) Extension::Load(extenName);
-	}
-	else
-	{
-		for (auto file : QDir().entryList())
-			if (file.endsWith(".dll") && file != ITH_DLL) Extension::Load(file.left(file.lastIndexOf(".dll")));
-	}
-	ReloadExtensions();
 
 	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
 	// TODO: add GUI for changing these
@@ -120,7 +108,7 @@ void MainWindow::ThreadOutput(QString threadString, QString output)
 
 bool MainWindow::ProcessThreadOutput(TextThread* thread, std::wstring& output)
 {
-	if (Extension::DispatchSentence(output, GetInfoForExtensions(thread)))
+	if (ExtenDialog::DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
 	{
 		output += L"\r\n";
 		emit SigThreadOutput(TextThreadString(thread), QString::fromStdWString(output));
@@ -150,18 +138,6 @@ ThreadParam MainWindow::ParseTextThreadString(QString textThreadString)
 DWORD MainWindow::GetSelectedProcessId()
 {
 	return processCombo->currentText().split(":")[0].toULong(nullptr, 16);
-}
-
-void MainWindow::ReloadExtensions()
-{
-	extenCombo->clear();
-	QFile extenSaveFile("Extensions.txt");
-	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-	for (auto extenName : Extension::GetNames())
-	{
-		extenSaveFile.write((extenName + ">").toUtf8());
-		extenCombo->addItem(extenName);
-	}
 }
 
 std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextThread* thread)
@@ -259,25 +235,5 @@ void MainWindow::on_ttCombo_activated(int index)
 
 void MainWindow::on_addExtenButton_clicked()
 {
-	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension", "C:\\", "Extensions (*.dll)");
-	if (!extenFileName.size()) return;
-	QString extenName = extenFileName.mid(extenFileName.lastIndexOf("/") + 1);
-	QFile::copy(extenFileName, extenName);
-	Extension::Load(extenName.left(extenName.lastIndexOf(".dll")));
-	ReloadExtensions();
-}
-
-void MainWindow::on_moveExtenButton_clicked()
-{
-	if (extenCombo->currentText() == "") return;
-	Extension::SendToBack(extenCombo->currentText());
-	ReloadExtensions();
-	Host::AddConsoleOutput(L"extension sent to back");
-}
-
-void MainWindow::on_rmvExtenButton_clicked()
-{
-	if (extenCombo->currentText() == "") return;
-	Extension::Unload(extenCombo->currentText());
-	ReloadExtensions();
+	extenDialog->show();
 }
