@@ -13,14 +13,9 @@ namespace
 		~InfoForExtension() { if (next) delete next; };
 	};
 
-	struct Extension
-	{
-		QString name;
-		wchar_t*(*callback)(const wchar_t*, const InfoForExtension*);
-	};
-
+	QHash<QString, wchar_t*(*)(const wchar_t*, const InfoForExtension*)> extensions;
+	QStringList extenNames;
 	std::shared_mutex extenMutex;
-	QVector<Extension> extensions;
 
 	void Load(QString extenName)
 	{
@@ -30,13 +25,22 @@ namespace
 		if (!module) return;
 		FARPROC callback = GetProcAddress(module, "OnNewSentence");
 		if (!callback) return;
-		extensions.push_back({ extenName, (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback });
+		LOCK(extenMutex);
+		extensions[extenName] = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback;
+		extenNames.push_back(extenName);
 	}
 
 	void Unload(QString extenName)
 	{
-		extensions.erase(std::remove_if(extensions.begin(), extensions.end(), [&](Extension extension) { return extension.name == extenName; }), extensions.end());
+		LOCK(extenMutex);
+		extenNames.erase(std::remove(extenNames.begin(), extenNames.end(), extenName), extenNames.end());
 		FreeLibrary(GetModuleHandleW(extenName.toStdWString().c_str()));
+	}
+
+	void Reorder(QStringList extenNames)
+	{
+		LOCK(extenMutex);
+		::extenNames = extenNames;
 	}
 }
 
@@ -51,9 +55,9 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
 
 	std::shared_lock sharedLock(extenMutex);
-	for (auto extension : extensions)
+	for (auto extenName : extenNames)
 	{
-		wchar_t* nextBuffer = extension.callback(sentenceBuffer, &miscInfoLinkedList);
+		wchar_t* nextBuffer = extensions[extenName](sentenceBuffer, &miscInfoLinkedList);
 		if (nextBuffer == nullptr) { success = false; break; }
 		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 		sentenceBuffer = nextBuffer;
@@ -108,10 +112,9 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 	// See https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215
 	if (event->type() == QEvent::ChildRemoved)
 	{
-		QVector<Extension> newExtensions;
-		for (int i = 0; i < extenList->count(); ++i)
-			newExtensions.push_back(*std::find_if(extensions.begin(), extensions.end(), [=](Extension extension) { return extension.name == extenList->item(i)->text(); }));
-		extensions = newExtensions;
+		QStringList extenNames;
+		for (int i = 0; i < extenList->count(); ++i) extenNames.push_back(extenList->item(i)->text());
+		Reorder(extenNames);
 		Sync();
 	}
 	return false; 
@@ -121,10 +124,11 @@ void ExtenWindow::Sync()
 {
 	extenList->clear();
 	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-	for (auto extension : extensions)
+	std::shared_lock sharedLock(extenMutex);
+	for (auto extenName : extenNames)
 	{
-		extenList->addItem(extension.name);
-		extenSaveFile.write((extension.name + ">").toUtf8());
+		extenList->addItem(extenName);
+		extenSaveFile.write((extenName + ">").toUtf8());
 	}
 	extenSaveFile.close();
 }
