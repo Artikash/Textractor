@@ -19,7 +19,7 @@ public:
 	inline static int maxBufferSize = 200;
 	inline static int threadCounter = 0;
 
-	TextThread(ThreadParam tp);
+	TextThread(ThreadParam tp, HookParam hp, std::wstring name);
 	~TextThread();
 
 	std::wstring GetStorage();

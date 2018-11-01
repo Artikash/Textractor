@@ -60,7 +60,7 @@ namespace
 		if (textThreadsByParams[tp] == nullptr)
 		{
 			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"too many text threads: can't create more");
-			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp));
+			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)));
 		}
 		textThreadsByParams[tp]->AddText(text, len);
 	}
@@ -153,7 +153,7 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
-		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE));
+		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
 		StartPipe();
 	}
 
@@ -238,14 +238,12 @@ namespace Host
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr)
 	{
-		if (processId == 0) return {};
 		LOCK(hostMutex);
 		return processRecordsByIds.at(processId)->GetHook(addr).hp;
 	}
 
 	std::wstring GetHookName(DWORD processId, uint64_t addr)
 	{
-		if (processId == 0) return L"Console";
 		LOCK(hostMutex);
 		return StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName, CP_UTF8);
 	}
@@ -256,7 +254,10 @@ namespace Host
 		return textThreadsByParams[tp];
 	}
 
-	void AddConsoleOutput(std::wstring text) { GetThread(CONSOLE)->AddSentence(text); }
+	void AddConsoleOutput(std::wstring text) 
+	{ 
+		GetThread(CONSOLE)->AddSentence(text); 
+	}
 }
 
 // EOF

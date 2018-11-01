@@ -8,7 +8,7 @@
 #include <regex>
 #include <algorithm>
 
-TextThread::TextThread(ThreadParam tp) : handle(threadCounter++), name(Host::GetHookName(tp)), tp(tp), hp(Host::GetHookParam(tp)) {}
+TextThread::TextThread(ThreadParam tp, HookParam hp, std::wstring name) : handle(threadCounter++), name(name), tp(tp), hp(hp) {}
 
 TextThread::~TextThread()
 {
