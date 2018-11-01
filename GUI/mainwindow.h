@@ -3,7 +3,6 @@
 
 #include "qtcommon.h"
 #include "host/host.h"
-#include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QComboBox>
 #include <QSettings>
@@ -49,7 +48,7 @@ private:
 	QString TextThreadString(TextThread* thread);
 	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();
-	std::unordered_map<std::string, int64_t> GetInfoForExtensions(TextThread* thread);
+	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
 
 	Ui::MainWindow* ui;
@@ -58,7 +57,7 @@ private:
 	QComboBox* ttCombo;
 	QComboBox* extenCombo;
 	QPlainTextEdit* textOutput;
-	QWidget* extenDialog;
+	QWidget* extenWindow;
 };
 
 #endif // MAINWINDOW_H

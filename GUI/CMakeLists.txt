@@ -9,7 +9,7 @@ set(gui_SRCS
 	main.cpp
 	mainwindow.cpp
 	misc.cpp
-    extendialog.cpp
+    extenwindow.cpp
 	tests.cpp
 	host/host.cc
 	host/textthread.cc

@@ -1,4 +1,3 @@
-#include "extendialog.h"
 #include "misc.h"
 
 static int TESTS = []

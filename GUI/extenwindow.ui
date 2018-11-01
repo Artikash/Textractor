@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ExtenDialog</class>
- <widget class="QDialog" name="ExtenDialog">
+ <class>ExtenWindow</class>
+ <widget class="QMainWindow" name="ExtenWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,6 +13,7 @@
   <property name="windowTitle">
    <string>Extensions</string>
   </property>
+  <widget class="QWidget" name="centralWidget">
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="QListWidget" name="extenList">
@@ -22,9 +23,6 @@
      <property name="defaultDropAction">
       <enum>Qt::MoveAction</enum>
      </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::MultiSelection</enum>
-     </property>
     </widget>
    </item>
    <item>
@@ -33,12 +31,6 @@
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
        </property>
       </spacer>
      </item>
@@ -61,17 +53,12 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
       </spacer>
      </item>
     </layout>
    </item>
   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

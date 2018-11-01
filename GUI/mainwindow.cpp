@@ -1,16 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
-#include "extendialog.h"
+#include "extenwindow.h"
 #include "misc.h"
-#include <QCoreApplication>
 #include <QInputDialog>
-#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
-	extenDialog(new ExtenDialog(this))
+	extenWindow(new ExtenWindow)
 {
 	ui->setupUi(this);
 
@@ -108,7 +106,7 @@ void MainWindow::ThreadOutput(QString threadString, QString output)
 
 bool MainWindow::ProcessThreadOutput(TextThread* thread, std::wstring& output)
 {
-	if (ExtenDialog::DispatchSentenceToExtensions(output, GetInfoForExtensions(thread)))
+	if (DispatchSentenceToExtensions(output, GetMiscInfo(thread)))
 	{
 		output += L"\r\n";
 		emit SigThreadOutput(TextThreadString(thread), QString::fromStdWString(output));
@@ -140,7 +138,7 @@ DWORD MainWindow::GetSelectedProcessId()
 	return processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
-std::unordered_map<std::string, int64_t> MainWindow::GetInfoForExtensions(TextThread* thread)
+std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
 {
 	return 
 	{
@@ -235,5 +233,6 @@ void MainWindow::on_ttCombo_activated(int index)
 
 void MainWindow::on_addExtenButton_clicked()
 {
-	extenDialog->show();
+	extenWindow->activateWindow();
+	extenWindow->showNormal();
 }
