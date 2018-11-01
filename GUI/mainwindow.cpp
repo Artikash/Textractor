@@ -14,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
-	extenCombo = findChild<QComboBox*>("extenCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
 
 	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
@@ -225,14 +224,14 @@ void MainWindow::on_saveButton_clicked()
 	file.write((hookList + "\r\n").toUtf8());
 }
 
+void MainWindow::on_extenButton_clicked()
+{
+	extenWindow->activateWindow();
+	extenWindow->showNormal();
+}
+
 void MainWindow::on_ttCombo_activated(int index)
 {
 	textOutput->setPlainText(QString::fromStdWString(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStorage()));
 	textOutput->moveCursor(QTextCursor::End);
-}
-
-void MainWindow::on_addExtenButton_clicked()
-{
-	extenWindow->activateWindow();
-	extenWindow->showNormal();
 }

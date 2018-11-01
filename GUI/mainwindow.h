@@ -37,11 +37,11 @@ private slots:
 	void ThreadOutput(QString threadString, QString output); // this function doesn't take TextThread* because it might be destroyed on pipe thread
 	void on_attachButton_clicked();
 	void on_detachButton_clicked();
-	void on_ttCombo_activated(int index);
 	void on_unhookButton_clicked();
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
-	void on_addExtenButton_clicked();
+	void on_extenButton_clicked();
+	void on_ttCombo_activated(int index);
 
 private:
 	bool ProcessThreadOutput(TextThread* thread, std::wstring& output);
@@ -55,7 +55,6 @@ private:
 	QSettings settings = QSettings("Textractor.ini", QSettings::IniFormat);
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
-	QComboBox* extenCombo;
 	QPlainTextEdit* textOutput;
 	QWidget* extenWindow;
 };
