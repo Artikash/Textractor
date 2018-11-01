@@ -52,8 +52,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 		for (TextHook *man = ::hookman; man < ::hookman + MAX_HOOK; man++) if (man->hp.insertion_address) man->ClearHook();
 		//if (ith_has_section)
 		UnmapViewOfFile(::hookman);
-
-		CloseHandle(::hookPipe);
 		CloseHandle(hSection);
 		//} ITH_EXCEPT {}
 	}

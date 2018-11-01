@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "defs.h"
 #include "extensions.h"
 #include "misc.h"
 #include <QCoreApplication>
@@ -26,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	else
 	{
 		for (auto file : QDir().entryList())
-			if (file.endsWith(".dll") && file != "vnrhook.dll") Extension::Load(file.left(file.lastIndexOf(".dll")));
+			if (file.endsWith(".dll") && file != ITH_DLL) Extension::Load(file.left(file.lastIndexOf(".dll")));
 	}
 	ReloadExtensions();
 

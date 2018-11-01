@@ -23,7 +23,6 @@ void CreatePipe()
 {
 	CreateThread(nullptr, 0, [](LPVOID)
 	{
-		enum { STANDARD_WAIT = 50 };
 		while (::running)
 		{
 			DWORD count = 0;
@@ -34,15 +33,16 @@ void CreatePipe()
 			{
 				if (::hookPipe == INVALID_HANDLE_VALUE)
 				{
-					::hookPipe = CreateFileW(ITH_TEXT_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+					::hookPipe = CreateFileW(HOOK_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 				}
 				if (::hookPipe != INVALID_HANDLE_VALUE && hostPipe == INVALID_HANDLE_VALUE)
 				{
-					hostPipe = CreateFileW(ITH_COMMAND_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+					hostPipe = CreateFileW(HOST_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 					DWORD mode = PIPE_READMODE_MESSAGE;
 					SetNamedPipeHandleState(hostPipe, &mode, NULL, NULL);
+					continue;
 				}
-				Sleep(STANDARD_WAIT);
+				Sleep(50);
 			}
 
 			*(DWORD*)buffer = GetCurrentProcessId();
@@ -78,6 +78,7 @@ void CreatePipe()
 				}
 
 			CloseHandle(hostPipe);
+			CloseHandle(::hookPipe);
 		}
 		FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
 		return (DWORD)0;

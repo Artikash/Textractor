@@ -7,8 +7,8 @@
 
 // Pipes
 
-#define ITH_TEXT_PIPE       L"\\\\.\\pipe\\VNR_TEXT"
-#define ITH_COMMAND_PIPE    L"\\\\.\\pipe\\VNR_COMMAND"
+#define HOOK_PIPE       L"\\\\.\\pipe\\TEXTRACTOR_HOOK"
+#define HOST_PIPE    L"\\\\.\\pipe\\TEXTRACTOR_HOST"
 
 // Sections
 
