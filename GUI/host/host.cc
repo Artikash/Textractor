@@ -52,7 +52,7 @@ namespace
 	std::recursive_mutex hostMutex;
 
 	DWORD DUMMY[1];
-	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL };
+	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 
 	void DispatchText(ThreadParam tp, const BYTE* text, int len)
 	{
@@ -146,6 +146,32 @@ namespace
 			CloseHandle(hostPipe);
 		}).detach();
 	}
+
+	void StartCapturingClipboard()
+	{
+		std::thread([]
+		{
+			std::wstring last;
+			while (true)
+			{
+				Sleep(50);
+				if (IsClipboardFormatAvailable(CF_UNICODETEXT) && OpenClipboard(NULL))
+				{
+					if (HANDLE clipboardHandle = GetClipboardData(CF_UNICODETEXT))
+					{
+						if (wchar_t* clipboardData = (wchar_t*)GlobalLock(clipboardHandle))
+						{
+							if (last != clipboardData)
+								Host::GetThread(CLIPBOARD)->AddSentence(last = clipboardData);
+							GlobalUnlock(clipboardHandle);
+						}
+					}
+					CloseClipboard();
+				}
+			}
+
+		}).detach();
+	}
 }
 
 namespace Host
@@ -154,6 +180,8 @@ namespace Host
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
 		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
+		OnCreate(textThreadsByParams[CLIPBOARD] = std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard"));
+		StartCapturingClipboard();
 		StartPipe();
 	}
 
