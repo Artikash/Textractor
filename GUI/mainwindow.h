@@ -3,7 +3,6 @@
 
 #include "qtcommon.h"
 #include "host/host.h"
-#include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QComboBox>
 #include <QSettings>
@@ -38,29 +37,27 @@ private slots:
 	void ThreadOutput(QString threadString, QString output); // this function doesn't take TextThread* because it might be destroyed on pipe thread
 	void on_attachButton_clicked();
 	void on_detachButton_clicked();
-	void on_ttCombo_activated(int index);
 	void on_unhookButton_clicked();
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
-	void on_addExtenButton_clicked();
-	void on_moveExtenButton_clicked();
-	void on_rmvExtenButton_clicked();
+	void on_extenButton_clicked();
+	void on_ttCombo_activated(int index);
 
 private:
 	bool ProcessThreadOutput(TextThread* thread, std::wstring& output);
 	QString TextThreadString(TextThread* thread);
 	ThreadParam ParseTextThreadString(QString textThreadString);
 	DWORD GetSelectedProcessId();
-	void ReloadExtensions();
-	std::unordered_map<std::string, int64_t> GetInfoForExtensions(TextThread* thread);
+	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
+	void closeEvent(QCloseEvent*);
 
 	Ui::MainWindow* ui;
 	QSettings settings = QSettings("Textractor.ini", QSettings::IniFormat);
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
-	QComboBox* extenCombo;
 	QPlainTextEdit* textOutput;
+	QWidget* extenWindow;
 };
 
 #endif // MAINWINDOW_H

@@ -1,4 +1,3 @@
-#include "extensions.h"
 #include "misc.h"
 
 static int TESTS = []

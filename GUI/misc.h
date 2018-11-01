@@ -3,7 +3,6 @@
 
 #include "qtcommon.h"
 #include "types.h"
-#include <QHash>
 
 QString GetFullModuleName(DWORD processId, HMODULE module = NULL);
 QString GetModuleName(DWORD processId, HMODULE module = NULL);

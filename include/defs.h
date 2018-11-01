@@ -3,7 +3,7 @@
 // vnrhook/defs.h
 // 8/23/2013 jichi
 
-#define ITH_DLL     L"vnrhook.dll"
+#define ITH_DLL     L"vnrhook"
 
 // Pipes
 
