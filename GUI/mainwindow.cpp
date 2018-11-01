@@ -50,6 +50,11 @@ MainWindow::~MainWindow()
 	Host::Close();
 }
 
+void MainWindow::closeEvent(QCloseEvent*)
+{
+	QCoreApplication::quit(); // Need to do this to kill any windows that might've been made by extensions
+}
+
 void MainWindow::AddProcess(unsigned processId)
 {
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));

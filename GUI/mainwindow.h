@@ -50,6 +50,7 @@ private:
 	DWORD GetSelectedProcessId();
 	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);
+	void closeEvent(QCloseEvent*);
 
 	Ui::MainWindow* ui;
 	QSettings settings = QSettings("Textractor.ini", QSettings::IniFormat);
