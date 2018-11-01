@@ -1,7 +1,10 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
+#include "defs.h"
 #include "types.h"
 #include <QFileDialog>
+#include <QMimeData>
+#include <QUrl>
 
 namespace
 {
@@ -19,6 +22,7 @@ namespace
 
 	void Load(QString extenName)
 	{
+		if (extenName == ITH_DLL) return;
 		// Extension is dll and exports "OnNewSentence"
 		HMODULE module = GetModuleHandleW(extenName.toStdWString().c_str());
 		if (!module) module = LoadLibraryW(extenName.toStdWString().c_str());
@@ -91,19 +95,25 @@ ExtenWindow::~ExtenWindow()
 	delete ui;
 }
 
-void ExtenWindow::on_addButton_clicked()
+void ExtenWindow::Sync()
 {
-	QString extenFileName = QFileDialog::getOpenFileName(this, "Select Extension", "C:\\", "Extensions (*.dll)");
-	if (!extenFileName.size()) return;
-	QString extenName = extenFileName.mid(extenFileName.lastIndexOf("/") + 1);
-	QFile::copy(extenFileName, extenName);
-	Load(extenName.left(extenName.lastIndexOf(".dll")));
-	Sync();
+	extenList->clear();
+	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	std::shared_lock sharedLock(extenMutex);
+	for (auto extenName : extenNames)
+	{
+		extenList->addItem(extenName);
+		extenSaveFile.write((extenName + ">").toUtf8());
+	}
+	extenSaveFile.close();
 }
 
-void ExtenWindow::on_rmvButton_clicked()
+void ExtenWindow::Add(QString fileName)
 {
-	if (auto extenName = extenList->currentItem()) Unload(extenName->text());
+	if (!fileName.endsWith(".dll")) return;
+	QString extenName = fileName.mid(fileName.lastIndexOf("/") + 1);
+	QFile::copy(fileName, extenName);
+	Load(extenName.split(".dll")[0]);
 	Sync();
 }
 
@@ -120,15 +130,23 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 	return false; 
 }
 
-void ExtenWindow::Sync()
+void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)
 {
-	extenList->clear();
-	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-	std::shared_lock sharedLock(extenMutex);
-	for (auto extenName : extenNames)
-	{
-		extenList->addItem(extenName);
-		extenSaveFile.write((extenName + ">").toUtf8());
-	}
-	extenSaveFile.close();
+	event->acceptProposedAction();
+}
+
+void ExtenWindow::dropEvent(QDropEvent* event) 
+{ 
+	for (auto file : event->mimeData()->urls()) Add(file.toLocalFile());
+}
+
+void ExtenWindow::on_addButton_clicked()
+{
+	Add(QFileDialog::getOpenFileName(this, "Select Extension", "C:\\", "Extensions (*.dll)"));
+}
+
+void ExtenWindow::on_rmvButton_clicked()
+{
+	if (auto extenName = extenList->currentItem()) Unload(extenName->text());
+	Sync();
 }

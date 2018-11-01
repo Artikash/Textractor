@@ -4,6 +4,8 @@
 #include "qtcommon.h"
 #include <shared_mutex>
 #include <QListWidget>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 
 namespace Ui
 {
@@ -25,8 +27,11 @@ private slots:
 	void on_rmvButton_clicked();
 
 private:
-	bool eventFilter(QObject* target, QEvent* event);
+	void Add(QString fileName);
 	void Sync();
+	bool eventFilter(QObject* target, QEvent* event);
+	void dragEnterEvent(QDragEnterEvent* event);
+	void dropEvent(QDropEvent* event);
 
 	Ui::ExtenWindow* ui;
 	QFile extenSaveFile = QFile("Extensions.txt");
