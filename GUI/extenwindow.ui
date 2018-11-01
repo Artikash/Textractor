@@ -81,6 +81,7 @@ QPushButton, QComboBox
    </layout>
   </widget>
  </widget>
+ <layoutdefault spacing="6" margin="6"/>
  <resources/>
  <connections/>
 </ui>
