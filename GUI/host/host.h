@@ -30,7 +30,8 @@ namespace Host
 	void AddConsoleOutput(std::wstring text);
 }
 
-inline std::wstring StringToWideString(const std::string& text, UINT encoding)
+inline UINT DEFAULT_CODEPAGE = SHIFT_JIS;
+inline std::wstring StringToWideString(const std::string& text, UINT encoding = DEFAULT_CODEPAGE)
 {
 	std::wstring ret(text.size() + 1, 0);
 	ret.resize(MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.capacity()) - 1);

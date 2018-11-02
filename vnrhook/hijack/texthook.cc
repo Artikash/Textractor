@@ -104,6 +104,7 @@ bool TextHook::InsertHook()
 {
 	//ConsoleOutput("vnrcli:InsertHook: enter");
 	LOCK(*sectionMutex);
+	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
 	if (hp.type & DIRECT_READ) return InsertReadCode();
 #ifndef _WIN64
 	else return InsertHookCode();
@@ -228,9 +229,6 @@ bool TextHook::InsertHookCode()
 			else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: function not present"), false;
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
 		else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: module not present"), false;
-
-	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
-	if (hp.codepage == 0) hp.codepage = SHIFT_JIS; // Use Shift-JIS unless custom encoding was specified
 
 	BYTE* original;
 insert:

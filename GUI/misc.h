@@ -15,7 +15,7 @@ static QString CodeInfoDump =
 /H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n\
 OR\r\n\
 Enter read code\r\n\
-/R{S|Q|V}[#codepage][*deref_offset|0]@addr\r\n\
+/R{S|Q|V}[codepage#][*deref_offset|0]@addr\r\n\
 All numbers except codepage in hexadecimal\r\n\
 A/B: Shift-JIS char little/big endian\r\n\
 W: UTF-16 char\r\n\

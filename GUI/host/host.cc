@@ -126,7 +126,7 @@ namespace
 				case HOST_NOTIFICATION_TEXT:
 				{
 					auto info = *(ConsoleOutputNotif*)buffer;
-					Host::AddConsoleOutput(StringToWideString(info.message, CP_UTF8));
+					Host::AddConsoleOutput(StringToWideString(info.message));
 				}
 				break;
 				default:
@@ -273,7 +273,7 @@ namespace Host
 	std::wstring GetHookName(DWORD processId, uint64_t addr)
 	{
 		LOCK(hostMutex);
-		return StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName, CP_UTF8);
+		return StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName);
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)

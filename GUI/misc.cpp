@@ -189,7 +189,7 @@ namespace
 		else if (hp.type & USING_UTF8) codeBuilder << "V";
 		else codeBuilder << "S";
 
-		if (hp.codepage != SHIFT_JIS && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+		if (hp.codepage != 0 && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
 
 		codeBuilder.setIntegerBase(16);
 		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
@@ -220,7 +220,7 @@ namespace
 		}
 		if (hp.type & NO_CONTEXT) codeBuilder << "N";
 
-		if (hp.codepage != SHIFT_JIS && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+		if (hp.codepage != 0 && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
 
 		codeBuilder.setIntegerBase(16);
 		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
