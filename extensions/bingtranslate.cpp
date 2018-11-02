@@ -1,5 +1,6 @@
 #include "extension.h"
 #include <winhttp.h>
+#include <Shlwapi.h>
 #include <regex>
 #include <QInputDialog>
 #include <QTimer>
@@ -81,6 +82,16 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 	static HINTERNET internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
+	char buffer[10000] = {};
+	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer, text.size() * 5, NULL, NULL);
+	text.clear();
+	for (int i = 0; buffer[i];)
+	{
+		wchar_t utf8char[3] = {};
+		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)buffer[i++]);
+		text += L"%" + std::wstring(utf8char);
+	}
+
 	std::wstring translation;
 	if (internet)
 	{
@@ -97,6 +108,7 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 					char buffer[10000] = {};
 					WinHttpReceiveResponse(request, NULL);
 					WinHttpReadData(request, buffer, 10000, &bytesRead);
+					puts(buffer);
 					wchar_t wbuffer[10000] = {};
 					MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
 					if (translateFrom.empty()) translateFrom = wbuffer;
