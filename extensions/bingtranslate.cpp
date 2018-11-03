@@ -83,7 +83,7 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
 	char buffer[10000] = {};
-	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer, text.size() * 5, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer, 10000, NULL, NULL);
 	text.clear();
 	for (int i = 0; buffer[i];)
 	{
@@ -108,7 +108,6 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 					char buffer[10000] = {};
 					WinHttpReceiveResponse(request, NULL);
 					WinHttpReadData(request, buffer, 10000, &bytesRead);
-					puts(buffer);
 					wchar_t wbuffer[10000] = {};
 					MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
 					if (translateFrom.empty()) translateFrom = wbuffer;
