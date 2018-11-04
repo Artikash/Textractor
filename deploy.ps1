@@ -11,6 +11,7 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Copy to Clipboard.dll",
 	"Extra Newlines.dll",
 	"Google Translate.dll",
+	"Regex Filter.dll",
 	"Remove Repetition.dll",
 	"Extensions.txt"
 )
@@ -28,6 +29,7 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Copy to Clipboard.dll",
 	"Extra Newlines.dll",
 	"Google Translate.dll",
+	"Regex Filter.dll",
 	"Remove Repetition.dll",
 	"Extensions.txt"
 )
