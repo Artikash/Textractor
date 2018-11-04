@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "defs.h"
 #include "text.h"
 #include "extenwindow.h"
 #include "misc.h"
@@ -17,11 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
 
-	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
+	if (settings.contains(WINDOW)) this->setGeometry(settings.value(WINDOW).toRect());
 	// TODO: add GUI for changing these
-	if (settings.contains("Default_Codepage")) DEFAULT_CODEPAGE = settings.value("Default_Codepage").toInt();
-	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
-	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
+	if (settings.contains(DEFAULT_CODEPAGE)) CURRENT_CODEPAGE = settings.value(DEFAULT_CODEPAGE).toInt();
+	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
+	if (settings.contains(MAX_BUFFER_SIZE)) TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE).toInt();
 
 	qRegisterMetaType<std::shared_ptr<TextThread>>();
 
@@ -43,10 +42,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	settings.setValue("Window", this->geometry());
-	settings.setValue("Default_Codepage", DEFAULT_CODEPAGE);
-	settings.setValue("Flush_Delay", TextThread::flushDelay);
-	settings.setValue("Max_Buffer_Size", TextThread::maxBufferSize);
+	settings.setValue(WINDOW, this->geometry());
+	settings.setValue(DEFAULT_CODEPAGE, CURRENT_CODEPAGE);
+	settings.setValue(FLUSH_DELAY, TextThread::flushDelay);
+	settings.setValue(MAX_BUFFER_SIZE, TextThread::maxBufferSize);
 	settings.sync();
 	delete ui;
 
@@ -61,7 +60,7 @@ void MainWindow::closeEvent(QCloseEvent*)
 void MainWindow::AddProcess(unsigned processId)
 {
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
-	QFile file("SavedHooks.txt");
+	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::ReadOnly);
 	QString processName = GetFullModuleName(processId);
 	QStringList allProcesses = QString(file.readAll()).split("\r", QString::SkipEmptyParts);
@@ -223,7 +222,7 @@ void MainWindow::on_saveButton_clicked()
 	for (auto hook : hooks)
 		if (!(hook.type & HOOK_ENGINE))
 			hookList += " , " + GenerateCode(hook, GetSelectedProcessId());
-	QFile file("SavedHooks.txt");
+	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::Append);
 	file.write((hookList + "\r\n").toUtf8());
 }

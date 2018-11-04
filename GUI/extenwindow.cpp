@@ -1,8 +1,7 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
-#include "defs.h"
-#include "types.h"
 #include "text.h"
+#include "types.h"
 #include <QFileDialog>
 #include <QMimeData>
 #include <QUrl>
