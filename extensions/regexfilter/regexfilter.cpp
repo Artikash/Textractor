@@ -25,7 +25,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (w == nullptr) return false;
-	std::lock_guard l(w->locker);
+	std::lock_guard l(w->m);
 	sentence = std::regex_replace(sentence, w->regex, L"");
 	return true;
 }

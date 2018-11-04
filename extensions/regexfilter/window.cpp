@@ -15,7 +15,7 @@ Window::~Window()
 
 void Window::on_regexInput_textEdited(const QString& newRegex)
 {
-	std::lock_guard<std::mutex> lock(locker);
+	std::lock_guard<std::mutex> l(m);
 	try { regex = newRegex.toStdWString(); }
 	catch (...) {}
 }

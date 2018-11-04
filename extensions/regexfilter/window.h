@@ -20,7 +20,7 @@ public:
 	~Window();
 
 	Ui::Window* ui;
-	std::mutex locker;
+	std::mutex m;
 	std::wregex regex;
 
 private slots:
