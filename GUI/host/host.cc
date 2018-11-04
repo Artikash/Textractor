@@ -59,7 +59,7 @@ namespace
 		LOCK(hostMutex);
 		if (textThreadsByParams[tp] == nullptr)
 		{
-			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"too many text threads: can't create more");
+			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"Textractor: too many text threads: can't create more");
 			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)));
 		}
 		textThreadsByParams[tp]->Push(text, len);
@@ -91,7 +91,7 @@ namespace
 		RemoveThreads([&](ThreadParam tp) { return tp.pid == processId; });
 	}
 
-	void StartPipe()
+	void CreatePipe()
 	{
 		std::thread([]
 		{
@@ -108,15 +108,11 @@ namespace
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
 			RegisterProcess(processId, hostPipe);
 
-			// jichi 9/27/2013: why recursion?
-			// Artikash 5/20/2018: Easy way to create a new pipe for another process
-			StartPipe();
+			CreatePipe();
 
 			while (ReadFile(hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
 				switch (*(int*)buffer)
 				{
-					//case HOST_NOTIFICATION_NEWHOOK:	// Artikash 7/18/2018: Useless for now, but could be used to implement smth later
-					//break;
 				case HOST_NOTIFICATION_RMVHOOK:
 				{
 					auto info = *(HookRemovedNotif*)buffer;
@@ -139,9 +135,9 @@ namespace
 				break;
 				}
 
+			UnregisterProcess(processId);
 			DisconnectNamedPipe(hookPipe);
 			DisconnectNamedPipe(hostPipe);
-			UnregisterProcess(processId);
 			CloseHandle(hookPipe);
 			CloseHandle(hostPipe);
 		}).detach();
@@ -151,7 +147,6 @@ namespace
 	{
 		std::thread([]
 		{
-			std::wstring last;
 			while (true)
 			{
 				Sleep(50);
@@ -161,8 +156,8 @@ namespace
 					{
 						if (wchar_t* clipboardData = (wchar_t*)GlobalLock(clipboardHandle))
 						{
-							if (last != clipboardData)
-								Host::GetThread(CLIPBOARD)->AddSentence(last = clipboardData);
+							static std::wstring last;
+							if (last != clipboardData) Host::GetThread(CLIPBOARD)->AddSentence(last = clipboardData);
 							GlobalUnlock(clipboardHandle);
 						}
 					}
@@ -182,7 +177,7 @@ namespace Host
 		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
 		OnCreate(textThreadsByParams[CLIPBOARD] = std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard"));
 		StartCapturingClipboard();
-		StartPipe();
+		CreatePipe();
 	}
 
 	void Close()
@@ -202,7 +197,7 @@ namespace Host
 		CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
-			AddConsoleOutput(L"already injected");
+			AddConsoleOutput(L"Textractor: already injected");
 			return false;
 		}
 
@@ -218,7 +213,7 @@ namespace Host
 			IsWow64Process(processHandle, &invalidProcess);
 			if (invalidProcess)
 			{
-				AddConsoleOutput(L"architecture mismatch: try 32 bit Textractor instead");
+				AddConsoleOutput(L"Textractor: architecture mismatch: try 32 bit Textractor instead");
 				CloseHandle(processHandle);
 				return false;
 			}
@@ -239,7 +234,7 @@ namespace Host
 			}
 		}
 
-		AddConsoleOutput(L"couldn't inject dll");
+		AddConsoleOutput(L"Textractor: couldn't inject dll");
 		return false;
 	}
 
