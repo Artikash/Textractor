@@ -179,7 +179,7 @@ void MainWindow::on_attachButton_clicked()
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
-	QString process = QInputDialog::getItem(this, SELECT_PROCESS, INJECT_INFO, processList, 0, true, &ok);
+	QString process = QInputDialog::getItem(this, SELECT_PROCESS, INJECT_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
 	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
 	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
@@ -193,7 +193,7 @@ void MainWindow::on_detachButton_clicked()
 void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
-	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok);
+	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
 	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
 	else Host::AddConsoleOutput(INVALID_CODE);
@@ -211,7 +211,7 @@ void MainWindow::on_unhookButton_clicked()
 			GenerateCode(hook, GetSelectedProcessId())
 		);
 	bool ok;
-	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok);
+	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok, Qt::WindowCloseButtonHint);
 	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).insertion_address);
 }
 

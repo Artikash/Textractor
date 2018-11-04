@@ -66,7 +66,14 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 		QTimer::singleShot(0, []
 		{
-			translateTo = QInputDialog::getItem(nullptr, "Select Language", "What language should Bing translate to?", languages, 0, false).split(" ")[1].toStdWString();
+			translateTo = QInputDialog::getItem(
+				nullptr,
+				"Select Language",
+				"What language should Bing translate to?",
+				languages,
+				0, false, nullptr,
+				Qt::WindowCloseButtonHint
+			).split(" ")[1].toStdWString();
 		});
 	}
 	break;
