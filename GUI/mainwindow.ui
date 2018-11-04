@@ -13,24 +13,26 @@
   <property name="windowTitle">
    <string>Textractor</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">QObject
-{
-	font: 10pt &quot;MS Shell Dlg 2&quot;;
-}
-#textOutput
-{
-	font: 13pt &quot;MS Shell Dlg 2&quot;;
-}
-QPushButton, QComboBox
-{
-	padding-top: 3px;
-	padding-bottom: 3px;
-	padding-right: 5px;
-	padding-left: 5px;
-	text-align: left;
-}</string>
-  </property>
+   <property name="styleSheet">
+     <string notr="true">
+       QObject
+       {
+       font: 10pt &quot;MS Shell Dlg 2&quot;;
+       }
+       #textOutput
+       {
+       font: 13pt &quot;MS Shell Dlg 2&quot;;
+       }
+       QPushButton, QComboBox
+       {
+       padding-top: 3px;
+       padding-bottom: 3px;
+       padding-right: 5px;
+       padding-left: 5px;
+       text-align: left;
+       }
+     </string>
+   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout">
     <item>

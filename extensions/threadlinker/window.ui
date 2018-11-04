@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ExtenWindow</class>
- <widget class="QMainWindow" name="ExtenWindow">
+ <class>Window</class>
+ <widget class="QMainWindow" name="Window">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,11 +10,8 @@
     <height>300</height>
    </rect>
   </property>
-  <property name="acceptDrops">
-   <bool>true</bool>
-  </property>
   <property name="windowTitle">
-   <string>Extensions</string>
+   <string>Thread Linker</string>
   </property>
    <property name="styleSheet">
      <string notr="true">
@@ -37,37 +34,31 @@
      </string>
    </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout">
     <item>
-     <widget class="QListWidget" name="extenList">
-      <property name="dragDropMode">
-       <enum>QAbstractItemView::InternalMove</enum>
-      </property>
-      <property name="defaultDropAction">
-       <enum>Qt::MoveAction</enum>
-      </property>
+     <widget class="QListWidget" name="threadLinkList">
      </widget>
     </item>
     <item>
      <layout class="QVBoxLayout">
       <item>
-       <spacer name="verticalSpacer">
+       <spacer>
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="addButton">
+       <widget class="QPushButton" name="linkButton">
         <property name="text">
-         <string>Add</string>
+         <string>Link</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="rmvButton">
+       <widget class="QPushButton" name="unlinkButton">
         <property name="text">
-         <string>Remove</string>
+         <string>Unlink</string>
         </property>
        </widget>
       </item>
@@ -83,7 +74,6 @@
    </layout>
   </widget>
  </widget>
- <layoutdefault spacing="6" margin="6"/>
  <resources/>
  <connections/>
 </ui>
