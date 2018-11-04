@@ -106,7 +106,7 @@ std::wstring GetTranslationUri(std::wstring text, unsigned TKK)
 	unsigned a = (unsigned)(_time64(NULL) / 3600), b = a; // <- the first part of TKK
 	for (int i = 0; utf8[i];)
 	{
-		a += (unsigned)utf8[i++];
+		a += (unsigned char)utf8[i++];
 		a += a << 10;
 		a ^= a >> 6;
 	}
@@ -121,7 +121,7 @@ std::wstring GetTranslationUri(std::wstring text, unsigned TKK)
 	for (int i = 0; utf8[i];)
 	{
 		wchar_t utf8char[3] = {};
-		swprintf_s<3>(utf8char, L"%02X", (unsigned)utf8[i++]);
+		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)utf8[i++]);
 		text += L"%" + std::wstring(utf8char);
 	}
 

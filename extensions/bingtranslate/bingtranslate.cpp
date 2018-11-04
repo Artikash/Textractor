@@ -90,7 +90,7 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 	for (int i = 0; utf8[i];)
 	{
 		wchar_t utf8char[3] = {};
-		swprintf_s<3>(utf8char, L"%02X", (unsigned)utf8[i++]);
+		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)utf8[i++]);
 		text += L"%" + std::wstring(utf8char);
 	}
 
