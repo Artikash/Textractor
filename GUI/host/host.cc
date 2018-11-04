@@ -5,6 +5,7 @@
 #include "host.h"
 #include "const.h"
 #include "defs.h"
+#include "text.h"
 #include "../vnrhook/hijack/texthook.h"
 
 namespace
@@ -59,7 +60,7 @@ namespace
 		LOCK(hostMutex);
 		if (textThreadsByParams[tp] == nullptr)
 		{
-			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"Textractor: too many text threads: can't create more");
+			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(TOO_MANY_THREADS);
 			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)));
 		}
 		textThreadsByParams[tp]->Push(text, len);
@@ -197,7 +198,7 @@ namespace Host
 		CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
-			AddConsoleOutput(L"Textractor: already injected");
+			AddConsoleOutput(ALREADY_INJECTED);
 			return false;
 		}
 
@@ -213,7 +214,7 @@ namespace Host
 			IsWow64Process(processHandle, &invalidProcess);
 			if (invalidProcess)
 			{
-				AddConsoleOutput(L"Textractor: architecture mismatch: try 32 bit Textractor instead");
+				AddConsoleOutput(ARCHITECTURE_MISMATCH);
 				CloseHandle(processHandle);
 				return false;
 			}
@@ -234,7 +235,7 @@ namespace Host
 			}
 		}
 
-		AddConsoleOutput(L"Textractor: couldn't inject dll");
+		AddConsoleOutput(INJECT_FAILED);
 		return false;
 	}
 

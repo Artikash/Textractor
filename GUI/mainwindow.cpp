@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
+#include "text.h"
 #include "extenwindow.h"
 #include "misc.h"
 #include <QInputDialog>
@@ -37,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](std::shared_ptr<TextThread> thread) { emit SigRemoveThread(thread); },
 		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
-	Host::AddConsoleOutput(L"Textractor beta v3.4.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(ABOUT);
 }
 
 MainWindow::~MainWindow()
@@ -175,18 +176,14 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 
 void MainWindow::on_attachButton_clicked()
 {
-	QMultiHash<QString, DWORD> allProcesses = GetAllProcesses();
+	auto allProcesses = GetAllProcesses();
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
-	QString process = QInputDialog::getItem(this, "Select Process",
-		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id",
-		processList, 0, true, &ok);
-	bool injected = false;
+	QString process = QInputDialog::getItem(this, SELECT_PROCESS, INJECT_INFO, processList, 0, true, &ok);
 	if (!ok) return;
-	if (process.toInt(nullptr, 0)) injected |= Host::InjectProcess(process.toInt(nullptr, 0));
-	else for (auto processId : allProcesses.values(process)) injected |= Host::InjectProcess(processId);
-	if (!injected) Host::AddConsoleOutput(L"failed to inject");
+	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
+	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
 }
 
 void MainWindow::on_detachButton_clicked()
@@ -197,16 +194,16 @@ void MainWindow::on_detachButton_clicked()
 void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
-	QString hookCode = QInputDialog::getText(this, "Add Hook", CodeInfoDump, QLineEdit::Normal, "", &ok);
+	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok);
 	if (!ok) return;
 	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
-	else Host::AddConsoleOutput(L"invalid code");
+	else Host::AddConsoleOutput(INVALID_CODE);
 }
 
 void MainWindow::on_unhookButton_clicked()
 {
-	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
-	if (hooks.empty()) return Host::AddConsoleOutput(L"no hooks detected");
+	auto hooks = GetAllHooks(GetSelectedProcessId());
+	if (hooks.empty()) return Host::AddConsoleOutput(NO_HOOKS);
 	QStringList hookList;
 	for (auto hook : hooks) 
 		hookList.push_back(
@@ -215,13 +212,13 @@ void MainWindow::on_unhookButton_clicked()
 			GenerateCode(hook, GetSelectedProcessId())
 		);
 	bool ok;
-	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
+	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok);
 	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).insertion_address);
 }
 
 void MainWindow::on_saveButton_clicked()
 {
-	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
+	auto hooks = GetAllHooks(GetSelectedProcessId());
 	QString hookList = GetFullModuleName(GetSelectedProcessId());
 	for (auto hook : hooks)
 		if (!(hook.type & HOOK_ENGINE))
