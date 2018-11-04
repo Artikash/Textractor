@@ -1,5 +1,8 @@
-#include "extension.h"
+#include "../extension.h"
 #include <winhttp.h>
+#include <vector>
+#include <mutex>
+#include <algorithm>
 #include <regex>
 #include <QInputDialog>
 #include <QTimer>
@@ -81,13 +84,13 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 	static HINTERNET internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
-	char buffer[10000] = {};
-	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer, 10000, NULL, NULL);
+	char utf8[10000] = {};
+	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, utf8, 10000, NULL, NULL);
 	text.clear();
-	for (int i = 0; buffer[i];)
+	for (int i = 0; utf8[i];)
 	{
 		wchar_t utf8char[3] = {};
-		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)buffer[i++]);
+		swprintf_s<3>(utf8char, L"%02X", (unsigned)utf8[i++]);
 		text += L"%" + std::wstring(utf8char);
 	}
 
@@ -123,10 +126,22 @@ std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstr
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["hook address"] == -1 || sentenceInfo["current select"] != 1) return false;
+	if (sentenceInfo["hook address"] == -1) return false;
 
-	std::wstring translation;
-	std::wstring translateFrom;
+	{
+		static std::mutex m;
+		static std::vector<DWORD> requestTimes;
+		std::lock_guard l(m);
+		requestTimes.push_back(GetTickCount());
+		requestTimes.erase(std::remove_if(requestTimes.begin(), requestTimes.end(), [&](DWORD requestTime) { return GetTickCount() - requestTime > 60 * 1000; }), requestTimes.end());
+		if (!sentenceInfo["current select"] && requestTimes.size() > 30)
+		{
+			sentence += L"\r\nToo many translation requests: refuse to make more.";
+			return true;
+		}
+	}
+
+	std::wstring translation, translateFrom;
 	Translate(sentence, translateFrom, translateTo);
 	translation = Translate(sentence, translateFrom, translateTo);
 	for (auto& c : translation) if (c == L'\\') c = 0x200b;
