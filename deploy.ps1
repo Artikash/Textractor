@@ -7,10 +7,11 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Qt5Gui.dll",
 	"Qt5Widgets.dll",
 	"vnrhook.dll",
-	"Remove Repetition.dll",
-	"Copy to Clipboard.dll",
 	"Bing Translate.dll",
+	"Copy to Clipboard.dll",
 	"Extra Newlines.dll",
+	"Google Translate.dll",
+	"Remove Repetition.dll",
 	"Extensions.txt"
 )
 
@@ -23,9 +24,10 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Qt5Gui.dll",
 	"Qt5Widgets.dll",
 	"vnrhook.dll",
-	"Remove Repetition.dll",
-	"Copy to Clipboard.dll",
 	"Bing Translate.dll",
+	"Copy to Clipboard.dll",
 	"Extra Newlines.dll",
+	"Google Translate.dll",
+	"Remove Repetition.dll",
 	"Extensions.txt"
 )
