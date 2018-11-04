@@ -1,6 +1,6 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
-#include "defs.h"
+#include "text.h"
 #include "types.h"
 #include <QFileDialog>
 #include <QMimeData>
@@ -142,7 +142,7 @@ void ExtenWindow::dropEvent(QDropEvent* event)
 
 void ExtenWindow::on_addButton_clicked()
 {
-	Add(QFileDialog::getOpenFileName(this, "Select Extension", "C:\\", "Extensions (*.dll)"));
+	Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSIONS));
 }
 
 void ExtenWindow::on_rmvButton_clicked()

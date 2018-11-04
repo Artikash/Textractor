@@ -3,6 +3,7 @@
 
 #include "qtcommon.h"
 #include "host/host.h"
+#include "defs.h"
 #include <QPlainTextEdit>
 #include <QComboBox>
 #include <QSettings>
@@ -53,7 +54,7 @@ private:
 	void closeEvent(QCloseEvent*);
 
 	Ui::MainWindow* ui;
-	QSettings settings = QSettings("Textractor.ini", QSettings::IniFormat);
+	QSettings settings = QSettings(CONFIG_FILE, QSettings::IniFormat);
 	QComboBox* processCombo;
 	QComboBox* ttCombo;
 	QPlainTextEdit* textOutput;

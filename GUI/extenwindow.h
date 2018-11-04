@@ -2,6 +2,7 @@
 #define EXTENSIONS_H
 
 #include "qtcommon.h"
+#include "defs.h"
 #include <shared_mutex>
 #include <QListWidget>
 #include <QDragEnterEvent>
@@ -34,7 +35,7 @@ private:
 	void dropEvent(QDropEvent* event);
 
 	Ui::ExtenWindow* ui;
-	QFile extenSaveFile = QFile("Extensions.txt");
+	QFile extenSaveFile = QFile(EXTEN_SAVE_FILE);
 	QListWidget* extenList;
 };
 

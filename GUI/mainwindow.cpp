@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "defs.h"
+#include "text.h"
 #include "extenwindow.h"
 #include "misc.h"
 #include <QInputDialog>
@@ -16,11 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
 
-	if (settings.contains("Window")) this->setGeometry(settings.value("Window").toRect());
+	if (settings.contains(WINDOW)) this->setGeometry(settings.value(WINDOW).toRect());
 	// TODO: add GUI for changing these
-	if (settings.contains("Default_Codepage")) DEFAULT_CODEPAGE = settings.value("Default_Codepage").toInt();
-	if (settings.contains("Flush_Delay")) TextThread::flushDelay = settings.value("Flush_Delay").toInt();
-	if (settings.contains("Max_Buffer_Size")) TextThread::maxBufferSize = settings.value("Max_Buffer_Size").toInt();
+	if (settings.contains(DEFAULT_CODEPAGE)) CURRENT_CODEPAGE = settings.value(DEFAULT_CODEPAGE).toInt();
+	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
+	if (settings.contains(MAX_BUFFER_SIZE)) TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE).toInt();
 
 	qRegisterMetaType<std::shared_ptr<TextThread>>();
 
@@ -37,15 +37,15 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](std::shared_ptr<TextThread> thread) { emit SigRemoveThread(thread); },
 		[&](TextThread* thread, std::wstring& output) { return ProcessThreadOutput(thread, output); }
 	);
-	Host::AddConsoleOutput(L"Textractor beta v3.4.0 by Artikash\r\nSource code and more information available under GPLv3 at https://github.com/Artikash/Textractor");
+	Host::AddConsoleOutput(ABOUT);
 }
 
 MainWindow::~MainWindow()
 {
-	settings.setValue("Window", this->geometry());
-	settings.setValue("Default_Codepage", DEFAULT_CODEPAGE);
-	settings.setValue("Flush_Delay", TextThread::flushDelay);
-	settings.setValue("Max_Buffer_Size", TextThread::maxBufferSize);
+	settings.setValue(WINDOW, this->geometry());
+	settings.setValue(DEFAULT_CODEPAGE, CURRENT_CODEPAGE);
+	settings.setValue(FLUSH_DELAY, TextThread::flushDelay);
+	settings.setValue(MAX_BUFFER_SIZE, TextThread::maxBufferSize);
 	settings.sync();
 	delete ui;
 
@@ -60,7 +60,7 @@ void MainWindow::closeEvent(QCloseEvent*)
 void MainWindow::AddProcess(unsigned processId)
 {
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
-	QFile file("SavedHooks.txt");
+	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::ReadOnly);
 	QString processName = GetFullModuleName(processId);
 	QStringList allProcesses = QString(file.readAll()).split("\r", QString::SkipEmptyParts);
@@ -175,18 +175,14 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 
 void MainWindow::on_attachButton_clicked()
 {
-	QMultiHash<QString, DWORD> allProcesses = GetAllProcesses();
+	auto allProcesses = GetAllProcesses();
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
-	QString process = QInputDialog::getItem(this, "Select Process",
-		"If you don't see the process you want to inject, try running with admin rights\r\nYou can also type in the process id",
-		processList, 0, true, &ok);
-	bool injected = false;
+	QString process = QInputDialog::getItem(this, SELECT_PROCESS, INJECT_INFO, processList, 0, true, &ok);
 	if (!ok) return;
-	if (process.toInt(nullptr, 0)) injected |= Host::InjectProcess(process.toInt(nullptr, 0));
-	else for (auto processId : allProcesses.values(process)) injected |= Host::InjectProcess(processId);
-	if (!injected) Host::AddConsoleOutput(L"failed to inject");
+	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
+	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
 }
 
 void MainWindow::on_detachButton_clicked()
@@ -197,16 +193,16 @@ void MainWindow::on_detachButton_clicked()
 void MainWindow::on_hookButton_clicked()
 {
 	bool ok;
-	QString hookCode = QInputDialog::getText(this, "Add Hook", CodeInfoDump, QLineEdit::Normal, "", &ok);
+	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok);
 	if (!ok) return;
 	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
-	else Host::AddConsoleOutput(L"invalid code");
+	else Host::AddConsoleOutput(INVALID_CODE);
 }
 
 void MainWindow::on_unhookButton_clicked()
 {
-	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
-	if (hooks.empty()) return Host::AddConsoleOutput(L"no hooks detected");
+	auto hooks = GetAllHooks(GetSelectedProcessId());
+	if (hooks.empty()) return Host::AddConsoleOutput(NO_HOOKS);
 	QStringList hookList;
 	for (auto hook : hooks) 
 		hookList.push_back(
@@ -215,18 +211,18 @@ void MainWindow::on_unhookButton_clicked()
 			GenerateCode(hook, GetSelectedProcessId())
 		);
 	bool ok;
-	QString hook = QInputDialog::getItem(this, "Unhook", "Which hook to remove?", hookList, 0, false, &ok);
+	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok);
 	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).insertion_address);
 }
 
 void MainWindow::on_saveButton_clicked()
 {
-	QVector<HookParam> hooks = GetAllHooks(GetSelectedProcessId());
+	auto hooks = GetAllHooks(GetSelectedProcessId());
 	QString hookList = GetFullModuleName(GetSelectedProcessId());
 	for (auto hook : hooks)
 		if (!(hook.type & HOOK_ENGINE))
 			hookList += " , " + GenerateCode(hook, GetSelectedProcessId());
-	QFile file("SavedHooks.txt");
+	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::Append);
 	file.write((hookList + "\r\n").toUtf8());
 }
