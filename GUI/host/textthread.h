@@ -23,8 +23,8 @@ public:
 	~TextThread();
 
 	std::wstring GetStorage();
-	void AddText(const BYTE* data, int len);
 	void AddSentence(std::wstring sentence);
+	void Push(const BYTE* data, int len);
 
 	const int64_t handle;
 	const std::wstring name;
@@ -41,7 +41,7 @@ private:
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
-	DWORD timestamp = GetTickCount();
+	DWORD lastPushTime = GetTickCount();
 };
 
 // EOF

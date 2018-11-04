@@ -62,7 +62,7 @@ namespace
 			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(L"too many text threads: can't create more");
 			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)));
 		}
-		textThreadsByParams[tp]->AddText(text, len);
+		textThreadsByParams[tp]->Push(text, len);
 	}
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
