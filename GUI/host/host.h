@@ -12,7 +12,7 @@ typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
 
 namespace Host
 {
-	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output);
+	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output);
 	void Close();
 
 	bool InjectProcess(DWORD processId, DWORD timeout = 5000);

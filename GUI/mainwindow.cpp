@@ -161,7 +161,6 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 {
 	QSet<uint64_t> addresses;
 	QVector<HookParam> hooks;
-	if (!processId) return hooks;
 	for (int i = 0; i < ttCombo->count(); ++i)
 	{
 		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
@@ -188,7 +187,6 @@ void MainWindow::on_attachButton_clicked()
 
 void MainWindow::on_detachButton_clicked()
 {
-	if (processCombo->count() == 0) return;
 	Host::DetachProcess(GetSelectedProcessId());
 }
 
@@ -197,7 +195,6 @@ void MainWindow::on_hookButton_clicked()
 	bool ok;
 	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
-	if (processCombo->count() == 0) return;
 	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
 	else Host::AddConsoleOutput(INVALID_CODE);
 }

@@ -44,7 +44,7 @@ namespace
 		WinMutex sectionMutex;
 	};
 
-	ThreadEventCallback OnCreate, OnRemove;
+	ThreadEventCallback OnCreate, OnDestroy;
 	ProcessEventCallback OnAttach, OnDetach;
 
 	std::unordered_map<ThreadParam, std::shared_ptr<TextThread>> textThreadsByParams;
@@ -72,7 +72,7 @@ namespace
 		for (auto it = textThreadsByParams.begin(); it != textThreadsByParams.end();)
 			if (auto curr = it++; removeIf(curr->first))
 			{
-				OnRemove(curr->second);
+				OnDestroy(curr->second);
 				textThreadsByParams.erase(curr->first);
 			}
 	}
@@ -172,9 +172,10 @@ namespace
 
 namespace Host
 {
-	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onRemove, TextThread::OutputCallback output)
+	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output)
 	{
-		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnRemove = onRemove; TextThread::Output = output;
+		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnDestroy = onDestroy; TextThread::Output = output;
+		RegisterProcess(CONSOLE.pid, INVALID_HANDLE_VALUE);
 		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
 		OnCreate(textThreadsByParams[CLIPBOARD] = std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard"));
 		StartCapturingClipboard();
