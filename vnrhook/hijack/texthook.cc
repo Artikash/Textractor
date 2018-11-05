@@ -26,33 +26,21 @@ TextHook *hookman;
 namespace { // unnamed
 #ifndef _WIN64
 
-	const BYTE common_hook[] = {
+	BYTE common_hook[] = {
 	  0x9c, // pushfd
 	  0x60, // pushad
-	  0x9c, // pushfd
-	  0x8d,0x54,0x24,0x28, // lea edx,[esp+0x28] ; esp value
-	  0x8b,0x32,     // mov esi,[edx] ; return address
-	  0xb9, 0,0,0,0, // mov ecx, $ ; pointer to TextHook
-	  0xe8, 0,0,0,0, // call @hook
+	  0x9c, // pushfd ; Artikash 11/4/2018: not sure why pushfd happens twice. Anyway, after this a total of 0x28 bytes are pushed
+	  0x8d, 0x44, 0x24, 0x28, // lea eax,[esp+0x28]
+	  0x50, // push eax ; dwDatabase
+	  0xb9, 0,0,0,0, // mov ecx,@this
+	  0xbb, 0,0,0,0, // mov ebx,@TextHook::Send
+	  0xff, 0xd3, // call ebx
 	  0x9d, // popfd
 	  0x61, // popad
 	  0x9d,  // popfd
-	  0xe9  // jmp @original
+	  0x68, 0,0,0,0, // push @original
+	  0xc3  // ret ; basically absolute jmp to @original
 	};
-
-
-	__declspec(naked) // jichi 10/2/2013: No prolog and epilog
-		int ProcessHook(DWORD dwDataBase, DWORD dwRetn, TextHook *hook) // Use SEH to ensure normal execution even bad hook inserted.
-	{
-		// jichi 12/17/2013: The function parameters here are meaning leass. The parameters are in esi and edi
-		__asm
-		{
-			push esi
-			push edx
-			call TextHook::Send
-			retn    // jichi 12/13/2013: return near, see: http://stackoverflow.com/questions/1396909/ret-retn-retf-how-to-use-them
-		}
-	}
 
 #else
 	const BYTE common_hook[] = {
@@ -114,109 +102,96 @@ bool TextHook::InsertHook()
 }
 
 #ifndef _WIN64
-// jichi 12/2/2013: This function mostly return 0.
-// It return the hook address only for auxiliary case.
-// However, because no known hooks are auxiliary, this function always return 0.
-//
 // jichi 5/11/2014:
 // - dwDataBase: the stack address
-// - dwRetn: the return address of the hook
-DWORD TextHook::Send(DWORD dwDataBase, DWORD dwRetn)
+void TextHook::Send(DWORD dwDataBase)
 {
-	DWORD ret = 0;
-	ITH_WITH_SEH(ret = UnsafeSend(dwDataBase, dwRetn));
-	return ret;
-}
+	__try
+	{
+		DWORD dwCount,
+			dwAddr,
+			dwDataIn,
+			dwRetn,
+			dwSplit;
+		BYTE pbData[PIPE_BUFFER_SIZE];
+		DWORD dwType = hp.type;
 
-DWORD TextHook::UnsafeSend(DWORD dwDataBase, DWORD dwRetn)
-{
-	DWORD dwCount,
-		dwAddr,
-		dwDataIn,
-		dwSplit;
-	BYTE pbData[PIPE_BUFFER_SIZE];
-	DWORD dwType = hp.type;
+		dwAddr = hp.insertion_address;
+		dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
 
-	dwAddr = hp.insertion_address;
+		/** jichi 12/24/2014
+		 *  @param  addr  function address
+		 *  @param  frame  real address of the function, supposed to be the same as addr
+		 *  @param  stack  address of current stack - 4
+		 *  @return  If success, which is reverted
+		 */
+		if (::trigger)
+			::trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
 
-	/** jichi 12/24/2014
-	 *  @param  addr  function address
-	 *  @param  frame  real address of the function, supposed to be the same as addr
-	 *  @param  stack  address of current stack - 4
-	 *  @return  If success, which is reverted
-	 */
-	if (::trigger)
-		::trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
+		// jichi 10/24/2014: generic hook function
+		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp))
+			hp.hook_fun = nullptr;
 
-	// jichi 10/24/2014: generic hook function
-	if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp))
-		hp.hook_fun = nullptr;
+		if (dwType & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
 
-	if (dwType & HOOK_EMPTY) // jichi 10/24/2014: dummy hook only for dynamic hook
-		return 0;
+		dwCount = 0;
+		dwSplit = 0;
+		dwDataIn = *(DWORD *)(dwDataBase + hp.offset); // default value
 
-	dwCount = 0;
-	dwSplit = 0;
-	dwDataIn = *(DWORD *)(dwDataBase + hp.offset); // default value
-
-	if (hp.text_fun) {
-		hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
-	}
-	else {
-		if (dwDataIn == 0)
-			return 0;
-		if (dwType & FIXING_SPLIT)
-			dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
-		else if (dwType & USING_SPLIT) {
-			dwSplit = *(DWORD *)(dwDataBase + hp.split);
-			if (dwType & SPLIT_INDIRECT) {
-				if (IthGetMemoryRange((LPVOID)(dwSplit + hp.split_index), 0, 0))
-					dwSplit = *(DWORD *)(dwSplit + hp.split_index);
-				else
-					return 0;
+		if (hp.text_fun) {
+			hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
+		}
+		else {
+			if (dwDataIn == 0)
+				return;
+			if (dwType & FIXING_SPLIT)
+				dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
+			else if (dwType & USING_SPLIT) {
+				dwSplit = *(DWORD *)(dwDataBase + hp.split);
+				if (dwType & SPLIT_INDIRECT) {
+					if (IthGetMemoryRange((LPVOID)(dwSplit + hp.split_index), 0, 0)) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
+					else return;
+				}
 			}
+			if (dwType & DATA_INDIRECT) {
+				if (IthGetMemoryRange((LPVOID)(dwDataIn + hp.index), 0, 0)) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
+				else return;
+			}
+			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
-		if (dwType & DATA_INDIRECT) {
-			if (IthGetMemoryRange((LPVOID)(dwDataIn + hp.index), 0, 0))
-				dwDataIn = *(DWORD *)(dwDataIn + hp.index);
-			else
-				return 0;
+		// jichi 12/25/2013: validate data size
+		if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) return;
+
+		if (hp.length_offset == 1) {
+			dwDataIn &= 0xffff;
+			if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8))
+				dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
+			if (dwCount == 1)
+				dwDataIn &= 0xff;
+			*(WORD *)(pbData + sizeof(ThreadParam)) = dwDataIn & 0xffff;
 		}
-		dwCount = GetLength(dwDataBase, dwDataIn);
+		else
+			::memcpy(pbData + sizeof(ThreadParam), (void *)dwDataIn, dwCount);
+
+		// jichi 10/14/2014: Add filter function
+		if (hp.filter_fun && !hp.filter_fun(pbData + sizeof(ThreadParam), &dwCount, &hp, 0) || dwCount <= 0) return;
+
+		if (dwType & (NO_CONTEXT | FIXING_SPLIT))
+			dwRetn = 0;
+
+		*(ThreadParam*)pbData = { GetCurrentProcessId(), dwAddr, dwRetn, dwSplit };
+		if (dwCount) {
+			DWORD unused;
+
+			//CliLockPipe();
+			WriteFile(::hookPipe, pbData, dwCount + sizeof(ThreadParam), &unused, nullptr);
+			//CliUnlockPipe();
+		}
 	}
-	// jichi 12/25/2013: validate data size
-	if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam))
-		return 0;
-
-	if (hp.length_offset == 1) {
-		dwDataIn &= 0xffff;
-		if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8))
-			dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
-		if (dwCount == 1)
-			dwDataIn &= 0xff;
-		*(WORD *)(pbData + sizeof(ThreadParam)) = dwDataIn & 0xffff;
+	__except (EXCEPTION_EXECUTE_HANDLER) 
+	{
+		ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
 	}
-	else
-		::memcpy(pbData + sizeof(ThreadParam), (void *)dwDataIn, dwCount);
-
-	// jichi 10/14/2014: Add filter function
-	if (hp.filter_fun && !hp.filter_fun(pbData + sizeof(ThreadParam), &dwCount, &hp, 0) || dwCount <= 0) {
-		return 0;
-	}
-
-	if (dwType & (NO_CONTEXT | FIXING_SPLIT))
-		dwRetn = 0;
-
-	*(ThreadParam*)pbData = { GetCurrentProcessId(), dwAddr, dwRetn, dwSplit };
-	if (dwCount) {
-		DWORD unused;
-
-		//CliLockPipe();
-		WriteFile(::hookPipe, pbData, dwCount + sizeof(ThreadParam), &unused, nullptr);
-		//CliUnlockPipe();
-	}
-	return 0;
-
 }
 
 bool TextHook::InsertHookCode()
@@ -226,9 +201,9 @@ bool TextHook::InsertHookCode()
 	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
 		if (hp.type & FUNCTION_OFFSET)
 			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
-			else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: function not present"), false;
+			else return ConsoleOutput("Textractor: InsertHookCode FAILED: function not present"), false;
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
-		else return ConsoleOutput("Textractor: UnsafeInsertHookCode: FAILED: module not present"), false;
+		else return ConsoleOutput("Textractor: InsertHookCode FAILED: module not present"), false;
 
 	BYTE* original;
 insert:
@@ -240,18 +215,15 @@ insert:
 		}
 		else
 		{
-			ConsoleOutput(("Textractor: UnsafeInsertHookCode: FAILED: error " + std::string(MH_StatusToString(err))).c_str());
+			ConsoleOutput(("Textractor: InsertHookCode FAILED: error " + std::string(MH_StatusToString(err))).c_str());
 			return false;
 		}
 
-	void* thisPtr = (void*)this;
-	void* funcPtr = (void*)((BYTE*)ProcessHook - (BYTE*)(trampoline + 19));
-	DWORD dist = original - (trampoline + sizeof(common_hook)) - 4;
-
+	
+	*(TextHook**)(common_hook + 9) = this;
+	*(void(TextHook::**)(DWORD))(common_hook + 14) = &TextHook::Send;
+	*(BYTE**)(common_hook + 24) = original;
 	memcpy(trampoline, common_hook, sizeof(common_hook));
-	memcpy(trampoline + 10, &thisPtr, sizeof(void*));
-	memcpy(trampoline + 15, &funcPtr, sizeof(void*));
-	memcpy(trampoline + sizeof(common_hook), &dist, sizeof(dist));
 
 	//BYTE* original;
 	//MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original);
@@ -274,41 +246,38 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	unsigned int changeCount = 0;
 	int dataLen = 0;
-	const void* currentAddress = (void*)hook->hp.insertion_address;
-	while (true)
+	__try
 	{
-		if (!IthGetMemoryRange((void*)hook->hp.insertion_address, nullptr, nullptr))
+		const void* currentAddress = (void*)hook->hp.insertion_address;
+		while (true)
 		{
-			ConsoleOutput("Textractor: can't read desired address");
-			break;
-		}
-		if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
-		if (!IthGetMemoryRange(currentAddress, nullptr, nullptr))
-		{
-			ConsoleOutput("Textractor: can't read desired address");
-			break;
-		}
-		Sleep(500);
-		if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1) == 0)
-		{
-			changeCount = 0;
-			continue;
-		}
-		if (++changeCount > 10)
-		{
-			ConsoleOutput("Textractor: memory constantly changing, useless to read");
-			break;
-		}
+			if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
+			Sleep(500);
+			if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1) == 0)
+			{
+				changeCount = 0;
+				continue;
+			}
+			if (++changeCount > 10)
+			{
+				ConsoleOutput("Textractor: memory constantly changing, useless to read");
+				break;
+			}
 
-		if (hook->hp.type & USING_UNICODE)
-			dataLen = wcslen((const wchar_t*)currentAddress) * 2;
-		else
-			dataLen = strlen((const char*)currentAddress);
+			if (hook->hp.type & USING_UNICODE)
+				dataLen = wcslen((const wchar_t*)currentAddress) * 2;
+			else
+				dataLen = strlen((const char*)currentAddress);
 
-		*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 };
-		memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
-		DWORD unused;
-		WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
+			*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 };
+			memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
+			DWORD unused;
+			WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		ConsoleOutput("Textractor: ReaderThread ERROR (likely an incorrect R-code)");
 	}
 	ConsoleOutput("Textractor: remove read code");
 	hook->ClearHook();

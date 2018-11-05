@@ -20,7 +20,6 @@ class TextHook
 {
 	bool InsertHookCode();
 	bool InsertReadCode();
-	DWORD UnsafeSend(DWORD dwDataBase, DWORD dwRetn);
 	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 	void RemoveHookCode();
 	void RemoveReadCode();
@@ -32,7 +31,7 @@ public:
 
 	bool InsertHook();
 	void InitHook(const HookParam &hp, LPCSTR name, DWORD set_flag);
-	DWORD Send(DWORD dwDataBase, DWORD dwRetn);
+	void Send(DWORD dwDataBase);
 	void ClearHook();
 };
 
