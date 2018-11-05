@@ -20,7 +20,7 @@ constexpr auto UNHOOK = u8"Unhook";
 constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
 constexpr auto SELECT_EXTENSION = u8"Select Extension";
 constexpr auto EXTENSIONS = u8"Extensions (*.dll)";
-constexpr auto ABOUT = L"Textractor beta v3.4.0 by Artikash\r\n"
+constexpr auto ABOUT = L"Textractor beta v3.4.1 by Artikash\r\n"
 "Source code and more information available under GPLv3 at https://github.com/Artikash/Textractor";
 constexpr auto TOO_MANY_THREADS = L"Textractor: ERROR: too many text threads: can't create more";
 constexpr auto ALREADY_INJECTED = L"Textractor: ERROR: already injected";
