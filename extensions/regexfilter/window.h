@@ -1,10 +1,9 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "common.h"
 #include <QMainWindow>
 #include <QString>
-#include <regex>
-#include <mutex>
 
 namespace Ui
 {

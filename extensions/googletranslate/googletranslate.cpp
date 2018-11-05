@@ -1,10 +1,6 @@
 #include "../extension.h"
 #include <winhttp.h>
 #include <ctime>
-#include <vector>
-#include <mutex>
-#include <algorithm>
-#include <regex>
 #include <QInputDialog>
 #include <QTimer>
 

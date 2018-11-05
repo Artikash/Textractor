@@ -6,7 +6,6 @@
 
 #include "common.h"
 #include "types.h"
-#include <unordered_set>
 
 class TextThread
 {

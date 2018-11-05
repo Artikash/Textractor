@@ -1,6 +1,4 @@
 #include "../extension.h"
-#include <set>
-#include <mutex>
 
 bool RemoveRepeatedChars(std::wstring& sentence)
 {
@@ -44,11 +42,11 @@ bool RemoveCyclicRepeats(std::wstring& sentence)
 
 bool RemoveRepeatedSentences(std::wstring& sentence, int64_t handle)
 {
-	static std::set<std::pair<int64_t, std::wstring>> seenSentences;
+	static std::unordered_map<int64_t, std::unordered_set<std::wstring>> seenSentences;
 	static std::mutex m;
 	std::lock_guard<std::mutex> l(m);
-	if (seenSentences.count({ handle, sentence }) != 0) Skip();
-	seenSentences.insert({ handle, sentence });
+	if (seenSentences[handle].count(sentence)) Skip();
+	seenSentences[handle].insert(sentence);
 	return false;
 }
 

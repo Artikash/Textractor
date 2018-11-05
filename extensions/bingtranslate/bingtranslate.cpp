@@ -1,9 +1,5 @@
 #include "../extension.h"
 #include <winhttp.h>
-#include <vector>
-#include <mutex>
-#include <algorithm>
-#include <regex>
 #include <QInputDialog>
 #include <QTimer>
 

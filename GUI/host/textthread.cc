@@ -5,7 +5,6 @@
 #include "textthread.h"
 #include "host.h"
 #include "const.h"
-#include <regex>
 
 TextThread::TextThread(ThreadParam tp, HookParam hp, std::wstring name) : handle(threadCounter++), name(name), tp(tp), hp(hp) {}
 

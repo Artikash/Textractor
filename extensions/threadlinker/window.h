@@ -1,9 +1,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <unordered_map>
-#include <unordered_set>
-#include <mutex>
+#include "common.h"
 #include <QMainWindow>
 #include <QListWidget>
 
