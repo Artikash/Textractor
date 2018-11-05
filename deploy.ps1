@@ -13,6 +13,7 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Google Translate.dll",
 	"Regex Filter.dll",
 	"Remove Repetition.dll",
+	"Thread Linker.dll",
 	"Extensions.txt"
 )
 
@@ -31,5 +32,6 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Google Translate.dll",
 	"Regex Filter.dll",
 	"Remove Repetition.dll",
+	"Thread Linker.dll",
 	"Extensions.txt"
 )
