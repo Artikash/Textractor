@@ -22,9 +22,9 @@ namespace Host
 	void RemoveHook(DWORD processId, uint64_t addr);
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr);
-	inline HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.pid, tp.hook); }
+	inline HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.processId, tp.addr); }
 	std::wstring GetHookName(DWORD processId, uint64_t addr);
-	inline std::wstring GetHookName(ThreadParam tp) { return GetHookName(tp.pid, tp.hook); }
+	inline std::wstring GetHookName(ThreadParam tp) { return GetHookName(tp.processId, tp.addr); }
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);

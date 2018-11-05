@@ -29,16 +29,16 @@ struct HookParam
 	hook_fun_t hook_fun;
 };
 
-struct ThreadParam // From hook, used internally by host as well
+struct ThreadParam
 {
-	DWORD pid; // jichi: 5/11/2014: The process ID
-	uint64_t hook; // Artikash 6/6/2018: The insertion address of the hook
-	uint64_t retn; // jichi 5/11/2014: The return address of the hook
-	uint64_t spl;  // jichi 5/11/2014: the processed split value of the hook paramete
+	DWORD processId;
+	uint64_t addr;
+	uint64_t ctx; // The context of the hook: by default the first value on stack, usually the return address
+	uint64_t ctx2;  // The subcontext of the hook: 0 by default, generated in a method specific to the hook
 };
 // Artikash 5/31/2018: required for unordered_map to work with struct key
-template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<int64_t>()((tp.pid + tp.hook) ^ (tp.retn + tp.spl)); } };
-static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.pid == two.pid && one.hook == two.hook && one.retn == two.retn && one.spl == two.spl; }
+template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<int64_t>()((tp.processId + tp.addr) ^ (tp.ctx + tp.ctx2)); } };
+static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.processId == two.processId && one.addr == two.addr && one.ctx == two.ctx && one.ctx2 == two.ctx2; }
 
 class WinMutex
 {

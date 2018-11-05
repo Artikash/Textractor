@@ -59,6 +59,7 @@ void MainWindow::closeEvent(QCloseEvent*)
 
 void MainWindow::AddProcess(unsigned processId)
 {
+	if (processId == 0) return;
 	processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + GetModuleName(processId));
 	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::ReadOnly);
@@ -84,7 +85,7 @@ void MainWindow::AddThread(std::shared_ptr<TextThread> thread)
 		TextThreadString(thread.get()) +
 		QString::fromStdWString(thread->name) +
 		" (" +
-		GenerateCode(thread->hp, thread->tp.pid) +
+		GenerateCode(thread->hp, thread->tp.processId) +
 		")"
 	);
 }
@@ -126,10 +127,10 @@ QString MainWindow::TextThreadString(TextThread* thread)
 	ThreadParam tp = thread->tp;
 	return QString("%1:%2:%3:%4:%5: ").arg(
 		QString::number(thread->handle, 16),
-		QString::number(tp.pid, 16),
-		QString::number(tp.hook, 16),
-		QString::number(tp.retn, 16),
-		QString::number(tp.spl, 16)
+		QString::number(tp.processId, 16),
+		QString::number(tp.addr, 16),
+		QString::number(tp.ctx, 16),
+		QString::number(tp.ctx2, 16)
 	).toUpper();
 }
 
@@ -150,8 +151,8 @@ std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thr
 	{
 	{ "current select", ttCombo->currentText().startsWith(TextThreadString(thread)) },
 	{ "text number", thread->handle },
-	{ "process id", thread->tp.pid },
-	{ "hook address", thread->tp.hook },
+	{ "process id", thread->tp.processId },
+	{ "hook address", thread->tp.addr },
 	{ "text handle", thread->handle },
 	{ "text name", (int64_t)thread->name.c_str() }
 	};
@@ -164,9 +165,9 @@ QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
 	for (int i = 0; i < ttCombo->count(); ++i)
 	{
 		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
-		if (tp.pid == processId && !addresses.contains(tp.hook))
+		if (tp.processId == processId && !addresses.contains(tp.addr))
 		{
-			addresses.insert(tp.hook);
+			addresses.insert(tp.addr);
 			hooks.push_back(Host::GetHookParam(tp));
 		}
 	}
@@ -204,11 +205,11 @@ void MainWindow::on_unhookButton_clicked()
 	auto hooks = GetAllHooks(GetSelectedProcessId());
 	if (hooks.empty()) return Host::AddConsoleOutput(NO_HOOKS);
 	QStringList hookList;
-	for (auto hook : hooks) 
+	for (auto hp : hooks) 
 		hookList.push_back(
-			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hook.insertion_address)) +
+			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hp.insertion_address)) +
 			": " +
-			GenerateCode(hook, GetSelectedProcessId())
+			GenerateCode(hp, GetSelectedProcessId())
 		);
 	bool ok;
 	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok, Qt::WindowCloseButtonHint);
@@ -219,9 +220,9 @@ void MainWindow::on_saveButton_clicked()
 {
 	auto hooks = GetAllHooks(GetSelectedProcessId());
 	QString hookList = GetFullModuleName(GetSelectedProcessId());
-	for (auto hook : hooks)
-		if (!(hook.type & HOOK_ENGINE))
-			hookList += " , " + GenerateCode(hook, GetSelectedProcessId());
+	for (auto hp : hooks)
+		if (!(hp.type & HOOK_ENGINE))
+			hookList += " , " + GenerateCode(hp, GetSelectedProcessId());
 	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::Append);
 	file.write((hookList + "\r\n").toUtf8());

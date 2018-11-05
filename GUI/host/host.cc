@@ -89,7 +89,7 @@ namespace
 		OnDetach(processId);
 		LOCK(hostMutex);
 		processRecordsByIds.erase(processId);
-		RemoveThreads([&](ThreadParam tp) { return tp.pid == processId; });
+		RemoveThreads([&](ThreadParam tp) { return tp.processId == processId; });
 	}
 
 	void CreatePipe()
@@ -117,7 +117,7 @@ namespace
 				case HOST_NOTIFICATION_RMVHOOK:
 				{
 					auto info = *(HookRemovedNotif*)buffer;
-					RemoveThreads([&](ThreadParam tp) { return tp.pid == processId && tp.hook == info.address; });
+					RemoveThreads([&](ThreadParam tp) { return tp.processId == processId && tp.addr == info.address; });
 				}
 				break;
 				case HOST_NOTIFICATION_TEXT:
@@ -175,7 +175,7 @@ namespace Host
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnDestroy = onDestroy; TextThread::Output = output;
-		RegisterProcess(CONSOLE.pid, INVALID_HANDLE_VALUE);
+		RegisterProcess(CONSOLE.processId, INVALID_HANDLE_VALUE);
 		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
 		OnCreate(textThreadsByParams[CLIPBOARD] = std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard"));
 		StartCapturingClipboard();
