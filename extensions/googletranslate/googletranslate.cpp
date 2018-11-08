@@ -99,7 +99,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 std::wstring GetTranslationUri(std::wstring text, unsigned TKK)
 {
-	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access.
+	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access
 	if (!TKK) return L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=" + translateTo + L"&q=" + text;
 
 	// Artikash 8/19/2018: reverse engineered from translate.google.com
@@ -155,24 +155,23 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	std::wstring translation;
 	if (internet)
 	{
-		if (!TKK)
-			if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+		if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+		{
+			if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
 			{
-				if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
+				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 				{
-					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-					{
-						DWORD bytesRead;
-						char buffer[100000] = {}; // Google Translate page is ~64kb
-						WinHttpReceiveResponse(request, NULL);
-						WinHttpReadData(request, buffer, 100000, &bytesRead);
-						if (strstr(buffer, "a\\x3d")) TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
-						else TKK = strtoll(strstr(buffer, "TKK") + 12, nullptr, 10);
-					}
-					WinHttpCloseHandle(request);
+					DWORD bytesRead;
+					char buffer[100000] = {}; // Google Translate page is ~64kb
+					WinHttpReceiveResponse(request, NULL);
+					WinHttpReadData(request, buffer, 100000, &bytesRead);
+					if (strstr(buffer, "a\\x3d")) TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
+					else TKK = strtoll(strstr(buffer, "TKK") + 12, nullptr, 10);
 				}
-				WinHttpCloseHandle(connection);
+				WinHttpCloseHandle(request);
 			}
+			WinHttpCloseHandle(connection);
+		}
 
 		if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
 		{
