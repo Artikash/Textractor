@@ -44,20 +44,24 @@ void TextThread::Push(const BYTE* data, int len)
 
 void TextThread::Flush()
 {
-	std::wstring sentence;
+	std::unique_lock locker(threadMutex);
+	if (buffer.empty()) return;
+	if (buffer.size() > maxBufferSize || GetTickCount() - lastPushTime > flushDelay)
 	{
-		LOCK(threadMutex);
-		if (buffer.empty()) return;
-		if (buffer.size() < maxBufferSize && GetTickCount() - lastPushTime < flushDelay) return;
-		sentence = buffer;
+		std::wstring sentence = buffer;
 		buffer.clear();
 
-		bool hasRepetition = false;
-		for (std::wsmatch results; std::regex_search(sentence, results, std::wregex(L"([^\\x00]{6,})\\1\\1")); hasRepetition = true) sentence = results[1];
-		if (hasRepetition) repeatingChars = std::unordered_set<wchar_t>(sentence.begin(), sentence.end());
-		else repeatingChars.clear();
+		locker.unlock(); // This algorithm might take a while
+		std::unordered_set<wchar_t> repeatingChars;
+		for (std::wsmatch results; std::regex_search(sentence, results, std::wregex(L"([^\\x00]{6,})\\1\\1")); sentence = results[1])
+			repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
+		locker.lock();
+
+		this->repeatingChars = repeatingChars;
+
+		locker.unlock();
+		AddSentence(sentence);
 	}
-	AddSentence(sentence);
 }
 
 // EOF

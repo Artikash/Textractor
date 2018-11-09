@@ -14,8 +14,8 @@ public:
 
 	inline static OutputCallback Output;
 
-	inline static int flushDelay = 250; // flush every 250ms by default
-	inline static int maxBufferSize = 200;
+	inline static int flushDelay = 400; // flush every 400ms by default
+	inline static int maxBufferSize = 1000;
 	inline static int threadCounter = 0;
 
 	TextThread(ThreadParam tp, HookParam hp, std::wstring name);
