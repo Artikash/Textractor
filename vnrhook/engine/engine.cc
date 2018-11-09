@@ -4266,6 +4266,8 @@ bool InsertCMVS2Hook()
   enum { addr_offset = 3 }; // offset from the beginning of the function
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  // Artikash 11/9/2018: Not sure, but isn't findCallerAddress a better way to do this?
+  if (!addr) addr = MemDbg::findCallerAddressAfterInt3((DWORD)GetGlyphOutlineA, processStartAddress, processStopAddress);
   if (!addr) {
     ConsoleOutput("vnreng:CMVS2: pattern not found");
     return false;
