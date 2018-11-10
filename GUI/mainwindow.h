@@ -41,6 +41,7 @@ private slots:
 	void on_unhookButton_clicked();
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
+	void on_setButton_clicked();
 	void on_extenButton_clicked();
 	void on_ttCombo_activated(int index);
 

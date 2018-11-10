@@ -5,5 +5,6 @@
 #include <QVector>
 #include <QHash>
 #include <QMainWindow>
+#include <QDialog>
 #include <QFile>
 #include <QRegularExpression>

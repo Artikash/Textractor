@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "textthread.h"
+#include "text.h"
 
 typedef std::function<void(DWORD)> ProcessEventCallback;
 typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
@@ -30,12 +31,19 @@ namespace Host
 	void AddConsoleOutput(std::wstring text);
 }
 
-inline UINT CURRENT_CODEPAGE = SHIFT_JIS;
-inline std::wstring StringToWideString(const std::string& text, UINT encoding = CURRENT_CODEPAGE)
+inline std::wstring StringToWideString(const std::string& text, UINT encoding = CP_UTF8)
 {
 	std::wstring ret(text.size() + 1, 0);
-	ret.resize(MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.capacity()) - 1);
-	return ret;
+	if (int len = MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.capacity()))
+	{
+		ret.resize(len - 1);
+		return ret;
+	}
+	else
+	{
+		Host::AddConsoleOutput(INVALID_CODEPAGE);
+		return L"";
+	}
 }
 
 // EOF

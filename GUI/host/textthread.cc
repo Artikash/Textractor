@@ -37,7 +37,7 @@ void TextThread::Push(const BYTE* data, int len)
 	LOCK(threadMutex);
 	buffer += hp.type & USING_UNICODE
 		? std::wstring((wchar_t*)data, len / 2)
-		: StringToWideString(std::string((char*)data, len), hp.codepage != 0 ? hp.codepage : CURRENT_CODEPAGE);
+		: StringToWideString(std::string((char*)data, len), hp.codepage != 0 ? hp.codepage : defaultCodepage);
 	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
 	lastPushTime = GetTickCount();
 }

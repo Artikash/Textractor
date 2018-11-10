@@ -16,6 +16,7 @@ public:
 
 	inline static int flushDelay = 400; // flush every 400ms by default
 	inline static int maxBufferSize = 1000;
+	inline static int defaultCodepage = SHIFT_JIS;
 	inline static int threadCounter = 0;
 
 	TextThread(ThreadParam tp, HookParam hp, std::wstring name);

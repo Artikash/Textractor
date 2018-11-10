@@ -102,6 +102,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="setButton">
+         <property name="text">
+          <string>Settings</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="extenButton">
          <property name="text">
           <string>Extensions</string>

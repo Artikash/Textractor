@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "text.h"
 #include "extenwindow.h"
+#include "setdialog.h"
 #include "misc.h"
 #include <QInputDialog>
 
@@ -16,11 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");
 
-	if (settings.contains(WINDOW)) this->setGeometry(settings.value(WINDOW).toRect());
-	// TODO: add GUI for changing these
-	if (settings.contains(DEFAULT_CODEPAGE)) CURRENT_CODEPAGE = settings.value(DEFAULT_CODEPAGE).toInt();
+	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
 	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
 	if (settings.contains(MAX_BUFFER_SIZE)) TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE).toInt();
+	if (settings.contains(DEFAULT_CODEPAGE)) TextThread::defaultCodepage = settings.value(DEFAULT_CODEPAGE).toInt();
 
 	qRegisterMetaType<std::shared_ptr<TextThread>>();
 
@@ -42,13 +42,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	settings.setValue(WINDOW, this->geometry());
-	settings.setValue(DEFAULT_CODEPAGE, CURRENT_CODEPAGE);
-	settings.setValue(FLUSH_DELAY, TextThread::flushDelay);
-	settings.setValue(MAX_BUFFER_SIZE, TextThread::maxBufferSize);
+	settings.setValue(WINDOW, geometry());
 	settings.sync();
 	delete ui;
-
 	Host::Close();
 }
 
@@ -226,6 +222,11 @@ void MainWindow::on_saveButton_clicked()
 	QFile file(HOOK_SAVE_FILE);
 	file.open(QIODevice::Append);
 	file.write((hookList + "\r\n").toUtf8());
+}
+
+void MainWindow::on_setButton_clicked()
+{
+	SetDialog(this).exec();
 }
 
 void MainWindow::on_extenButton_clicked()

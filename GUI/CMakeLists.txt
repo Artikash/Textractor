@@ -10,6 +10,7 @@ set(gui_SRCS
 	mainwindow.cpp
 	misc.cpp
     extenwindow.cpp
+	setdialog.cpp
 	tests.cpp
 	host/host.cc
 	host/textthread.cc

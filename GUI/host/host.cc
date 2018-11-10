@@ -5,7 +5,6 @@
 #include "host.h"
 #include "const.h"
 #include "defs.h"
-#include "text.h"
 #include "../vnrhook/hijack/texthook.h"
 
 namespace

@@ -28,3 +28,4 @@ constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: ERROR: architecture mismatc
 constexpr auto INJECT_FAILED = L"Textractor: ERROR: couldn't inject";
 constexpr auto INVALID_CODE = L"Textractor: invalid code";
 constexpr auto NO_HOOKS = L"Textractor: no hooks detected";
+constexpr auto INVALID_CODEPAGE = L"Textractor: ERROR: couldn't convert text (invalid codepage?)";
