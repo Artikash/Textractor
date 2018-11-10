@@ -8,7 +8,7 @@
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow),
-	extenWindow(new ExtenWindow)
+	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
 
