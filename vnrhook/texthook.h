@@ -10,8 +10,7 @@
 #include "common.h"
 #include "types.h"
 
-extern int currentHook;
-extern DWORD trigger;
+void SetTrigger();
 
 // jichi 9/25/2013: This class will be used by NtMapViewOfSectionfor
 // interprocedure communication, where constructor/destructor will NOT work.
@@ -23,6 +22,7 @@ class TextHook
 	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 	void RemoveHookCode();
 	void RemoveReadCode();
+
 public:
 	HookParam hp;
 	char hookName[HOOK_NAME_SIZE];
@@ -30,17 +30,11 @@ public:
 	HANDLE readerHandle;
 
 	bool InsertHook();
-	void InitHook(const HookParam &hp, LPCSTR name, DWORD set_flag);
+	void InitHook(HookParam hp, LPCSTR name, DWORD set_flag);
 	void Send(DWORD dwDataBase);
 	void ClearHook();
 };
 
-enum { MAX_HOOK = 300 };
-enum { HOOK_SECTION_SIZE = MAX_HOOK * sizeof(TextHook) * 2, HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook) };
-
-extern TextHook *hookman;
-extern bool running;
-extern HANDLE hookPipe;
-extern std::unique_ptr<WinMutex> sectionMutex;
+enum { MAX_HOOK = 300, HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook), HOOK_SECTION_SIZE = HOOK_BUFFER_SIZE * 2 };
 
 // EOF

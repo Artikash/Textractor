@@ -6,11 +6,12 @@
 
 #include "common.h"
 #include "types.h"
-#include "pipe.h"
 
-void NewHook(const HookParam &hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
+void TextOutput(ThreadParam tp, BYTE* text, int len);
+void ConsoleOutput(LPCSTR text);
+void NotifyHookRemove(uint64_t addr);
+void NewHook(HookParam hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 void RemoveHook(uint64_t addr);
-void SwitchTrigger(DWORD on);
 
 #define ITH_RAISE  (*(int*)0 = 0) // raise C000005, for debugging only
 #define ITH_TRY    __try

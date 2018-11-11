@@ -5,7 +5,7 @@
 #include "host.h"
 #include "const.h"
 #include "defs.h"
-#include "../vnrhook/hijack/texthook.h"
+#include "../vnrhook/texthook.h"
 
 namespace
 {
@@ -51,7 +51,7 @@ namespace
 
 	std::recursive_mutex hostMutex;
 
-	DWORD DUMMY[1];
+	DWORD DUMMY;
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 
 	void DispatchText(ThreadParam tp, const BYTE* text, int len)
@@ -111,7 +111,7 @@ namespace
 			CreatePipe();
 
 			while (ReadFile(hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
-				switch (*(int*)buffer)
+				switch (*(HostNotificationType*)buffer)
 				{
 				case HOST_NOTIFICATION_RMVHOOK:
 				{
@@ -242,22 +242,22 @@ namespace Host
 	void DetachProcess(DWORD processId)
 	{
 		LOCK(hostMutex);
-		auto command = HOST_COMMAND_DETACH;
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		HostCommandType buffer(HOST_COMMAND_DETACH);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 	}
 
 	void InsertHook(DWORD processId, HookParam hp, std::string name)
 	{
 		LOCK(hostMutex);
-		auto command = InsertHookCmd(hp, name);
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		InsertHookCmd buffer(hp, name);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 	}
 
 	void RemoveHook(DWORD processId, uint64_t addr)
 	{
 		LOCK(hostMutex);
-		auto command = RemoveHookCmd(addr);
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &command, sizeof(command), DUMMY, nullptr);
+		RemoveHookCmd buffer(addr);
+		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 	}
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr)

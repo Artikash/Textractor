@@ -3,18 +3,16 @@ include_directories(. util)
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
 set(vnrhook_src
   main.cc
-  pipe.cc
+  texthook.cc
   util/ithsys/ithsys.cc
-  hijack/texthook.cc
 )
 else()
 set(vnrhook_src
   main.cc
-  pipe.cc
+  texthook.cc
   engine/engine.cc
   engine/match.cc
   engine/native/pchooks.cc
-  hijack/texthook.cc
   util/util.cc
   util/ithsys/ithsys.cc
   util/disasm/disasm.cc

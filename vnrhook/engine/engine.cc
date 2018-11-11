@@ -11,6 +11,7 @@
 #include "engine/match.h"
 #include "util/util.h"
 #include "main.h"
+#include "texthook.h"
 #include "engine/mono/funcinfo.h"
 #include "engine/ppsspp/funcinfo.h"
 #include "ithsys/ithsys.h"
@@ -2232,7 +2233,7 @@ void InsertRealliveHook()
   //ConsoleOutput("Probably Reallive. Wait for text.");
   ConsoleOutput("vnreng: TRIGGER Reallive");
   trigger_fun_ = InsertRealliveDynamicHook;
-  SwitchTrigger(true);
+  SetTrigger();
 }
 
 namespace { // unnamed
@@ -5766,7 +5767,8 @@ int GetShinaRioVersion()
     //char *buffer,*version;//,*ptr;
     enum { BufferSize = 0x40 };
     char buffer[BufferSize];
-    ReadFile(hFile, buffer, BufferSize, (DWORD*)buffer, nullptr);
+	DWORD DUMMY;
+    ReadFile(hFile, buffer, BufferSize, &DUMMY, nullptr);
     CloseHandle(hFile);
     if (buffer[0] == '[') {
       buffer[0x3f] = 0; // jichi 8/24/2013: prevent strstr from overflow
@@ -5785,7 +5787,7 @@ bool InsertShinaHook()
 {
   int ver = GetShinaRioVersion();
   if (ver >= 50) {
-	  SwitchTrigger(true);
+	  SetTrigger();
 	  trigger_fun_ = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
 	  ConsoleOutput("Textractor: ShinaRio 2.50+: adding trigger");
 	  return true;
@@ -5960,7 +5962,7 @@ void InsertWaffleHook()
     }
   //ConsoleOutput("Probably Waffle. Wait for text.");
   trigger_fun_ = InsertWaffleDynamicHook;
-  SwitchTrigger(true);
+  SetTrigger();
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
 
@@ -8503,7 +8505,7 @@ bool InsertSystemAoiDynamic()
   ConsoleOutput("vnreng: DYNAMIC SystemAoi");
   //ConsoleOutput("Probably SoftHouseChara. Wait for text.");
   trigger_fun_ = InsertSystemAoiDynamicHook;
-  SwitchTrigger(true);
+  SetTrigger();
   return true;
 }
 
@@ -8818,7 +8820,7 @@ void InsertIronGameSystemHook()
 {
   //ConsoleOutput("Probably IronGameSystem. Wait for text.");
   trigger_fun_ = InsertIGSDynamicHook;
-  SwitchTrigger(true);
+  SetTrigger();
   ConsoleOutput("vnreng: TRIGGER IronGameSystem");
 }
 
@@ -9454,7 +9456,7 @@ void InsertRyokuchaHook()
 {
   //ConsoleOutput("Probably Ryokucha. Wait for text.");
   trigger_fun_ = InsertRyokuchaDynamicHook;
-  SwitchTrigger(true);
+  SetTrigger();
   ConsoleOutput("vnreng: TRIGGER Ryokucha");
 }
 

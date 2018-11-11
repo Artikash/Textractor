@@ -9,17 +9,22 @@
 //# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
 #endif // _MSC_VER
 
-#include "hijack/texthook.h"
+#include "texthook.h"
 #include "MinHook.h"
 #include "engine/match.h"
 #include "main.h"
-#include "pipe.h"
 #include "const.h"
 #include "ithsys/ithsys.h"
 #include "growl.h"
 #include <Psapi.h>
 
-TextHook *hookman;
+extern std::unique_ptr<WinMutex> sectionMutex;
+
+bool trigger = 0;
+void SetTrigger()
+{
+	trigger = true;
+}
 
 // - Unnamed helpers -
 
@@ -125,8 +130,8 @@ void TextHook::Send(DWORD dwDataBase)
 		 *  @param  stack  address of current stack - 4
 		 *  @return  If success, which is reverted
 		 */
-		if (::trigger)
-			::trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
+		if (trigger)
+			trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
 
 		// jichi 10/24/2014: generic hook function
 		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp))
@@ -168,25 +173,18 @@ void TextHook::Send(DWORD dwDataBase)
 				dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
 			if (dwCount == 1)
 				dwDataIn &= 0xff;
-			*(WORD *)(pbData + sizeof(ThreadParam)) = dwDataIn & 0xffff;
+			*(WORD*)pbData = dwDataIn & 0xffff;
 		}
 		else
-			::memcpy(pbData + sizeof(ThreadParam), (void *)dwDataIn, dwCount);
+			::memcpy(pbData, (void*)dwDataIn, dwCount);
 
 		// jichi 10/14/2014: Add filter function
-		if (hp.filter_fun && !hp.filter_fun(pbData + sizeof(ThreadParam), &dwCount, &hp, 0) || dwCount <= 0) return;
+		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) return;
 
 		if (dwType & (NO_CONTEXT | FIXING_SPLIT))
 			dwRetn = 0;
 
-		*(ThreadParam*)pbData = { GetCurrentProcessId(), dwAddr, dwRetn, dwSplit };
-		if (dwCount) {
-			DWORD unused;
-
-			//CliLockPipe();
-			WriteFile(::hookPipe, pbData, dwCount + sizeof(ThreadParam), &unused, nullptr);
-			//CliUnlockPipe();
-		}
+		TextOutput({ GetCurrentProcessId(), dwAddr, dwRetn, dwSplit }, pbData, dwCount);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER) 
 	{
@@ -205,9 +203,9 @@ bool TextHook::InsertHookCode()
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
 		else return ConsoleOutput("Textractor: InsertHookCode FAILED: module not present"), false;
 
-	BYTE* original;
+	void* original;
 insert:
-	if (MH_STATUS err = MH_CreateHook((void*)hp.insertion_address, (void*)trampoline, (void**)&original))
+	if (MH_STATUS err = MH_CreateHook((void*)hp.insertion_address, (void*)trampoline, &original))
 		if (err == MH_ERROR_ALREADY_CREATED)
 		{
 			RemoveHook(hp.insertion_address);
@@ -222,7 +220,7 @@ insert:
 	
 	*(TextHook**)(common_hook + 9) = this;
 	*(void(TextHook::**)(DWORD))(common_hook + 14) = &TextHook::Send;
-	*(BYTE**)(common_hook + 24) = original;
+	*(void**)(common_hook + 24) = original;
 	memcpy(trampoline, common_hook, sizeof(common_hook));
 
 	//BYTE* original;
@@ -240,7 +238,7 @@ insert:
 }
 #endif // _WIN32
 
-DWORD WINAPI ReaderThread(LPVOID hookPtr)
+DWORD WINAPI Reader(LPVOID hookPtr)
 {
 	TextHook* hook = (TextHook*)hookPtr;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
@@ -253,7 +251,7 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 		{
 			if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
 			Sleep(500);
-			if (memcmp(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1) == 0)
+			if (memcmp(buffer, currentAddress, dataLen + 1) == 0)
 			{
 				changeCount = 0;
 				continue;
@@ -269,15 +267,13 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 			else
 				dataLen = strlen((const char*)currentAddress);
 
-			*(ThreadParam*)buffer = { GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 };
-			memcpy(buffer + sizeof(ThreadParam), currentAddress, dataLen + 1);
-			DWORD unused;
-			WriteFile(::hookPipe, buffer, dataLen + sizeof(ThreadParam), &unused, nullptr);
+			memcpy(buffer, currentAddress, dataLen + 1);
+			TextOutput({ GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 }, buffer, dataLen);
 		}
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		ConsoleOutput("Textractor: ReaderThread ERROR (likely an incorrect R-code)");
+		ConsoleOutput("Textractor: Reader ERROR (likely an incorrect R-code)");
 	}
 	ConsoleOutput("Textractor: remove read code");
 	hook->ClearHook();
@@ -287,14 +283,14 @@ DWORD WINAPI ReaderThread(LPVOID hookPtr)
 bool TextHook::InsertReadCode()
 {
 	//RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
-	readerHandle = CreateThread(nullptr, 0, ReaderThread, this, 0, nullptr);
+	readerHandle = CreateThread(nullptr, 0, Reader, this, 0, nullptr);
 	return true;
 }
 
-void TextHook::InitHook(const HookParam &h, LPCSTR name, DWORD set_flag)
+void TextHook::InitHook(HookParam h, LPCSTR name, DWORD set_flag)
 {
 	LOCK(*sectionMutex);
-	hp = h;
+	this->hp = h;
 	hp.insertion_address = hp.address;
 	hp.type |= set_flag;
 	strcpy_s<HOOK_NAME_SIZE>(hookName, name);
