@@ -14,17 +14,12 @@
 #include "engine/match.h"
 #include "main.h"
 #include "const.h"
+#include "text.h"
 #include "ithsys/ithsys.h"
 #include "growl.h"
 #include <Psapi.h>
 
 extern std::unique_ptr<WinMutex> sectionMutex;
-
-bool trigger = 0;
-void SetTrigger()
-{
-	trigger = true;
-}
 
 // - Unnamed helpers -
 
@@ -89,7 +84,14 @@ namespace { // unnamed
 	0xff, 0x25, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 // jmp @original
 	};
 #endif
+
+	bool trigger = false;
 } // unnamed namespace
+
+void SetTrigger()
+{
+	trigger = true;
+}
 
 // - TextHook methods -
 
@@ -199,9 +201,9 @@ bool TextHook::InsertHookCode()
 	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
 		if (hp.type & FUNCTION_OFFSET)
 			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
-			else return ConsoleOutput("Textractor: InsertHookCode FAILED: function not present"), false;
+			else return ConsoleOutput(FUNC_MISSING), false;
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
-		else return ConsoleOutput("Textractor: InsertHookCode FAILED: module not present"), false;
+		else return ConsoleOutput(MODULE_MISSING), false;
 
 	void* original;
 insert:
@@ -213,7 +215,7 @@ insert:
 		}
 		else
 		{
-			ConsoleOutput(("Textractor: InsertHookCode FAILED: error " + std::string(MH_StatusToString(err))).c_str());
+			ConsoleOutput(MH_StatusToString(err));
 			return false;
 		}
 
@@ -258,7 +260,7 @@ DWORD WINAPI Reader(LPVOID hookPtr)
 			}
 			if (++changeCount > 10)
 			{
-				ConsoleOutput("Textractor: memory constantly changing, useless to read");
+				ConsoleOutput(GARBAGE_MEMORY);
 				break;
 			}
 
@@ -275,7 +277,6 @@ DWORD WINAPI Reader(LPVOID hookPtr)
 	{
 		ConsoleOutput("Textractor: Reader ERROR (likely an incorrect R-code)");
 	}
-	ConsoleOutput("Textractor: remove read code");
 	hook->ClearHook();
 	return 0;
 }
@@ -311,7 +312,7 @@ void TextHook::RemoveReadCode()
 void TextHook::ClearHook()
 {
 	LOCK(*sectionMutex);
-	ConsoleOutput(("Textractor: removing hook: " + std::string(hookName)).c_str());
+	ConsoleOutput((REMOVING_HOOK + std::string(hookName)).c_str());
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(hp.insertion_address);

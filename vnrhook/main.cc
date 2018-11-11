@@ -10,18 +10,23 @@
 
 #include "main.h"
 #include "defs.h"
+#include "text.h"
 #include "MinHook.h"
 #include "engine/engine.h"
 #include "engine/match.h"
 #include "texthook.h"
 #include "util/growl.h"
 
-HANDLE hSection, hookPipe;
-TextHook* hooks;
-bool running;
-int currentHook = 0, userhookCount = 0;
-DWORD DUMMY;
 std::unique_ptr<WinMutex> sectionMutex;
+
+namespace
+{
+	HANDLE hSection, hookPipe;
+	TextHook* hooks;
+	bool running;
+	int currentHook = 0, userhookCount = 0;
+	DWORD DUMMY;
+}
 
 DWORD WINAPI Pipe(LPVOID)
 {
@@ -50,9 +55,9 @@ DWORD WINAPI Pipe(LPVOID)
 		*(DWORD*)buffer = GetCurrentProcessId();
 		WriteFile(hookPipe, buffer, sizeof(DWORD), &count, nullptr);
 
-		ConsoleOutput("Textractor: pipe connected");
+		ConsoleOutput(PIPE_CONNECTED);
 #ifdef _WIN64
-		ConsoleOutput("Hooks don't work on x64, only read codes work. Engine disabled.");
+		ConsoleOutput(DISABLE_HOOKS);
 #else
 		Engine::Hijack();
 #endif
@@ -130,18 +135,16 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 		MH_Initialize();
 		running = true;
 
-		CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr);
+		CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr); // Using std::thread here = deadlock
 	} 
 	break;
 	case DLL_PROCESS_DETACH:
 	{
 		running = false;
-		MH_Uninitialize();
 		for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].hp.insertion_address) hooks[i].ClearHook();
-		//if (ith_has_section)
 		UnmapViewOfFile(hooks);
+		MH_Uninitialize();
 		CloseHandle(hSection);
-		//} ITH_EXCEPT {}
 	}
 	break;
 	}
@@ -155,14 +158,13 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 	if (++currentHook < MAX_HOOK) 
 	{
 		if (name.empty()) name = "UserHook" + std::to_string(userhookCount++);
-		ConsoleOutput("Textractor: try inserting hook: " + name);
+		ConsoleOutput(INSERTING_HOOK + name);
 
 		// jichi 7/13/2014: This function would raise when too many hooks added
 		hooks[currentHook].InitHook(hp, name.c_str(), flag);
-		if (hooks[currentHook].InsertHook()) ConsoleOutput("Textractor: inserted hook: " + name);
-		else ConsoleOutput("Textractor:WARNING: failed to insert hook");
+		if (!hooks[currentHook].InsertHook()) ConsoleOutput(HOOK_FAILED);
 	}
-	else ConsoleOutput("Textractor: too many hooks: can't insert");
+	else ConsoleOutput(TOO_MANY_HOOKS);
 }
 
 void RemoveHook(uint64_t addr)
