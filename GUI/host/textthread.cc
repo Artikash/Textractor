@@ -50,14 +50,10 @@ void TextThread::Flush()
 	{
 		std::wstring sentence = buffer;
 		buffer.clear();
+		repeatingChars.clear();
 
-		locker.unlock(); // This algorithm might take a while
-		std::unordered_set<wchar_t> repeatingChars;
-		for (std::wsmatch results; std::regex_search(sentence, results, std::wregex(L"([^\\x00]{6,})\\1\\1")); sentence = results[1])
+		for (std::wsmatch results; std::regex_search(sentence, results, std::wregex(L"^([^]{6,})\\1\\1")); sentence = results[1])
 			repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
-		locker.lock();
-
-		this->repeatingChars = repeatingChars;
 
 		locker.unlock();
 		AddSentence(sentence);
