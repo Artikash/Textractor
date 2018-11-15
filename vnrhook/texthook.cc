@@ -291,7 +291,7 @@ bool TextHook::InsertReadCode()
 void TextHook::InitHook(HookParam h, LPCSTR name, DWORD set_flag)
 {
 	LOCK(*sectionMutex);
-	this->hp = h;
+	hp = h;
 	hp.insertion_address = hp.address;
 	hp.type |= set_flag;
 	strcpy_s<HOOK_NAME_SIZE>(hookName, name);

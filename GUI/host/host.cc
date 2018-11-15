@@ -143,28 +143,34 @@ namespace
 		}).detach();
 	}
 
+	std::optional<std::wstring> GetClipboardText()
+	{
+		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
+		if (!OpenClipboard(NULL)) return {};
+
+		if (HANDLE clipboardHandle = GetClipboardData(CF_UNICODETEXT))
+		{
+			std::wstring ret = (wchar_t*)GlobalLock(clipboardHandle);
+			GlobalUnlock(clipboardHandle);
+			CloseClipboard();
+			return ret;
+		}
+		CloseClipboard();
+		return {};
+	}
+
 	void StartCapturingClipboard()
 	{
 		std::thread([]
 		{
+			std::wstring last;
 			while (true)
 			{
 				Sleep(50);
-				if (IsClipboardFormatAvailable(CF_UNICODETEXT) && OpenClipboard(NULL))
-				{
-					if (HANDLE clipboardHandle = GetClipboardData(CF_UNICODETEXT))
-					{
-						if (wchar_t* clipboardData = (wchar_t*)GlobalLock(clipboardHandle))
-						{
-							static std::wstring last;
-							if (last != clipboardData) Host::GetThread(CLIPBOARD)->AddSentence(last = clipboardData);
-							GlobalUnlock(clipboardHandle);
-						}
-					}
-					CloseClipboard();
-				}
+				if (auto text = GetClipboardText())
+					if (last != text.value())
+						Host::GetThread(CLIPBOARD)->AddSentence(last = text.value());
 			}
-
 		}).detach();
 	}
 }
