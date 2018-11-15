@@ -22,7 +22,17 @@ void RemoveRepeatedChars(std::wstring& sentence)
 
 void RemoveCyclicRepeats(std::wstring& sentence)
 {
-	for (std::wsmatch results; std::regex_search(sentence, results, std::wregex(L"^([^\\x00]{5,})[^\\x00]*?\\1")); sentence.erase(0, results[1].length()));
+remove:
+	std::wstring junk = sentence;
+	while (junk.size() > 4)
+	{
+		junk.pop_back();
+		if (sentence.rfind(junk) > 0)
+		{
+			sentence.erase(0, junk.size());
+			goto remove;
+		}
+	}
 }
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
