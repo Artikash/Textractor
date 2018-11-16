@@ -32,6 +32,8 @@ public:
 	const HookParam hp;
 
 private:
+	// see https://github.com/Artikash/Textractor/issues/40
+	static bool FilterRepetition(std::wstring& sentence);
 	void Flush();
 
 	std::wstring buffer;
