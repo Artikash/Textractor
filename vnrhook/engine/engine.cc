@@ -8745,9 +8745,10 @@ struct TextListElement // ecx, this structure saved a list of element
 
   bool isValid() const
   {
-    return flag1 == 0 && flag2 == 0 && flag3 == 0 && flag4 == 0
-        && size > 0 && size < capacity
-        && !::IsBadReadPtr(text, capacity) && size == ::strlen(text);
+	  // Artikash 11/18/2018: I'm not sure why those checks were ever there, but they prevented this hook from working on RJ232953
+    return /*flag1 == 0 && flag2 == 0 && flag3 == 0 && flag4 == 0
+        && */size > 0 && size < capacity
+        && !::IsBadReadPtr(text, capacity) /*&& size == ::strlen(text)*/;
         //&& (quint8)*text > 127;
   }
 };
