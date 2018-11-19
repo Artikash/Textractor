@@ -1,7 +1,7 @@
 #pragma once
 
 constexpr auto SELECT_PROCESS = u8"Select Process";
-constexpr auto INJECT_INFO = u8"If you don't see the process you want to inject, try running with admin rights\r\n"
+constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 "You can also type in the process id";
 constexpr auto ADD_HOOK = u8"Add hook";
 constexpr auto CODE_INFODUMP = u8"Enter hook code\r\n"
@@ -20,8 +20,11 @@ constexpr auto UNHOOK = u8"Unhook";
 constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
 constexpr auto SELECT_EXTENSION = u8"Select Extension";
 constexpr auto EXTENSIONS = u8"Extensions (*.dll)";
-constexpr auto ABOUT = L"Textractor beta v3.4.1 by Artikash\r\n"
-"Source code and more information available under GPLv3 at https://github.com/Artikash/Textractor";
+constexpr auto ABOUT = L"Textractor beta v3.5.0 (project homepage: https://github.com/Artikash/Textractor)\r\n"
+"Made with <3 by Artikash (email: akashmozumdar@gmail.com)\r\n"
+"Please contact Artikash with any problems, feature requests, or questions relating to Textractor\r\n"
+"You can do so via the project homepage (issues section) or via email\r\n"
+"Source code available under GPLv3 at project homepage";
 constexpr auto TOO_MANY_THREADS = L"Textractor: too many text threads: can't create more";
 constexpr auto ALREADY_INJECTED = L"Textractor: already injected";
 constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";

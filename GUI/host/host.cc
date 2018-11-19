@@ -127,9 +127,7 @@ namespace
 				break;
 				default:
 				{
-					ThreadParam tp = *(ThreadParam*)buffer;
-					buffer[bytesRead] = 0;
-					buffer[bytesRead + 1] = 0;
+					auto tp = *(ThreadParam*)buffer;
 					DispatchText(tp, buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
@@ -163,14 +161,10 @@ namespace
 	{
 		std::thread([]
 		{
-			std::wstring last;
-			while (true)
-			{
-				Sleep(50);
+			for (std::wstring last; true; Sleep(50))
 				if (auto text = GetClipboardText())
 					if (last != text.value())
 						Host::GetThread(CLIPBOARD)->AddSentence(last = text.value());
-			}
 		}).detach();
 	}
 }

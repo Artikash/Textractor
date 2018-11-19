@@ -176,7 +176,7 @@ void MainWindow::on_attachButton_clicked()
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
-	QString process = QInputDialog::getItem(this, SELECT_PROCESS, INJECT_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint);
+	QString process = QInputDialog::getItem(this, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
 	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
 	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
