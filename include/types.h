@@ -42,12 +42,16 @@ static bool operator==(const ThreadParam& one, const ThreadParam& two) { return 
 
 class WinMutex
 {
-	HANDLE mutex;
 public:
 	WinMutex(std::wstring name) : mutex(CreateMutexW(nullptr, false, name.c_str())) {}
+	WinMutex(WinMutex&) = delete;
+	WinMutex& operator=(WinMutex) = delete;
 	~WinMutex() { ReleaseMutex(mutex); CloseHandle(mutex); }
 	void lock() { WaitForSingleObject(mutex, 0); }
 	void unlock() { ReleaseMutex(mutex); }
+
+private:
+	HANDLE mutex;
 };
 
 struct InsertHookCmd // From host

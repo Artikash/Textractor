@@ -1,12 +1,7 @@
 #pragma once
 
-// host.h
-// 8/23/2013 jichi
-// Branch: ITH/IHF.h, rev 105
-
 #include "common.h"
 #include "textthread.h"
-#include "text.h"
 
 typedef std::function<void(DWORD)> ProcessEventCallback;
 typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
@@ -30,20 +25,3 @@ namespace Host
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
 }
-
-inline std::wstring StringToWideString(const std::string& text, UINT encoding = CP_UTF8)
-{
-	std::wstring ret(text.size() + 1, 0);
-	if (int len = MultiByteToWideChar(encoding, 0, text.c_str(), -1, ret.data(), ret.size()))
-	{
-		ret.resize(len - 1);
-		return ret;
-	}
-	else
-	{
-		Host::AddConsoleOutput(INVALID_CODEPAGE);
-		return L"";
-	}
-}
-
-// EOF

@@ -1,10 +1,8 @@
-// host.cc
-// 8/24/2013 jichi
-// Branch IHF/main.cpp, rev 111
-
 #include "host.h"
 #include "const.h"
+#include "text.h"
 #include "defs.h"
+#include "util.h"
 #include "../vnrhook/texthook.h"
 
 namespace
@@ -18,6 +16,9 @@ namespace
 			sectionMap(MapViewOfFile(section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
 			sectionMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
 		{}
+
+		ProcessRecord(ProcessRecord&) = delete;
+		ProcessRecord& operator=(ProcessRecord) = delete;
 
 		~ProcessRecord()
 		{
@@ -103,7 +104,7 @@ namespace
 			HANDLE hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
 			ConnectNamedPipe(hookPipe, nullptr);
 
-			BYTE buffer[PIPE_BUFFER_SIZE + 1] = {};
+			BYTE buffer[PIPE_BUFFER_SIZE] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
 			RegisterProcess(processId, hostPipe);
@@ -122,7 +123,7 @@ namespace
 				case HOST_NOTIFICATION_TEXT:
 				{
 					auto info = *(ConsoleOutputNotif*)buffer;
-					Host::AddConsoleOutput(StringToWideString(info.message));
+					Host::AddConsoleOutput(Util::StringToWideString(info.message));
 				}
 				break;
 				default:
@@ -141,28 +142,12 @@ namespace
 		}).detach();
 	}
 
-	std::optional<std::wstring> GetClipboardText()
-	{
-		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
-		if (!OpenClipboard(NULL)) return {};
-
-		if (HANDLE clipboardHandle = GetClipboardData(CF_UNICODETEXT))
-		{
-			std::wstring ret = (wchar_t*)GlobalLock(clipboardHandle);
-			GlobalUnlock(clipboardHandle);
-			CloseClipboard();
-			return ret;
-		}
-		CloseClipboard();
-		return {};
-	}
-
 	void StartCapturingClipboard()
 	{
 		std::thread([]
 		{
 			for (std::wstring last; true; Sleep(50))
-				if (auto text = GetClipboardText())
+				if (auto text = Util::GetClipboardText())
 					if (last != text.value())
 						Host::GetThread(CLIPBOARD)->AddSentence(last = text.value());
 		}).detach();
@@ -269,7 +254,7 @@ namespace Host
 	std::wstring GetHookName(DWORD processId, uint64_t addr)
 	{
 		LOCK(hostMutex);
-		return StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName);
+		return Util::StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName);
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
@@ -283,5 +268,3 @@ namespace Host
 		GetThread(CONSOLE)->AddSentence(text); 
 	}
 }
-
-// EOF

@@ -1,9 +1,5 @@
 #pragma once
 
-// textthread.h
-// 8/23/2013 jichi
-// Branch: ITH/TextThread.h, rev 120
-
 #include "common.h"
 #include "types.h"
 
@@ -20,6 +16,8 @@ public:
 	inline static int threadCounter = 0;
 
 	TextThread(ThreadParam tp, HookParam hp, std::wstring name);
+	TextThread(TextThread&) = delete;
+	TextThread& operator=(TextThread) = delete;
 	~TextThread();
 
 	std::wstring GetStorage();
@@ -37,13 +35,12 @@ private:
 	void Flush();
 
 	std::wstring buffer;
-	std::wstring storage;
 	std::unordered_set<wchar_t> repeatingChars;
-	std::recursive_mutex threadMutex;
+	std::mutex bufferMutex;
+	std::wstring storage;
+	std::recursive_mutex storageMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
 	DWORD lastPushTime = GetTickCount();
 };
-
-// EOF

@@ -14,6 +14,7 @@ set(gui_SRCS
 	tests.cpp
 	host/host.cc
 	host/textthread.cc
+	host/util.cpp
 	${RESOURCE_FILES}
 )
 add_executable(${PROJECT_NAME} WIN32 ${gui_SRCS})

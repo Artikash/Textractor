@@ -26,7 +26,7 @@ namespace
 			L"Error in module: " << moduleName << std::endl;
 
 		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
-			errorMsg << "Additional info: " << GetCppExceptionInfo(exception) << std::endl;
+			errorMsg << L"Additional info: " << GetCppExceptionInfo(exception) << std::endl;
 
 		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
