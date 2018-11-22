@@ -12,8 +12,8 @@ set(gui_SRCS
     extenwindow.cpp
 	setdialog.cpp
 	tests.cpp
-	host/host.cc
-	host/textthread.cc
+	host/host.cpp
+	host/textthread.cpp
 	host/util.cpp
 	${RESOURCE_FILES}
 )
