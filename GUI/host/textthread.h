@@ -30,15 +30,13 @@ public:
 	const HookParam hp;
 
 private:
-	// see https://github.com/Artikash/Textractor/issues/40
-	static bool FilterRepetition(std::wstring& sentence);
 	void Flush();
 
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	std::wstring storage;
-	std::recursive_mutex storageMutex;
+	std::mutex storageMutex;
 
 	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });

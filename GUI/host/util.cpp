@@ -34,4 +34,13 @@ namespace Util
 			return L"";
 		}
 	}
+
+	bool RemoveRepetition(std::wstring& text)
+	{
+		wchar_t* end = text.data() + text.size();
+		for (int len = text.size() / 3; len > 6; --len)
+			if (wcsncmp(end - len * 3, end - len * 2, len) == 0 && wcsncmp(end - len * 3, end - len * 1, len) == 0)
+				return true | RemoveRepetition(text = end - len);
+		return false;
+	}
 }

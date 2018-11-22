@@ -38,15 +38,6 @@ void TextThread::Push(const BYTE* data, int len)
 	lastPushTime = GetTickCount();
 }
 
-bool TextThread::FilterRepetition(std::wstring& sentence)
-{
-	wchar_t* end = sentence.data() + sentence.size();
-	for (int len = sentence.size() / 3; len > 6; --len)
-		if (wcsncmp(end - len * 3, end - len * 2, len) == 0 && wcsncmp(end - len * 3, end - len * 1, len) == 0)
-			return true | FilterRepetition(sentence = end - len);
-	return false;
-}
-
 void TextThread::Flush()
 {
 	std::wstring sentence;
@@ -57,7 +48,7 @@ void TextThread::Flush()
 		sentence = buffer;
 		buffer.clear();
 
-		if (FilterRepetition(sentence)) repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
+		if (Util::RemoveRepetition(sentence)) repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
 		else repeatingChars.clear();
 	}
 	AddSentence(sentence);
