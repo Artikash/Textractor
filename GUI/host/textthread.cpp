@@ -1,5 +1,6 @@
 #include "textthread.h"
 #include "const.h"
+#include "text.h"
 #include "host.h"
 #include "util.h"
 
@@ -38,9 +39,9 @@ void TextThread::Push(const BYTE* data, int len)
 {
 	if (len < 0) return;
 	LOCK(bufferMutex);
-	buffer += hp.type & USING_UNICODE
-		? std::wstring((wchar_t*)data, len / 2)
-		: Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : defaultCodepage);
+	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
+	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : defaultCodepage)) buffer += converted.value();
+	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
 	lastPushTime = GetTickCount();
 }

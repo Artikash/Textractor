@@ -5,7 +5,7 @@
 namespace Util
 {
 	std::optional<std::wstring> GetClipboardText();
-	std::wstring StringToWideString(std::string text, UINT encoding = CP_UTF8);
+	std::optional<std::wstring> StringToWideString(std::string text, UINT encoding = CP_UTF8);
 	// return true if repetition found (see https://github.com/Artikash/Textractor/issues/40)
 	bool RemoveRepetition(std::wstring& text); 
 }
