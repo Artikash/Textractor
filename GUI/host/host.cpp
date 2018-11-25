@@ -4,9 +4,50 @@
 #include "defs.h"
 #include "util.h"
 #include "../vnrhook/texthook.h"
+#include <sstream>
 
 namespace
 {
+	char* GetCppExceptionInfo(EXCEPTION_POINTERS* exception)
+	{
+		// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
+		// Not very reliable so use __try
+		__try { return ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8; }
+		__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
+	}
+
+	std::wstring lastError = L"Unknown error";
+
+	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)
+	{
+		MEMORY_BASIC_INFORMATION info = {};
+		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
+		wchar_t moduleName[MAX_PATH] = {};
+		GetModuleFileNameW((HMODULE)info.AllocationBase, moduleName, MAX_PATH);
+
+		std::wstringstream errorMsg;
+		errorMsg << std::uppercase << std::hex <<
+			L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl <<
+			L"Error address: " << (uint64_t)exception->ExceptionRecord->ExceptionAddress << std::endl <<
+			L"Error in module: " << moduleName << std::endl;
+
+		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
+			errorMsg << L"Additional info: " << GetCppExceptionInfo(exception) << std::endl;
+
+		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
+			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
+
+		lastError = errorMsg.str();
+
+		return EXCEPTION_CONTINUE_SEARCH;
+	}
+
+	void Terminate()
+	{
+		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
+		std::abort();
+	}
+
 	class ProcessRecord
 	{
 	public:
@@ -96,6 +137,7 @@ namespace
 	{
 		std::thread([]
 		{
+			Host::Setup();
 			SECURITY_DESCRIPTOR pipeSD = {};
 			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
 			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
@@ -146,6 +188,7 @@ namespace
 	{
 		std::thread([]
 		{
+			Host::Setup();
 			for (std::wstring last; true; Sleep(50))
 				if (auto text = Util::GetClipboardText())
 					if (last != text.value())
@@ -156,6 +199,17 @@ namespace
 
 namespace Host
 {
+	void Setup()
+	{
+		static std::once_flag flag;
+		std::call_once(flag, []
+		{
+			AddVectoredExceptionHandler(FALSE, ExceptionLogger);
+			SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)Terminate);
+		});
+		std::set_terminate(Terminate);
+	}
+
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output)
 	{
 		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnDestroy = onDestroy; TextThread::Output = output;

@@ -8,6 +8,7 @@ typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
 
 namespace Host
 {
+	void Setup();
 	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output);
 	void Close();
 
