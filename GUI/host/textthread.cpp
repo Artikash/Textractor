@@ -4,14 +4,7 @@
 #include "host.h"
 #include "util.h"
 
-TextThread::TextThread(ThreadParam tp, HookParam hp, std::wstring name) : 
-	handle(threadCounter++),
-	name(name),
-	tp(tp), 
-	hp(hp),
-	deletionEvent(CreateEventW(nullptr, FALSE, FALSE, NULL)),
-	flushThread([&] { Host::Setup(); while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); })
-{}
+TextThread::TextThread(ThreadParam tp, HookParam hp, std::wstring name) : handle(threadCounter++), name(name), tp(tp), hp(hp) {}
 
 TextThread::~TextThread()
 {

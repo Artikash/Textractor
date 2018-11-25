@@ -37,7 +37,8 @@ private:
 	std::mutex bufferMutex;
 	std::wstring storage;
 	std::mutex storageMutex;
-	HANDLE deletionEvent;
-	std::thread flushThread;
-	DWORD lastPushTime;
+
+	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
+	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
+	DWORD lastPushTime = GetTickCount();
 };
