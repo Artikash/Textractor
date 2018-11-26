@@ -12,7 +12,9 @@ namespace
 		__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
 	}
 
-	LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exception)
+	thread_local std::wstring lastError = L"Unknown error";
+
+	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)
 	{
 		MEMORY_BASIC_INFORMATION info = {};
 		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
@@ -31,15 +33,23 @@ namespace
 		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
 
-		MessageBoxW(NULL, errorMsg.str().c_str(), L"Textractor ERROR", MB_ICONERROR);
-
+		lastError = errorMsg.str();
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
+
+	void Terminate()
+	{
+		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
+		std::abort();
+	}
+
+	thread_local auto _ = [] { return std::set_terminate(Terminate); }();
 }
 
 int main(int argc, char *argv[])
 {
-	SetUnhandledExceptionFilter(ExceptionHandler);
+	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
+	SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)Terminate);
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
