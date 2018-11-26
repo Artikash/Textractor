@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "misc.h"
 #include <sstream>
 #include <QApplication>
 
@@ -50,6 +51,8 @@ int main(int argc, char *argv[])
 {
 	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
 	SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)Terminate);
+	QString exe = GetFullModuleName(GetCurrentProcessId());
+	SetCurrentDirectoryW(exe.left(exe.lastIndexOf("\\")).toStdWString().c_str());
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
