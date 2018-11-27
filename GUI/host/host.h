@@ -3,12 +3,10 @@
 #include "common.h"
 #include "textthread.h"
 
-typedef std::function<void(DWORD)> ProcessEventCallback;
-typedef std::function<void(std::shared_ptr<TextThread>)> ThreadEventCallback;
-
 namespace Host
 {
-	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output);
+	typedef std::function<void(DWORD)> ProcessEventCallback;
+	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output);
 	void Close();
 
 	bool InjectProcess(DWORD processId, DWORD timeout = 5000);

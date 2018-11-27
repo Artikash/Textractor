@@ -6,8 +6,9 @@
 class TextThread
 {
 public:
+	typedef std::function<void(TextThread*)> EventCallback;
 	typedef std::function<bool(TextThread*, std::wstring&)> OutputCallback;
-
+	inline static EventCallback OnCreate, OnDestroy;
 	inline static OutputCallback Output;
 
 	inline static int flushDelay = 400; // flush every 400ms by default
@@ -21,6 +22,7 @@ public:
 	~TextThread();
 
 	std::wstring GetStorage();
+	void Start();
 	void AddSentence(std::wstring sentence);
 	void Push(const BYTE* data, int len);
 
@@ -32,13 +34,11 @@ public:
 private:
 	void Flush();
 
+	ThreadSafePtr<std::wstring> storage;
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
-	std::wstring storage;
-	std::mutex storageMutex;
-
-	HANDLE deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
-	std::thread flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
-	DWORD lastPushTime = GetTickCount();
+	AutoHandle<> deletionEvent = NULL;
+	std::thread flushThread;
+	DWORD lastPushTime;
 };

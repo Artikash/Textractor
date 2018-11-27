@@ -1,7 +1,10 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
 #include "text.h"
+#include "defs.h"
 #include "types.h"
+#include "misc.h"
+#include <shared_mutex>
 #include <QFileDialog>
 #include <QMimeData>
 #include <QUrl>
@@ -81,12 +84,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 	extenList = findChild<QListWidget*>("extenList");
 	extenList->installEventFilter(this);
 
-	if (extensions.empty())
-	{
-		extenSaveFile.open(QIODevice::ReadOnly);
-		for (auto extenName : QString(extenSaveFile.readAll()).split(">")) Load(extenName);
-		extenSaveFile.close();
-	}
+	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
 	Sync();
 }
 
@@ -98,14 +96,13 @@ ExtenWindow::~ExtenWindow()
 void ExtenWindow::Sync()
 {
 	extenList->clear();
-	extenSaveFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+	QAutoFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
 	std::shared_lock sharedLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
 		extenList->addItem(extenName);
-		extenSaveFile.write((extenName + ">").toUtf8());
+		extenSaveFile->write((extenName + ">").toUtf8());
 	}
-	extenSaveFile.close();
 }
 
 void ExtenWindow::Add(QString fileName)

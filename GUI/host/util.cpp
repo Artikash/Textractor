@@ -1,16 +1,36 @@
 #include "util.h"
+#include "types.h"
+#include <Psapi.h>
 
 namespace Util
 {
+	std::optional<std::wstring> GetModuleFileName(DWORD processId, HMODULE module)
+	{
+		if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
+		{
+			std::vector<wchar_t> buffer(MAX_PATH);
+			if (GetModuleFileNameExW(process, module, buffer.data(), MAX_PATH)) return buffer.data();
+			else return {};
+		}
+		return {};
+	}
+
+	std::optional<std::wstring> GetModuleFileName(HMODULE module)
+	{
+		std::vector<wchar_t> buffer(MAX_PATH);
+		if (::GetModuleFileNameW(module, buffer.data(), MAX_PATH)) return buffer.data();
+		else return {};
+	}
+
 	std::optional<std::wstring> GetClipboardText()
 	{
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
 		if (!OpenClipboard(NULL)) return {};
 
-		if (HANDLE clipboardHandle = GetClipboardData(CF_UNICODETEXT))
+		if (HANDLE clipboard = GetClipboardData(CF_UNICODETEXT))
 		{
-			std::wstring ret = (wchar_t*)GlobalLock(clipboardHandle);
-			GlobalUnlock(clipboardHandle);
+			std::wstring ret = (wchar_t*)GlobalLock(clipboard);
+			GlobalUnlock(clipboard);
 			CloseClipboard();
 			return ret;
 		}

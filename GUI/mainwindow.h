@@ -13,8 +13,6 @@ namespace Ui
 	class MainWindow;
 }
 
-Q_DECLARE_METATYPE(std::shared_ptr<TextThread>);
-
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -23,19 +21,7 @@ public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
 
-signals:
-	void SigAddProcess(unsigned processId);
-	void SigRemoveProcess(unsigned processId);
-	void SigAddThread(std::shared_ptr<TextThread>);
-	void SigRemoveThread(std::shared_ptr<TextThread>);
-	void SigThreadOutput(QString threadString, QString output);
-
 private slots:
-	void AddProcess(unsigned processId);
-	void RemoveProcess(unsigned processId);
-	void AddThread(std::shared_ptr<TextThread> thread);
-	void RemoveThread(std::shared_ptr<TextThread> thread);
-	void ThreadOutput(QString threadString, QString output); // this function doesn't take TextThread* because it might be destroyed on pipe thread
 	void on_attachButton_clicked();
 	void on_detachButton_clicked();
 	void on_unhookButton_clicked();
@@ -46,9 +32,14 @@ private slots:
 	void on_ttCombo_activated(int index);
 
 private:
-	bool ProcessThreadOutput(TextThread* thread, std::wstring& output);
+	void InvokeOnMainThread(std::function<void()>&& f);
+	void ProcessConnected(DWORD processId);
+	void ProcessDisconnected(DWORD processId);
+	void ThreadAdded(TextThread* thread);
+	void ThreadRemoved(TextThread* thread);
+	bool SentenceReceived(TextThread* thread, std::wstring& sentence);
 	QString TextThreadString(TextThread* thread);
-	ThreadParam ParseTextThreadString(QString textThreadString);
+	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
 	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
 	QVector<HookParam> GetAllHooks(DWORD processId);

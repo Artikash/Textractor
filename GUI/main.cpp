@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "misc.h"
+#include "host/util.h"
 #include <sstream>
 #include <QApplication>
 
@@ -19,17 +19,19 @@ namespace
 	{
 		MEMORY_BASIC_INFORMATION info = {};
 		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
-		wchar_t moduleName[MAX_PATH] = {};
-		GetModuleFileNameW((HMODULE)info.AllocationBase, moduleName, MAX_PATH);
 
 		std::wstringstream errorMsg;
 		errorMsg << std::uppercase << std::hex <<
 			L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl <<
-			L"Error address: " << (uint64_t)exception->ExceptionRecord->ExceptionAddress << std::endl <<
-			L"Error in module: " << moduleName << std::endl;
+			L"Error address: " << exception->ExceptionRecord->ExceptionAddress << std::endl <<
+			L"Error in module: " << Util::GetModuleFileName((HMODULE)info.AllocationBase).value_or(L"Could not find") << std::endl <<
+			L"Additional info: " << info.AllocationBase << std::endl;
 
 		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
+		{
 			errorMsg << L"Additional info: " << GetCppExceptionInfo(exception) << std::endl;
+			if (errorMsg.str().find(L"exception")) errorMsg << ((std::exception*)exception->ExceptionRecord->ExceptionInformation[1])->what();
+		}
 
 		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
@@ -38,7 +40,7 @@ namespace
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
 
-	void Terminate()
+	__declspec(noreturn) void Terminate()
 	{
 		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
 		std::abort();
@@ -50,9 +52,12 @@ namespace
 int main(int argc, char *argv[])
 {
 	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
-	SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)Terminate);
-	QString exe = GetFullModuleName(GetCurrentProcessId());
-	SetCurrentDirectoryW(exe.left(exe.lastIndexOf("\\")).toStdWString().c_str());
+	SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); });
+
+	std::wstring exe = Util::GetModuleFileName().value();
+	while (exe.back() != L'\\') exe.pop_back();
+	SetCurrentDirectoryW(exe.c_str());
+
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();

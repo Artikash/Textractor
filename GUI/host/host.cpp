@@ -10,86 +10,58 @@ namespace
 	class ProcessRecord
 	{
 	public:
-		ProcessRecord(DWORD processId, HANDLE hostPipe) :
-			hostPipe(hostPipe),
-			section(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
-			sectionMap(MapViewOfFile(section, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
-			sectionMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
-		{}
+		inline static Host::ProcessEventCallback OnConnect, OnDisconnect;
 
-		ProcessRecord(ProcessRecord&) = delete;
-		ProcessRecord& operator=(ProcessRecord) = delete;
+		ProcessRecord(DWORD processId, HANDLE pipe) :
+			processId(processId),
+			pipe(pipe),
+			fileMapping(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
+			mappedView(MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
+			sectionMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
+		{
+			OnConnect(processId);
+		}
 
 		~ProcessRecord()
 		{
-			UnmapViewOfFile(sectionMap);
-			CloseHandle(section);
+			OnDisconnect(processId);
+			UnmapViewOfFile(mappedView);
 		}
 
 		TextHook GetHook(uint64_t addr)
 		{
-			if (sectionMap == nullptr) return {};
+			if (mappedView == nullptr) return {};
 			LOCK(sectionMutex);
-			auto hooks = (const TextHook*)sectionMap;
+			auto hooks = (const TextHook*)mappedView;
 			for (int i = 0; i < MAX_HOOK; ++i)
 				if (hooks[i].hp.insertion_address == addr) return hooks[i];
 			return {};
 		}
 
-		HANDLE hostPipe;
+		template <typename T>
+		void Send(T data)
+		{
+			DWORD DUMMY;
+			WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
+		}
 
 	private:
-		HANDLE section;
-		LPVOID sectionMap;
+		DWORD processId;
+		HANDLE pipe;
+		AutoHandle<> fileMapping;
+		LPCVOID mappedView;
 		WinMutex sectionMutex;
 	};
 
-	ThreadEventCallback OnCreate, OnDestroy;
-	ProcessEventCallback OnAttach, OnDetach;
+	ThreadSafePtr<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
+	ThreadSafePtr<std::unordered_map<DWORD, std::unique_ptr<ProcessRecord>>> processRecordsByIds;
 
-	std::unordered_map<ThreadParam, std::shared_ptr<TextThread>> textThreadsByParams;
-	std::unordered_map<DWORD, std::unique_ptr<ProcessRecord>> processRecordsByIds;
-
-	std::recursive_mutex hostMutex;
-
-	DWORD DUMMY;
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
-
-	void DispatchText(ThreadParam tp, const BYTE* text, int len)
-	{
-		LOCK(hostMutex);
-		if (textThreadsByParams[tp] == nullptr)
-		{
-			if (textThreadsByParams.size() > MAX_THREAD_COUNT) return Host::AddConsoleOutput(TOO_MANY_THREADS);
-			OnCreate(textThreadsByParams[tp] = std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)));
-		}
-		textThreadsByParams[tp]->Push(text, len);
-	}
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
-		LOCK(hostMutex);
-		for (auto it = textThreadsByParams.begin(); it != textThreadsByParams.end();)
-			if (auto curr = it++; removeIf(curr->first))
-			{
-				OnDestroy(curr->second);
-				textThreadsByParams.erase(curr->first);
-			}
-	}
-
-	void RegisterProcess(DWORD processId, HANDLE hostPipe)
-	{
-		LOCK(hostMutex);
-		processRecordsByIds.insert({ processId, std::make_unique<ProcessRecord>(processId, hostPipe) });
-		OnAttach(processId);
-	}
-
-	void UnregisterProcess(DWORD processId)
-	{
-		OnDetach(processId);
-		LOCK(hostMutex);
-		processRecordsByIds.erase(processId);
-		RemoveThreads([&](ThreadParam tp) { return tp.processId == processId; });
+		auto lockedTextThreadsByParams = textThreadsByParams.operator->();
+		for (auto it = lockedTextThreadsByParams->begin(); it != lockedTextThreadsByParams->end(); removeIf(it->first) ? it = lockedTextThreadsByParams->erase(it) : ++it);
 	}
 
 	void CreatePipe()
@@ -100,14 +72,15 @@ namespace
 			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
 			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
 			SECURITY_ATTRIBUTES pipeSA = { sizeof(SECURITY_ATTRIBUTES), &pipeSD, FALSE };
-			HANDLE hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &pipeSA);
-			HANDLE hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
+			AutoHandle<Util::NamedPipeHandleCloser>
+				hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &pipeSA),
+				hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
 			ConnectNamedPipe(hookPipe, nullptr);
 
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-			RegisterProcess(processId, hostPipe);
+			processRecordsByIds->insert({ processId, std::make_unique<ProcessRecord>(processId, hostPipe) });
 
 			CreatePipe();
 
@@ -129,16 +102,19 @@ namespace
 				default:
 				{
 					auto tp = *(ThreadParam*)buffer;
-					DispatchText(tp, buffer + sizeof(tp), bytesRead - sizeof(tp));
+					if (textThreadsByParams->count(tp) == 0)
+					{
+						auto textThread = textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)) }).first->second;
+						if (textThreadsByParams->size() > MAX_THREAD_COUNT)	Host::AddConsoleOutput(TOO_MANY_THREADS);
+						else textThread->Start();
+					}
+					textThreadsByParams->at(tp)->Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
 				}
 
-			UnregisterProcess(processId);
-			DisconnectNamedPipe(hookPipe);
-			DisconnectNamedPipe(hostPipe);
-			CloseHandle(hookPipe);
-			CloseHandle(hostPipe);
+			RemoveThreads([&](ThreadParam tp) { return tp.processId == processId; });
+			processRecordsByIds->erase(processId);
 		}).detach();
 	}
 
@@ -156,12 +132,16 @@ namespace
 
 namespace Host
 {
-	void Start(ProcessEventCallback onAttach, ProcessEventCallback onDetach, ThreadEventCallback onCreate, ThreadEventCallback onDestroy, TextThread::OutputCallback output)
+	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output)
 	{
-		OnAttach = onAttach; OnDetach = onDetach; OnCreate = onCreate; OnDestroy = onDestroy; TextThread::Output = output;
-		RegisterProcess(CONSOLE.processId, INVALID_HANDLE_VALUE);
-		OnCreate(textThreadsByParams[CONSOLE] = std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console"));
-		OnCreate(textThreadsByParams[CLIPBOARD] = std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard"));
+		ProcessRecord::OnConnect = OnConnect;
+		ProcessRecord::OnDisconnect = OnDisconnect;
+		TextThread::OnCreate = OnCreate;
+		TextThread::OnDestroy = OnDestroy;
+		TextThread::Output = Output;
+		processRecordsByIds->insert({ CONSOLE.processId, std::make_unique<ProcessRecord>(CONSOLE.processId, INVALID_HANDLE_VALUE) });
+		textThreadsByParams->insert({ CONSOLE, std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console") });
+		textThreadsByParams->insert({ CLIPBOARD, std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
 		StartCapturingClipboard();
 		CreatePipe();
 	}
@@ -170,9 +150,10 @@ namespace Host
 	{
 		// Artikash 7/25/2018: This is only called when Textractor is closed, at which point Windows should free everything itself...right?
 #ifdef _DEBUG // Check memory leaks
-		LOCK(hostMutex);
-		processRecordsByIds.clear();
-		textThreadsByParams.clear();
+		ProcessRecord::OnConnect = ProcessRecord::OnDisconnect = [](auto) {};
+		TextThread::OnCreate = TextThread::OnDestroy = [](auto) {};
+		processRecordsByIds->clear();
+		textThreadsByParams->clear();
 #endif
 	}
 
@@ -180,43 +161,37 @@ namespace Host
 	{
 		if (processId == GetCurrentProcessId()) return false;
 
-		CloseHandle(CreateMutexW(nullptr, FALSE, (ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId)).c_str()));
+		WinMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId));
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
 			AddConsoleOutput(ALREADY_INJECTED);
 			return false;
 		}
 
-		HMODULE textHooker = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
-		wchar_t textHookerPath[MAX_PATH];
-		DWORD textHookerPathSize = GetModuleFileNameW(textHooker, textHookerPath, MAX_PATH) * 2 + 2;
-		FreeLibrary(textHooker);
+		static HMODULE vnrhook = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
+		static std::wstring location = Util::GetModuleFileName(vnrhook).value();
 
-		if (HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
+		if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
 		{
 #ifdef _WIN64
 			BOOL invalidProcess = FALSE;
-			IsWow64Process(processHandle, &invalidProcess);
+			IsWow64Process(process, &invalidProcess);
 			if (invalidProcess)
 			{
 				AddConsoleOutput(ARCHITECTURE_MISMATCH);
-				CloseHandle(processHandle);
 				return false;
 			}
 #endif
-			if (LPVOID remoteData = VirtualAllocEx(processHandle, nullptr, textHookerPathSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
+			if (LPVOID remoteData = VirtualAllocEx(process, nullptr, location.size() * 2 + 2, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 			{
-				WriteProcessMemory(processHandle, remoteData, textHookerPath, textHookerPathSize, nullptr);
-				if (HANDLE thread = CreateRemoteThread(processHandle, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
+				WriteProcessMemory(process, remoteData, location.c_str(), location.size() * 2 + 2, nullptr);
+				if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
 				{
 					WaitForSingleObject(thread, timeout);
-					CloseHandle(thread);
-					VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
-					CloseHandle(processHandle);
+					VirtualFreeEx(process, remoteData, 0, MEM_RELEASE);
 					return true;
 				}
-				VirtualFreeEx(processHandle, remoteData, 0, MEM_RELEASE);
-				CloseHandle(processHandle);
+				VirtualFreeEx(process, remoteData, 0, MEM_RELEASE);
 			}
 		}
 
@@ -226,41 +201,32 @@ namespace Host
 
 	void DetachProcess(DWORD processId)
 	{
-		LOCK(hostMutex);
-		HostCommandType buffer(HOST_COMMAND_DETACH);
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+		processRecordsByIds->at(processId)->Send(HostCommandType(HOST_COMMAND_DETACH));
 	}
 
 	void InsertHook(DWORD processId, HookParam hp, std::string name)
 	{
-		LOCK(hostMutex);
-		InsertHookCmd buffer(hp, name);
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+		processRecordsByIds->at(processId)->Send(InsertHookCmd(hp, name));
 	}
 
 	void RemoveHook(DWORD processId, uint64_t addr)
 	{
-		LOCK(hostMutex);
-		RemoveHookCmd buffer(addr);
-		WriteFile(processRecordsByIds.at(processId)->hostPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+		processRecordsByIds->at(processId)->Send(RemoveHookCmd(addr));
 	}
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr)
 	{
-		LOCK(hostMutex);
-		return processRecordsByIds.at(processId)->GetHook(addr).hp;
+		return processRecordsByIds->at(processId)->GetHook(addr).hp;
 	}
 
 	std::wstring GetHookName(DWORD processId, uint64_t addr)
 	{
-		LOCK(hostMutex);
-		return Util::StringToWideString(processRecordsByIds.at(processId)->GetHook(addr).hookName).value();
+		return Util::StringToWideString(processRecordsByIds->at(processId)->GetHook(addr).hookName).value();
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
 	{
-		LOCK(hostMutex);
-		return textThreadsByParams[tp];
+		return textThreadsByParams->at(tp);
 	}
 
 	void AddConsoleOutput(std::wstring text) 
