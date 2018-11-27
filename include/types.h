@@ -3,6 +3,46 @@
 #include "common.h"
 #include "const.h"
 
+template<typename E, typename mtx = std::recursive_mutex>
+class ThreadSafePtr
+{
+public:
+	class Locker
+	{
+	public:
+		Locker(E* ptr, mtx* mtxPtr) : ptr(ptr), lock(*mtxPtr) {}
+		E* operator->() { return ptr; }
+
+	private:
+		E* ptr;
+		std::unique_lock<mtx> lock;
+	};
+	template <typename... Args> ThreadSafePtr(Args... args) : ptr(std::make_shared<E>(args...)), mtxPtr(std::make_shared<mtx>()) {}
+	Locker operator->() { return Locker(ptr.get(), mtxPtr.get()); }
+
+private:
+	std::shared_ptr<E> ptr;
+	std::shared_ptr<mtx> mtxPtr;
+};
+
+struct DefHandleCloser { void operator()(void* h) { CloseHandle(h); } };
+template <typename HandleCloser = DefHandleCloser>
+class AutoHandle
+{
+public:
+	AutoHandle(HANDLE h) : h(h) {}
+	operator HANDLE() { return h.get(); }
+	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
+
+private:
+	struct HandleCleaner 
+	{
+		HandleCloser hc;
+		void operator()(HANDLE h) { if (h != INVALID_HANDLE_VALUE) hc(h); }
+	};
+	std::unique_ptr<void, HandleCleaner> h;
+};
+
 // jichi 3/7/2014: Add guessed comment
 struct HookParam 
 {
@@ -40,18 +80,15 @@ struct ThreadParam
 template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<int64_t>()((tp.processId + tp.addr) ^ (tp.ctx + tp.ctx2)); } };
 static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.processId == two.processId && one.addr == two.addr && one.ctx == two.ctx && one.ctx2 == two.ctx2; }
 
-class WinMutex
+class WinMutex // Like CMutex but works with lock_guard
 {
 public:
-	WinMutex(std::wstring name) : mutex(CreateMutexW(nullptr, false, name.c_str())) {}
-	WinMutex(WinMutex&) = delete;
-	WinMutex& operator=(WinMutex) = delete;
-	~WinMutex() { ReleaseMutex(mutex); CloseHandle(mutex); }
-	void lock() { WaitForSingleObject(mutex, 0); }
-	void unlock() { ReleaseMutex(mutex); }
+	WinMutex(std::wstring name) : m(CreateMutexW(nullptr, FALSE, name.c_str())) {}
+	void lock() { if (m) WaitForSingleObject(m, 0); }
+	void unlock() { if (m) ReleaseMutex(m); }
 
 private:
-	HANDLE mutex;
+	AutoHandle<> m;
 };
 
 struct InsertHookCmd // From host
