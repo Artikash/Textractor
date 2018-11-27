@@ -23,16 +23,12 @@ void RemoveRepeatedChars(std::wstring& sentence)
 void RemoveCyclicRepeats(std::wstring& sentence)
 {
 remove:
-	std::wstring junk = sentence;
-	while (junk.size() > 4)
-	{
-		junk.pop_back();
+	for (std::wstring junk = sentence; junk.size() > 4; junk.pop_back())
 		if (sentence.rfind(junk) > 0)
 		{
 			sentence.erase(0, junk.size());
 			goto remove;
 		}
-	}
 }
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
