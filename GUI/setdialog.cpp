@@ -12,17 +12,18 @@ SetDialog::SetDialog(QWidget* parent) :
 
 	QFormLayout* layout = findChild<QFormLayout*>("layout");
 
-	auto addSpinBox = [&](QString label, int value)
+	using Bindable = std::tuple<QSpinBox*&, int, const char*>;
+	for (auto[spinBox, value, label] : {
+		Bindable{ flushDelay, TextThread::flushDelay, FLUSH_DELAY },
+		Bindable{ maxBufferSize, TextThread::maxBufferSize, MAX_BUFFER_SIZE },
+		Bindable{ defaultCodepage, TextThread::defaultCodepage, DEFAULT_CODEPAGE }
+	})
 	{
-		auto spinbox = new QSpinBox(this);
-		spinbox->setMaximum(INT_MAX);
-		spinbox->setValue(value);
-		layout->insertRow(0, label, spinbox);
-		return spinbox;
-	};
-	flushDelay = addSpinBox(FLUSH_DELAY, TextThread::flushDelay);
-	maxBufferSize = addSpinBox(MAX_BUFFER_SIZE, TextThread::maxBufferSize);
-	defaultCodepage = addSpinBox(DEFAULT_CODEPAGE, TextThread::defaultCodepage);
+		spinBox = new QSpinBox(this);
+		spinBox->setMaximum(INT_MAX);
+		spinBox->setValue(value);
+		layout->insertRow(0, label, spinBox);
+	}
 }
 
 SetDialog::~SetDialog()
