@@ -146,17 +146,6 @@ namespace Host
 		CreatePipe();
 	}
 
-	void Close()
-	{
-		// Artikash 7/25/2018: This is only called when Textractor is closed, at which point Windows should free everything itself...right?
-#ifdef _DEBUG // Check memory leaks
-		ProcessRecord::OnConnect = ProcessRecord::OnDisconnect = [](auto) {};
-		TextThread::OnCreate = TextThread::OnDestroy = [](auto) {};
-		processRecordsByIds->clear();
-		textThreadsByParams->clear();
-#endif
-	}
-
 	bool InjectProcess(DWORD processId, DWORD timeout)
 	{
 		if (processId == GetCurrentProcessId()) return false;
@@ -207,11 +196,6 @@ namespace Host
 	void InsertHook(DWORD processId, HookParam hp, std::string name)
 	{
 		processRecordsByIds->at(processId)->Send(InsertHookCmd(hp, name));
-	}
-
-	void RemoveHook(DWORD processId, uint64_t addr)
-	{
-		processRecordsByIds->at(processId)->Send(RemoveHookCmd(addr));
 	}
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr)

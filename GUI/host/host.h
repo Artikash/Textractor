@@ -7,13 +7,10 @@ namespace Host
 {
 	typedef std::function<void(DWORD)> ProcessEventCallback;
 	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output);
-	void Close();
 
 	bool InjectProcess(DWORD processId, DWORD timeout = 5000);
 	void DetachProcess(DWORD processId);
-
 	void InsertHook(DWORD processId, HookParam hp, std::string name = "");
-	void RemoveHook(DWORD processId, uint64_t addr);
 
 	HookParam GetHookParam(DWORD processId, uint64_t addr);
 	inline HookParam GetHookParam(ThreadParam tp) { return GetHookParam(tp.processId, tp.addr); }

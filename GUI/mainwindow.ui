@@ -88,13 +88,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="unhookButton">
-         <property name="text">
-          <string>Remove hook</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="saveButton">
          <property name="text">
           <string>Save hook(s)</string>

@@ -24,7 +24,6 @@ public:
 private slots:
 	void on_attachButton_clicked();
 	void on_detachButton_clicked();
-	void on_unhookButton_clicked();
 	void on_hookButton_clicked();
 	void on_saveButton_clicked();
 	void on_setButton_clicked();
@@ -32,6 +31,7 @@ private slots:
 	void on_ttCombo_activated(int index);
 
 private:
+	void closeEvent(QCloseEvent*);
 	void InvokeOnMainThread(std::function<void()>&& f);
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
@@ -42,8 +42,6 @@ private:
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
 	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
-	QVector<HookParam> GetAllHooks(DWORD processId);
-	void closeEvent(QCloseEvent*);
 
 	Ui::MainWindow* ui;
 	QSettings settings = QSettings(CONFIG_FILE, QSettings::IniFormat);

@@ -99,13 +99,6 @@ struct InsertHookCmd // From host
 	char name[HOOK_NAME_SIZE] = {};
 };
 
-struct RemoveHookCmd // From host
-{
-	RemoveHookCmd(uint64_t address) : address(address) {};
-	int command = HOST_COMMAND_REMOVE_HOOK;
-	uint64_t address;
-};
-
 struct ConsoleOutputNotif // From hook
 {
 	ConsoleOutputNotif(std::string message = "") { strcpy_s<MESSAGE_SIZE>(this->message, message.c_str()); };

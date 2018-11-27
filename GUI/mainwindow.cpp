@@ -37,7 +37,6 @@ MainWindow::~MainWindow()
 {
 	settings.setValue(WINDOW, geometry());
 	settings.sync();
-	Host::Close();
 	delete ui;
 }
 
@@ -152,22 +151,6 @@ std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thr
 	};
 }
 
-QVector<HookParam> MainWindow::GetAllHooks(DWORD processId)
-{
-	QSet<uint64_t> addresses;
-	QVector<HookParam> hooks;
-	for (int i = 0; i < ttCombo->count(); ++i)
-	{
-		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
-		if (tp.processId == processId && !addresses.contains(tp.addr))
-		{
-			addresses.insert(tp.addr);
-			hooks.push_back(Host::GetHookParam(tp));
-		}
-	}
-	return hooks;
-}
-
 void MainWindow::on_attachButton_clicked()
 {
 	auto allProcesses = GetAllProcesses();
@@ -194,27 +177,16 @@ void MainWindow::on_hookButton_clicked()
 	else Host::AddConsoleOutput(INVALID_CODE);
 }
 
-void MainWindow::on_unhookButton_clicked()
-{
-	auto hooks = GetAllHooks(GetSelectedProcessId());
-	if (hooks.empty()) return Host::AddConsoleOutput(NO_HOOKS);
-	QStringList hookList;
-	for (auto hp : hooks) 
-		hookList.push_back(
-			QString::fromStdWString(Host::GetHookName(GetSelectedProcessId(), hp.insertion_address)) +
-			": " +
-			GenerateCode(hp, GetSelectedProcessId())
-		);
-	bool ok;
-	QString hook = QInputDialog::getItem(this, UNHOOK, REMOVE_HOOK, hookList, 0, false, &ok, Qt::WindowCloseButtonHint);
-	if (ok) Host::RemoveHook(GetSelectedProcessId(), hooks.at(hookList.indexOf(hook)).insertion_address);
-}
-
 void MainWindow::on_saveButton_clicked()
 {
+	QHash<uint64_t, QString> hookCodes;
+	for (int i = 0; i < ttCombo->count(); ++i)
+	{
+		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
+		if (tp.processId == GetSelectedProcessId() && !(Host::GetHookParam(tp).type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(Host::GetHookParam(tp), tp.processId);
+	}
 	QString hookList = GetFullModuleName(GetSelectedProcessId());
-	for (auto hp : GetAllHooks(GetSelectedProcessId()))
-		if (!(hp.type & HOOK_ENGINE)) hookList += " , " + GenerateCode(hp, GetSelectedProcessId());
+	for (auto hookCode : hookCodes) hookList += " , " + hookCode;
 	QAutoFile(HOOK_SAVE_FILE, QIODevice::Append)->write((hookList + "\r\n").toUtf8());
 }
 

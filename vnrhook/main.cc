@@ -71,12 +71,6 @@ DWORD WINAPI Pipe(LPVOID)
 				NewHook(info.hp, info.name, 0);
 			}
 			break;
-			case HOST_COMMAND_REMOVE_HOOK:
-			{
-				auto info = *(RemoveHookCmd*)buffer;
-				RemoveHook(info.address);
-			}
-			break;
 			case HOST_COMMAND_DETACH:
 			{
 				running = false;
