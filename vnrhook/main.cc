@@ -94,9 +94,10 @@ DWORD WINAPI Pipe(LPVOID)
 void TextOutput(ThreadParam tp, BYTE* text, int len)
 {
 	if (len < 0) return;
+	if (len > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) len = PIPE_BUFFER_SIZE - sizeof(ThreadParam);
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	*(ThreadParam*)buffer = tp;
-	memcpy_s(buffer + sizeof(ThreadParam), sizeof(buffer) - sizeof(ThreadParam), text, len);
+	memcpy(buffer + sizeof(ThreadParam), text, len);
 	WriteFile(hookPipe, buffer, sizeof(ThreadParam) + len, &DUMMY, nullptr);
 }
 
@@ -155,9 +156,9 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 {
 	std::string name = lpname;
-	if (++currentHook < MAX_HOOK) 
+	if (++currentHook < MAX_HOOK)
 	{
-		if (name.empty()) name = "UserHook" + std::to_string(userhookCount++);
+		if (name.empty()) name = "UserHook " + std::to_string(userhookCount++);
 		ConsoleOutput(INSERTING_HOOK + name);
 
 		// jichi 7/13/2014: This function would raise when too many hooks added
