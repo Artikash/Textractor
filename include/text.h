@@ -21,7 +21,7 @@ constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
 constexpr auto SELECT_EXTENSION = u8"Select Extension";
 constexpr auto EXTENSIONS = u8"Extensions (*.dll)";
 constexpr auto ABOUT = L"Textractor beta v3.5.0 (project homepage: https://github.com/Artikash/Textractor)\r\n"
-"Made with <3 by Artikash (email: akashmozumdar@gmail.com)\r\n"
+"Made with love by Artikash (email: akashmozumdar@gmail.com)\r\n"
 "Please contact Artikash with any problems, feature requests, or questions relating to Textractor\r\n"
 "You can do so via the project homepage (issues section) or via email\r\n"
 "Source code available under GPLv3 at project homepage";
@@ -33,7 +33,7 @@ constexpr auto INVALID_CODE = L"Textractor: invalid code";
 constexpr auto NO_HOOKS = L"Textractor: no hooks detected";
 constexpr auto INVALID_CODEPAGE = L"Textractor: couldn't convert text (invalid codepage?)";
 constexpr auto PIPE_CONNECTED = u8"Textractor: pipe connected";
-constexpr auto DISABLE_HOOKS = u8"Textractor: hooks don't work on x64, only read codes work. Engine disabled.";
+constexpr auto DISABLE_HOOKS = u8"Textractor: hooks don't work on x64, only read codes work: engine disabled";
 constexpr auto INSERTING_HOOK = u8"Textractor: inserting hook: ";
 constexpr auto HOOK_FAILED = u8"Textractor: failed to insert hook";
 constexpr auto TOO_MANY_HOOKS = u8"Textractor: too many hooks: can't insert";
