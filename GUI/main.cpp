@@ -27,11 +27,8 @@ namespace
 			L"Error in module: " << Util::GetModuleFileName((HMODULE)info.AllocationBase).value_or(L"Could not find") << std::endl <<
 			L"Additional info: " << info.AllocationBase << std::endl;
 
-		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
-		{
+		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363) 
 			errorMsg << L"Additional info: " << GetCppExceptionInfo(exception) << std::endl;
-			if (errorMsg.str().find(L"exception")) errorMsg << ((std::exception*)exception->ExceptionRecord->ExceptionInformation[1])->what();
-		}
 
 		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
