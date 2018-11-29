@@ -11336,24 +11336,22 @@ bool InsertScenarioPlayerHook()
   }
 
   HookParam hp = {};
-  //hp.address = addr;
+  hp.address = addr;
   hp.length_offset = 1;
   hp.offset = 4;
-  //if (addr - start == addr_offset_W) {
-  // Artikash 8/18/2018: can't figure out how to tell apart which hook is needed, so just insert both xD
+  if (addr - start == addr_offset_W) {
+  // Artikash 8/18/2018: can't figure out how to tell apart which hook is needed, so alert user
   // (The method used to tell the hooks apart previously fails on https://vndb.org/v19713)
-  HookParam hp2 = hp;
 
   hp.type = USING_UNICODE;
-  hp.address = addr;
   ConsoleOutput("vnreng: INSERT ScenarioPlayerW");
   NewHook(hp, "ScenarioPlayerW");
-  //} else {
-  hp2.type = BIG_ENDIAN; // 4
-  hp2.address = addr + 5;
+  } else {
+  hp.type = BIG_ENDIAN; // 4
   ConsoleOutput("vnreng: INSERT ScenarioPlayerA");
-  NewHook(hp2, "ScenarioPlayerA");
-  //}
+  NewHook(hp, "ScenarioPlayerA");
+  }
+  ConsoleOutput("Text encoding might be wrong: try changing it if this hook finds garbage!");
   return true;
 }
 
