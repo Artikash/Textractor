@@ -4,16 +4,23 @@
 #include "host.h"
 #include "util.h"
 
-TextThread::TextThread(ThreadParam tp, HookParam hp, std::wstring name) : handle(threadCounter++), name(name), tp(tp), hp(hp) 
+TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) : 
+	handle(threadCounter++), 
+	name(name.value_or(Util::StringToWideString(hp.name).value())), 
+	tp(tp), 
+	hp(hp)
 {
 	OnCreate(this);
 }
 
 TextThread::~TextThread()
 {
-	SetEvent(deletionEvent);
-	flushThread.join();
-	OnDestroy(this);
+	if (flushThread.joinable())
+	{
+		SetEvent(deletionEvent);
+		flushThread.join();
+		OnDestroy(this);
+	}
 }
 
 std::wstring TextThread::GetStorage()

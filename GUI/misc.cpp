@@ -1,32 +1,16 @@
 #include "misc.h"
 #include "const.h"
+#include "host/util.h"
 #include <Psapi.h>
 #include <QTextStream>
 
-QString GetFullModuleName(DWORD processId, HMODULE module)
-{
-	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-	wchar_t buffer[MAX_PATH] = {};
-	GetModuleFileNameExW(handle, module, buffer, MAX_PATH);
-	CloseHandle(handle);
-	return QString::fromWCharArray(buffer);
-}
-
-QString GetModuleName(DWORD processId, HMODULE module)
-{
-	QString fullName = GetFullModuleName(processId, module);
-	return fullName.remove(0, fullName.lastIndexOf("\\") + 1);
-}
-
 QMultiHash<QString, DWORD> GetAllProcesses()
 {
-	DWORD allProcessIds[0x1000];
-	DWORD spaceUsed;
+	DWORD allProcessIds[5000] = {}, spaceUsed = 0;
+	EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed);
 	QMultiHash<QString, DWORD> ret;
-	if (!EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed)) return ret;
 	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
-		if (GetModuleName(allProcessIds[i]).size())
-			ret.insert(GetModuleName(allProcessIds[i]), allProcessIds[i]);
+		if (auto processName = Util::GetModuleFileName(allProcessIds[i])) ret.insert(QFileInfo(QString::fromStdWString(processName.value())).fileName(), allProcessIds[i]);
 	return ret;
 }
 
@@ -235,19 +219,15 @@ namespace
 
 		// Attempt to make the address relative
 		if (!(hp.type & MODULE_OFFSET))
-		{
-			HANDLE processHandle;
-			if (!(processHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))) goto fin;
-			MEMORY_BASIC_INFORMATION info;
-			if (!VirtualQueryEx(processHandle, (LPCVOID)hp.address, &info, sizeof(info))) goto fin;
-			QString moduleName = GetModuleName(processId, (HMODULE)info.AllocationBase);
-			if (moduleName == "") goto fin;
-			hp.type |= MODULE_OFFSET;
-			hp.address -= (uint64_t)info.AllocationBase;
-			wcscpy_s<MAX_MODULE_SIZE>(hp.module, moduleName.toStdWString().c_str());
-		}
+			if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
+				if (MEMORY_BASIC_INFORMATION info = {}; VirtualQueryEx(process, (LPCVOID)hp.address, &info, sizeof(info)))
+					if (auto moduleName = Util::GetModuleFileName(processId, (HMODULE)info.AllocationBase))
+					{
+						hp.type |= MODULE_OFFSET;
+						hp.address -= (uint64_t)info.AllocationBase;
+						wcscpy_s<MAX_MODULE_SIZE>(hp.module, moduleName->c_str() + moduleName->rfind(L'\\') + 1);
+					}
 
-		fin:
 		codeBuilder << "@" << hp.address;
 		if (hp.type & MODULE_OFFSET) codeBuilder << ":" << QString::fromWCharArray(hp.module);
 		if (hp.type & FUNCTION_OFFSET) codeBuilder << ":" << hp.function;

@@ -26,7 +26,7 @@ private slots:
 	void on_rmvButton_clicked();
 
 private:
-	void Add(QString fileName);
+	void Add(QFileInfo extenFile);
 	void Sync();
 	bool eventFilter(QObject* target, QEvent* event);
 	void dragEnterEvent(QDragEnterEvent* event);

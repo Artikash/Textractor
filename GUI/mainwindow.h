@@ -32,7 +32,7 @@ private slots:
 
 private:
 	void closeEvent(QCloseEvent*);
-	void InvokeOnMainThread(std::function<void()>&& f);
+	void InvokeOnMainThread(std::function<void()> f);
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
 	void ThreadAdded(TextThread* thread);

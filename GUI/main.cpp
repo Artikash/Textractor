@@ -2,6 +2,7 @@
 #include "host/util.h"
 #include <sstream>
 #include <QApplication>
+#include <QDir>
 
 namespace
 {
@@ -15,8 +16,16 @@ namespace
 
 	thread_local std::wstring lastError = L"Unknown error";
 
+	__declspec(noreturn) void Terminate()
+	{
+		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
+		std::abort();
+	}
+
 	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)
 	{
+		thread_local static auto terminateSetter = std::invoke(std::set_terminate, Terminate);
+
 		MEMORY_BASIC_INFORMATION info = {};
 		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
 
@@ -36,14 +45,6 @@ namespace
 		lastError = errorMsg.str();
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
-
-	__declspec(noreturn) void Terminate()
-	{
-		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
-		std::abort();
-	}
-
-	thread_local auto _ = [] { return std::set_terminate(Terminate); }();
 }
 
 int main(int argc, char *argv[])
@@ -51,9 +52,7 @@ int main(int argc, char *argv[])
 	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
 	SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); });
 
-	std::wstring exe = Util::GetModuleFileName().value();
-	while (exe.back() != L'\\') exe.pop_back();
-	SetCurrentDirectoryW(exe.c_str());
+	QDir::setCurrent(QFileInfo().absolutePath());
 
 	QApplication a(argc, argv);
 	MainWindow w;

@@ -7,4 +7,5 @@
 #include <QMainWindow>
 #include <QDialog>
 #include <QFile>
+#include <QFileInfo>
 #include <QRegularExpression>

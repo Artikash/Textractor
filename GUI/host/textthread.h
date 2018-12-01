@@ -6,8 +6,8 @@
 class TextThread
 {
 public:
-	typedef std::function<void(TextThread*)> EventCallback;
-	typedef std::function<bool(TextThread*, std::wstring&)> OutputCallback;
+	using EventCallback = std::function<void(TextThread*)>;
+	using OutputCallback = std::function<bool(TextThread*, std::wstring&)>;
 	inline static EventCallback OnCreate, OnDestroy;
 	inline static OutputCallback Output;
 
@@ -16,9 +16,7 @@ public:
 	inline static int defaultCodepage = SHIFT_JIS;
 	inline static int threadCounter = 0;
 
-	TextThread(ThreadParam tp, HookParam hp, std::wstring name);
-	TextThread(TextThread&) = delete;
-	TextThread& operator=(TextThread) = delete;
+	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 	~TextThread();
 
 	std::wstring GetStorage();

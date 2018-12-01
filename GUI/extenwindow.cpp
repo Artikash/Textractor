@@ -105,12 +105,11 @@ void ExtenWindow::Sync()
 	}
 }
 
-void ExtenWindow::Add(QString fileName)
+void ExtenWindow::Add(QFileInfo extenFile)
 {
-	if (!fileName.endsWith(".dll")) return;
-	QString extenName = fileName.mid(fileName.lastIndexOf("/") + 1);
-	QFile::copy(fileName, extenName);
-	Load(extenName.split(".dll")[0]);
+	if (extenFile.suffix() != "dll") return;
+	QFile::copy(extenFile.fileName(), extenFile.absoluteFilePath());
+	Load(extenFile.completeBaseName());
 	Sync();
 }
 

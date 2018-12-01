@@ -15,9 +15,9 @@ namespace
 		ProcessRecord(DWORD processId, HANDLE pipe) :
 			processId(processId),
 			pipe(pipe),
-			fileMapping(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
-			mappedView(MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
-			sectionMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
+			mappedFile(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
+			view(MapViewOfFile(mappedFile, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
+			viewMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
 		{
 			OnConnect(processId);
 		}
@@ -25,14 +25,14 @@ namespace
 		~ProcessRecord()
 		{
 			OnDisconnect(processId);
-			UnmapViewOfFile(mappedView);
+			UnmapViewOfFile(view);
 		}
 
 		TextHook GetHook(uint64_t addr)
 		{
-			if (mappedView == nullptr) return {};
-			LOCK(sectionMutex);
-			auto hooks = (const TextHook*)mappedView;
+			if (view == nullptr) return {};
+			LOCK(viewMutex);
+			auto hooks = (const TextHook*)view;
 			for (int i = 0; i < MAX_HOOK; ++i)
 				if (hooks[i].hp.insertion_address == addr) return hooks[i];
 			return {};
@@ -41,16 +41,16 @@ namespace
 		template <typename T>
 		void Send(T data)
 		{
-			DWORD DUMMY;
+			std::enable_if_t<sizeof(data) < PIPE_BUFFER_SIZE, DWORD> DUMMY;
 			WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
 		}
 
 	private:
 		DWORD processId;
 		HANDLE pipe;
-		AutoHandle<> fileMapping;
-		LPCVOID mappedView;
-		WinMutex sectionMutex;
+		AutoHandle<> mappedFile;
+		LPCVOID view;
+		WinMutex viewMutex;
 	};
 
 	ThreadSafePtr<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
@@ -60,8 +60,8 @@ namespace
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
-		auto lockedTextThreadsByParams = textThreadsByParams.operator->();
-		for (auto it = lockedTextThreadsByParams->begin(); it != lockedTextThreadsByParams->end(); removeIf(it->first) ? it = lockedTextThreadsByParams->erase(it) : ++it);
+		auto[lock, textThreadsByParams] = ::textThreadsByParams.operator->();
+		for (auto it = textThreadsByParams->begin(); it != textThreadsByParams->end(); removeIf(it->first) ? it = textThreadsByParams->erase(it) : ++it);
 	}
 
 	void CreatePipe()
@@ -104,9 +104,9 @@ namespace
 					auto tp = *(ThreadParam*)buffer;
 					if (textThreadsByParams->count(tp) == 0)
 					{
-						auto textThread = textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp), Host::GetHookName(tp)) }).first->second;
-						if (textThreadsByParams->size() > MAX_THREAD_COUNT)	Host::AddConsoleOutput(TOO_MANY_THREADS);
-						else textThread->Start();
+						auto textThread = textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp)) }).first->second;
+						if (textThreadsByParams->size() < MAX_THREAD_COUNT)	 textThread->Start();
+						else Host::AddConsoleOutput(TOO_MANY_THREADS);
 					}
 					textThreadsByParams->at(tp)->Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
@@ -144,6 +144,16 @@ namespace Host
 		textThreadsByParams->insert({ CLIPBOARD, std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
 		StartCapturingClipboard();
 		CreatePipe();
+	}
+
+	void Shutdown()
+	{
+		auto NOP = [](auto... args) { return NULL; };
+		ProcessRecord::OnConnect = NOP;
+		ProcessRecord::OnDisconnect = NOP;
+		TextThread::OnCreate = NOP;
+		TextThread::OnDestroy = NOP;
+		TextThread::Output = NOP;
 	}
 
 	bool InjectProcess(DWORD processId, DWORD timeout)
@@ -193,19 +203,14 @@ namespace Host
 		processRecordsByIds->at(processId)->Send(HostCommandType(HOST_COMMAND_DETACH));
 	}
 
-	void InsertHook(DWORD processId, HookParam hp, std::string name)
+	void InsertHook(DWORD processId, HookParam hp)
 	{
-		processRecordsByIds->at(processId)->Send(InsertHookCmd(hp, name));
+		processRecordsByIds->at(processId)->Send(InsertHookCmd(hp));
 	}
 
-	HookParam GetHookParam(DWORD processId, uint64_t addr)
+	HookParam GetHookParam(ThreadParam tp)
 	{
-		return processRecordsByIds->at(processId)->GetHook(addr).hp;
-	}
-
-	std::wstring GetHookName(DWORD processId, uint64_t addr)
-	{
-		return Util::StringToWideString(processRecordsByIds->at(processId)->GetHook(addr).hookName).value();
+		return processRecordsByIds->at(tp.processId)->GetHook(tp.addr).hp;
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
