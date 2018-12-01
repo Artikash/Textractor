@@ -23,16 +23,15 @@ class TextHook
 	void RemoveHookCode();
 	void RemoveReadCode();
 
+	HANDLE readerThread, readerEvent;
+	BYTE trampoline[120];
 public:
 	HookParam hp;
-	char hookName[HOOK_NAME_SIZE];
-	BYTE trampoline[120];
-	HANDLE readerHandle;
 
-	bool InsertHook();
-	void InitHook(HookParam hp, LPCSTR name, DWORD set_flag);
+	bool Insert(HookParam hp, DWORD set_flag);
 	void Send(DWORD dwDataBase);
-	void ClearHook();
+	void Clear();
+	friend DWORD WINAPI Reader(LPVOID hookPtr);
 };
 
 enum { MAX_HOOK = 300, HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook), HOOK_SECTION_SIZE = HOOK_BUFFER_SIZE * 2 };

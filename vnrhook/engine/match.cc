@@ -29,6 +29,12 @@ WCHAR *processName, // cached
       processPath[MAX_PATH]; // cached
 
 //LPVOID trigger_addr;
+/** jichi 12/24/2014
+	*  @param  addr  function address
+	*  @param  frame  real address of the function, supposed to be the same as addr
+	*  @param  stack  address of current stack - 4
+	*  @return  If success, which is reverted
+*/
 trigger_fun_t trigger_fun_;
 
 } // namespace Engine

@@ -19,7 +19,7 @@
 #include "growl.h"
 #include <Psapi.h>
 
-extern std::unique_ptr<WinMutex> sectionMutex;
+extern std::unique_ptr<WinMutex> viewMutex;
 
 // - Unnamed helpers -
 
@@ -95,16 +95,17 @@ void SetTrigger()
 
 // - TextHook methods -
 
-bool TextHook::InsertHook()
+bool TextHook::Insert(HookParam h, DWORD set_flag)
 {
-	//ConsoleOutput("vnrcli:InsertHook: enter");
-	LOCK(*sectionMutex);
+	LOCK(*viewMutex);
+	hp = h;
+	hp.insertion_address = hp.address;
+	hp.type |= set_flag;
 	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
 	if (hp.type & DIRECT_READ) return InsertReadCode();
 #ifndef _WIN64
 	else return InsertHookCode();
 #endif
-	//ConsoleOutput("vnrcli:InsertHook: leave");
 	return false;
 }
 
@@ -126,12 +127,6 @@ void TextHook::Send(DWORD dwDataBase)
 		dwAddr = hp.insertion_address;
 		dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
 
-		/** jichi 12/24/2014
-		 *  @param  addr  function address
-		 *  @param  frame  real address of the function, supposed to be the same as addr
-		 *  @param  stack  address of current stack - 4
-		 *  @return  If success, which is reverted
-		 */
 		if (trigger)
 			trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
 
@@ -166,7 +161,7 @@ void TextHook::Send(DWORD dwDataBase)
 			}
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
-		// jichi 12/25/2013: validate data size
+
 		if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) return;
 
 		if (hp.length_offset == 1) {
@@ -180,7 +175,6 @@ void TextHook::Send(DWORD dwDataBase)
 		else
 			::memcpy(pbData, (void*)dwDataIn, dwCount);
 
-		// jichi 10/14/2014: Add filter function
 		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) return;
 
 		if (dwType & (NO_CONTEXT | FIXING_SPLIT))
@@ -219,24 +213,23 @@ insert:
 			return false;
 		}
 
-	
+#ifndef _WIN64
 	*(TextHook**)(common_hook + 9) = this;
 	*(void(TextHook::**)(DWORD))(common_hook + 14) = &TextHook::Send;
 	*(void**)(common_hook + 24) = original;
 	memcpy(trampoline, common_hook, sizeof(common_hook));
+#else // _WIN32
+	BYTE* original;
+	MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original);
+	memcpy(trampoline, common_hook, sizeof(common_hook));
+	void* thisPtr = (void*)this;
+	memcpy(trampoline + 30, &thisPtr, sizeof(void*));
+	auto sendPtr = (void(TextHook::*)(void*))&TextHook::Send;
+	memcpy(trampoline + 46, &sendPtr, sizeof(sendPtr));
+	memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
+#endif // _WIN64
 
-	//BYTE* original;
-	//MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original);
-	//memcpy(trampoline, common_hook, sizeof(common_hook));
-	//void* thisPtr = (void*)this;
-	//memcpy(trampoline + 30, &thisPtr, sizeof(void*));
-	//auto sendPtr = (void(TextHook::*)(void*))&TextHook::Send;
-	//memcpy(trampoline + 46, &sendPtr, sizeof(sendPtr));
-	//memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
-
-	if (MH_EnableHook((void*)hp.insertion_address) != MH_OK) return false;
-
-	return true;
+	return MH_EnableHook((void*)hp.insertion_address) == MH_OK;
 }
 #endif // _WIN32
 
@@ -249,10 +242,9 @@ DWORD WINAPI Reader(LPVOID hookPtr)
 	__try
 	{
 		const void* currentAddress = (void*)hook->hp.insertion_address;
-		while (true)
+		while (WaitForSingleObject(hook->readerEvent, 500) == WAIT_TIMEOUT)
 		{
 			if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
-			Sleep(500);
 			if (memcmp(buffer, currentAddress, dataLen + 1) == 0)
 			{
 				changeCount = 0;
@@ -261,6 +253,7 @@ DWORD WINAPI Reader(LPVOID hookPtr)
 			if (++changeCount > 10)
 			{
 				ConsoleOutput(GARBAGE_MEMORY);
+				hook->Clear();
 				break;
 			}
 
@@ -276,25 +269,16 @@ DWORD WINAPI Reader(LPVOID hookPtr)
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 		ConsoleOutput("Textractor: Reader ERROR (likely an incorrect R-code)");
+		hook->Clear();
 	}
-	hook->ClearHook();
 	return 0;
 }
 
 bool TextHook::InsertReadCode()
 {
-	//RemoveHook(hp.address); // Artikash 8/25/2018: clear existing
-	readerHandle = CreateThread(nullptr, 0, Reader, this, 0, nullptr);
+	readerThread = CreateThread(nullptr, 0, Reader, this, 0, nullptr);
+	readerEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	return true;
-}
-
-void TextHook::InitHook(HookParam h, LPCSTR name, DWORD set_flag)
-{
-	LOCK(*sectionMutex);
-	hp = h;
-	hp.insertion_address = hp.address;
-	hp.type |= set_flag;
-	strcpy_s<HOOK_NAME_SIZE>(hookName, name);
 }
 
 void TextHook::RemoveHookCode()
@@ -305,14 +289,16 @@ void TextHook::RemoveHookCode()
 
 void TextHook::RemoveReadCode()
 {
-	TerminateThread(readerHandle, 0);
-	CloseHandle(readerHandle);
+	SetEvent(readerEvent);
+	if (GetThreadId(readerThread) != GetCurrentThreadId()) WaitForSingleObject(readerThread, 1000);
+	CloseHandle(readerEvent);
+	CloseHandle(readerThread);
 }
 
-void TextHook::ClearHook()
+void TextHook::Clear()
 {
-	LOCK(*sectionMutex);
-	ConsoleOutput((REMOVING_HOOK + std::string(hookName)).c_str());
+	LOCK(*viewMutex);
+	ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(hp.insertion_address);
