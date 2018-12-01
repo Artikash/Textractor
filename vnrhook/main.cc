@@ -17,14 +17,14 @@
 #include "texthook.h"
 #include "util/growl.h"
 
-std::unique_ptr<WinMutex> sectionMutex;
+std::unique_ptr<WinMutex> viewMutex;
 
 namespace
 {
-	HANDLE hSection, hookPipe;
+	AutoHandle<> hookPipe = INVALID_HANDLE_VALUE, mappedFile = INVALID_HANDLE_VALUE;
 	TextHook* hooks;
 	bool running;
-	int currentHook = 0, userhookCount = 0;
+	int currentHook = 0;
 	DWORD DUMMY;
 }
 
@@ -34,7 +34,8 @@ DWORD WINAPI Pipe(LPVOID)
 	{
 		DWORD count = 0;
 		BYTE buffer[PIPE_BUFFER_SIZE] = {};
-		HANDLE hostPipe = hookPipe = INVALID_HANDLE_VALUE;
+		AutoHandle<> hostPipe = INVALID_HANDLE_VALUE;
+		hookPipe = INVALID_HANDLE_VALUE;
 
 		while (hookPipe == INVALID_HANDLE_VALUE || hostPipe == INVALID_HANDLE_VALUE)
 		{
@@ -68,7 +69,7 @@ DWORD WINAPI Pipe(LPVOID)
 			case HOST_COMMAND_NEW_HOOK:
 			{
 				auto info = *(InsertHookCmd*)buffer;
-				NewHook(info.hp, info.name, 0);
+				NewHook(info.hp, "UserHook", 0);
 			}
 			break;
 			case HOST_COMMAND_DETACH:
@@ -77,10 +78,9 @@ DWORD WINAPI Pipe(LPVOID)
 			}
 			break;
 			}
-
-		CloseHandle(hostPipe);
-		CloseHandle(hookPipe);
 	}
+	hookPipe = INVALID_HANDLE_VALUE;
+	for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].hp.insertion_address) hooks[i].Clear();
 	FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
 	return 0;
 }
@@ -95,15 +95,13 @@ void TextOutput(ThreadParam tp, BYTE* text, int len)
 	WriteFile(hookPipe, buffer, sizeof(ThreadParam) + len, &DUMMY, nullptr);
 }
 
-void ConsoleOutput(LPCSTR text)
+void ConsoleOutput(LPCSTR text, ...)
 {
-	ConsoleOutputNotif buffer(text);
+	ConsoleOutputNotif buffer;
+	va_list args;
+	va_start(args, text);
+	vsprintf_s<MESSAGE_SIZE>(buffer.message, text, args);
 	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
-}
-
-void ConsoleOutput(std::string text)
-{
-	ConsoleOutput(text.c_str());
 }
 
 void NotifyHookRemove(uint64_t addr)
@@ -118,13 +116,13 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		sectionMutex = std::make_unique<WinMutex>(ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId()));
+		viewMutex = std::make_unique<WinMutex>(ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId()));
 		if (GetLastError() == ERROR_ALREADY_EXISTS) return FALSE;
 		DisableThreadLibraryCalls(hModule);
 
 		// jichi 9/25/2013: Interprocedural communication with vnrsrv.
-		hSection = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, (ITH_SECTION_ + std::to_wstring(GetCurrentProcessId())).c_str());
-		hooks = (TextHook*)MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE, 0, 0, HOOK_BUFFER_SIZE);
+		mappedFile = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, (ITH_SECTION_ + std::to_wstring(GetCurrentProcessId())).c_str());
+		hooks = (TextHook*)MapViewOfFile(mappedFile, FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE, 0, 0, HOOK_BUFFER_SIZE);
 		memset(hooks, 0, HOOK_BUFFER_SIZE);
 
 		MH_Initialize();
@@ -136,36 +134,27 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	case DLL_PROCESS_DETACH:
 	{
 		running = false;
-		for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].hp.insertion_address) hooks[i].ClearHook();
 		UnmapViewOfFile(hooks);
 		MH_Uninitialize();
-		CloseHandle(hSection);
 	}
 	break;
 	}
 	return TRUE;
 }
 
-//extern "C" {
 void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 {
-	std::string name = lpname;
-	if (++currentHook < MAX_HOOK)
-	{
-		if (name.empty()) name = "UserHook " + std::to_string(userhookCount++);
-		ConsoleOutput(INSERTING_HOOK + name);
-
-		// jichi 7/13/2014: This function would raise when too many hooks added
-		hooks[currentHook].InitHook(hp, name.c_str(), flag);
-		if (!hooks[currentHook].InsertHook()) ConsoleOutput(HOOK_FAILED);
-	}
-	else ConsoleOutput(TOO_MANY_HOOKS);
+	if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
+	if (lpname && *lpname) strcpy_s<HOOK_NAME_SIZE>(hp.name, lpname);
+	ConsoleOutput(INSERTING_HOOK, hp.name);
+	RemoveHook(hp.address, 0);
+	if (!hooks[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
 }
 
-void RemoveHook(uint64_t addr)
+void RemoveHook(uint64_t addr, int maxOffset)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
-		if (abs((long long)(hooks[i].hp.insertion_address - addr)) < 9) return hooks[i].ClearHook();
+		if (abs((long long)(hooks[i].hp.insertion_address - addr)) <= maxOffset) return hooks[i].Clear();
 }
 
 // EOF
