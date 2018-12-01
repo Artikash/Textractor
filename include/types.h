@@ -3,26 +3,25 @@
 #include "common.h"
 #include "const.h"
 
-template<typename E, typename mtx = std::recursive_mutex>
+template<typename E, typename M = std::mutex, template<typename...> typename P = std::unique_ptr>
 class ThreadSafePtr
 {
 public:
-	class Locker
+	template <typename ...Args> ThreadSafePtr(Args ...args) : ptr(new E(args...)), mtxPtr(new M) {}
+	auto operator->()
 	{
-	public:
-		Locker(E* ptr, mtx* mtxPtr) : ptr(ptr), lock(*mtxPtr) {}
-		E* operator->() { return ptr; }
-
-	private:
-		E* ptr;
-		std::unique_lock<mtx> lock;
-	};
-	template <typename... Args> ThreadSafePtr(Args... args) : ptr(std::make_shared<E>(args...)), mtxPtr(std::make_shared<mtx>()) {}
-	Locker operator->() { return Locker(ptr.get(), mtxPtr.get()); }
+		struct
+		{
+			E* operator->() { return ptr; }
+			std::unique_lock<M> lock;
+			E* ptr;
+		} lockedProxy{ std::unique_lock<M>(*mtxPtr), ptr.get() };
+		return lockedProxy;
+	}
 
 private:
-	std::shared_ptr<E> ptr;
-	std::shared_ptr<mtx> mtxPtr;
+	P<E> ptr;
+	P<M> mtxPtr;
 };
 
 struct DefHandleCloser { void operator()(void* h) { CloseHandle(h); } };
@@ -35,11 +34,7 @@ public:
 	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
 
 private:
-	struct HandleCleaner 
-	{
-		HandleCloser hc;
-		void operator()(HANDLE h) { if (h != INVALID_HANDLE_VALUE) hc(h); }
-	};
+	struct HandleCleaner : HandleCloser { void operator()(void* h) { if (h != INVALID_HANDLE_VALUE) HandleCloser::operator()(h); } };
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
@@ -67,6 +62,8 @@ struct HookParam
 	text_fun_t text_fun;
 	filter_fun_t filter_fun;
 	hook_fun_t hook_fun;
+
+	char name[HOOK_NAME_SIZE];
 };
 
 struct ThreadParam
@@ -93,10 +90,9 @@ private:
 
 struct InsertHookCmd // From host
 {
-	InsertHookCmd(HookParam hp, std::string name = "") : hp(hp) { strcpy_s<HOOK_NAME_SIZE>(this->name, name.c_str()); };
+	InsertHookCmd(HookParam hp) : hp(hp) {};
 	int command = HOST_COMMAND_NEW_HOOK;
 	HookParam hp;
-	char name[HOOK_NAME_SIZE] = {};
 };
 
 struct ConsoleOutputNotif // From hook
