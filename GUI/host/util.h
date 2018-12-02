@@ -4,7 +4,6 @@
 
 namespace Util
 {
-	struct NamedPipeHandleCloser { void operator()(void* h) { DisconnectNamedPipe(h); CloseHandle(h); } };
 	std::optional<std::wstring> GetModuleFileName(DWORD processId, HMODULE module = NULL);
 	std::optional<std::wstring> GetModuleFileName(HMODULE module = NULL);
 	std::optional<std::wstring> GetClipboardText();

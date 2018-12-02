@@ -72,7 +72,9 @@ namespace
 			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
 			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
 			SECURITY_ATTRIBUTES pipeSA = { sizeof(SECURITY_ATTRIBUTES), &pipeSD, FALSE };
-			AutoHandle<Util::NamedPipeHandleCloser>
+
+			struct NamedPipeHandleCloser { void operator()(void* h) { DisconnectNamedPipe(h); CloseHandle(h); } };
+			AutoHandle<NamedPipeHandleCloser>
 				hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &pipeSA),
 				hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
 			ConnectNamedPipe(hookPipe, nullptr);
@@ -117,7 +119,7 @@ namespace
 	{
 		std::thread([]
 		{
-			for (std::wstring last; true; Sleep(50))
+			for (std::wstring last; true; Sleep(500))
 				if (auto text = Util::GetClipboardText())
 					if (last != text.value())
 						Host::GetThread(CLIPBOARD)->AddSentence(last = text.value());
