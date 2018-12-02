@@ -1,5 +1,4 @@
-#ifndef MISC_H
-#define MISC_H
+#pragma once
 
 #include "qtcommon.h"
 #include "types.h"
@@ -16,5 +15,3 @@ private:
 QMultiHash<QString, DWORD> GetAllProcesses();
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
-
-#endif // MISC_H

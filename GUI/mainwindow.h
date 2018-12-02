@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "qtcommon.h"
 #include "host/host.h"
@@ -50,5 +49,3 @@ private:
 	QPlainTextEdit* textOutput;
 	QWidget* extenWindow;
 };
-
-#endif // MAINWINDOW_H

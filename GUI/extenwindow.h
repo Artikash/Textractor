@@ -1,5 +1,4 @@
-#ifndef EXTENSIONS_H
-#define EXTENSIONS_H
+#pragma once
 
 #include "qtcommon.h"
 #include <QListWidget>
@@ -35,5 +34,3 @@ private:
 	Ui::ExtenWindow* ui;
 	QListWidget* extenList;
 };
-
-#endif // EXTENSIONS_H

@@ -1,5 +1,4 @@
-#ifndef SETDIALOG_H
-#define SETDIALOG_H
+#pragma once
 
 #include "qtcommon.h"
 #include <QSpinBox>
@@ -26,5 +25,3 @@ private:
 	QSpinBox* maxBufferSize;
 	QSpinBox* defaultCodepage;
 };
-
-#endif // SETDIALOG_H
