@@ -8,30 +8,23 @@ TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring>
 	handle(threadCounter++), 
 	name(name.value_or(Util::StringToWideString(hp.name).value())), 
 	tp(tp), 
-	hp(hp)
+	hp(hp),
+	timer(NULL)
 {
+	HANDLE newTimer;
+	CreateTimerQueueTimer(&newTimer, NULL, Flush, this, 25, 25, WT_EXECUTELONGFUNCTION);
+	timer = newTimer;
 	OnCreate(this);
 }
 
 TextThread::~TextThread()
 {
-	if (flushThread.joinable())
-	{
-		SetEvent(deletionEvent);
-		flushThread.join();
-		OnDestroy(this);
-	}
+	OnDestroy(this);
 }
 
 std::wstring TextThread::GetStorage()
 {
 	return storage->c_str();
-}
-
-void TextThread::Start()
-{
-	deletionEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
-	flushThread = std::thread([&] { while (WaitForSingleObject(deletionEvent, 10) == WAIT_TIMEOUT) Flush(); });
 }
 
 void TextThread::AddSentence(std::wstring sentence)
@@ -41,7 +34,7 @@ void TextThread::AddSentence(std::wstring sentence)
 
 void TextThread::Push(const BYTE* data, int len)
 {
-	if (!flushThread.joinable() || len < 0) return;
+	if (len < 0) return;
 	LOCK(bufferMutex);
 	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
 	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : defaultCodepage)) buffer += converted.value();
@@ -50,18 +43,19 @@ void TextThread::Push(const BYTE* data, int len)
 	lastPushTime = GetTickCount();
 }
 
-void TextThread::Flush()
+void CALLBACK Flush(void* thread, BOOLEAN)
 {
+	auto This = (TextThread*)thread;
 	std::wstring sentence;
 	{
-		LOCK(bufferMutex);
-		if (buffer.empty()) return;
-		if (buffer.size() < maxBufferSize && GetTickCount() - lastPushTime < flushDelay) return;
-		sentence = buffer;
-		buffer.clear();
+		LOCK(This->bufferMutex);
+		if (This->buffer.empty()) return;
+		if (This->buffer.size() < This->maxBufferSize && GetTickCount() - This->lastPushTime < This->flushDelay) return;
+		sentence = This->buffer;
+		This->buffer.clear();
 
-		if (Util::RemoveRepetition(sentence)) repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
-		else repeatingChars.clear();
+		if (Util::RemoveRepetition(sentence)) This->repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
+		else This->repeatingChars.clear();
 	}
-	AddSentence(sentence);
+	This->AddSentence(sentence);
 }

@@ -25,7 +25,6 @@ constexpr auto ABOUT = L"Textractor beta v3.5.0 (project homepage: https://githu
 "Please contact Artikash with any problems, feature requests, or questions relating to Textractor\r\n"
 "You can do so via the project homepage (issues section) or via email\r\n"
 "Source code available under GPLv3 at project homepage";
-constexpr auto TOO_MANY_THREADS = L"Textractor: too many text threads: can't create more";
 constexpr auto ALREADY_INJECTED = L"Textractor: already injected";
 constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
 constexpr auto INJECT_FAILED = L"Textractor: couldn't inject";

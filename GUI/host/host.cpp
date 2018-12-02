@@ -102,12 +102,7 @@ namespace
 				default:
 				{
 					auto tp = *(ThreadParam*)buffer;
-					if (textThreadsByParams->count(tp) == 0)
-					{
-						auto textThread = textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp)) }).first->second;
-						if (textThreadsByParams->size() < MAX_THREAD_COUNT)	 textThread->Start();
-						else Host::AddConsoleOutput(TOO_MANY_THREADS);
-					}
+					if (textThreadsByParams->count(tp) == 0) textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp)) });
 					textThreadsByParams->at(tp)->Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
