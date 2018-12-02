@@ -5,7 +5,6 @@
 #include "setdialog.h"
 #include "misc.h"
 #include "host/util.h"
-#include <QTimer>
 #include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :

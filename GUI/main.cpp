@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
 	SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); });
 
-	QDir::setCurrent(QFileInfo().absolutePath());
+	QDir::setCurrent(QFileInfo(QString::fromStdWString(Util::GetModuleFileName().value())).absolutePath());
 
 	QApplication a(argc, argv);
 	MainWindow w;
