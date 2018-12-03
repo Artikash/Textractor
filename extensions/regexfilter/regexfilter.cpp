@@ -15,7 +15,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	break;
 	case DLL_PROCESS_DETACH:
 	{
-		if (lpReserved == NULL && w != nullptr) delete w; // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
+		if (lpReserved == NULL) delete w; // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
 	}
 	break;
 	}
