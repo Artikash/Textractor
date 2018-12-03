@@ -35,10 +35,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	Host::Shutdown();
 	settings.setValue(WINDOW, geometry());
 	settings.sync();
 	delete ui;
+	ExitProcess(0);
 }
 
 void MainWindow::closeEvent(QCloseEvent*)

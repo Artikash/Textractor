@@ -7,7 +7,6 @@ namespace Host
 {
 	using ProcessEventCallback = std::function<void(DWORD)>;
 	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output);
-	void Shutdown();
 
 	bool InjectProcess(DWORD processId, DWORD timeout = 5000);
 	void DetachProcess(DWORD processId);

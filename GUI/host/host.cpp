@@ -143,16 +143,6 @@ namespace Host
 		CreatePipe();
 	}
 
-	void Shutdown()
-	{
-		auto NOP = [](auto... args) { return NULL; };
-		ProcessRecord::OnConnect = NOP;
-		ProcessRecord::OnDisconnect = NOP;
-		TextThread::OnCreate = NOP;
-		TextThread::OnDestroy = NOP;
-		TextThread::Output = NOP;
-	}
-
 	bool InjectProcess(DWORD processId, DWORD timeout)
 	{
 		if (processId == GetCurrentProcessId()) return false;
