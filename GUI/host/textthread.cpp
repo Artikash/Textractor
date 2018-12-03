@@ -8,12 +8,9 @@ TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring>
 	handle(threadCounter++), 
 	name(name.value_or(Util::StringToWideString(hp.name).value())), 
 	tp(tp), 
-	hp(hp),
-	timer(NULL)
+	hp(hp)
 {
-	HANDLE newTimer;
-	CreateTimerQueueTimer(&newTimer, NULL, Flush, this, 25, 25, WT_EXECUTELONGFUNCTION);
-	timer = newTimer;
+	CreateTimerQueueTimer(timer, NULL, Flush, this, 25, 25, WT_EXECUTELONGFUNCTION);
 	OnCreate(this);
 }
 

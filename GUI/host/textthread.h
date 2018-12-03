@@ -36,6 +36,6 @@ private:
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
-	AutoHandle<TimerDeleter> timer;
 	DWORD lastPushTime;
+	AutoHandle<TimerDeleter> timer = NULL; // this needs to be last so it's destructed first
 };

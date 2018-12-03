@@ -31,6 +31,7 @@ class AutoHandle
 public:
 	AutoHandle(HANDLE h) : h(h) {}
 	operator HANDLE() { return h.get(); }
+	operator PHANDLE() { return &h._Myptr(); }
 	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
 
 private:
