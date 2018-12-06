@@ -75,8 +75,8 @@ struct ThreadParam
 	uint64_t ctx2;  // The subcontext of the hook: 0 by default, generated in a method specific to the hook
 };
 // Artikash 5/31/2018: required for unordered_map to work with struct key
-template <> struct std::hash<ThreadParam> { size_t operator()(const ThreadParam& tp) const { return std::hash<int64_t>()((tp.processId + tp.addr) ^ (tp.ctx + tp.ctx2)); } };
-static bool operator==(const ThreadParam& one, const ThreadParam& two) { return one.processId == two.processId && one.addr == two.addr && one.ctx == two.ctx && one.ctx2 == two.ctx2; }
+template <> struct std::hash<ThreadParam> { size_t operator()(ThreadParam tp) const { return std::hash<int64_t>()((tp.processId + tp.addr) ^ (tp.ctx + tp.ctx2)); } };
+static bool operator==(ThreadParam one, ThreadParam two) { return one.processId == two.processId && one.addr == two.addr && one.ctx == two.ctx && one.ctx2 == two.ctx2; }
 
 class WinMutex // Like CMutex but works with lock_guard
 {
