@@ -162,11 +162,10 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 				{
 					DWORD bytesRead;
-					char buffer[100000] = {}; // Google Translate page is ~64kb
+					char buffer[200000] = {}; // Google Translate page is ~180kb (good god the bloat >_>)
 					WinHttpReceiveResponse(request, NULL);
-					WinHttpReadData(request, buffer, 100000, &bytesRead);
-					if (strstr(buffer, "a\\x3d")) TKK = strtoll(strstr(buffer, "a\\x3d") + 5, nullptr, 10) + strtoll(strstr(buffer, "b\\x3d") + 5, nullptr, 10);
-					else TKK = strtoll(strstr(buffer, "TKK") + 12, nullptr, 10);
+					WinHttpReadData(request, buffer, 200000, &bytesRead);
+					if (std::cmatch results; std::regex_search(buffer, results, std::regex("(\\d{7,})'"))) TKK = stoll(results[1]);
 				}
 				WinHttpCloseHandle(request);
 			}
@@ -200,7 +199,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		}
 	}
 
-	if (translation == L"") translation = L"Error while translating.";
+	if (translation.empty()) translation = L"Error while translating (TKK=" + std::to_wstring(TKK) + L")";
 	sentence += L"\r\n" + translation;
 	return true;
 }
