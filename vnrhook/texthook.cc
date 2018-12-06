@@ -144,21 +144,13 @@ void TextHook::Send(DWORD dwDataBase)
 			hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
 		}
 		else {
-			if (dwDataIn == 0)
-				return;
-			if (dwType & FIXING_SPLIT)
-				dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
+			if (dwDataIn == 0) return;
+			if (dwType & FIXING_SPLIT) dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
 			else if (dwType & USING_SPLIT) {
 				dwSplit = *(DWORD *)(dwDataBase + hp.split);
-				if (dwType & SPLIT_INDIRECT) {
-					if (IthGetMemoryRange((LPVOID)(dwSplit + hp.split_index), 0, 0)) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
-					else return;
-				}
+				if (dwType & SPLIT_INDIRECT) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
 			}
-			if (dwType & DATA_INDIRECT) {
-				if (IthGetMemoryRange((LPVOID)(dwDataIn + hp.index), 0, 0)) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
-				else return;
-			}
+			if (dwType & DATA_INDIRECT) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
@@ -166,19 +158,15 @@ void TextHook::Send(DWORD dwDataBase)
 
 		if (hp.length_offset == 1) {
 			dwDataIn &= 0xffff;
-			if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8))
-				dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
-			if (dwCount == 1)
-				dwDataIn &= 0xff;
+			if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8)) dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
+			if (dwCount == 1) dwDataIn &= 0xff;
 			*(WORD*)pbData = dwDataIn & 0xffff;
 		}
-		else
-			::memcpy(pbData, (void*)dwDataIn, dwCount);
+		else ::memcpy(pbData, (void*)dwDataIn, dwCount);
 
 		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) return;
 
-		if (dwType & (NO_CONTEXT | FIXING_SPLIT))
-			dwRetn = 0;
+		if (dwType & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
 
 		TextOutput({ GetCurrentProcessId(), dwAddr, dwRetn, dwSplit }, pbData, dwCount);
 	}
@@ -233,7 +221,7 @@ insert:
 }
 #endif // _WIN32
 
-DWORD WINAPI Reader(LPVOID hookPtr)
+DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 {
 	TextHook* hook = (TextHook*)hookPtr;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};

@@ -17,21 +17,24 @@ void SetTrigger();
 
 class TextHook
 {
+public:
+	HookParam hp;
+
+	bool Insert(HookParam hp, DWORD set_flag);
+	void Clear();
+
+private:
+	static DWORD WINAPI Reader(LPVOID hookPtr);
 	bool InsertHookCode();
 	bool InsertReadCode();
+	void Send(DWORD dwDatabase);
 	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
 	void RemoveHookCode();
 	void RemoveReadCode();
 
 	HANDLE readerThread, readerEvent;
 	BYTE trampoline[120];
-public:
-	HookParam hp;
 
-	bool Insert(HookParam hp, DWORD set_flag);
-	void Send(DWORD dwDataBase);
-	void Clear();
-	friend DWORD WINAPI Reader(LPVOID hookPtr);
 };
 
 enum { MAX_HOOK = 300, HOOK_BUFFER_SIZE = MAX_HOOK * sizeof(TextHook), HOOK_SECTION_SIZE = HOOK_BUFFER_SIZE * 2 };
