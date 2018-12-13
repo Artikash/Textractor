@@ -188,7 +188,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 						wchar_t wbuffer[10000] = {};
 						MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
 						std::wstring response(wbuffer);
-						for (std::wsmatch results; std::regex_search(response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix().str())
+						for (std::wsmatch results; std::regex_search(response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix())
 							translation += std::wstring(results[1]) + L" ";
 						for (auto& c : translation) if (c == L'\\') c = 0x200b;
 					}
