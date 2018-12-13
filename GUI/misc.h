@@ -15,3 +15,4 @@ private:
 QMultiHash<QString, DWORD> GetAllProcesses();
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
+bool UpdateAvailable(std::string currentVersion);

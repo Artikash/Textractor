@@ -18,6 +18,6 @@ set(gui_SRCS
 	${RESOURCE_FILES}
 )
 add_executable(${PROJECT_NAME} WIN32 ${gui_SRCS})
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets winhttp)
 
 install_qt5_libs(${PROJECT_NAME})

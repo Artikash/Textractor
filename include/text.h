@@ -1,5 +1,6 @@
 #pragma once
 
+#define CURRENT_VERSION "3.5.1"
 constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 "You can also type in the process id";
@@ -20,11 +21,13 @@ constexpr auto UNHOOK = u8"Unhook";
 constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
 constexpr auto SELECT_EXTENSION = u8"Select Extension";
 constexpr auto EXTENSIONS = u8"Extensions (*.dll)";
-constexpr auto ABOUT = L"Textractor beta v3.5.0 (project homepage: https://github.com/Artikash/Textractor)\r\n"
-"Made with love by Artikash (email: akashmozumdar@gmail.com)\r\n"
-"Please contact Artikash with any problems, feature requests, or questions relating to Textractor\r\n"
+constexpr auto ABOUT = L"Textractor beta v" CURRENT_VERSION " (project homepage: https://github.com/Artikash/Textractor)\r\n"
+"Made by me: Artikash (email: akashmozumdar@gmail.com)\r\n"
+"Please contact me with any problems, feature requests, or questions relating to Textractor\r\n"
 "You can do so via the project homepage (issues section) or via email\r\n"
-"Source code available under GPLv3 at project homepage";
+"Source code available under GPLv3 at project homepage\r\n"
+"I'm currently on the job market: please email me if you're hiring US software engineers";
+constexpr auto UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 constexpr auto ALREADY_INJECTED = L"Textractor: already injected";
 constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
 constexpr auto INJECT_FAILED = L"Textractor: couldn't inject";

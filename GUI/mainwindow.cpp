@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](TextThread* thread, std::wstring& output) { return SentenceReceived(thread, output); }
 	);
 	Host::AddConsoleOutput(ABOUT);
+	std::thread([] { if (UpdateAvailable(CURRENT_VERSION)) Host::AddConsoleOutput(UPDATE_AVAILABLE); }).detach();
 }
 
 MainWindow::~MainWindow()

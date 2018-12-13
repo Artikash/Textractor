@@ -2,6 +2,7 @@
 #include "const.h"
 #include "host/util.h"
 #include <Psapi.h>
+#include <Winhttp.h>
 #include <QTextStream>
 
 QMultiHash<QString, DWORD> GetAllProcesses()
@@ -247,4 +248,22 @@ QString GenerateCode(HookParam hp, DWORD processId)
 {
 	if (hp.type & DIRECT_READ) return GenerateRCode(hp);
 	else return GenerateHCode(hp, processId);
+}
+
+bool UpdateAvailable(std::string currentVersion)
+{
+	// Queries GitHub releases API https://developer.github.com/v3/repos/releases/ and checks the last release tag to check if it's the same
+	struct InternetHandleCloser { void operator()(void* h) { WinHttpCloseHandle(h); } };
+	if (AutoHandle<InternetHandleCloser> internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
+		if (AutoHandle<InternetHandleCloser> connection = WinHttpConnect(internet, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+			if (AutoHandle<InternetHandleCloser> request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
+				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+				{
+					DWORD bytesRead;
+					char buffer[1000] = {};
+					WinHttpReceiveResponse(request, NULL);
+					WinHttpReadData(request, buffer, 1000, &bytesRead);
+					if (abs(strstr(buffer, "/tag/") - strstr(buffer, currentVersion.c_str())) > 10) return true;
+				}
+	return false;
 }
