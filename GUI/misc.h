@@ -12,7 +12,7 @@ private:
 	QFile f;
 };
 
-QMultiHash<QString, DWORD> GetAllProcesses();
+std::wstring S(const QString& S);
+QString S(const std::wstring& S);
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
-bool UpdateAvailable(std::string currentVersion);

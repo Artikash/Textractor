@@ -1,6 +1,6 @@
 #pragma once
 
-#define CURRENT_VERSION "3.5.1"
+#define CURRENT_VERSION "3.6.0"
 constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 "You can also type in the process id";

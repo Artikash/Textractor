@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "misc.h"
 #include "host/util.h"
 #include <sstream>
 #include <QApplication>
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
 	AddVectoredExceptionHandler(FALSE, ExceptionLogger);
 	SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); });
 
-	QDir::setCurrent(QFileInfo(QString::fromStdWString(Util::GetModuleFileName().value())).absolutePath());
+	QDir::setCurrent(QFileInfo(S(Util::GetModuleFileName().value())).absolutePath());
 
 	QApplication a(argc, argv);
 	MainWindow w;

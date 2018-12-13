@@ -5,6 +5,8 @@
 #include "setdialog.h"
 #include "misc.h"
 #include "host/util.h"
+#include <Psapi.h>
+#include <winhttp.h>
 #include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -31,7 +33,23 @@ MainWindow::MainWindow(QWidget *parent) :
 		[&](TextThread* thread, std::wstring& output) { return SentenceReceived(thread, output); }
 	);
 	Host::AddConsoleOutput(ABOUT);
-	std::thread([] { if (UpdateAvailable(CURRENT_VERSION)) Host::AddConsoleOutput(UPDATE_AVAILABLE); }).detach();
+
+	std::thread([]
+	{
+		// Queries GitHub releases API https://developer.github.com/v3/repos/releases/ and checks the last release tag to check if it's the same
+		struct InternetHandleCloser { void operator()(void* h) { WinHttpCloseHandle(h); } };
+		if (AutoHandle<InternetHandleCloser> internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
+			if (AutoHandle<InternetHandleCloser> connection = WinHttpConnect(internet, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+				if (AutoHandle<InternetHandleCloser> request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
+					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+					{
+						DWORD bytesRead;
+						char buffer[1000] = {};
+						WinHttpReceiveResponse(request, NULL);
+						WinHttpReadData(request, buffer, 1000, &bytesRead);
+						if (abs(strstr(buffer, "/tag/") - strstr(buffer, CURRENT_VERSION)) > 10) Host::AddConsoleOutput(UPDATE_AVAILABLE);
+					}
+	}).detach();
 }
 
 MainWindow::~MainWindow()
@@ -58,7 +76,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (processId == 0) return;
 	InvokeOnMainThread([&, processId]
 	{
-		QString process = QString::fromStdWString(Util::GetModuleFileName(processId).value());
+		QString process = S(Util::GetModuleFileName(processId).value());
 		processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
 
 		QStringList allProcesses = QString(QAutoFile(HOOK_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split("\r", QString::SkipEmptyParts);
@@ -77,7 +95,7 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 
 void MainWindow::ThreadAdded(TextThread* thread)
 {
-	QString ttString = TextThreadString(thread) + QString::fromStdWString(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
+	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
 	InvokeOnMainThread([&, ttString] { ttCombo->addItem(ttString); });
 }
 
@@ -107,7 +125,7 @@ bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
 			if (ttCombo->currentText().startsWith(ttString))
 			{
 				textOutput->moveCursor(QTextCursor::End);
-				textOutput->insertPlainText(QString::fromStdWString(sentence));
+				textOutput->insertPlainText(S(sentence));
 				textOutput->moveCursor(QTextCursor::End);
 			}
 		});
@@ -154,7 +172,12 @@ std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thr
 
 void MainWindow::on_attachButton_clicked()
 {
-	auto allProcesses = GetAllProcesses();
+	QMultiHash<QString, DWORD> allProcesses;
+	DWORD allProcessIds[5000] = {}, spaceUsed = 0;
+	EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed);
+	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
+		if (auto processName = Util::GetModuleFileName(allProcessIds[i])) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), allProcessIds[i]);
+
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
 	bool ok;
@@ -186,7 +209,7 @@ void MainWindow::on_saveButton_clicked()
 		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
 		if (tp.processId == GetSelectedProcessId() && !(Host::GetHookParam(tp).type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(Host::GetHookParam(tp), tp.processId);
 	}
-	QString hookList = QString::fromStdWString(Util::GetModuleFileName(GetSelectedProcessId()).value());
+	QString hookList = S(Util::GetModuleFileName(GetSelectedProcessId()).value());
 	for (auto hookCode : hookCodes) hookList += " , " + hookCode;
 	QAutoFile(HOOK_SAVE_FILE, QIODevice::Append)->write((hookList + "\r\n").toUtf8());
 }
@@ -204,6 +227,6 @@ void MainWindow::on_extenButton_clicked()
 
 void MainWindow::on_ttCombo_activated(int index)
 {
-	textOutput->setPlainText(QString::fromStdWString(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStorage()));
+	textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStorage()));
 	textOutput->moveCursor(QTextCursor::End);
 }

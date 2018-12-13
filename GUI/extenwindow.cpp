@@ -27,8 +27,8 @@ namespace
 	{
 		if (extenName == ITH_DLL) return;
 		// Extension is dll and exports "OnNewSentence"
-		HMODULE module = GetModuleHandleW(extenName.toStdWString().c_str());
-		if (!module) module = LoadLibraryW(extenName.toStdWString().c_str());
+		HMODULE module = GetModuleHandleW(S(extenName).c_str());
+		if (!module) module = LoadLibraryW(S(extenName).c_str());
 		if (!module) return;
 		FARPROC callback = GetProcAddress(module, "OnNewSentence");
 		if (!callback) return;
@@ -41,7 +41,7 @@ namespace
 	{
 		LOCK(extenMutex);
 		extenNames.erase(std::remove(extenNames.begin(), extenNames.end(), extenName), extenNames.end());
-		FreeLibrary(GetModuleHandleW(extenName.toStdWString().c_str()));
+		FreeLibrary(GetModuleHandleW(S(extenName).c_str()));
 	}
 
 	void Reorder(QStringList extenNames)
@@ -69,7 +69,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 		sentenceBuffer = nextBuffer;
 	}
-	sentence = std::wstring(sentenceBuffer);
+	sentence = sentenceBuffer;
 
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	return success;
