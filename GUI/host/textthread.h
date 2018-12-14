@@ -22,7 +22,6 @@ public:
 	std::wstring GetStorage();
 	void AddSentence(std::wstring sentence);
 	void Push(const BYTE* data, int len);
-	friend void CALLBACK Flush(void* thread, BOOLEAN);
 
 	const int64_t handle;
 	const std::wstring name;
@@ -30,8 +29,9 @@ public:
 	const HookParam hp;
 
 private:
-	struct TimerDeleter { void operator()(void* h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
+	void Flush();
 
+	struct TimerDeleter { void operator()(void* h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	ThreadSafePtr<std::wstring> storage;
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;

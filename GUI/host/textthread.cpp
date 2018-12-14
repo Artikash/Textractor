@@ -4,13 +4,13 @@
 #include "host.h"
 #include "util.h"
 
-TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) : 
-	handle(threadCounter++), 
-	name(name.value_or(Util::StringToWideString(hp.name).value())), 
-	tp(tp), 
+TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) :
+	handle(threadCounter++),
+	name(name.value_or(Util::StringToWideString(hp.name).value())),
+	tp(tp),
 	hp(hp)
 {
-	CreateTimerQueueTimer(timer, NULL, Flush, this, 25, 25, WT_EXECUTELONGFUNCTION);
+	CreateTimerQueueTimer(timer, NULL, [](void* This, BOOLEAN) { ((TextThread*)This)->Flush(); }, this, 25, 25, WT_EXECUTELONGFUNCTION);
 	OnCreate(this);
 }
 
@@ -40,19 +40,18 @@ void TextThread::Push(const BYTE* data, int len)
 	lastPushTime = GetTickCount();
 }
 
-void CALLBACK Flush(void* thread, BOOLEAN)
+void TextThread::Flush()
 {
-	auto This = (TextThread*)thread;
 	std::wstring sentence;
 	{
-		LOCK(This->bufferMutex);
-		if (This->buffer.empty()) return;
-		if (This->buffer.size() < This->maxBufferSize && GetTickCount() - This->lastPushTime < This->flushDelay) return;
-		sentence = This->buffer;
-		This->buffer.clear();
+		LOCK(bufferMutex);
+		if (buffer.empty()) return;
+		if (buffer.size() < maxBufferSize && GetTickCount() - lastPushTime < flushDelay) return;
+		sentence = buffer;
+		buffer.clear();
 
-		if (Util::RemoveRepetition(sentence)) This->repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
-		else This->repeatingChars.clear();
+		if (Util::RemoveRepetition(sentence)) repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
+		else repeatingChars.clear();
 	}
-	This->AddSentence(sentence);
+	AddSentence(sentence);
 }
