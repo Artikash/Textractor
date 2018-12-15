@@ -24,11 +24,4 @@ constexpr auto CONFIG_FILE = u8"Textractor.ini";
 constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"Extensions.txt";
 
-// Settings
-
-constexpr auto WINDOW = u8"Window";
-constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
-constexpr auto FLUSH_DELAY = u8"Flush Delay";
-constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";
-
 // EOF

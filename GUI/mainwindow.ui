@@ -36,11 +36,11 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout">
     <item>
-     <widget class="QFrame" name="processManager">
+     <widget class="QFrame" name="processFrame">
       <property name="enabled">
        <bool>true</bool>
       </property>
-      <layout class="QVBoxLayout">
+      <layout class="QVBoxLayout" name="processLayout">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -65,55 +65,6 @@
           <enum>QComboBox::AdjustToContents</enum>
          </property>
         </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="attachButton">
-         <property name="text">
-          <string>Attach to game</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="detachButton">
-         <property name="text">
-          <string>Detach from game</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="hookButton">
-         <property name="text">
-          <string>Add hook</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="saveButton">
-         <property name="text">
-          <string>Save hook(s)</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="setButton">
-         <property name="text">
-          <string>Settings</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="extenButton">
-         <property name="text">
-          <string>Extensions</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer>
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>

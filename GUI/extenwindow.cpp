@@ -138,7 +138,7 @@ void ExtenWindow::dropEvent(QDropEvent* event)
 
 void ExtenWindow::on_addButton_clicked()
 {
-	Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSIONS));
+	Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES));
 }
 
 void ExtenWindow::on_rmvButton_clicked()

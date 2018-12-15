@@ -139,7 +139,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		requestTimes.erase(std::remove_if(requestTimes.begin(), requestTimes.end(), [&](DWORD requestTime) { return GetTickCount() - requestTime > 60 * 1000; }), requestTimes.end());
 		if (!sentenceInfo["current select"] && requestTimes.size() > 30)
 		{
-			sentence += L"\r\nToo many translation requests: refuse to make more.";
+			sentence += L"\r\nToo many translation requests: refuse to make more";
 			return true;
 		}
 	}

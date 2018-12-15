@@ -1,6 +1,7 @@
 #include "setdialog.h"
 #include "ui_setdialog.h"
 #include "defs.h"
+#include "text.h"
 #include "host/host.h"
 #include <QSettings>
 

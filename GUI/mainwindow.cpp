@@ -7,6 +7,9 @@
 #include "host/util.h"
 #include <Psapi.h>
 #include <winhttp.h>
+#include <QFrame>
+#include <QLayout>
+#include <QPushButton>
 #include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -15,7 +18,24 @@ MainWindow::MainWindow(QWidget *parent) :
 	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
-
+	QFrame* processFrame = findChild<QFrame*>("processFrame");
+	QVBoxLayout* processLayout = findChild<QVBoxLayout*>("processLayout");
+	for (auto[text, slot] : std::initializer_list<std::tuple<QString, void(MainWindow::*)()>>{
+		{ ATTACH, &MainWindow::on_attachButton_clicked },
+		{ DETACH, &MainWindow::on_detachButton_clicked },
+		{ ADD_HOOK, &MainWindow::on_hookButton_clicked },
+		{ SAVE_HOOKS, &MainWindow::on_saveButton_clicked },
+		{ SETTINGS, &MainWindow::on_setButton_clicked },
+		{ EXTENSIONS, &MainWindow::on_extenButton_clicked }
+	})
+	{
+		QPushButton* button = new QPushButton(processFrame);
+		connect(button, &QPushButton::clicked, this, slot);
+		button->setText(text);
+		processLayout->addWidget(button);
+	}
+	processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	
 	processCombo = findChild<QComboBox*>("processCombo");
 	ttCombo = findChild<QComboBox*>("ttCombo");
 	textOutput = findChild<QPlainTextEdit*>("textOutput");

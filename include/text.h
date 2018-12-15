@@ -1,10 +1,15 @@
 #pragma once
 
 #define CURRENT_VERSION "3.6.0"
+constexpr auto ATTACH = u8"Attach to game";
+constexpr auto DETACH = u8"Detach from game";
+constexpr auto ADD_HOOK = u8"Add hook";
+constexpr auto SAVE_HOOKS = u8"Save hook(s)";
+constexpr auto SETTINGS = u8"Settings";
+constexpr auto EXTENSIONS = u8"Extensions";
 constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 "You can also type in the process id";
-constexpr auto ADD_HOOK = u8"Add hook";
 constexpr auto CODE_INFODUMP = u8"Enter hook code\r\n"
 "/H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
 "OR\r\n"
@@ -20,7 +25,11 @@ constexpr auto CODE_INFODUMP = u8"Enter hook code\r\n"
 constexpr auto UNHOOK = u8"Unhook";
 constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
 constexpr auto SELECT_EXTENSION = u8"Select Extension";
-constexpr auto EXTENSIONS = u8"Extensions (*.dll)";
+constexpr auto EXTENSION_FILES = u8"Extensions (*.dll)";
+constexpr auto WINDOW = u8"Window";
+constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
+constexpr auto FLUSH_DELAY = u8"Flush Delay";
+constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";
 constexpr auto ABOUT = L"Textractor beta v" CURRENT_VERSION " (project homepage: https://github.com/Artikash/Textractor)\r\n"
 "Made by me: Artikash (email: akashmozumdar@gmail.com)\r\n"
 "Please contact me with any problems, feature requests, or questions relating to Textractor\r\n"
