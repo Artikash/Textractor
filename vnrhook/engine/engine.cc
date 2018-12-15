@@ -16245,7 +16245,7 @@ bool InsertAdobeAirHook()
 *  Artikash 12/8/2018: Update AIRNovel hook for version 31.0.0.96
 *  Sample game: https://vndb.org/v22252: /HQ4*8:4*4@12FF9A:Adobe AIR.dll
 *  First function parameter points to a struct containing a pointer to the text along with info about the type of text
-*  wchar_t* at offset 8, good split parameter at offset 4
+*  wchar_t* at offset 8
 Adobe AIR.dll+12FF9A - 51                    - push ecx
 Adobe AIR.dll+12FF9B - 53                    - push ebx
 Adobe AIR.dll+12FF9C - 55                    - push ebp
@@ -16406,14 +16406,13 @@ Adobe AIR.dll+130135 - 5B                    - pop ebx
 Adobe AIR.dll+130136 - 59                    - pop ecx
 Adobe AIR.dll+130137 - C2 0400               - ret 0004 { 4 }
 */
-
 bool InsertAIRNovelHook()
 {
-	if (DWORD base = (DWORD)GetModuleHandleW(L"Adobe Air.dll"))
+	if (DWORD base = (DWORD)GetModuleHandleW(L"Adobe AIR.dll"))
 	{
 		HookParam hp = {};
 		hp.address = base + 0x12ff9a;
-		hp.type = USING_UNICODE|USING_STRING|USING_SPLIT|SPLIT_INDIRECT|DATA_INDIRECT;
+		hp.type = USING_UNICODE|USING_STRING/*|USING_SPLIT|SPLIT_INDIRECT*/|DATA_INDIRECT; // Artikash 12/14/2018: doesn't seem to be a good split anymore
 		hp.length_offset = 0;
 		hp.offset = 0x4;
 		hp.split = 0x4;
