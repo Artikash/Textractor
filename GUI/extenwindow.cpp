@@ -81,8 +81,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 {
 	ui->setupUi(this);
 
-	extenList = findChild<QListWidget*>("extenList");
-	extenList->installEventFilter(this);
+	ui->extenList->installEventFilter(this);
 
 	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
 	Sync();
@@ -95,12 +94,12 @@ ExtenWindow::~ExtenWindow()
 
 void ExtenWindow::Sync()
 {
-	extenList->clear();
+	ui->extenList->clear();
 	QAutoFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
 	std::shared_lock sharedLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
-		extenList->addItem(extenName);
+		ui->extenList->addItem(extenName);
 		extenSaveFile->write((extenName + ">").toUtf8());
 	}
 }
@@ -119,7 +118,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 	if (event->type() == QEvent::ChildRemoved)
 	{
 		QStringList extenNames;
-		for (int i = 0; i < extenList->count(); ++i) extenNames.push_back(extenList->item(i)->text());
+		for (int i = 0; i < ui->extenList->count(); ++i) extenNames.push_back(ui->extenList->item(i)->text());
 		Reorder(extenNames);
 		Sync();
 	}
@@ -143,6 +142,6 @@ void ExtenWindow::on_addButton_clicked()
 
 void ExtenWindow::on_rmvButton_clicked()
 {
-	if (auto extenName = extenList->currentItem()) Unload(extenName->text());
+	if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text());
 	Sync();
 }

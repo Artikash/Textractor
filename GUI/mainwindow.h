@@ -44,8 +44,5 @@ private:
 
 	Ui::MainWindow* ui;
 	QSettings settings = QSettings(CONFIG_FILE, QSettings::IniFormat);
-	QComboBox* processCombo;
-	QComboBox* ttCombo;
-	QPlainTextEdit* textOutput;
 	QWidget* extenWindow;
 };

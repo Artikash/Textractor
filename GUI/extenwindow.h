@@ -32,5 +32,4 @@ private:
 	void dropEvent(QDropEvent* event);
 
 	Ui::ExtenWindow* ui;
-	QListWidget* extenList;
 };

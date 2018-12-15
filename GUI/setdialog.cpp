@@ -10,10 +10,7 @@ SetDialog::SetDialog(QWidget* parent) :
 	ui(new Ui::SetDialog)
 {
 	ui->setupUi(this);
-
-	QFormLayout* layout = findChild<QFormLayout*>("layout");
-
-	for (auto[spinBox, value, label] : std::initializer_list<std::tuple<QSpinBox*&, int, const char*>>{
+	for (auto[spinBox, value, label] : Array<std::tuple<QSpinBox*&, int, const char*>>{
 		{ flushDelay, TextThread::flushDelay, FLUSH_DELAY },
 		{ maxBufferSize, TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 		{ defaultCodepage, TextThread::defaultCodepage, DEFAULT_CODEPAGE }
@@ -22,7 +19,7 @@ SetDialog::SetDialog(QWidget* parent) :
 		spinBox = new QSpinBox(this);
 		spinBox->setMaximum(INT_MAX);
 		spinBox->setValue(value);
-		layout->insertRow(0, label, spinBox);
+		ui->layout->insertRow(0, label, spinBox);
 	}
 }
 

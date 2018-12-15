@@ -3,6 +3,8 @@
 #include "common.h"
 #include "const.h"
 
+template <typename T> using Array = T[];
+
 template<typename E, typename M = std::mutex, template<typename...> typename P = std::unique_ptr>
 class ThreadSafePtr
 {

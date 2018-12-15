@@ -18,9 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
-	QFrame* processFrame = findChild<QFrame*>("processFrame");
-	QVBoxLayout* processLayout = findChild<QVBoxLayout*>("processLayout");
-	for (auto[text, slot] : std::initializer_list<std::tuple<QString, void(MainWindow::*)()>>{
+	for (auto[text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
 		{ ATTACH, &MainWindow::on_attachButton_clicked },
 		{ DETACH, &MainWindow::on_detachButton_clicked },
 		{ ADD_HOOK, &MainWindow::on_hookButton_clicked },
@@ -29,16 +27,12 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ EXTENSIONS, &MainWindow::on_extenButton_clicked }
 	})
 	{
-		QPushButton* button = new QPushButton(processFrame);
+		QPushButton* button = new QPushButton(ui->processFrame);
 		connect(button, &QPushButton::clicked, this, slot);
 		button->setText(text);
-		processLayout->addWidget(button);
+		ui->processLayout->addWidget(button);
 	}
-	processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-	
-	processCombo = findChild<QComboBox*>("processCombo");
-	ttCombo = findChild<QComboBox*>("ttCombo");
-	textOutput = findChild<QPlainTextEdit*>("textOutput");
+	ui->processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
 	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
@@ -97,7 +91,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	InvokeOnMainThread([&, processId]
 	{
 		QString process = S(Util::GetModuleFileName(processId).value());
-		processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
+		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
 
 		QStringList allProcesses = QString(QAutoFile(HOOK_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split("\r", QString::SkipEmptyParts);
 		// Can't use QFileInfo::absoluteFilePath since hook save file has '\\' as path separator
@@ -110,13 +104,13 @@ void MainWindow::ProcessConnected(DWORD processId)
 
 void MainWindow::ProcessDisconnected(DWORD processId)
 {
-	InvokeOnMainThread([&, processId] { processCombo->removeItem(processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith)); });
+	InvokeOnMainThread([&, processId] { ui->processCombo->removeItem(ui->processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith)); });
 }
 
 void MainWindow::ThreadAdded(TextThread* thread)
 {
 	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
-	InvokeOnMainThread([&, ttString] { ttCombo->addItem(ttString); });
+	InvokeOnMainThread([&, ttString] { ui->ttCombo->addItem(ttString); });
 }
 
 void MainWindow::ThreadRemoved(TextThread* thread)
@@ -124,13 +118,13 @@ void MainWindow::ThreadRemoved(TextThread* thread)
 	QString ttString = TextThreadString(thread);
 	InvokeOnMainThread([&, ttString]
 	{
-		int threadIndex = ttCombo->findText(ttString, Qt::MatchStartsWith);
-		if (threadIndex == ttCombo->currentIndex())
+		int threadIndex = ui->ttCombo->findText(ttString, Qt::MatchStartsWith);
+		if (threadIndex == ui->ttCombo->currentIndex())
 		{
-			ttCombo->setCurrentIndex(0);
+			ui->ttCombo->setCurrentIndex(0);
 			on_ttCombo_activated(0);
 		}
-		ttCombo->removeItem(threadIndex);
+		ui->ttCombo->removeItem(threadIndex);
 	});
 }
 
@@ -142,11 +136,11 @@ bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
 		QString ttString = TextThreadString(thread);
 		InvokeOnMainThread([&, ttString, sentence]
 		{
-			if (ttCombo->currentText().startsWith(ttString))
+			if (ui->ttCombo->currentText().startsWith(ttString))
 			{
-				textOutput->moveCursor(QTextCursor::End);
-				textOutput->insertPlainText(S(sentence));
-				textOutput->moveCursor(QTextCursor::End);
+				ui->textOutput->moveCursor(QTextCursor::End);
+				ui->textOutput->insertPlainText(S(sentence));
+				ui->textOutput->moveCursor(QTextCursor::End);
 			}
 		});
 		return true;
@@ -174,14 +168,14 @@ ThreadParam MainWindow::ParseTextThreadString(QString ttString)
 
 DWORD MainWindow::GetSelectedProcessId()
 {
-	return processCombo->currentText().split(":")[0].toULong(nullptr, 16);
+	return ui->processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
 std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
 {
 	return 
 	{
-	{ "current select", ttCombo->currentText().startsWith(TextThreadString(thread)) },
+	{ "current select", ui->ttCombo->currentText().startsWith(TextThreadString(thread)) },
 	{ "text number", thread->handle },
 	{ "process id", thread->tp.processId },
 	{ "hook address", thread->tp.addr },
@@ -223,15 +217,18 @@ void MainWindow::on_hookButton_clicked()
 
 void MainWindow::on_saveButton_clicked()
 {
-	QHash<uint64_t, QString> hookCodes;
-	for (int i = 0; i < ttCombo->count(); ++i)
+	if (auto processName = Util::GetModuleFileName(GetSelectedProcessId()))
 	{
-		ThreadParam tp = ParseTextThreadString(ttCombo->itemText(i));
-		if (tp.processId == GetSelectedProcessId() && !(Host::GetHookParam(tp).type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(Host::GetHookParam(tp), tp.processId);
+		QHash<uint64_t, QString> hookCodes;
+		for (int i = 0; i < ui->ttCombo->count(); ++i)
+		{
+			ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
+			if (tp.processId == GetSelectedProcessId() && !(Host::GetHookParam(tp).type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(Host::GetHookParam(tp), tp.processId);
+		}
+		QString hookList = S(processName.value());
+		for (auto hookCode : hookCodes) hookList += " , " + hookCode;
+		QAutoFile(HOOK_SAVE_FILE, QIODevice::Append)->write((hookList + "\r\n").toUtf8());
 	}
-	QString hookList = S(Util::GetModuleFileName(GetSelectedProcessId()).value());
-	for (auto hookCode : hookCodes) hookList += " , " + hookCode;
-	QAutoFile(HOOK_SAVE_FILE, QIODevice::Append)->write((hookList + "\r\n").toUtf8());
 }
 
 void MainWindow::on_setButton_clicked()
@@ -247,6 +244,6 @@ void MainWindow::on_extenButton_clicked()
 
 void MainWindow::on_ttCombo_activated(int index)
 {
-	textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ttCombo->itemText(index)))->GetStorage()));
-	textOutput->moveCursor(QTextCursor::End);
+	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index)))->GetStorage()));
+	ui->textOutput->moveCursor(QTextCursor::End);
 }
