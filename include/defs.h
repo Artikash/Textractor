@@ -3,7 +3,7 @@
 // vnrhook/defs.h
 // 8/23/2013 jichi
 
-constexpr auto ITH_DLL = L"vnrhook";
+#include "common.h"
 
 // Pipes
 
@@ -20,8 +20,19 @@ constexpr auto ITH_HOOKMAN_MUTEX_ = L"VNR_HOOKMAN_"; // ITH_HOOKMAN_%d
 
 // Files
 
+constexpr auto ITH_DLL = L"vnrhook"; // .dll but LoadLibrary automatically adds that
 constexpr auto CONFIG_FILE = u8"Textractor.ini";
 constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"Extensions.txt";
+
+// Functions
+
+template <typename... Ts>
+inline void FORMAT_MESSAGE(const wchar_t* format, Ts ...args)
+{
+	wchar_t buffer[250] = {};
+	swprintf_s<250>(buffer, format, args...);
+	MessageBoxW(NULL, buffer, L"Textractor Message", MB_OK);
+}
 
 // EOF
