@@ -54,7 +54,7 @@ namespace
 	};
 
 	ThreadSafePtr<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
-	ThreadSafePtr<std::unordered_map<DWORD, std::unique_ptr<ProcessRecord>>> processRecordsByIds;
+	ThreadSafePtr<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
 
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 
@@ -82,7 +82,7 @@ namespace
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-			processRecordsByIds->insert({ processId, std::make_unique<ProcessRecord>(processId, hostPipe) });
+			processRecordsByIds->try_emplace(processId, processId, hostPipe);
 
 			CreatePipe();
 
@@ -136,7 +136,7 @@ namespace Host
 		TextThread::OnCreate = OnCreate;
 		TextThread::OnDestroy = OnDestroy;
 		TextThread::Output = Output;
-		processRecordsByIds->insert({ CONSOLE.processId, std::make_unique<ProcessRecord>(CONSOLE.processId, INVALID_HANDLE_VALUE) });
+		processRecordsByIds->try_emplace(CONSOLE.processId, CONSOLE.processId, INVALID_HANDLE_VALUE);
 		textThreadsByParams->insert({ CONSOLE, std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console") });
 		textThreadsByParams->insert({ CLIPBOARD, std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
 		StartCapturingClipboard();
@@ -187,17 +187,17 @@ namespace Host
 
 	void DetachProcess(DWORD processId)
 	{
-		processRecordsByIds->at(processId)->Send(HostCommandType(HOST_COMMAND_DETACH));
+		processRecordsByIds->at(processId).Send(HostCommandType(HOST_COMMAND_DETACH));
 	}
 
 	void InsertHook(DWORD processId, HookParam hp)
 	{
-		processRecordsByIds->at(processId)->Send(InsertHookCmd(hp));
+		processRecordsByIds->at(processId).Send(InsertHookCmd(hp));
 	}
 
 	HookParam GetHookParam(ThreadParam tp)
 	{
-		return processRecordsByIds->at(tp.processId)->GetHook(tp.addr).hp;
+		return processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp;
 	}
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
