@@ -1,4 +1,4 @@
-#include "../extension.h"
+#include "extension.h"
 #include <winhttp.h>
 #include <ctime>
 #include <QInputDialog>
