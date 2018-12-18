@@ -55,6 +55,14 @@ constexpr auto TOO_MANY_HOOKS = u8"Textractor: too many hooks: can't insert";
 constexpr auto FUNC_MISSING = u8"Textractor: function not present";
 constexpr auto MODULE_MISSING = u8"Textractor: module not present";
 constexpr auto GARBAGE_MEMORY = u8"Textractor: memory constantly changing, useless to read";
+constexpr auto SELECT_LANGUAGE = u8"Select Language";
+constexpr auto BING_PROMPT = u8"What language should Bing translate to?";
+constexpr auto GOOGLE_PROMPT = u8"What language should Google translate to?";
+constexpr auto TOO_MANY_TRANS_REQUESTS = L"\r\nToo many translation requests: refuse to make more";
+constexpr auto TRANSLATION_ERROR = L"Error while translating";
+constexpr auto REGEX_FILTER = u8"Regex Filter";
+constexpr auto INVALID_REGEX = u8"Invalid regex";
+constexpr auto CURRENT_FILTER = u8"Currently filtering: ";
 #endif // ENGLISH
 
 #ifdef TURKISH
@@ -66,7 +74,7 @@ constexpr auto SETTINGS = u8"Ayarlar";
 constexpr auto EXTENSIONS = u8"Uzantılar";
 constexpr auto SELECT_PROCESS = u8"İşlem Seçin";
 constexpr auto ATTACH_INFO = u8"Bağlanmak istediğiniz işlemi görmüyorsanız yönetici olarak çalıştırmayı deneyin";
-constexpr auto CODE_INFODUMP = u8"Hook kodunu girin\r\n"
+constexpr auto CODE_INFODUMP = u8"Kanca kodunu girin\r\n"
 u8"/H{A|B|W|S|Q|V}[N][kod_sayfası#]göreli_veri_konumu[*göreli_referanstan_ayırma_konumu1][:göreli_ayırma_konumu[*göreli_referanstan_ayırma_konumu2]]@adres[:modül[:fonksiyon]]\r\n"
 u8"YA DA\r\n"
 u8"Okuma kodunu girin\r\n"

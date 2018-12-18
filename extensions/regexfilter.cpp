@@ -1,4 +1,5 @@
 #include "extension.h"
+#include "text.h"
 #include <QMainWindow>
 #include <QLayout>
 #include <QLabel>
@@ -22,12 +23,12 @@ struct : QMainWindow {
 		{
 			std::lock_guard l(m);
 			try { regex = newRegex.toStdWString(); }
-			catch (...) { return output->setText("Invalid regex"); }
-			output->setText("Currently filtering: " + newRegex);
+			catch (...) { return output->setText(INVALID_REGEX); }
+			output->setText(CURRENT_FILTER + newRegex);
 		});
 		QMainWindow::resize(350, 60);
 		QMainWindow::setCentralWidget(centralWidget);
-		QMainWindow::setWindowTitle("Regex Filter");
+		QMainWindow::setWindowTitle(REGEX_FILTER);
 		QMainWindow::show();
 	}
 }*window = nullptr;

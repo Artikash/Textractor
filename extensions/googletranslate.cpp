@@ -1,4 +1,5 @@
 #include "extension.h"
+#include "text.h"
 #include <winhttp.h>
 #include <ctime>
 #include <QInputDialog>
@@ -80,8 +81,8 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		{
 			translateTo = QInputDialog::getItem(
 				nullptr, 
-				"Select Language", 
-				"What language should Google translate to?", 
+				SELECT_LANGUAGE, 
+				GOOGLE_PROMPT, 
 				languages, 
 				0, false, nullptr,
 				Qt::WindowCloseButtonHint
@@ -143,7 +144,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		requestTimes.erase(std::remove_if(requestTimes.begin(), requestTimes.end(), [&](DWORD requestTime) { return GetTickCount() - requestTime > 60 * 1000; }), requestTimes.end());
 		if (!sentenceInfo["current select"] && requestTimes.size() > 30)
 		{
-			sentence += L"\r\nToo many translation requests: refuse to make more";
+			sentence += TOO_MANY_TRANS_REQUESTS;
 			return true;
 		}
 	}
@@ -203,7 +204,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		}
 	}
 
-	if (translation.empty()) translation = L"Error while translating (TKK=" + std::to_wstring(TKK) + L")";
+	if (translation.empty()) translation = TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")");
 	sentence += L"\r\n" + translation;
 	return true;
 }
