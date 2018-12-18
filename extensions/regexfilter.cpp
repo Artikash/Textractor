@@ -34,18 +34,22 @@ struct : QMainWindow {
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-	std::lock_guard l(m);
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		QTimer::singleShot(0, [] { (window = new std::remove_pointer_t<decltype(window)>)->Initialize(); });
+		QTimer::singleShot(0, [] 
+		{ 
+			std::lock_guard l(m); 
+			(window = new std::remove_pointer_t<decltype(window)>)->Initialize(); 
+		});
 	}
 	break;
 	case DLL_PROCESS_DETACH:
 	{
 		if (lpReserved == NULL) // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
 		{
+			std::lock_guard l(m);
 			delete window;
 			window = nullptr;
 		}
