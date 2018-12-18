@@ -83,8 +83,8 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 
 	ui->extenList->installEventFilter(this);
 
-	connect(ui->addButton, &QPushButton::clicked, [&] { Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES)); });
-	connect(ui->rmvButton, &QPushButton::clicked, [&] { if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text()); Sync(); });
+	connect(ui->addButton, &QPushButton::clicked, [this] { Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES)); });
+	connect(ui->rmvButton, &QPushButton::clicked, [this] { if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text()); Sync(); });
 
 	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
 	Sync();

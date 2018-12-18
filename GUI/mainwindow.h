@@ -17,7 +17,6 @@ public:
 
 private:
 	void closeEvent(QCloseEvent*) override;
-	void InvokeOnMainThread(std::function<void()> f);
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
 	void ThreadAdded(TextThread* thread);

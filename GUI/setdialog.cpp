@@ -21,7 +21,7 @@ SetDialog::SetDialog(QWidget* parent) :
 		ui->layout->insertRow(0, label, spinBox);
 	}
 
-	connect(ui->buttonBox, &QDialogButtonBox::accepted, [&] { edited = true; });
+	connect(ui->buttonBox, &QDialogButtonBox::accepted, [this] { edited = true; });
 }
 
 SetDialog::~SetDialog()

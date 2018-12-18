@@ -43,11 +43,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	settings.sync();
 
 	Host::Start(
-		[&](DWORD processId) { ProcessConnected(processId); },
-		[&](DWORD processId) { ProcessDisconnected(processId); },
-		[&](TextThread* thread) { ThreadAdded(thread); },
-		[&](TextThread* thread) { ThreadRemoved(thread); },
-		[&](TextThread* thread, std::wstring& output) { return SentenceReceived(thread, output); }
+		[this](DWORD processId) { ProcessConnected(processId); },
+		[this](DWORD processId) { ProcessDisconnected(processId); },
+		[this](TextThread* thread) { ThreadAdded(thread); },
+		[this](TextThread* thread) { ThreadRemoved(thread); },
+		[this](TextThread* thread, std::wstring& output) { return SentenceReceived(thread, output); }
 	);
 	Host::AddConsoleOutput(ABOUT);
 
@@ -83,16 +83,10 @@ void MainWindow::closeEvent(QCloseEvent*)
 	QCoreApplication::quit(); // Need to do this to kill any windows that might've been made by extensions
 }
 
-
-void MainWindow::InvokeOnMainThread(std::function<void()> f)
-{
-	QMetaObject::invokeMethod(this, f);
-}
-
 void MainWindow::ProcessConnected(DWORD processId)
 {
 	if (processId == 0) return;
-	InvokeOnMainThread([&, processId]
+	QMetaObject::invokeMethod(this, [this, processId]
 	{
 		QString process = S(Util::GetModuleFileName(processId).value());
 		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
@@ -108,19 +102,19 @@ void MainWindow::ProcessConnected(DWORD processId)
 
 void MainWindow::ProcessDisconnected(DWORD processId)
 {
-	InvokeOnMainThread([&, processId] { ui->processCombo->removeItem(ui->processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith)); });
+	QMetaObject::invokeMethod(this, [this, processId] { ui->processCombo->removeItem(ui->processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith)); });
 }
 
 void MainWindow::ThreadAdded(TextThread* thread)
 {
 	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
-	InvokeOnMainThread([&, ttString] { ui->ttCombo->addItem(ttString); });
+	QMetaObject::invokeMethod(this, [this, ttString] { ui->ttCombo->addItem(ttString); });
 }
 
 void MainWindow::ThreadRemoved(TextThread* thread)
 {
 	QString ttString = TextThreadString(thread);
-	InvokeOnMainThread([&, ttString]
+	QMetaObject::invokeMethod(this, [this, ttString]
 	{
 		int threadIndex = ui->ttCombo->findText(ttString, Qt::MatchStartsWith);
 		if (threadIndex == ui->ttCombo->currentIndex())
@@ -138,7 +132,7 @@ bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
 	{
 		sentence += L"\r\n";
 		QString ttString = TextThreadString(thread);
-		InvokeOnMainThread([&, ttString, sentence]
+		QMetaObject::invokeMethod(this, [this, ttString, sentence]
 		{
 			if (ui->ttCombo->currentText().startsWith(ttString))
 			{
