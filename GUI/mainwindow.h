@@ -2,10 +2,6 @@
 
 #include "qtcommon.h"
 #include "host/host.h"
-#include "defs.h"
-#include <QPlainTextEdit>
-#include <QComboBox>
-#include <QSettings>
 
 namespace Ui
 {
@@ -14,23 +10,13 @@ namespace Ui
 
 class MainWindow : public QMainWindow
 {
-	Q_OBJECT
-
 public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
 
-private slots:
-	void on_attachButton_clicked();
-	void on_detachButton_clicked();
-	void on_hookButton_clicked();
-	void on_saveButton_clicked();
-	void on_setButton_clicked();
-	void on_extenButton_clicked();
-	void on_ttCombo_activated(int index);
 
 private:
-	void closeEvent(QCloseEvent*);
+	void closeEvent(QCloseEvent*) override;
 	void InvokeOnMainThread(std::function<void()> f);
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
@@ -41,8 +27,14 @@ private:
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
 	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
+	void AttachProcess();
+	void DetachProcess();
+	void AddHook();
+	void SaveHooks();
+	void Settings();
+	void Extensions();
+	void ViewThread(int index);
 
 	Ui::MainWindow* ui;
-	QSettings settings = QSettings(CONFIG_FILE, QSettings::IniFormat);
 	QWidget* extenWindow;
 };

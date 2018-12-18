@@ -3,7 +3,6 @@
 #include "defs.h"
 #include "text.h"
 #include "host/host.h"
-#include <QSettings>
 
 SetDialog::SetDialog(QWidget* parent) :
 	QDialog(parent, Qt::WindowCloseButtonHint),
@@ -21,18 +20,19 @@ SetDialog::SetDialog(QWidget* parent) :
 		spinBox->setValue(value);
 		ui->layout->insertRow(0, label, spinBox);
 	}
+
+	connect(ui->buttonBox, &QDialogButtonBox::accepted, [&] { edited = true; });
 }
 
 SetDialog::~SetDialog()
 {
+	if (edited)
+	{
+		QSettings settings(CONFIG_FILE, QSettings::IniFormat);
+		settings.setValue(FLUSH_DELAY, TextThread::flushDelay = flushDelay->value());
+		settings.setValue(MAX_BUFFER_SIZE, TextThread::maxBufferSize = maxBufferSize->value());
+		settings.setValue(DEFAULT_CODEPAGE, TextThread::defaultCodepage = defaultCodepage->value());
+		settings.sync();
+	}
 	delete ui;
-}
-
-void SetDialog::on_buttonBox_accepted()
-{
-	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
-	settings.setValue(FLUSH_DELAY, TextThread::flushDelay = flushDelay->value());
-	settings.setValue(MAX_BUFFER_SIZE, TextThread::maxBufferSize = maxBufferSize->value());
-	settings.setValue(DEFAULT_CODEPAGE, TextThread::defaultCodepage = defaultCodepage->value());
-	settings.sync();
 }

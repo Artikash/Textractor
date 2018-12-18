@@ -1,7 +1,6 @@
 #pragma once
 
 #include "qtcommon.h"
-#include <QListWidget>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 
@@ -14,15 +13,9 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 
 class ExtenWindow : public QMainWindow
 {
-	Q_OBJECT
-
 public:
 	explicit ExtenWindow(QWidget* parent = nullptr);
 	~ExtenWindow();
-
-private slots:
-	void on_addButton_clicked();
-	void on_rmvButton_clicked();
 
 private:
 	void Add(QFileInfo extenFile);

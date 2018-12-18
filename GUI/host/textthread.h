@@ -19,10 +19,10 @@ public:
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 	~TextThread();
 
-	std::wstring GetStorage();
 	void AddSentence(std::wstring sentence);
 	void Push(const BYTE* data, int len);
 
+	const ThreadSafePtr<std::wstring> storage;
 	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
@@ -32,7 +32,6 @@ private:
 	void Flush();
 
 	struct TimerDeleter { void operator()(void* h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
-	ThreadSafePtr<std::wstring> storage;
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;

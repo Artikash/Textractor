@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "defs.h"
 #include "text.h"
 #include "extenwindow.h"
 #include "setdialog.h"
@@ -7,8 +8,6 @@
 #include "host/util.h"
 #include <Psapi.h>
 #include <winhttp.h>
-#include <QFrame>
-#include <QLayout>
 #include <QPushButton>
 #include <QInputDialog>
 
@@ -19,12 +18,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 	for (auto[text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
-		{ ATTACH, &MainWindow::on_attachButton_clicked },
-		{ DETACH, &MainWindow::on_detachButton_clicked },
-		{ ADD_HOOK, &MainWindow::on_hookButton_clicked },
-		{ SAVE_HOOKS, &MainWindow::on_saveButton_clicked },
-		{ SETTINGS, &MainWindow::on_setButton_clicked },
-		{ EXTENSIONS, &MainWindow::on_extenButton_clicked }
+		{ ATTACH, &MainWindow::AttachProcess },
+		{ DETACH, &MainWindow::DetachProcess },
+		{ ADD_HOOK, &MainWindow::AddHook },
+		{ SAVE_HOOKS, &MainWindow::SaveHooks },
+		{ SETTINGS, &MainWindow::Settings },
+		{ EXTENSIONS, &MainWindow::Extensions }
 	})
 	{
 		QPushButton* button = new QPushButton(ui->processFrame);
@@ -34,10 +33,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 	ui->processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
+	connect(ui->ttCombo, (void(QComboBox::*)(int))&QComboBox::activated, this, &MainWindow::ViewThread);
+
+	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
 	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
 	if (settings.contains(MAX_BUFFER_SIZE)) TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE).toInt();
 	if (settings.contains(DEFAULT_CODEPAGE)) TextThread::defaultCodepage = settings.value(DEFAULT_CODEPAGE).toInt();
+	settings.sync();
 
 	Host::Start(
 		[&](DWORD processId) { ProcessConnected(processId); },
@@ -68,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	settings.setValue(WINDOW, geometry());
 	settings.sync();
 	delete ui;
@@ -122,7 +126,7 @@ void MainWindow::ThreadRemoved(TextThread* thread)
 		if (threadIndex == ui->ttCombo->currentIndex())
 		{
 			ui->ttCombo->setCurrentIndex(0);
-			on_ttCombo_activated(0);
+			ViewThread(0);
 		}
 		ui->ttCombo->removeItem(threadIndex);
 	});
@@ -184,7 +188,7 @@ std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thr
 	};
 }
 
-void MainWindow::on_attachButton_clicked()
+void MainWindow::AttachProcess()
 {
 	QMultiHash<QString, DWORD> allProcesses;
 	DWORD allProcessIds[5000] = {}, spaceUsed = 0;
@@ -201,12 +205,12 @@ void MainWindow::on_attachButton_clicked()
 	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
 }
 
-void MainWindow::on_detachButton_clicked()
+void MainWindow::DetachProcess()
 {
 	Host::DetachProcess(GetSelectedProcessId());
 }
 
-void MainWindow::on_hookButton_clicked()
+void MainWindow::AddHook()
 {
 	bool ok;
 	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint);
@@ -215,7 +219,7 @@ void MainWindow::on_hookButton_clicked()
 	else Host::AddConsoleOutput(INVALID_CODE);
 }
 
-void MainWindow::on_saveButton_clicked()
+void MainWindow::SaveHooks()
 {
 	if (auto processName = Util::GetModuleFileName(GetSelectedProcessId()))
 	{
@@ -231,19 +235,19 @@ void MainWindow::on_saveButton_clicked()
 	}
 }
 
-void MainWindow::on_setButton_clicked()
+void MainWindow::Settings()
 {
 	SetDialog(this).exec();
 }
 
-void MainWindow::on_extenButton_clicked()
+void MainWindow::Extensions()
 {
 	extenWindow->activateWindow();
 	extenWindow->showNormal();
 }
 
-void MainWindow::on_ttCombo_activated(int index)
+void MainWindow::ViewThread(int index)
 {
-	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index)))->GetStorage()));
+	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index)))->storage->c_str()));
 	ui->textOutput->moveCursor(QTextCursor::End);
 }

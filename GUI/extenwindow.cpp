@@ -1,7 +1,7 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
-#include "text.h"
 #include "defs.h"
+#include "text.h"
 #include "types.h"
 #include "misc.h"
 #include <shared_mutex>
@@ -83,6 +83,9 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 
 	ui->extenList->installEventFilter(this);
 
+	connect(ui->addButton, &QPushButton::clicked, [&] { Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES)); });
+	connect(ui->rmvButton, &QPushButton::clicked, [&] { if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text()); Sync(); });
+
 	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
 	Sync();
 }
@@ -133,15 +136,4 @@ void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)
 void ExtenWindow::dropEvent(QDropEvent* event) 
 { 
 	for (auto file : event->mimeData()->urls()) Add(file.toLocalFile());
-}
-
-void ExtenWindow::on_addButton_clicked()
-{
-	Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES));
-}
-
-void ExtenWindow::on_rmvButton_clicked()
-{
-	if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text());
-	Sync();
 }

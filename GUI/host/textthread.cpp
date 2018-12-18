@@ -19,11 +19,6 @@ TextThread::~TextThread()
 	OnDestroy(this);
 }
 
-std::wstring TextThread::GetStorage()
-{
-	return storage->c_str();
-}
-
 void TextThread::AddSentence(std::wstring sentence)
 {
 	if (Output(this, sentence)) storage->append(sentence);

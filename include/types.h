@@ -10,7 +10,7 @@ class ThreadSafePtr
 {
 public:
 	template <typename ...Args> ThreadSafePtr(Args ...args) : ptr(new E(args...)), mtxPtr(new M) {}
-	auto operator->()
+	auto operator->() const
 	{
 		struct
 		{

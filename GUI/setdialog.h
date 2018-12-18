@@ -10,18 +10,14 @@ namespace Ui
 
 class SetDialog : public QDialog
 {
-	Q_OBJECT
-
 public:
 	explicit SetDialog(QWidget* parent = nullptr);
 	~SetDialog();
-
-private slots:
-	void on_buttonBox_accepted();
 
 private:
 	Ui::SetDialog* ui;
 	QSpinBox* flushDelay;
 	QSpinBox* maxBufferSize;
 	QSpinBox* defaultCodepage;
+	bool edited = false;
 };
