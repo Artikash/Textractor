@@ -47,7 +47,9 @@ Finally, the GUI dispatches the text to extensions before displaying it.
 
 ## Developers
 
+If you're on this list and want your link changed let me know.
 - Textractor creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- Turkish translation by niisokusu
 - ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
 - ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine making by [jichi](https://archive.is/prJwr)
