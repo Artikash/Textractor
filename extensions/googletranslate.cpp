@@ -154,22 +154,26 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	std::wstring translation;
 	if (internet)
 	{
-		if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+		if (!TKK)
 		{
-			if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
+			if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
 			{
-				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+				if (HINTERNET request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
 				{
-					DWORD bytesRead;
-					char buffer[200000] = {}; // Google Translate page is ~180kb (good god the bloat >_>)
-					WinHttpReceiveResponse(request, NULL);
-					WinHttpReadData(request, buffer, 200000, &bytesRead);
-					if (std::cmatch results; std::regex_search(buffer, results, std::regex("(\\d{7,})'"))) TKK = stoll(results[1]);
+					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
+					{
+						DWORD bytesRead;
+						char buffer[200000] = {}; // Google Translate page is ~180kb (good god the bloat >_>)
+						WinHttpReceiveResponse(request, NULL);
+						WinHttpReadData(request, buffer, 200000, &bytesRead);
+						if (std::cmatch results; std::regex_search(buffer, results, std::regex("(\\d{7,})'"))) TKK = stoll(results[1]);
+					}
+					WinHttpCloseHandle(request);
 				}
-				WinHttpCloseHandle(request);
+				WinHttpCloseHandle(connection);
 			}
-			WinHttpCloseHandle(connection);
 		}
+			
 
 		if (HINTERNET connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
 		{
@@ -191,6 +195,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 							translation += std::wstring(results[1]) + L" ";
 						for (auto& c : translation) if (c == L'\\') c = 0x200b;
 					}
+					else TKK = 0;
 				}
 				WinHttpCloseHandle(request);
 			}
