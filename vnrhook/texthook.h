@@ -32,13 +32,13 @@ private:
 	static DWORD WINAPI Reader(LPVOID hookPtr);
 	bool InsertHookCode();
 	bool InsertReadCode();
-	void Send(DWORD dwDatabase);
-	int GetLength(DWORD base, DWORD in); // jichi 12/25/2013: Return 0 if failed
+	void Send(uintptr_t dwDatabase);
+	int GetLength(uintptr_t base, uintptr_t in); // jichi 12/25/2013: Return 0 if failed
 	void RemoveHookCode();
 	void RemoveReadCode();
 
 	HANDLE readerThread, readerEvent;
-	BYTE trampoline[120];
+	BYTE trampoline[130];
 
 };
 

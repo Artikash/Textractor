@@ -14,6 +14,7 @@
 #include "engine/match.h"
 #include "main.h"
 #include "const.h"
+#include "defs.h"
 #include "text.h"
 #include "ithsys/ithsys.h"
 #include "growl.h"
@@ -27,61 +28,71 @@ namespace { // unnamed
 #ifndef _WIN64
 
 	BYTE common_hook[] = {
-	  0x9c, // pushfd
-	  0x60, // pushad
-	  0x9c, // pushfd ; Artikash 11/4/2018: not sure why pushfd happens twice. Anyway, after this a total of 0x28 bytes are pushed
-	  0x8d, 0x44, 0x24, 0x28, // lea eax,[esp+0x28]
-	  0x50, // push eax ; dwDatabase
-	  0xb9, 0,0,0,0, // mov ecx,@this
-	  0xbb, 0,0,0,0, // mov ebx,@TextHook::Send
-	  0xff, 0xd3, // call ebx
-	  0x9d, // popfd
-	  0x61, // popad
-	  0x9d,  // popfd
-	  0x68, 0,0,0,0, // push @original
-	  0xc3  // ret ; basically absolute jmp to @original
+		0x9c, // pushfd
+		0x60, // pushad
+		0x9c, // pushfd ; Artikash 11/4/2018: not sure why pushfd happens twice. Anyway, after this a total of 0x28 bytes are pushed
+		0x8d, 0x44, 0x24, 0x28, // lea eax,[esp+0x28]
+		0x50, // push eax ; dwDatabase
+		0xb9, 0,0,0,0, // mov ecx,@this
+		0xbb, 0,0,0,0, // mov ebx,@TextHook::Send
+		0xff, 0xd3, // call ebx
+		0x9d, // popfd
+		0x61, // popad
+		0x9d,  // popfd
+		0x68, 0,0,0,0, // push @original
+		0xc3  // ret ; basically absolute jmp to @original
 	};
 
 #else
-	const BYTE common_hook[] = {
-	0x9c, // push rflags
-	0x50, // push rax
-	0x53, // push rbx
-	0x51, // push rcx
-	0x52, // push rdx
-	0x54, // push rsp
-	0x55, // push rbp
-	0x56, // push rsi
-	0x57, // push rdi
-	0x41, 0x50, // push r8
-	0x41, 0x51, // push r9
-	0x41, 0x52, // push r10
-	0x41, 0x53, // push r11
-	0x41, 0x54, // push r12
-	0x41, 0x55, // push r13
-	0x41, 0x56, // push r14
-	0x41, 0x57, // push r15
-	0x48, 0x8b, 0xd4, // mov rdx,rsp
-	0x48, 0xb9, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // mov rcx, ?? ; pointer to TextHook
-	0xff, 0x15, 0x02, 0x0, 0x0, 0x0, 0xeb, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // call TextHook::Send
-	0x41, 0x5f, // pop r15
-	0x41, 0x5e, // pop r14
-	0x41, 0x5d, // pop r13
-	0x41, 0x5c, // pop r12
-	0x41, 0x5b, // pop r11
-	0x41, 0x5a, // pop r10
-	0x41, 0x59, // pop r9
-	0x41, 0x58, // pop r8
-	0x5f, // pop rdi
-	0x5e, // pop rsi
-	0x5d, // pop rbp
-	0x5c, // pop rsp
-	0x5a, // pop rdx
-	0x59, // pop rcx
-	0x5b, // pop rbx
-	0x58, // pop rax
-	0x9d, // pop rflags
-	0xff, 0x25, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 // jmp @original
+	BYTE common_hook[] = {
+		0x9c, // push rflags
+		0x50, // push rax
+		0x53, // push rbx
+		0x51, // push rcx
+		0x52, // push rdx
+		0x54, // push rsp
+		0x55, // push rbp
+		0x56, // push rsi
+		0x57, // push rdi
+		0x41, 0x50, // push r8
+		0x41, 0x51, // push r9
+		0x41, 0x52, // push r10
+		0x41, 0x53, // push r11
+		0x41, 0x54, // push r12
+		0x41, 0x55, // push r13
+		0x41, 0x56, // push r14
+		0x41, 0x57, // push r15
+		// https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention
+		// https://stackoverflow.com/questions/43358429/save-value-of-xmm-registers
+		0x48, 0x83, 0xec, 0x20, // sub rsp,0x20
+		0xc5, 0xfa, 0x7f, 0x24, 0x24, // vmovdqu [rsp],xmm4
+		0xc5, 0xfa, 0x7f, 0x6c, 0x24, 0x10, // vmovdqu [rsp+0x10],xmm5
+		0x48, 0x8d, 0x94, 0x24, 0xa8, 0x00, 0x00, 0x00, // lea rdx,[rsp+0xa8]
+		0x48, 0xb9, 0,0,0,0,0,0,0,0, // mov rcx,@this
+		0x48, 0xb8, 0,0,0,0,0,0,0,0, // mov rax,@TextHook::Send
+		0xff, 0xd0, // call rax
+		0xc5, 0xfa, 0x6f, 0x6c, 0x24, 0x10, // vmovdqu xmm5,XMMWORD PTR[rsp + 0x10]
+		0xc5, 0xfa, 0x6f, 0x24, 0x24, // vmovdqu xmm4,XMMWORD PTR[rsp]
+		0x48, 0x83, 0xc4, 0x20, // add rsp,0x20
+		0x41, 0x5f, // pop r15
+		0x41, 0x5e, // pop r14
+		0x41, 0x5d, // pop r13
+		0x41, 0x5c, // pop r12
+		0x41, 0x5b, // pop r11
+		0x41, 0x5a, // pop r10
+		0x41, 0x59, // pop r9
+		0x41, 0x58, // pop r8
+		0x5f, // pop rdi
+		0x5e, // pop rsi
+		0x5d, // pop rbp
+		0x5c, // pop rsp
+		0x5a, // pop rdx
+		0x59, // pop rcx
+		0x5b, // pop rbx
+		0x58, // pop rax
+		0x9d, // pop rflags
+		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [0] ; relative to next instruction (i.e. jmp @original)
+		0,0,0,0,0,0,0,0 // @original
 	};
 #endif
 
@@ -103,62 +114,46 @@ bool TextHook::Insert(HookParam h, DWORD set_flag)
 	hp.type |= set_flag;
 	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
 	if (hp.type & DIRECT_READ) return InsertReadCode();
-#ifndef _WIN64
 	else return InsertHookCode();
-#endif
-	return false;
 }
 
-#ifndef _WIN64
 // jichi 5/11/2014:
 // - dwDataBase: the stack address
-void TextHook::Send(DWORD dwDataBase)
+#ifndef _WIN64
+void TextHook::Send(uintptr_t dwDataBase)
 {
 	__try
 	{
-		DWORD dwCount,
-			dwAddr,
-			dwDataIn,
-			dwRetn,
-			dwSplit;
-		BYTE pbData[PIPE_BUFFER_SIZE];
-		DWORD dwType = hp.type;
+		DWORD dwCount = 0,
+			dwSplit = 0,
+			dwDataIn = *(DWORD*)(dwDataBase + hp.offset), // default values
+			dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
 
-		dwAddr = address;
-		dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
-
-		if (trigger)
-			trigger = Engine::InsertDynamicHook((LPVOID)dwAddr, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
+		if (trigger) trigger = Engine::InsertDynamicHook(location, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
 
 		// jichi 10/24/2014: generic hook function
-		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp))
-			hp.hook_fun = nullptr;
+		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp)) hp.hook_fun = nullptr;
 
-		if (dwType & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
-
-		dwCount = 0;
-		dwSplit = 0;
-		dwDataIn = *(DWORD *)(dwDataBase + hp.offset); // default value
+		if (hp.type & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
 
 		if (hp.text_fun) {
 			hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
 		}
 		else {
-			if (dwDataIn == 0) return;
-			if (dwType & FIXING_SPLIT) dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
-			else if (dwType & USING_SPLIT) {
+			if (hp.type & FIXING_SPLIT) dwSplit = FIXED_SPLIT_VALUE; // fuse all threads, and prevent floating
+			else if (hp.type & USING_SPLIT) {
 				dwSplit = *(DWORD *)(dwDataBase + hp.split);
-				if (dwType & SPLIT_INDIRECT) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
+				if (hp.type & SPLIT_INDIRECT) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
 			}
-			if (dwType & DATA_INDIRECT) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
+			if (hp.type & DATA_INDIRECT) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
 		if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) return;
-
+		BYTE pbData[PIPE_BUFFER_SIZE];
 		if (hp.length_offset == 1) {
 			dwDataIn &= 0xffff;
-			if ((dwType & BIG_ENDIAN) && (dwDataIn >> 8)) dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
+			if ((hp.type & BIG_ENDIAN) && (dwDataIn >> 8)) dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
 			if (dwCount == 1) dwDataIn &= 0xff;
 			*(WORD*)pbData = dwDataIn & 0xffff;
 		}
@@ -166,15 +161,53 @@ void TextHook::Send(DWORD dwDataBase)
 
 		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) return;
 
-		if (dwType & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
+		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
 
-		TextOutput({ GetCurrentProcessId(), dwAddr, dwRetn, dwSplit }, pbData, dwCount);
+		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, pbData, dwCount);
 	}
-	__except (EXCEPTION_EXECUTE_HANDLER) 
+	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 		ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
 	}
 }
+#else // _WIN32
+void TextHook::Send(uintptr_t dwDataBase)
+{
+	__try
+	{
+		int count = 0;
+		ThreadParam tp = { GetCurrentProcessId(), address, *(uintptr_t*)dwDataBase, 0 }; // first value on stack (if hooked start of function, this is return address)
+		uintptr_t data = *(uintptr_t*)(dwDataBase + hp.offset); // default value
+
+		if (hp.type & USING_SPLIT)
+		{
+			tp.ctx2 = *(uintptr_t*)(dwDataBase + hp.split);
+			if (hp.type & SPLIT_INDIRECT) tp.ctx2 = *(uintptr_t*)(tp.ctx2 + hp.split_index);
+		}
+		if (hp.type & DATA_INDIRECT) data = *(uintptr_t*)(data + hp.index);
+
+		count = GetLength(dwDataBase, data);
+		if (count == 0) return;
+		BYTE pbData[PIPE_BUFFER_SIZE];
+		if (hp.length_offset == 1)
+		{
+			data &= 0xffff;
+			if ((hp.type & BIG_ENDIAN) && (data >> 8)) data = _byteswap_ushort(data & 0xffff);
+			if (count == 1) data &= 0xff;
+			*(WORD*)pbData = data & 0xffff;
+		}
+		else ::memcpy(pbData, (void*)data, count);
+
+		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) tp.ctx = 0;
+
+		TextOutput(tp, pbData, count);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
+	}
+}
+#endif // _WIN64
 
 bool TextHook::InsertHookCode()
 {
@@ -203,23 +236,16 @@ insert:
 
 #ifndef _WIN64
 	*(TextHook**)(common_hook + 9) = this;
-	*(void(TextHook::**)(DWORD))(common_hook + 14) = &TextHook::Send;
+	*(void(TextHook::**)(uintptr_t))(common_hook + 14) = &TextHook::Send;
 	*(void**)(common_hook + 24) = original;
-	memcpy(trampoline, common_hook, sizeof(common_hook));
 #else // _WIN32
-	BYTE* original;
-	MH_CreateHook((void*)hp.address, (void*)trampoline, (void**)&original);
-	memcpy(trampoline, common_hook, sizeof(common_hook));
-	void* thisPtr = (void*)this;
-	memcpy(trampoline + 30, &thisPtr, sizeof(void*));
-	auto sendPtr = (void(TextHook::*)(void*))&TextHook::Send;
-	memcpy(trampoline + 46, &sendPtr, sizeof(sendPtr));
-	memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
+	*(TextHook**)(common_hook + 50) = this;
+	*(void(TextHook::**)(uintptr_t))(common_hook + 60) = &TextHook::Send;
+	*(void**)(common_hook + 116) = original;
 #endif // _WIN64
-
+	memcpy(trampoline, common_hook, sizeof(common_hook));
 	return MH_EnableHook(location) == MH_OK;
 }
-#endif // _WIN32
 
 DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 {
@@ -290,14 +316,12 @@ void TextHook::Clear()
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
 }
 
-int TextHook::GetLength(DWORD base, DWORD in)
+int TextHook::GetLength(uintptr_t base, uintptr_t in)
 {
-	if (base == 0)
-		return 0;
 	int len;
 	switch (hp.length_offset) {
 	default: // jichi 12/26/2013: I should not put this default branch to the end
-		len = *((int *)base + hp.length_offset);
+		len = *((uintptr_t*)base + hp.length_offset);
 		if (len >= 0) {
 			if (hp.type & USING_UNICODE)
 				len <<= 1;
