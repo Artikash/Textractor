@@ -196,7 +196,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 							translation += std::wstring(results[1]) + L" ";
 						for (auto& c : translation) if (c == L'\\') c = 0x200b;
 					}
-					else TKK = 0;
+					else
+					{
+						translation = TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")");
+						TKK = 0;
+					}
 				}
 				WinHttpCloseHandle(request);
 			}
@@ -204,7 +208,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		}
 	}
 
-	if (translation.empty()) translation = TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")");
+	if (translation.empty()) translation = TRANSLATION_ERROR;
 	sentence += L"\r\n" + translation;
 	return true;
 }
