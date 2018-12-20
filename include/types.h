@@ -49,8 +49,7 @@ struct HookParam
 	typedef bool(*filter_fun_t)(LPVOID str, DWORD *len, HookParam *hp, BYTE index); // jichi 10/24/2014: Add filter function. Return true if skip the text
 	typedef bool(*hook_fun_t)(DWORD esp, HookParam *hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
 
-	uint64_t insertion_address; // absolute address
-	uint64_t address; // absolute or relative address (not changed by TextHook)
+	uint64_t address; // absolute or relative address
 	int offset, // offset of the data in the memory
 		index, // deref_offset1
 		split, // offset of the split character

@@ -19,6 +19,11 @@ class TextHook
 {
 public:
 	HookParam hp;
+	union
+	{
+		uint64_t address;
+		void* location;
+	}; // Absolute address
 
 	bool Insert(HookParam hp, DWORD set_flag);
 	void Clear();

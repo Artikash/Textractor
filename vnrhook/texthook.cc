@@ -99,7 +99,7 @@ bool TextHook::Insert(HookParam h, DWORD set_flag)
 {
 	LOCK(*viewMutex);
 	hp = h;
-	hp.insertion_address = hp.address;
+	address = hp.address;
 	hp.type |= set_flag;
 	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
 	if (hp.type & DIRECT_READ) return InsertReadCode();
@@ -124,7 +124,7 @@ void TextHook::Send(DWORD dwDataBase)
 		BYTE pbData[PIPE_BUFFER_SIZE];
 		DWORD dwType = hp.type;
 
-		dwAddr = hp.insertion_address;
+		dwAddr = address;
 		dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
 
 		if (trigger)
@@ -182,17 +182,17 @@ bool TextHook::InsertHookCode()
 	// Artikash 10/30/2018: No, I think that's impossible now that I moved to minhook
 	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
 		if (hp.type & FUNCTION_OFFSET)
-			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) hp.insertion_address += (uint64_t)function;
+			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) address += (uint64_t)function;
 			else return ConsoleOutput(FUNC_MISSING), false;
-		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) hp.insertion_address += (uint64_t)moduleBase;
+		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) address += (uint64_t)moduleBase;
 		else return ConsoleOutput(MODULE_MISSING), false;
 
 	void* original;
 insert:
-	if (MH_STATUS err = MH_CreateHook((void*)hp.insertion_address, (void*)trampoline, &original))
+	if (MH_STATUS err = MH_CreateHook(location, trampoline, &original))
 		if (err == MH_ERROR_ALREADY_CREATED)
 		{
-			RemoveHook(hp.insertion_address);
+			RemoveHook(address);
 			goto insert; // FIXME: i'm too lazy to do this properly right now...
 		}
 		else
@@ -217,23 +217,22 @@ insert:
 	memcpy(trampoline + sizeof(common_hook) - 8, &original, sizeof(void*));
 #endif // _WIN64
 
-	return MH_EnableHook((void*)hp.insertion_address) == MH_OK;
+	return MH_EnableHook(location) == MH_OK;
 }
 #endif // _WIN32
 
 DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 {
-	TextHook* hook = (TextHook*)hookPtr;
+	TextHook* This = (TextHook*)hookPtr;
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
-	unsigned int changeCount = 0;
-	int dataLen = 0;
+	int changeCount = 0, dataLen = 0;
 	__try
 	{
-		const void* currentAddress = (void*)hook->hp.insertion_address;
-		while (WaitForSingleObject(hook->readerEvent, 500) == WAIT_TIMEOUT)
+		uint64_t currentAddress = This->address;
+		while (WaitForSingleObject(This->readerEvent, 500) == WAIT_TIMEOUT)
 		{
-			if (hook->hp.type & DATA_INDIRECT) currentAddress = *((char**)hook->hp.insertion_address + hook->hp.index);
-			if (memcmp(buffer, currentAddress, dataLen + 1) == 0)
+			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uint64_t*)This->address + This->hp.index;
+			if (memcmp(buffer, (void*)currentAddress, dataLen + 1) == 0)
 			{
 				changeCount = 0;
 				continue;
@@ -241,23 +240,21 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 			if (++changeCount > 10)
 			{
 				ConsoleOutput(GARBAGE_MEMORY);
-				hook->Clear();
+				This->Clear();
 				break;
 			}
 
-			if (hook->hp.type & USING_UNICODE)
-				dataLen = wcslen((const wchar_t*)currentAddress) * 2;
-			else
-				dataLen = strlen((const char*)currentAddress);
+			if (This->hp.type & USING_UNICODE) dataLen = wcslen((wchar_t*)currentAddress) * 2;
+			else dataLen = strlen((char*)currentAddress);
 
-			memcpy(buffer, currentAddress, dataLen + 1);
-			TextOutput({ GetCurrentProcessId(), hook->hp.insertion_address, 0, 0 }, buffer, dataLen);
+			memcpy(buffer, (void*)currentAddress, dataLen + 1);
+			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
 		}
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 		ConsoleOutput("Textractor: Reader ERROR (likely an incorrect R-code)");
-		hook->Clear();
+		This->Clear();
 	}
 	return 0;
 }
@@ -271,8 +268,8 @@ bool TextHook::InsertReadCode()
 
 void TextHook::RemoveHookCode()
 {
-	MH_DisableHook((void*)hp.insertion_address);
-	MH_RemoveHook((void*)hp.insertion_address);
+	MH_DisableHook(location);
+	MH_RemoveHook(location);
 }
 
 void TextHook::RemoveReadCode()
@@ -289,7 +286,7 @@ void TextHook::Clear()
 	ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
-	NotifyHookRemove(hp.insertion_address);
+	NotifyHookRemove(address);
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
 }
 

@@ -34,7 +34,7 @@ namespace
 			LOCK(viewMutex);
 			auto hooks = (const TextHook*)view;
 			for (int i = 0; i < MAX_HOOK; ++i)
-				if (hooks[i].hp.insertion_address == addr) return hooks[i];
+				if (hooks[i].address == addr) return hooks[i];
 			return {};
 		}
 

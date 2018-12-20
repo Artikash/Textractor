@@ -80,7 +80,7 @@ DWORD WINAPI Pipe(LPVOID)
 			}
 	}
 	hookPipe = INVALID_HANDLE_VALUE;
-	for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].hp.insertion_address) hooks[i].Clear();
+	for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].address) hooks[i].Clear();
 	FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
 	return 0;
 }
@@ -154,7 +154,7 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 void RemoveHook(uint64_t addr, int maxOffset)
 {
 	for (int i = 0; i < MAX_HOOK; i++)
-		if (abs((long long)(hooks[i].hp.insertion_address - addr)) <= maxOffset) return hooks[i].Clear();
+		if (abs((long long)(hooks[i].address - addr)) <= maxOffset) return hooks[i].Clear();
 }
 
 // EOF
