@@ -28,11 +28,11 @@ constexpr auto EXTEN_SAVE_FILE = u8"Extensions.txt";
 // Functions
 
 template <typename... Ts>
-inline void FORMAT_MESSAGE(const wchar_t* format, Ts ...args)
+inline void FORMAT_MESSAGE(const char* format, Ts ...args)
 {
-	wchar_t buffer[250] = {};
-	swprintf_s<250>(buffer, format, args...);
-	MessageBoxW(NULL, buffer, L"Textractor Message", MB_OK);
+	char buffer[250] = {};
+	sprintf_s<250>(buffer, format, args...);
+	MessageBoxA(NULL, buffer, "Textractor Message", MB_OK);
 }
 
 // EOF
