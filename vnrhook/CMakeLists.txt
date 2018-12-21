@@ -4,6 +4,8 @@ if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
 set(vnrhook_src
   main.cc
   texthook.cc
+  engine/match64.cc
+  engine/native/pchooks.cc
   util/ithsys/ithsys.cc
 )
 else()

@@ -3,19 +3,12 @@
 // Branch: ITH_DLL/main.cpp, rev 128
 // 8/24/2013 TODO: Clean up this file
 
-#ifdef _MSC_VER
-# pragma warning (disable:4100)   // C4100: unreference formal parameter
-//# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
-#endif // _MSC_VER
-
 #include "main.h"
 #include "defs.h"
 #include "text.h"
 #include "MinHook.h"
-#include "engine/engine.h"
 #include "engine/match.h"
 #include "texthook.h"
-#include "util/growl.h"
 
 std::unique_ptr<WinMutex> viewMutex;
 
@@ -37,13 +30,13 @@ DWORD WINAPI Pipe(LPVOID)
 		AutoHandle<> hostPipe = INVALID_HANDLE_VALUE;
 		hookPipe = INVALID_HANDLE_VALUE;
 
-		while (hookPipe == INVALID_HANDLE_VALUE || hostPipe == INVALID_HANDLE_VALUE)
+		while (!hookPipe || !hostPipe)
 		{
-			if (hookPipe == INVALID_HANDLE_VALUE)
+			if (!hookPipe)
 			{
 				hookPipe = CreateFileW(HOOK_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 			}
-			if (hookPipe != INVALID_HANDLE_VALUE && hostPipe == INVALID_HANDLE_VALUE)
+			if (hookPipe && !hostPipe)
 			{
 				hostPipe = CreateFileW(HOST_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 				DWORD mode = PIPE_READMODE_MESSAGE;
@@ -57,11 +50,7 @@ DWORD WINAPI Pipe(LPVOID)
 		WriteFile(hookPipe, buffer, sizeof(DWORD), &count, nullptr);
 
 		ConsoleOutput(PIPE_CONNECTED);
-#ifdef _WIN64
-		ConsoleOutput(DISABLE_HOOKS);
-#else
 		Engine::Hijack();
-#endif
 
 		while (running && ReadFile(hostPipe, buffer, PIPE_BUFFER_SIZE, &count, nullptr))
 			switch (*(HostCommandType*)buffer)

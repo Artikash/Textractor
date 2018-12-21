@@ -866,7 +866,7 @@ bool DetermineEngineType()
   bool found = false;
 #ifndef ITH_DISABLE_ENGINE
   __try { found = UnsafeDetermineEngineType(); }
-  __except(ExceptHandler((GetExceptionInformation())->ExceptionRecord, 0, 0, 0)) {}
+  __except (ExceptHandler((GetExceptionInformation())->ExceptionRecord, 0, 0, 0)) { ConsoleOutput("Textractor: Hijack ERROR"); }
 #endif // ITH_DISABLE_ENGINE
   if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
     PcHooks::hookOtherPcFunctions();
