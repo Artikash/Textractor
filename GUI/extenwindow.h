@@ -1,8 +1,6 @@
 #pragma once
 
 #include "qtcommon.h"
-#include <QDragEnterEvent>
-#include <QDropEvent>
 
 namespace Ui
 {
@@ -21,6 +19,7 @@ private:
 	void Add(QFileInfo extenFile);
 	void Sync();
 	bool eventFilter(QObject* target, QEvent* event) override;
+	void keyPressEvent(QKeyEvent* event) override;
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dropEvent(QDropEvent* event) override;
 

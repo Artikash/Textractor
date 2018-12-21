@@ -13,11 +13,8 @@
   <property name="acceptDrops">
    <bool>true</bool>
   </property>
-  <property name="windowTitle">
-   <string>Extensions</string>
-  </property>
-  <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+  <widget class="QWidget">
+   <layout class="QVBoxLayout">
     <item>
      <widget class="QListWidget" name="extenList">
       <property name="dragDropMode">
@@ -28,42 +25,9 @@
       </property>
      </widget>
     </item>
-    <item>
-     <layout class="QVBoxLayout">
-      <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="addButton">
-        <property name="text">
-         <string>Add</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="rmvButton">
-        <property name="text">
-         <string>Remove</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer>
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </item>
    </layout>
   </widget>
  </widget>
- <layoutdefault spacing="6" margin="6"/>
  <resources/>
  <connections/>
 </ui>

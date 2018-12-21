@@ -5,9 +5,12 @@
 #include "types.h"
 #include "misc.h"
 #include <shared_mutex>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFileDialog>
 #include <QMimeData>
 #include <QUrl>
+#include <QLabel>
 
 namespace
 {
@@ -76,15 +79,14 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std
 }
 
 ExtenWindow::ExtenWindow(QWidget* parent) :
-	QMainWindow(parent),
+	QMainWindow(parent, Qt::WindowCloseButtonHint),
 	ui(new Ui::ExtenWindow)
 {
 	ui->setupUi(this);
+	ui->vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
+	setWindowTitle(EXTENSIONS);
 
 	ui->extenList->installEventFilter(this);
-
-	connect(ui->addButton, &QPushButton::clicked, [this] { Add(QFileDialog::getOpenFileName(this, SELECT_EXTENSION, "C:\\", EXTENSION_FILES)); });
-	connect(ui->rmvButton, &QPushButton::clicked, [this] { if (auto extenName = ui->extenList->currentItem()) Unload(extenName->text()); Sync(); });
 
 	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
 	Sync();
@@ -126,6 +128,15 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 		Sync();
 	}
 	return false; 
+}
+
+void ExtenWindow::keyPressEvent(QKeyEvent* event)
+{
+	if (event->key() == Qt::Key_Delete) if (auto extenName = ui->extenList->currentItem())
+	{
+		Unload(extenName->text());
+		Sync();
+	}
 }
 
 void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)

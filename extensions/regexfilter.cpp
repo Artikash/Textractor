@@ -9,7 +9,8 @@
 std::wregex regex;
 std::mutex m;
 
-struct : QMainWindow {
+struct : QMainWindow 
+{
 	void Initialize()
 	{
 		auto centralWidget = new QWidget(this);
@@ -26,10 +27,10 @@ struct : QMainWindow {
 			catch (...) { return output->setText(INVALID_REGEX); }
 			output->setText(CURRENT_FILTER + newRegex);
 		});
-		QMainWindow::resize(350, 60);
-		QMainWindow::setCentralWidget(centralWidget);
-		QMainWindow::setWindowTitle(REGEX_FILTER);
-		QMainWindow::show();
+		resize(350, 60);
+		setCentralWidget(centralWidget);
+		setWindowTitle(REGEX_FILTER);
+		show();
 	}
 }*window = nullptr;
 

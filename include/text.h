@@ -25,10 +25,10 @@ u8"S/Q/V: Shift-JIS/UTF-16/UTF-8 string\r\n"
 u8"Negatives for data_offset/sub_offset refer to registers\r\n"
 u8"-4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI\r\n"
 u8"* means dereference pointer+deref_offset";
-constexpr auto UNHOOK = u8"Unhook";
-constexpr auto REMOVE_HOOK = u8"Which hook to remove?";
-constexpr auto SELECT_EXTENSION = u8"Select Extension";
-constexpr auto EXTENSION_FILES = u8"Extensions (*.dll)";
+constexpr auto SAVE_SETTINGS = u8"Save settings";
+constexpr auto EXTEN_WINDOW_INSTRUCTIONS = u8"Drag and drop extensions (.dll files) here to add them\r\n"
+u8"Press delete with an extension selected to remove it\r\n"
+u8"Drag and drop extensions to rearrange them";
 constexpr auto WINDOW = u8"Window";
 constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
 constexpr auto FLUSH_DELAY = u8"Flush Delay";

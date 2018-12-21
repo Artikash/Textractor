@@ -3,12 +3,13 @@
 #include "defs.h"
 #include "text.h"
 #include "extenwindow.h"
-#include "setdialog.h"
 #include "misc.h"
 #include "host/util.h"
 #include <Psapi.h>
 #include <winhttp.h>
+#include <QFormLayout>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -231,7 +232,34 @@ void MainWindow::SaveHooks()
 
 void MainWindow::Settings()
 {
-	SetDialog(this).exec();
+	struct : QDialog
+	{
+		using QDialog::QDialog;
+		void launch()
+		{
+			auto settings = new QSettings(CONFIG_FILE, QSettings::IniFormat, this);
+			auto layout = new QFormLayout(this);
+			auto save = new QPushButton(this);
+			save->setText(SAVE_SETTINGS);
+			layout->addWidget(save);
+			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
+				{ TextThread::defaultCodepage, DEFAULT_CODEPAGE },
+				{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
+				{ TextThread::flushDelay, FLUSH_DELAY },
+			})
+			{
+				auto spinBox = new QSpinBox(this);
+				spinBox->setMaximum(INT_MAX);
+				spinBox->setValue(value);
+				layout->insertRow(0, label, spinBox);
+				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = spinBox->value()); settings->sync(); });
+			}
+			connect(save, &QPushButton::clicked, this, &QDialog::accept);
+			setWindowTitle(SETTINGS);
+			exec();
+		}
+	} settingsDialog(this, Qt::WindowCloseButtonHint);
+	settingsDialog.launch();
 }
 
 void MainWindow::Extensions()
