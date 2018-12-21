@@ -25,6 +25,23 @@
 #include <cstdio>
 #include <string>
 
+// jichi 375/2014: Add offset of pusha/pushad
+// http://faydoc.tripod.com/cpu/pushad.htm
+// http://agth.wikia.com/wiki/Cheat_Engine_AGTH_Tutorial
+//
+// Warning: The offset in ITH has -4 offset comparing to pusha and AGTH
+enum pusha_off
+{
+	pusha_eax_off = -0x4,
+	pusha_ecx_off = -0x8,
+	pusha_edx_off = -0xc,
+	pusha_ebx_off = -0x10,
+	pusha_esp_off = -0x14,
+	pusha_ebp_off = -0x18,
+	pusha_esi_off = -0x1c,
+	pusha_edi_off = -0x20,
+	pusha_off = -0x24 // pushad offset
+};
 
 // jichi 7/6/2014: read esp_base
 #define retof(esp_base)         *(DWORD *)(esp_base) // return address

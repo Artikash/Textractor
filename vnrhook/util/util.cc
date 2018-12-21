@@ -37,7 +37,6 @@ uint64_t SafeSearchMemory(uint64_t startAddr, uint64_t endAddr, const BYTE* byte
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 		ConsoleOutput("Textractor: SearchMemory ERROR (Textractor will likely still work fine, but please let Artikash know if this happens a lot!)");
-		return 0;
 	}
 	return 0;
 }

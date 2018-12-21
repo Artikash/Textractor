@@ -20,9 +20,9 @@ public:
 private:
 	void Add(QFileInfo extenFile);
 	void Sync();
-	bool eventFilter(QObject* target, QEvent* event);
-	void dragEnterEvent(QDragEnterEvent* event);
-	void dropEvent(QDropEvent* event);
+	bool eventFilter(QObject* target, QEvent* event) override;
+	void dragEnterEvent(QDragEnterEvent* event) override;
+	void dropEvent(QDropEvent* event) override;
 
 	Ui::ExtenWindow* ui;
 };

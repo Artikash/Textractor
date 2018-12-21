@@ -3,12 +3,6 @@
 // Branch: ITH_DLL/texthook.cpp, rev 128
 // 8/24/2013 TODO: Clean up this file
 
-#ifdef _MSC_VER
-# pragma warning (disable:4100)   // C4100: unreference formal parameter
-# pragma warning (disable:4018)   // C4018: sign/unsigned mismatch
-//# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
-#endif // _MSC_VER
-
 #include "texthook.h"
 #include "MinHook.h"
 #include "engine/match.h"
@@ -17,8 +11,6 @@
 #include "defs.h"
 #include "text.h"
 #include "ithsys/ithsys.h"
-#include "growl.h"
-#include <Psapi.h>
 
 extern std::unique_ptr<WinMutex> viewMutex;
 
