@@ -58,6 +58,7 @@ constexpr auto BING_PROMPT = u8"What language should Bing translate to?";
 constexpr auto GOOGLE_PROMPT = u8"What language should Google translate to?";
 constexpr auto TOO_MANY_TRANS_REQUESTS = L"\r\nToo many translation requests: refuse to make more";
 constexpr auto TRANSLATION_ERROR = L"Error while translating";
+constexpr auto ALWAYS_ON_TOP = u8"Keep this window on top";
 constexpr auto REGEX_FILTER = u8"Regex Filter";
 constexpr auto INVALID_REGEX = u8"Invalid regex";
 constexpr auto CURRENT_FILTER = u8"Currently filtering: ";

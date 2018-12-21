@@ -3,33 +3,29 @@
 #include <QMainWindow>
 #include <QLayout>
 #include <QLabel>
-#include <QLineEdit>
+#include <QCheckBox>
 #include <QTimer>
 
-std::wregex regex;
 std::mutex m;
 
 struct : QMainWindow 
 {
+	QLabel* display;
 	void launch()
 	{
 		auto centralWidget = new QWidget(this);
 		auto layout = new QVBoxLayout(centralWidget);
-		auto input = new QLineEdit(centralWidget);
-		auto output = new QLabel(centralWidget);
-		output->setAlignment(Qt::AlignCenter);
-		layout->addWidget(input);
-		layout->addWidget(output);
-		connect(input, &QLineEdit::textEdited, [=](QString newRegex) 
-		{
-			std::lock_guard l(m);
-			try { regex = newRegex.toStdWString(); }
-			catch (...) { return output->setText(INVALID_REGEX); }
-			output->setText(CURRENT_FILTER + newRegex);
+		auto options = new QHBoxLayout(centralWidget);
+		layout->addItem(options);
+		layout->addWidget(display = new QLabel(centralWidget));
+		auto onTop = new QCheckBox(ALWAYS_ON_TOP, this);
+		options->addWidget(onTop);
+		connect(onTop, &QCheckBox::stateChanged, [this](int state) 
+		{ 
+			SetWindowPos((HWND)winId(), state == Qt::Checked ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE); 
 		});
-		resize(350, 60);
+		resize(800, 600);
 		setCentralWidget(centralWidget);
-		setWindowTitle(REGEX_FILTER);
 		show();
 	}
 }*window = nullptr;
@@ -64,7 +60,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	std::lock_guard l(m);
-	if (window == nullptr || sentenceInfo["hook address"] == -1) return false;
-	sentence = std::regex_replace(sentence, regex, L"");
-	return true;
+	if (window == nullptr || !sentenceInfo["current select"]) return false;
+	window->display->setText(QString::fromStdWString(sentence));
+	return false;
 }
