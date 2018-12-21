@@ -5,25 +5,25 @@
 
 template <typename T> using Array = T[];
 
-template<typename E, typename M = std::mutex, template<typename...> typename P = std::unique_ptr>
-class ThreadSafePtr
+template<typename E, typename M = std::mutex>
+class ThreadSafe
 {
 public:
-	template <typename ...Args> ThreadSafePtr(Args ...args) : ptr(new E(args...)), mtxPtr(new M) {}
-	auto operator->() const
+	template <typename ...Args> ThreadSafe(Args ...args) : contents(args...) {}
+	auto operator->()
 	{
 		struct
 		{
 			E* operator->() { return ptr; }
 			std::unique_lock<M> lock;
 			E* ptr;
-		} lockedProxy{ std::unique_lock<M>(*mtxPtr), ptr.get() };
+		} lockedProxy{ std::unique_lock(mtx), &contents };
 		return lockedProxy;
 	}
 
 private:
-	P<E> ptr;
-	P<M> mtxPtr;
+	E contents;
+	M mtx;
 };
 
 struct DefHandleCloser { void operator()(void* h) { CloseHandle(h); } };

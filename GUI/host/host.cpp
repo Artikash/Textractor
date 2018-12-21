@@ -53,8 +53,8 @@ namespace
 		WinMutex viewMutex;
 	};
 
-	ThreadSafePtr<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
-	ThreadSafePtr<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
+	ThreadSafe<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
+	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
 
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 

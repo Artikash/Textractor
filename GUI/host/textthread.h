@@ -22,7 +22,7 @@ public:
 	void AddSentence(std::wstring sentence);
 	void Push(const BYTE* data, int len);
 
-	const ThreadSafePtr<std::wstring> storage;
+	ThreadSafe<std::wstring> storage;
 	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
