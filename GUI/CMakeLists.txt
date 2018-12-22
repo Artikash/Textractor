@@ -9,6 +9,7 @@ set(gui_SRCS
 	main.cpp
 	mainwindow.cpp
 	misc.cpp
+	exception.cpp
     extenwindow.cpp
 	tests.cpp
 	host/host.cpp

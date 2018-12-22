@@ -75,7 +75,6 @@ MainWindow::~MainWindow()
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	settings.setValue(WINDOW, geometry());
 	settings.sync();
-	delete ui;
 	ExitProcess(0);
 }
 
@@ -89,7 +88,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (processId == 0) return;
 	QMetaObject::invokeMethod(this, [this, processId]
 	{
-		QString process = S(Util::GetModuleFileName(processId).value());
+		QString process = S(Util::GetModuleFilename(processId).value());
 		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
 
 		QStringList allProcesses = QString(QAutoFile(HOOK_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split("\r", QString::SkipEmptyParts);
@@ -189,7 +188,7 @@ void MainWindow::AttachProcess()
 	DWORD allProcessIds[5000] = {}, spaceUsed = 0;
 	EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed);
 	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
-		if (auto processName = Util::GetModuleFileName(allProcessIds[i])) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), allProcessIds[i]);
+		if (auto processName = Util::GetModuleFilename(allProcessIds[i])) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), allProcessIds[i]);
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
@@ -216,7 +215,7 @@ void MainWindow::AddHook()
 
 void MainWindow::SaveHooks()
 {
-	if (auto processName = Util::GetModuleFileName(GetSelectedProcessId()))
+	if (auto processName = Util::GetModuleFilename(GetSelectedProcessId()))
 	{
 		QHash<uint64_t, QString> hookCodes;
 		for (int i = 0; i < ui->ttCombo->count(); ++i)

@@ -155,7 +155,7 @@ namespace Host
 		}
 
 		static HMODULE vnrhook = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
-		static std::wstring location = Util::GetModuleFileName(vnrhook).value();
+		static std::wstring location = Util::GetModuleFilename(vnrhook).value();
 
 		if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
 		{

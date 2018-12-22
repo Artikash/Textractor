@@ -4,7 +4,7 @@
 
 namespace Util
 {
-	std::optional<std::wstring> GetModuleFileName(DWORD processId, HMODULE module)
+	std::optional<std::wstring> GetModuleFilename(DWORD processId, HMODULE module)
 	{
 		if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
 		{
@@ -15,7 +15,7 @@ namespace Util
 		return {};
 	}
 
-	std::optional<std::wstring> GetModuleFileName(HMODULE module)
+	std::optional<std::wstring> GetModuleFilename(HMODULE module)
 	{
 		std::vector<wchar_t> buffer(MAX_PATH);
 		if (::GetModuleFileNameW(module, buffer.data(), MAX_PATH)) return buffer.data();
