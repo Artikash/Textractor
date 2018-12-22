@@ -6,13 +6,14 @@
 class QAutoFile
 {
 public:
-	QAutoFile(QString name, QIODevice::OpenMode mode) : f(name) { f.open(mode); }
+	QAutoFile(const QString& name, QIODevice::OpenMode mode) : f(name) { f.open(mode); }
 	QFile* operator->() { return &f; }
+
 private:
 	QFile f;
 };
 
-std::wstring S(const QString& S);
-QString S(const std::wstring& S);
+inline std::wstring S(const QString& S) { return { S.toStdWString() }; }
+inline QString S(const std::wstring& S) { return QString::fromStdWString(S); }
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);

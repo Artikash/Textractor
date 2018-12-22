@@ -4,16 +4,6 @@
 #include <Psapi.h>
 #include <QTextStream>
 
-std::wstring S(const QString& S)
-{
-	return S.toStdWString();
-}
-
-QString S(const std::wstring& S)
-{
-	return QString::fromStdWString(S);
-}
-
 namespace
 {
 	std::optional<HookParam> ParseRCode(QString RCode)
@@ -221,7 +211,7 @@ namespace
 		if (!(hp.type & MODULE_OFFSET))
 			if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
 				if (MEMORY_BASIC_INFORMATION info = {}; VirtualQueryEx(process, (LPCVOID)hp.address, &info, sizeof(info)))
-					if (auto moduleName = Util::GetModuleFileName(processId, (HMODULE)info.AllocationBase))
+					if (auto moduleName = Util::GetModuleFilename(processId, (HMODULE)info.AllocationBase))
 					{
 						hp.type |= MODULE_OFFSET;
 						hp.address -= (uint64_t)info.AllocationBase;
