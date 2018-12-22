@@ -1,4 +1,4 @@
-cd Builds/RelWithDebInfo/x86;
+cd Builds/RelWithDebInfo_x86;
 Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Textractor.exe",
 	"styles",
@@ -16,7 +16,7 @@ Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Extensions.txt"
 )
 
-cd ../x64;
+cd ../RelWithDebInfo_x64;
 Compress-Archive -Force -DestinationPath Textractor -Path @(
 	"Textractor.exe",
 	"styles",
