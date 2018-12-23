@@ -21,6 +21,7 @@
 #include "mono/monoobject.h"
 #include "growl.h"
 #include "const.h"
+#include "native/pchooks.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
 #include <string>
@@ -8004,6 +8005,7 @@ bool InsertCandyHook2()
 // jichi 10/2/2013: Add new candy hook
 bool InsertCandyHook()
 {
+	PcHooks::hookOtherPcFunctions();
   //if (0 == _wcsicmp(processName, L"systemc.exe"))
   if (Util::CheckFile(L"SystemC.exe"))
     return InsertCandyHook1();
