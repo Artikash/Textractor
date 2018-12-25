@@ -16263,180 +16263,29 @@ bool InsertAdobeAirHook()
 /**
 *  Artikash 12/8/2018: Update AIRNovel hook for version 31.0.0.96
 *  Sample game: https://vndb.org/v22252: /HQ4*8:4*4@12FF9A:Adobe AIR.dll
+*  This function is called from Adobe AIR.FREGetObjectAsUTF8+5A
 *  First function parameter points to a struct containing a pointer to the text along with info about the type of text
 *  wchar_t* at offset 8
-Adobe AIR.dll+12FF9A - 51                    - push ecx
-Adobe AIR.dll+12FF9B - 53                    - push ebx
-Adobe AIR.dll+12FF9C - 55                    - push ebp
-Adobe AIR.dll+12FF9D - 56                    - push esi
-Adobe AIR.dll+12FF9E - 8B 74 24 14           - mov esi,[esp+14]
-Adobe AIR.dll+12FFA2 - 8B E9                 - mov ebp,ecx
-Adobe AIR.dll+12FFA4 - 57                    - push edi
-Adobe AIR.dll+12FFA5 - 85 F6                 - test esi,esi
-Adobe AIR.dll+12FFA7 - 0F84 78010000         - je "Adobe AIR.dll"+130125 { ->Adobe AIR.dll+130125 }
-Adobe AIR.dll+12FFAD - 8B 5E 10              - mov ebx,[esi+10]
-Adobe AIR.dll+12FFB0 - 85 DB                 - test ebx,ebx
-Adobe AIR.dll+12FFB2 - 0F84 6D010000         - je "Adobe AIR.dll"+130125 { ->Adobe AIR.dll+130125 }
-Adobe AIR.dll+12FFB8 - 8B C6                 - mov eax,esi
-Adobe AIR.dll+12FFBA - 25 00F0FFFF           - and eax,FFFFF000 { -4096 }
-Adobe AIR.dll+12FFBF - 8B 40 08              - mov eax,[eax+08]
-Adobe AIR.dll+12FFC2 - 89 44 24 10           - mov [esp+10],eax
-Adobe AIR.dll+12FFC6 - 8B 46 14              - mov eax,[esi+14]
-Adobe AIR.dll+12FFC9 - A8 01                 - test al,01 { 1 }
-Adobe AIR.dll+12FFCB - 0F85 D7000000         - jne "Adobe AIR.dll"+1300A8 { ->Adobe AIR.dll+1300A8 }
-Adobe AIR.dll+12FFD1 - A8 08                 - test al,08 { 8 }
-Adobe AIR.dll+12FFD3 - 75 4A                 - jne "Adobe AIR.dll"+13001F { ->Adobe AIR.dll+13001F }
-Adobe AIR.dll+12FFD5 - C1 E8 02              - shr eax,02 { 2 }
-Adobe AIR.dll+12FFD8 - A8 01                 - test al,01 { 1 }
-Adobe AIR.dll+12FFDA - 75 05                 - jne "Adobe AIR.dll"+12FFE1 { ->Adobe AIR.dll+12FFE1 }
-Adobe AIR.dll+12FFDC - 8B 4E 08              - mov ecx,[esi+08]
-Adobe AIR.dll+12FFDF - EB 09                 - jmp "Adobe AIR.dll"+12FFEA { ->Adobe AIR.dll+12FFEA }
-Adobe AIR.dll+12FFE1 - 8B 46 0C              - mov eax,[esi+0C]
-Adobe AIR.dll+12FFE4 - 8B 48 08              - mov ecx,[eax+08]
-Adobe AIR.dll+12FFE7 - 03 4E 08              - add ecx,[esi+08]
-Adobe AIR.dll+12FFEA - 89 35 9057BF10        - mov ["Adobe AIR.dll"+1385790],esi { [080D7CA0] }
-Adobe AIR.dll+12FFF0 - 33 FF                 - xor edi,edi
-Adobe AIR.dll+12FFF2 - 8B 56 10              - mov edx,[esi+10]
-Adobe AIR.dll+12FFF5 - 85 D2                 - test edx,edx
-Adobe AIR.dll+12FFF7 - 74 12                 - je "Adobe AIR.dll"+13000B { ->Adobe AIR.dll+13000B }
-Adobe AIR.dll+12FFF9 - 8A 01                 - mov al,[ecx]
-Adobe AIR.dll+12FFFB - B4 7F                 - mov ah,7F { 127 }
-Adobe AIR.dll+12FFFD - 41                    - inc ecx
-Adobe AIR.dll+12FFFE - 3A E0                 - cmp ah,al
-Adobe AIR.dll+130000 - 1B C0                 - sbb eax,eax
-Adobe AIR.dll+130002 - F7 D8                 - neg eax
-Adobe AIR.dll+130004 - 03 F8                 - add edi,eax
-Adobe AIR.dll+130006 - 83 EA 01              - sub edx,01 { 1 }
-Adobe AIR.dll+130009 - 75 EE                 - jne "Adobe AIR.dll"+12FFF9 { ->Adobe AIR.dll+12FFF9 }
-Adobe AIR.dll+13000B - 57                    - push edi
-Adobe AIR.dll+13000C - 53                    - push ebx
-Adobe AIR.dll+13000D - E8 36040900           - call "Adobe AIR.dll"+1C0448 { ->Adobe AIR.dll+1C0448 }
-Adobe AIR.dll+130012 - 8B D8                 - mov ebx,eax
-Adobe AIR.dll+130014 - 59                    - pop ecx
-Adobe AIR.dll+130015 - 59                    - pop ecx
-Adobe AIR.dll+130016 - 3B 5E 10              - cmp ebx,[esi+10]
-Adobe AIR.dll+130019 - 75 04                 - jne "Adobe AIR.dll"+13001F { ->Adobe AIR.dll+13001F }
-Adobe AIR.dll+13001B - 83 4E 14 08           - or dword ptr [esi+14],08 { 8 }
-Adobe AIR.dll+13001F - 8B 4C 24 10           - mov ecx,[esp+10]
-Adobe AIR.dll+130023 - 8D 43 01              - lea eax,[ebx+01]
-Adobe AIR.dll+130026 - 6A 02                 - push 02 { 2 }
-Adobe AIR.dll+130028 - 6A 00                 - push 00 { 0 }
-Adobe AIR.dll+13002A - 50                    - push eax
-Adobe AIR.dll+13002B - E8 CD250B00           - call "Adobe AIR.dll"+1E25FD { ->Adobe AIR.dll+1E25FD }
-Adobe AIR.dll+130030 - 8B 4E 14              - mov ecx,[esi+14]
-Adobe AIR.dll+130033 - 8B F8                 - mov edi,eax
-Adobe AIR.dll+130035 - C1 E9 02              - shr ecx,02 { 2 }
-Adobe AIR.dll+130038 - F6 C1 01              - test cl,01 { 1 }
-Adobe AIR.dll+13003B - 75 05                 - jne "Adobe AIR.dll"+130042 { ->Adobe AIR.dll+130042 }
-Adobe AIR.dll+13003D - 8B 56 08              - mov edx,[esi+08]
-Adobe AIR.dll+130040 - EB 09                 - jmp "Adobe AIR.dll"+13004B { ->Adobe AIR.dll+13004B }
-Adobe AIR.dll+130042 - 8B 46 0C              - mov eax,[esi+0C]
-Adobe AIR.dll+130045 - 8B 50 08              - mov edx,[eax+08]
-Adobe AIR.dll+130048 - 03 56 08              - add edx,[esi+08]
-Adobe AIR.dll+13004B - 89 35 9057BF10        - mov ["Adobe AIR.dll"+1385790],esi { [080D7CA0] }
-Adobe AIR.dll+130051 - 89 7D 00              - mov [ebp+00],edi
-Adobe AIR.dll+130054 - 89 5D 04              - mov [ebp+04],ebx
-Adobe AIR.dll+130057 - 8B 76 10              - mov esi,[esi+10]
-Adobe AIR.dll+13005A - 3B DE                 - cmp ebx,esi
-Adobe AIR.dll+13005C - 75 14                 - jne "Adobe AIR.dll"+130072 { ->Adobe AIR.dll+130072 }
-Adobe AIR.dll+13005E - 53                    - push ebx
-Adobe AIR.dll+13005F - 52                    - push edx
-Adobe AIR.dll+130060 - 57                    - push edi
-Adobe AIR.dll+130061 - E8 3A715D00           - call "Adobe AIR.dll"+7071A0 { ->Adobe AIR.dll+7071A0 }
-Adobe AIR.dll+130066 - 83 C4 0C              - add esp,0C { 12 }
-Adobe AIR.dll+130069 - C6 04 1F  00          - mov byte ptr [edi+ebx],00 { 0 }
-Adobe AIR.dll+13006D - E9 BE000000           - jmp "Adobe AIR.dll"+130130 { ->Adobe AIR.dll+130130 }
-Adobe AIR.dll+130072 - 85 F6                 - test esi,esi
-Adobe AIR.dll+130074 - 74 2A                 - je "Adobe AIR.dll"+1300A0 { ->Adobe AIR.dll+1300A0 }
-Adobe AIR.dll+130076 - BB 80000000           - mov ebx,00000080 { 128 }
-Adobe AIR.dll+13007B - 0FB6 0A               - movzx ecx,byte ptr [edx]
-Adobe AIR.dll+13007E - 4E                    - dec esi
-Adobe AIR.dll+13007F - 42                    - inc edx
-Adobe AIR.dll+130080 - 66 3B CB              - cmp cx,bx
-Adobe AIR.dll+130083 - 72 14                 - jb "Adobe AIR.dll"+130099 { ->Adobe AIR.dll+130099 }
-Adobe AIR.dll+130085 - 8A C1                 - mov al,cl
-Adobe AIR.dll+130087 - 83 E1 3F              - and ecx,3F { 63 }
-Adobe AIR.dll+13008A - C0 E8 06              - shr al,06 { 6 }
-Adobe AIR.dll+13008D - 24 03                 - and al,03 { 3 }
-Adobe AIR.dll+13008F - 2C 40                 - sub al,40 { 64 }
-Adobe AIR.dll+130091 - 88 07                 - mov [edi],al
-Adobe AIR.dll+130093 - 47                    - inc edi
-Adobe AIR.dll+130094 - 03 CB                 - add ecx,ebx
-Adobe AIR.dll+130096 - 0FB7 C9               - movzx ecx,cx
-Adobe AIR.dll+130099 - 88 0F                 - mov [edi],cl
-Adobe AIR.dll+13009B - 47                    - inc edi
-Adobe AIR.dll+13009C - 85 F6                 - test esi,esi
-Adobe AIR.dll+13009E - 75 DB                 - jne "Adobe AIR.dll"+13007B { ->Adobe AIR.dll+13007B }
-Adobe AIR.dll+1300A0 - C6 07 00              - mov byte ptr [edi],00 { 0 }
-Adobe AIR.dll+1300A3 - E9 88000000           - jmp "Adobe AIR.dll"+130130 { ->Adobe AIR.dll+130130 }
-Adobe AIR.dll+1300A8 - C1 E8 02              - shr eax,02 { 2 }
-Adobe AIR.dll+1300AB - A8 01                 - test al,01 { 1 }
-Adobe AIR.dll+1300AD - 75 05                 - jne "Adobe AIR.dll"+1300B4 { ->Adobe AIR.dll+1300B4 }
-Adobe AIR.dll+1300AF - 8B 46 08              - mov eax,[esi+08]
-Adobe AIR.dll+1300B2 - EB 09                 - jmp "Adobe AIR.dll"+1300BD { ->Adobe AIR.dll+1300BD }
-Adobe AIR.dll+1300B4 - 8B 46 0C              - mov eax,[esi+0C]
-Adobe AIR.dll+1300B7 - 8B 40 08              - mov eax,[eax+08]
-Adobe AIR.dll+1300BA - 03 46 08              - add eax,[esi+08]
-Adobe AIR.dll+1300BD - 6A 00                 - push 00 { 0 }
-Adobe AIR.dll+1300BF - 6A 00                 - push 00 { 0 }
-Adobe AIR.dll+1300C1 - 53                    - push ebx
-Adobe AIR.dll+1300C2 - 50                    - push eax
-Adobe AIR.dll+1300C3 - E8 A7730100           - call "Adobe AIR.dll"+14746F { ->Adobe AIR.dll+14746F }
-Adobe AIR.dll+1300C8 - 83 C4 10              - add esp,10 { 16 }
-Adobe AIR.dll+1300CB - 89 35 9057BF10        - mov ["Adobe AIR.dll"+1385790],esi { [080D7CA0] }
-Adobe AIR.dll+1300D1 - 8B F8                 - mov edi,eax
-Adobe AIR.dll+1300D3 - 33 C0                 - xor eax,eax
-Adobe AIR.dll+1300D5 - 85 FF                 - test edi,edi
-Adobe AIR.dll+1300D7 - 0F48 F8               - cmovs edi,eax
-Adobe AIR.dll+1300DA - 6A 02                 - push 02 { 2 }
-Adobe AIR.dll+1300DC - 50                    - push eax
-Adobe AIR.dll+1300DD - 8D 4F 01              - lea ecx,[edi+01]
-Adobe AIR.dll+1300E0 - 51                    - push ecx
-Adobe AIR.dll+1300E1 - 8B 4C 24 1C           - mov ecx,[esp+1C]
-Adobe AIR.dll+1300E5 - E8 13250B00           - call "Adobe AIR.dll"+1E25FD { ->Adobe AIR.dll+1E25FD }
-Adobe AIR.dll+1300EA - 8B D0                 - mov edx,eax
-Adobe AIR.dll+1300EC - 89 7D 04              - mov [ebp+04],edi
-Adobe AIR.dll+1300EF - 89 55 00              - mov [ebp+00],edx
-Adobe AIR.dll+1300F2 - C6 04 3A  00          - mov byte ptr [edx+edi],00 { 0 }
-Adobe AIR.dll+1300F6 - 8B 4E 14              - mov ecx,[esi+14]
-Adobe AIR.dll+1300F9 - C1 E9 02              - shr ecx,02 { 2 }
-Adobe AIR.dll+1300FC - F6 C1 01              - test cl,01 { 1 }
-Adobe AIR.dll+1300FF - 75 05                 - jne "Adobe AIR.dll"+130106 { ->Adobe AIR.dll+130106 }
-Adobe AIR.dll+130101 - 8B 46 08              - mov eax,[esi+08]
-Adobe AIR.dll+130104 - EB 09                 - jmp "Adobe AIR.dll"+13010F { ->Adobe AIR.dll+13010F }
-Adobe AIR.dll+130106 - 8B 46 0C              - mov eax,[esi+0C]
-Adobe AIR.dll+130109 - 8B 40 08              - mov eax,[eax+08]
-Adobe AIR.dll+13010C - 03 46 08              - add eax,[esi+08]
-Adobe AIR.dll+13010F - 57                    - push edi
-Adobe AIR.dll+130110 - 52                    - push edx
-Adobe AIR.dll+130111 - FF 76 10              - push [esi+10]
-Adobe AIR.dll+130114 - 50                    - push eax
-Adobe AIR.dll+130115 - E8 55730100           - call "Adobe AIR.dll"+14746F { ->Adobe AIR.dll+14746F }
-Adobe AIR.dll+13011A - 83 C4 10              - add esp,10 { 16 }
-Adobe AIR.dll+13011D - 89 35 9057BF10        - mov ["Adobe AIR.dll"+1385790],esi { [080D7CA0] }
-Adobe AIR.dll+130123 - EB 0B                 - jmp "Adobe AIR.dll"+130130 { ->Adobe AIR.dll+130130 }
-Adobe AIR.dll+130125 - 83 65 04 00           - and dword ptr [ebp+04],00 { 0 }
-Adobe AIR.dll+130129 - C7 45 00 20277210     - mov [ebp+00],"Adobe AIR.dll"+EB2720 { [00000000] }
-Adobe AIR.dll+130130 - 5F                    - pop edi
-Adobe AIR.dll+130131 - 5E                    - pop esi
-Adobe AIR.dll+130132 - 8B C5                 - mov eax,ebp
-Adobe AIR.dll+130134 - 5D                    - pop ebp
-Adobe AIR.dll+130135 - 5B                    - pop ebx
-Adobe AIR.dll+130136 - 59                    - pop ecx
-Adobe AIR.dll+130137 - C2 0400               - ret 0004 { 4 }
 */
 bool InsertAIRNovelHook()
 {
-	if (DWORD base = (DWORD)GetModuleHandleW(L"Adobe AIR.dll"))
+	if (DWORD FREGetObjectAsUTF8 = (DWORD)GetProcAddress(GetModuleHandleW(L"Adobe AIR.dll"), "FREGetObjectAsUTF8"))
 	{
+		DWORD func = FREGetObjectAsUTF8 + 0x5a + 5 + *(int*)(FREGetObjectAsUTF8 + 0x5b);
 		HookParam hp = {};
-		hp.address = base + 0x12ff9a;
+		hp.address = func;
 		hp.type = USING_UNICODE|USING_STRING/*|USING_SPLIT|SPLIT_INDIRECT*/|DATA_INDIRECT; // Artikash 12/14/2018: doesn't seem to be a good split anymore
 		hp.length_offset = 0;
 		hp.offset = 0x4;
 		hp.split = 0x4;
 		hp.index = 0x8;
 		hp.split_index = 0x4;
+		hp.text_fun = [](DWORD stack, auto, auto, DWORD* data, auto, DWORD* count)
+		{
+			DWORD string = *(DWORD*)(stack + 4);
+			*data = IsBadReadPtr((void*)string, 1) ? 0 : *(DWORD*)(string + 8);
+			*count = IsBadReadPtr((void*)*data, 1) ? 0 : wcslen((wchar_t*)*data) * 2;
+		};
 		//hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index)  // removes some of the garbage threads
 		//{ 
 		//	return *len < 4 &&
