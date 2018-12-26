@@ -38,6 +38,7 @@ private:
 	void RemoveReadCode();
 
 	HANDLE readerThread, readerEvent;
+	bool err;
 	BYTE trampoline[130];
 
 };

@@ -4502,7 +4502,6 @@ bool InsertRUGP1Hook()
  */
 bool InsertRUGP2Hook()
 {
-  DWORD low, high;
   if (!Util::CheckFile(L"vm60.dll") /*|| !SafeFillRange(L"vm60.dll", &low, &high)*/) {
     ConsoleOutput("vnreng:rUGP2: vm60.dll does not exist");
     return false;
@@ -8814,7 +8813,6 @@ bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
   DWORD i;
   i = *(DWORD *)frame;
   i = *(DWORD *)(i+4);
-  DWORD j, k;
   //if (SafeFillRange(L"mscorlib.ni.dll", &j, &k)) { // Artikash 6/30/2018: Dunno why addresses are needed
     while (*(BYTE *)i != 0xe8)
       i++;
@@ -16280,12 +16278,6 @@ bool InsertAIRNovelHook()
 		hp.split = 0x4;
 		hp.index = 0x8;
 		hp.split_index = 0x4;
-		hp.text_fun = [](DWORD stack, auto, auto, DWORD* data, auto, DWORD* count)
-		{
-			DWORD string = *(DWORD*)(stack + 4);
-			*data = IsBadReadPtr((void*)string, 1) ? 0 : *(DWORD*)(string + 8);
-			*count = IsBadReadPtr((void*)*data, 1) ? 0 : wcslen((wchar_t*)*data) * 2;
-		};
 		//hp.filter_fun = [](void* str, DWORD* len, HookParam* hp, BYTE index)  // removes some of the garbage threads
 		//{ 
 		//	return *len < 4 &&

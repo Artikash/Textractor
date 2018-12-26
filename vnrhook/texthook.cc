@@ -111,11 +111,11 @@ bool TextHook::Insert(HookParam h, DWORD set_flag)
 
 // jichi 5/11/2014:
 // - dwDataBase: the stack address
-#ifndef _WIN64
 void TextHook::Send(uintptr_t dwDataBase)
 {
 	__try
 	{
+#ifndef _WIN64
 		DWORD dwCount = 0,
 			dwSplit = 0,
 			dwDataIn = *(DWORD*)(dwDataBase + hp.offset), // default values
@@ -156,17 +156,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
 
 		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, pbData, dwCount);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER)
-	{
-		ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
-	}
-}
 #else // _WIN32
-void TextHook::Send(uintptr_t dwDataBase)
-{
-	__try
-	{
 		int count = 0;
 		ThreadParam tp = { GetCurrentProcessId(), address, *(uintptr_t*)dwDataBase, 0 }; // first value on stack (if hooked start of function, this is return address)
 		uintptr_t data = *(uintptr_t*)(dwDataBase + hp.offset); // default value
@@ -193,13 +183,17 @@ void TextHook::Send(uintptr_t dwDataBase)
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) tp.ctx = 0;
 
 		TextOutput(tp, pbData, count);
+#endif // _WIN64
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
+		if (!err)
+		{
+			ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
+			err = true;
+		}
 	}
 }
-#endif // _WIN64
 
 bool TextHook::InsertHookCode()
 {
