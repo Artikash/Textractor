@@ -9,9 +9,6 @@ add_compile_options(
   /std:c++17
   /MP
   /wd4018 # signed/unsigned mismatch
-)
-
-add_definitions(
   /DUNICODE # config.pri
   /D_UNICODE
 )
