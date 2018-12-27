@@ -14,3 +14,4 @@
 #include <thread>
 #include <mutex>
 #include <cstdint>
+#include <cassert>

@@ -11,7 +11,6 @@ set(gui_SRCS
 	misc.cpp
 	exception.cpp
     extenwindow.cpp
-	tests.cpp
 	host/host.cpp
 	host/textthread.cpp
 	host/util.cpp

@@ -1,5 +1,6 @@
 #include "misc.h"
 #include "const.h"
+#include "defs.h"
 #include "host/util.h"
 #include <Psapi.h>
 #include <QTextStream>
@@ -238,3 +239,12 @@ QString GenerateCode(HookParam hp, DWORD processId)
 	if (hp.type & DIRECT_READ) return GenerateRCode(hp);
 	else return GenerateHCode(hp, processId);
 }
+
+TEST(
+	assert(ParseCode("/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
+	assert(ParseCode("/HB4@0")),
+	assert(ParseCode("/RS*10@44")),
+	assert(!ParseCode("HQ@4")),
+	assert(!ParseCode("/RW@44")),
+	assert(!ParseCode("/HWG@33"))
+);
