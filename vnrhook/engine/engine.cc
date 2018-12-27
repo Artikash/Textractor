@@ -12529,7 +12529,10 @@ static bool InsertNewPal2Hook()
   return true;
 }
 bool InsertPalHook() // use Old Pal first, which does not have ruby
-{ return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); }
+{ 
+	PcHooks::hookOtherPcFunctions();
+	return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); 
+}
 
 /** jichi 7/6/2014 NeXAS
  *  Sample game: BALDRSKYZERO EXTREME
