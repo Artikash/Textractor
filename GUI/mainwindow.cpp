@@ -75,6 +75,7 @@ MainWindow::~MainWindow()
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	settings.setValue(WINDOW, geometry());
 	settings.sync();
+	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);
 }
 
