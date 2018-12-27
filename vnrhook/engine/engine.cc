@@ -13548,171 +13548,73 @@ bool InsertExpHook()
  *  /HA-4@552B5:姉小路直子と銀色の死�exe
  *  If this hook no longer works, try that one instead.
 
-
- * Artikash 10/14/2018: Old HorkEye hook can't be found in shukusei no girlfriend https://vndb.org/v22880
- * This function can be used instead
- 00FABC30 - 83 EC 34              - sub esp,34 { 52 }
-00FABC33 - A1 F4701701           - mov eax,[011770F4] { [9E005B76] }
-00FABC38 - 33 C4                 - xor eax,esp
-00FABC3A - 89 44 24 30           - mov [esp+30],eax
-00FABC3E - 83 3D C4541701 00     - cmp dword ptr [011754C4],00 { 0 }
-00FABC45 - 0F84 C8010000         - je 00FABE13
-00FABC4B - 83 3D 0CBF7F01 00     - cmp dword ptr [017FBF0C],00 { 0 }
-00FABC52 - 66 A1 DCD00F01        - mov ax,[010FD0DC] { [00003264] }
-00FABC58 - F3 0F7E 05 D4D00F01   - movq xmm0,[010FD0D4] { ["lookahead2"] }
-00FABC60 - 66 A3 C0B97F01        - mov [017FB9C0],ax { [00545000] }
-00FABC66 - A0 DED00F01           - mov al,[010FD0DE] { [0] }
-00FABC6B - A2 C2B97F01           - mov [017FB9C2],al { [84] }
-00FABC70 - A1 E0D00F01           - mov eax,[010FD0E0] { ["vo/000/"] }
-00FABC75 - 66 0FD6 05 B8B97F01   - movq [017FB9B8],xmm0 { [00006669] }
-00FABC7D - 0F57 C0               - xorps xmm0,xmm0
-00FABC80 - 89 44 24 10           - mov [esp+10],eax
-00FABC84 - A1 E4D00F01           - mov eax,[010FD0E4] { [002F3030] }
-00FABC89 - 89 44 24 14           - mov [esp+14],eax
-00FABC8D - 0F11 44 24 18         - movups [esp+18],xmm0
-00FABC92 - 66 0FD6 44 24 28      - movq [esp+28],xmm0
-00FABC98 - 74 0B                 - je 00FABCA5
-00FABC9A - A1 9CE27F01           - mov eax,[017FE29C] { [0EC90D98] }
-00FABC9F - 8B 00                 - mov eax,[eax]
-00FABCA1 - 8B 00                 - mov eax,[eax]
-00FABCA3 - EB 05                 - jmp 00FABCAA
-00FABCA5 - A1 F8BE7F01           - mov eax,[017FBEF8] { [00000640] }
-00FABCAA - 40                    - inc eax
-00FABCAB - 55                    - push ebp
-00FABCAC - 8B 2D 00602801        - mov ebp,[01286000] { [00D07890] }
-00FABCB2 - 89 44 24 04           - mov [esp+04],eax
-00FABCB6 - B8 ABAAAA2A           - mov eax,2AAAAAAB { 715827883 }
-00FABCBB - 8B 4D 1C              - mov ecx,[ebp+1C]
-00FABCBE - 2B 4D 18              - sub ecx,[ebp+18]
-00FABCC1 - F7 E9                 - imul ecx
-00FABCC3 - D1 FA                 - sar edx,1
-00FABCC5 - 8B C2                 - mov eax,edx
-00FABCC7 - C1 E8 1F              - shr eax,1F { 31 }
-00FABCCA - 03 C2                 - add eax,edx
-00FABCCC - 8B 54 24 04           - mov edx,[esp+04]
-00FABCD0 - 89 44 24 10           - mov [esp+10],eax
-00FABCD4 - 3B D0                 - cmp edx,eax
-00FABCD6 - 0F83 36010000         - jae 00FABE12
-00FABCDC - 53                    - push ebx
-00FABCDD - 8D 0C 52              - lea ecx,[edx+edx*2]
-00FABCE0 - C1 E1 02              - shl ecx,02 { 2 }
-00FABCE3 - 56                    - push esi
-00FABCE4 - 89 4C 24 10           - mov [esp+10],ecx
-00FABCE8 - 57                    - push edi
-00FABCE9 - 0F1F 80 00000000      - nop [eax+00000000]
-00FABCF0 - 8B 45 18              - mov eax,[ebp+18]
-00FABCF3 - 8B 3C 01              - mov edi,[ecx+eax]
-00FABCF6 - 8B 4F 14              - mov ecx,[edi+14] ; Hook here - edi currently is char** to text
-00FABCF9 - 83 F9 10              - cmp ecx,10 { 16 }
-00FABCFC - 72 04                 - jb 00FABD02
-00FABCFE - 8B 07                 - mov eax,[edi]
-00FABD00 - EB 02                 - jmp 00FABD04
-00FABD02 - 8B C7                 - mov eax,edi
-00FABD04 - 8A 10                 - mov dl,[eax]
-00FABD06 - 0FB6 C2               - movzx eax,dl
-00FABD09 - 80 B8 20FA0F01 00     - cmp byte ptr [eax+010FFA20],00 { 0 }
-00FABD10 - 0F85 AD000000         - jne 00FABDC3
-00FABD16 - 80 B8 20041001 00     - cmp byte ptr [eax+01100420],00 { 0 }
-00FABD1D - 0F85 A0000000         - jne 00FABDC3
-00FABD23 - 80 FA 81              - cmp dl,-7F { 129 }
-00FABD26 - 0F85 E3000000         - jne 00FABE0F
-00FABD2C - 83 F9 10              - cmp ecx,10 { 16 }
-00FABD2F - 72 04                 - jb 00FABD35
-00FABD31 - 8B 07                 - mov eax,[edi]
-00FABD33 - EB 02                 - jmp 00FABD37
-00FABD35 - 8B C7                 - mov eax,edi
-00FABD37 - 80 78 01 79           - cmp byte ptr [eax+01],79 { 121 }
-00FABD3B - 0F85 CE000000         - jne 00FABE0F
-00FABD41 - 8B 47 10              - mov eax,[edi+10]
-00FABD44 - 33 DB                 - xor ebx,ebx
-00FABD46 - 89 44 24 18           - mov [esp+18],eax
-00FABD4A - 8D 73 02              - lea esi,[ebx+02]
-00FABD4D - 3B C6                 - cmp eax,esi
-00FABD4F - 76 72                 - jna 00FABDC3
-00FABD51 - 8B E8                 - mov ebp,eax
-00FABD53 - 8B 57 14              - mov edx,[edi+14]
-00FABD56 - 83 FA 10              - cmp edx,10 { 16 }
-00FABD59 - 72 04                 - jb 00FABD5F
-00FABD5B - 8B 07                 - mov eax,[edi]
-00FABD5D - EB 02                 - jmp 00FABD61
-00FABD5F - 8B C7                 - mov eax,edi
-00FABD61 - 8A 0C 30              - mov cl,[eax+esi]
-00FABD64 - 0FB6 C1               - movzx eax,cl
-00FABD67 - 80 B8 20FF0F01 00     - cmp byte ptr [eax+010FFF20],00 { 0 }
-00FABD6E - 74 1A                 - je 00FABD8A
-00FABD70 - 80 F9 81              - cmp cl,-7F { 129 }
-00FABD73 - 75 12                 - jne 00FABD87
-00FABD75 - 83 FA 10              - cmp edx,10 { 16 }
-00FABD78 - 72 04                 - jb 00FABD7E
-00FABD7A - 8B 07                 - mov eax,[edi]
-00FABD7C - EB 02                 - jmp 00FABD80
-00FABD7E - 8B C7                 - mov eax,edi
-00FABD80 - 80 7C 30 01 7A        - cmp byte ptr [eax+esi+01],7A { 122 }
-00FABD85 - 74 32                 - je 00FABDB9
-00FABD87 - 46                    - inc esi
-00FABD88 - EB 28                 - jmp 00FABDB2
-00FABD8A - 80 F9 2C              - cmp cl,2C { 44 }
-00FABD8D - 75 23                 - jne 00FABDB2
-00FABD8F - 85 DB                 - test ebx,ebx
-00FABD91 - 74 1C                 - je 00FABDAF
-00FABD93 - 8B C6                 - mov eax,esi
-00FABD95 - 8B CF                 - mov ecx,edi
-00FABD97 - 2B C3                 - sub eax,ebx
-00FABD99 - 50                    - push eax
-00FABD9A - E8 C1DFFAFF           - call 00F59D60
-00FABD9F - 03 C3                 - add eax,ebx
-00FABDA1 - 50                    - push eax
-00FABDA2 - 8D 44 24 28           - lea eax,[esp+28]
-00FABDA6 - 50                    - push eax
-00FABDA7 - E8 F4BB0100           - call 00FC79A0
-00FABDAC - 83 C4 0C              - add esp,0C { 12 }
-00FABDAF - 8D 5E 01              - lea ebx,[esi+01]
-00FABDB2 - 46                    - inc esi
-00FABDB3 - 3B F5                 - cmp esi,ebp
-00FABDB5 - 72 9C                 - jb 00FABD53
-00FABDB7 - EB 04                 - jmp 00FABDBD
-00FABDB9 - 85 DB                 - test ebx,ebx
-00FABDBB - 75 37                 - jne 00FABDF4
-00FABDBD - 8B 2D 00602801        - mov ebp,[01286000] { [00D07890] }
-00FABDC3 - 8B 54 24 10           - mov edx,[esp+10]
-00FABDC7 - 8B 4C 24 14           - mov ecx,[esp+14]
-00FABDCB - 42                    - inc edx
-00FABDCC - 83 C1 0C              - add ecx,0C { 12 }
-00FABDCF - 89 54 24 10           - mov [esp+10],edx
-00FABDD3 - 89 4C 24 14           - mov [esp+14],ecx
-00FABDD7 - 3B 54 24 1C           - cmp edx,[esp+1C]
-00FABDDB - 0F82 0FFFFFFF         - jb 00FABCF0
-00FABDE1 - 5F                    - pop edi
-00FABDE2 - 5E                    - pop esi
-00FABDE3 - 5B                    - pop ebx
-00FABDE4 - 5D                    - pop ebp
-00FABDE5 - 8B 4C 24 30           - mov ecx,[esp+30]
-00FABDE9 - 33 CC                 - xor ecx,esp
-00FABDEB - E8 16C61000           - call 010B8406
-00FABDF0 - 83 C4 34              - add esp,34 { 52 }
-00FABDF3 - C3                    - ret
-00FABDF4 - 83 FA 10              - cmp edx,10 { 16 }
-00FABDF7 - 72 02                 - jb 00FABDFB
-00FABDF9 - 8B 3F                 - mov edi,[edi]
-00FABDFB - 2B F3                 - sub esi,ebx
-00FABDFD - 8D 04 1F              - lea eax,[edi+ebx]
-00FABE00 - 56                    - push esi
-00FABE01 - 50                    - push eax
-00FABE02 - 8D 44 24 28           - lea eax,[esp+28]
-00FABE06 - 50                    - push eax
-00FABE07 - E8 94BB0100           - call 00FC79A0
-00FABE0C - 83 C4 0C              - add esp,0C { 12 }
-00FABE0F - 5F                    - pop edi
-00FABE10 - 5E                    - pop esi
-00FABE11 - 5B                    - pop ebx
-00FABE12 - 5D                    - pop ebp
-00FABE13 - 8B 4C 24 30           - mov ecx,[esp+30]
-00FABE17 - 33 CC                 - xor ecx,esp
-00FABE19 - E8 E8C51000           - call 010B8406
-00FABE1E - 83 C4 34              - add esp,34 { 52 }
-00FABE21 - C3                    - ret
-
- */
+ *  Artikash 12/26/2018: Old HorkEye hook can't be found in shukusei no girlfriend https://vndb.org/v22880
+ *  This function can be used instead. Hook code: /HS4@funcaddr
+0022DD80 - 83 EC 44              - sub esp,44 { 68 }
+0022DD83 - A1 3C704400           - mov eax,[0044703C] { [0000001C] }
+0022DD88 - 8B 0D 34704400        - mov ecx,[00447034] { [00000014] }
+0022DD8E - 03 C0                 - add eax,eax
+0022DD90 - 8B 54 24 48           - mov edx,[esp+48]
+0022DD94 - 89 44 24 2C           - mov [esp+2C],eax
+0022DD98 - A1 C87E5500           - mov eax,[00557EC8] { [00000002] }
+0022DD9D - 03 05 30704400        - add eax,[00447030] { [00000014] }
+0022DDA3 - 89 44 24 18           - mov [esp+18],eax
+0022DDA7 - A1 38704400           - mov eax,[00447038] { [00000008] }
+0022DDAC - 03 C1                 - add eax,ecx
+0022DDAE - D1 F9                 - sar ecx,1
+0022DDB0 - 53                    - push ebx
+0022DDB1 - 55                    - push ebp
+0022DDB2 - 56                    - push esi
+0022DDB3 - 8B 74 24 58           - mov esi,[esp+58]
+0022DDB7 - 33 DB                 - xor ebx,ebx
+0022DDB9 - 89 4C 24 48           - mov [esp+48],ecx
+0022DDBD - 46                    - inc esi
+0022DDBE - 8B 0D 5CA28300        - mov ecx,[0083A25C] { [00000000] }
+0022DDC4 - 57                    - push edi
+0022DDC5 - 8B 3D 887E5500        - mov edi,[00557E88] { [00000040] }
+0022DDCB - 89 74 24 2C           - mov [esp+2C],esi
+0022DDCF - 89 44 24 34           - mov [esp+34],eax
+0022DDD3 - 89 5C 24 18           - mov [esp+18],ebx
+0022DDD7 - 8A 24 11              - mov ah,[ecx+edx]
+0022DDDA - 8A 44 11 01           - mov al,[ecx+edx+01]
+0022DDDE - 89 7C 24 20           - mov [esp+20],edi
+0022DDE2 - 39 1D 60A28300        - cmp [0083A260],ebx { [00000000] }
+0022DDE8 - 0F85 DD000000         - jne 0022DECB
+0022DDEE - 80 FC 5B              - cmp ah,5B { 91 }
+0022DDF1 - 0F85 9C000000         - jne 0022DE93
+0022DDF7 - 8B C1                 - mov eax,ecx
+0022DDF9 - 3B C6                 - cmp eax,esi
+0022DDFB - 7D 10                 - jnl 0022DE0D
+0022DDFD - 0F1F 00               - nop [eax]
+0022DE00 - 80 3C 10  5D          - cmp byte ptr [eax+edx],5D { 93 }
+0022DE04 - 74 79                 - je 0022DE7F
+0022DE06 - 40                    - inc eax
+0022DE07 - 3B 44 24 2C           - cmp eax,[esp+2C]
+0022DE0B - 7C F3                 - jl 0022DE00
+0022DE0D - A1 BC7E5500           - mov eax,[00557EBC] { [00000001] }
+0022DE12 - 85 C0                 - test eax,eax
+0022DE14 - 0F84 A7000000         - je 0022DEC1
+0022DE1A - BE 02000000           - mov esi,00000002 { 2 }
+0022DE1F - 89 74 24 1C           - mov [esp+1C],esi
+0022DE23 - 89 35 68A28300        - mov [0083A268],esi { [00000000] }
+0022DE29 - 83 F8 01              - cmp eax,01 { 1 }
+0022DE2C - 0F85 A3000000         - jne 0022DED5
+0022DE32 - 83 3D C07E5500 00     - cmp dword ptr [00557EC0],00 { 0 }
+0022DE39 - 8B 2D 506D5500        - mov ebp,[00556D50] { [00000028] }
+0022DE3F - 75 2D                 - jne 0022DE6E
+0022DE41 - 8B C7                 - mov eax,edi
+0022DE43 - 8D 8D 50855100        - lea ecx,[ebp+00518550]
+0022DE49 - C1 E0 0A              - shl eax,0A { 10 }
+0022DE4C - 03 C8                 - add ecx,eax
+0022DE4E - 66 A1 58704400        - mov ax,[00447058] { [00004081] }
+0022DE54 - 83 C5 02              - add ebp,02 { 2 }
+0022DE57 - 89 2D 506D5500        - mov [00556D50],ebp { [00000028] }
+0022DE5D - 66 89 01              - mov [ecx],ax
+0022DE60 - A0 5A704400           - mov al,[0044705A] { [0] }
+0022DE65 - 88 41 02              - mov [ecx+02],al
+0022DE68 - 8B 0D 5CA28300        - mov ecx,[0083A25C] { [00000000] }
+...
+*/
 // Skip text between "," and "�, and remove [n]
 // ex:【夏偾,S005_B_0002】「バーッ�ク
 static bool HorkEyeFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
@@ -13762,17 +13664,18 @@ bool InsertHorkEyeHook()
 
   const BYTE bytes2[] =
   {
-	  0x8b, 0x45, 0x18,
-	  0x8b, 0x3c, 0x01
+	  0x83, 0xec, XX, // sub esp,??
+	  0xa1, XX4, // mov eax,??
+	  0x8b, 0x0d, XX4, // mov ecx,??
+	  0x03, 0xc0 // add eax,eax
   };
 
-  if (DWORD addr = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStopAddress))
+  for (auto addr : Util::SearchMemory(bytes2, sizeof(bytes2)))
   {
 	  HookParam hp = {};
-	  hp.address = addr + 6;
-	  hp.offset = pusha_edi_off - 4;
-	  hp.type = USING_STRING | DATA_INDIRECT;
-	  hp.index = 0;
+	  hp.address = addr;
+	  hp.offset = 4;
+	  hp.type = USING_STRING;
 	  ConsoleOutput("Textractor: INSERT HorkEye2");
 	  NewHook(hp, "HorkEye2");
 	  return true;
