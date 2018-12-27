@@ -36,7 +36,7 @@ inline void FORMAT_MESSAGE(const char* format, Ts ...args)
 }
 
 #ifdef _DEBUG
-#define TEST(...) static auto _ = std::invoke([]{ { __VA_ARGS__; } return 0; }) 
+#define TEST(...) static auto _ = std::invoke([]{ __VA_ARGS__; return 0; }) 
 #else
 #define TEST(...)
 #endif
