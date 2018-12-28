@@ -19,11 +19,6 @@ TextThread::~TextThread()
 	OnDestroy(this);
 }
 
-void TextThread::AddSentence(std::wstring sentence)
-{
-	if (Output(this, sentence)) storage->append(sentence);
-}
-
 void TextThread::Push(const BYTE* data, int len)
 {
 	if (len < 0) return;
@@ -33,6 +28,13 @@ void TextThread::Push(const BYTE* data, int len)
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
 	lastPushTime = GetTickCount();
+}
+
+void TextThread::PushSentence(std::wstring sentence)
+{
+	LOCK(bufferMutex);
+	buffer += sentence;
+	lastPushTime = 0;
 }
 
 void TextThread::Flush()
@@ -48,5 +50,5 @@ void TextThread::Flush()
 		if (Util::RemoveRepetition(sentence)) repeatingChars = std::unordered_set(sentence.begin(), sentence.end());
 		else repeatingChars.clear();
 	}
-	AddSentence(sentence);
+	if (Output(this, sentence)) storage->append(sentence);
 }

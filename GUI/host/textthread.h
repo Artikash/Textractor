@@ -19,8 +19,9 @@ public:
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 	~TextThread();
 
-	void AddSentence(std::wstring sentence);
 	void Push(const BYTE* data, int len);
+	// Flushes ASAP
+	void PushSentence(std::wstring sentence);
 
 	ThreadSafe<std::wstring> storage;
 	const int64_t handle;

@@ -117,13 +117,12 @@ namespace
 
 	void StartCapturingClipboard()
 	{
-		std::thread([]
+		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
 		{
-			for (std::wstring last; true; Sleep(500))
-				if (auto text = Util::GetClipboardText())
-					if (last != text.value())
-						Host::GetThread(CLIPBOARD)->AddSentence(last = text.value());
-		}).detach();
+			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
+				if (auto text = Util::GetClipboardText()) Host::GetThread(CLIPBOARD)->PushSentence(text.value());
+			return CallNextHookEx(NULL, statusCode, wParam, lParam);
+		}, NULL, GetCurrentThreadId());
 	}
 }
 
@@ -207,6 +206,6 @@ namespace Host
 
 	void AddConsoleOutput(std::wstring text) 
 	{ 
-		GetThread(CONSOLE)->AddSentence(text); 
+		GetThread(CONSOLE)->PushSentence(text); 
 	}
 }
