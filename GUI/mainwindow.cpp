@@ -172,7 +172,7 @@ DWORD MainWindow::GetSelectedProcessId()
 
 std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
 {
-	return 
+	return
 	{
 	{ "current select", ui->ttCombo->currentText().startsWith(TextThreadString(thread)) },
 	{ "text number", thread->handle },

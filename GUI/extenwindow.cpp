@@ -117,8 +117,8 @@ void ExtenWindow::Add(QFileInfo extenFile)
 	Sync();
 }
 
-bool ExtenWindow::eventFilter(QObject* target, QEvent* event) 
-{ 
+bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
+{
 	// See https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215
 	if (event->type() == QEvent::ChildRemoved)
 	{
@@ -127,7 +127,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 		Reorder(extenNames);
 		Sync();
 	}
-	return false; 
+	return false;
 }
 
 void ExtenWindow::keyPressEvent(QKeyEvent* event)
@@ -144,7 +144,7 @@ void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)
 	event->acceptProposedAction();
 }
 
-void ExtenWindow::dropEvent(QDropEvent* event) 
-{ 
+void ExtenWindow::dropEvent(QDropEvent* event)
+{
 	for (auto file : event->mimeData()->urls()) Add(file.toLocalFile());
 }

@@ -204,8 +204,8 @@ namespace Host
 		return textThreadsByParams->at(tp);
 	}
 
-	void AddConsoleOutput(std::wstring text) 
-	{ 
-		GetThread(CONSOLE)->PushSentence(text); 
+	void AddConsoleOutput(std::wstring text)
+	{
+		GetThread(CONSOLE)->PushSentence(text);
 	}
 }

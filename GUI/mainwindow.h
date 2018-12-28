@@ -14,7 +14,6 @@ public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
 
-
 private:
 	void closeEvent(QCloseEvent*) override;
 	void ProcessConnected(DWORD processId);
