@@ -1,22 +1,34 @@
 #include "extension.h"
+#include "defs.h"
 
 void RemoveRepeatedChars(std::wstring& sentence)
 {
-	int repeatNumber = 0;
-	wchar_t prevChar = sentence[0];
-	for (auto c : sentence)
-		if (c == prevChar) repeatNumber++;
-		else break;
-	if (repeatNumber == 1) return;
+	std::vector<int> repeatNumbers(sentence.size() + 1, 0);
+	int repeatNumber = 1;
+	wchar_t prevChar = L'\0';
+	for (auto nextChar : sentence)
+		if (nextChar == prevChar) repeatNumber++;
+		else
+		{
+			prevChar = nextChar;
+			++repeatNumbers.at(repeatNumber);
+			repeatNumber = 1;
+		}
+	if ((repeatNumber = std::distance(repeatNumbers.begin(), std::max_element(repeatNumbers.begin(), repeatNumbers.end()))) == 1) return;
 
-	for (int i = 0; i < sentence.size(); i += repeatNumber)
-		for (int j = i; j < sentence.size(); ++j)
-			if (sentence[j] != sentence[i])
-				if ((j - i) % repeatNumber != 0) return;
-				else break;
-
-	std::wstring newSentence = L"";
-	for (int i = 0; i < sentence.size(); i += repeatNumber) newSentence.push_back(sentence[i]);
+	std::wstring newSentence;
+	for (int i = 0; i < sentence.size();)
+	{
+		newSentence.push_back(sentence.at(i));
+		for (int j = i; j <= sentence.size(); ++j)
+		{
+			if (j == sentence.size() || sentence.at(i) != sentence.at(j))
+			{
+				i += (j - i) % repeatNumber == 0 ? repeatNumber : 1;
+				break;
+			}
+		}
+	}
 	sentence = newSentence;
 }
 
@@ -38,3 +50,22 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	RemoveCyclicRepeats(sentence);
 	return true;
 }
+
+TEST(
+	{
+		std::wstring repeatedChars = L"aaaaaaaaaaaabbbbbbcccdddaabbbcccddd";
+		RemoveRepeatedChars(repeatedChars);
+		assert(repeatedChars.find(L"aaaabbcd") == 0);
+
+		std::wstring cyclicRepeats = L"abcdeabcdefabcdefgabcdefgabcdefgabcdefgabcdefg";
+		RemoveCyclicRepeats(cyclicRepeats);
+		assert(cyclicRepeats == L"abcdefg");
+
+		InfoForExtension tester{ "hook address", 0, nullptr };
+		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. ‚Í‚¢B";
+		ProcessSentence(empty, { &tester });
+		ProcessSentence(one, { &tester });
+		ProcessSentence(normal, { &tester });
+		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. ‚Í‚¢B");
+	}
+);

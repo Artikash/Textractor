@@ -12,6 +12,8 @@ add_library(Google\ Translate SHARED googletranslate.cpp extensionimpl.cpp)
 add_library(Regex\ Filter SHARED regexfilter.cpp extensionimpl.cpp)
 add_library(Remove\ Repetition SHARED removerepeat.cpp extensionimpl.cpp)
 
+add_executable(Extension_Tests extensiontester.cpp)
+
 target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
 target_link_libraries(Extra\ Window Qt5::Widgets)
 target_link_libraries(Google\ Translate winhttp Qt5::Widgets)
