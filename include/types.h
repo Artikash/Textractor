@@ -42,7 +42,7 @@ private:
 };
 
 // jichi 3/7/2014: Add guessed comment
-struct HookParam 
+struct HookParam
 {
 	// jichi 8/24/2013: For special hooks.
 	typedef void(*text_fun_t)(DWORD esp, HookParam *hp, BYTE index, DWORD *data, DWORD *split, DWORD *len);
@@ -92,14 +92,14 @@ private:
 
 struct InsertHookCmd // From host
 {
-	InsertHookCmd(HookParam hp) : hp(hp) {};
+	InsertHookCmd(HookParam hp) : hp(hp) {}
 	int command = HOST_COMMAND_NEW_HOOK;
 	HookParam hp;
 };
 
 struct ConsoleOutputNotif // From hook
 {
-	ConsoleOutputNotif(std::string message = "") { strcpy_s<MESSAGE_SIZE>(this->message, message.c_str()); };
+	ConsoleOutputNotif(std::string message = "") { strcpy_s<MESSAGE_SIZE>(this->message, message.c_str()); }
 	int command = HOST_NOTIFICATION_TEXT;
 	char message[MESSAGE_SIZE] = {};
 };

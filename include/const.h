@@ -6,7 +6,7 @@
 
 enum { MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 2000, SHIFT_JIS = 932, MAX_MODULE_SIZE = 120, HOOK_NAME_SIZE = 30 };
 
-enum HostCommandType 
+enum HostCommandType
 {
 	HOST_COMMAND = -1, // null type
 	HOST_COMMAND_NEW_HOOK = 0,
@@ -16,7 +16,7 @@ enum HostCommandType
 	HOST_COMMAND_DETACH = 4
 };
 
-enum HostNotificationType 
+enum HostNotificationType
 {
 	HOST_NOTIFICATION = -1, // null type
 	HOST_NOTIFICATION_TEXT = 0,
@@ -24,7 +24,7 @@ enum HostNotificationType
 	HOST_NOTIFICATION_RMVHOOK = 2
 };
 
-enum HookParamType : unsigned long 
+enum HookParamType : unsigned long
 {
 	USING_STRING = 0x1, // type(data) is char* or wchar_t* and has length
 	USING_UNICODE = 0x2, // type(data) is wchar_t or wchar_t*
