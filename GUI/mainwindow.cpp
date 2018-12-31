@@ -37,11 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->ttCombo, (void(QComboBox::*)(int))&QComboBox::activated, this, &MainWindow::ViewThread);
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
-	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
-	if (settings.contains(FLUSH_DELAY)) TextThread::flushDelay = settings.value(FLUSH_DELAY).toInt();
-	if (settings.contains(MAX_BUFFER_SIZE)) TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE).toInt();
-	if (settings.contains(DEFAULT_CODEPAGE)) TextThread::defaultCodepage = settings.value(DEFAULT_CODEPAGE).toInt();
-	settings.sync();
+	setGeometry(settings.value(WINDOW, geometry()).toRect());
+	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
+	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
+	TextThread::defaultCodepage = settings.value(DEFAULT_CODEPAGE, TextThread::defaultCodepage).toInt();
 
 	Host::Start(
 		[this](DWORD processId) { ProcessConnected(processId); },
@@ -252,7 +251,7 @@ void MainWindow::Settings()
 				spinBox->setMaximum(INT_MAX);
 				spinBox->setValue(value);
 				layout->insertRow(0, label, spinBox);
-				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = spinBox->value()); settings->sync(); });
+				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = spinBox->value()); });
 			}
 			connect(save, &QPushButton::clicked, this, &QDialog::accept);
 			setWindowTitle(SETTINGS);
