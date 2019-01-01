@@ -18,7 +18,6 @@ extern std::unique_ptr<WinMutex> viewMutex;
 
 namespace { // unnamed
 #ifndef _WIN64
-
 	BYTE common_hook[] = {
 		0x9c, // pushfd
 		0x60, // pushad
@@ -34,7 +33,7 @@ namespace { // unnamed
 		0x68, 0,0,0,0, // push @original
 		0xc3  // ret ; basically absolute jmp to @original
 	};
-
+	int this_offset = 9, send_offset = 14, original_offset = 24;
 #else
 	BYTE common_hook[] = {
 		0x9c, // push rflags
@@ -86,6 +85,7 @@ namespace { // unnamed
 		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [0] ; relative to next instruction (i.e. jmp @original)
 		0,0,0,0,0,0,0,0 // @original
 	};
+	int this_offset = 50, send_offset = 60, original_offset = 116;
 #endif
 
 	bool trigger = false;
@@ -189,7 +189,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 	{
 		if (!err)
 		{
-			ConsoleOutput("Textractor: Send ERROR (likely an incorrect H-code)");
+			ConsoleOutput(SEND_ERROR);
 			err = true;
 		}
 	}
@@ -207,28 +207,14 @@ bool TextHook::InsertHookCode()
 		else return ConsoleOutput(MODULE_MISSING), false;
 
 	void* original;
-insert:
-	if (MH_STATUS err = MH_CreateHook(location, trampoline, &original))
-		if (err == MH_ERROR_ALREADY_CREATED)
-		{
-			RemoveHook(address);
-			goto insert; // FIXME: i'm too lazy to do this properly right now...
-		}
-		else
-		{
-			ConsoleOutput(MH_StatusToString(err));
-			return false;
-		}
+	MH_STATUS error;
+	while ((error = MH_CreateHook(location, trampoline, &original)) != MH_OK)
+		if (error == MH_ERROR_ALREADY_CREATED) RemoveHook(address);
+		else return ConsoleOutput(MH_StatusToString(error)), false;
 
-#ifndef _WIN64
-	*(TextHook**)(common_hook + 9) = this;
-	*(void(TextHook::**)(uintptr_t))(common_hook + 14) = &TextHook::Send;
-	*(void**)(common_hook + 24) = original;
-#else // _WIN32
-	*(TextHook**)(common_hook + 50) = this;
-	*(void(TextHook::**)(uintptr_t))(common_hook + 60) = &TextHook::Send;
-	*(void**)(common_hook + 116) = original;
-#endif // _WIN64
+	*(TextHook**)(common_hook + this_offset) = this;
+	*(void(TextHook::**)(uintptr_t))(common_hook + send_offset) = &TextHook::Send;
+	*(void**)(common_hook + original_offset) = original;
 	memcpy(trampoline, common_hook, sizeof(common_hook));
 	return MH_EnableHook(location) == MH_OK;
 }
@@ -243,7 +229,7 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 		uint64_t currentAddress = This->address;
 		while (WaitForSingleObject(This->readerEvent, 500) == WAIT_TIMEOUT)
 		{
-			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uint64_t*)This->address + This->hp.index;
+			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uintptr_t*)This->address + This->hp.index;
 			if (memcmp(buffer, (void*)currentAddress, dataLen + 1) == 0)
 			{
 				changeCount = 0;
@@ -265,7 +251,7 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		ConsoleOutput("Textractor: Reader ERROR (likely an incorrect R-code)");
+		ConsoleOutput(READ_ERROR);
 		This->Clear();
 	}
 	return 0;

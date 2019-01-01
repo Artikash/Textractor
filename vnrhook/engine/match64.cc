@@ -1,6 +1,7 @@
-#include "main.h"
-#include "native/pchooks.h"
 #include "match.h"
+#include "main.h"
+#include "text.h"
+#include "native/pchooks.h"
 
 namespace Engine
 {
@@ -15,6 +16,6 @@ namespace Engine
 			PcHooks::hookGDIPlusFunctions();
 			PcHooks::hookOtherPcFunctions();
 		}
-		__except (EXCEPTION_EXECUTE_HANDLER) { ConsoleOutput("Textractor: Hijack ERROR"); }
+		__except (EXCEPTION_EXECUTE_HANDLER) { ConsoleOutput(HIJACK_ERROR); }
 	}
 }

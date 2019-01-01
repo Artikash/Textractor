@@ -26,9 +26,9 @@ u8"Negatives for data_offset/sub_offset refer to registers\r\n"
 u8"-4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI\r\n"
 u8"* means dereference pointer+deref_offset";
 constexpr auto SAVE_SETTINGS = u8"Save settings";
-constexpr auto EXTEN_WINDOW_INSTRUCTIONS = u8"Drag and drop extensions (.dll files) here to add them\r\n"
-u8"Press delete with an extension selected to remove it\r\n"
-u8"Drag and drop extensions to rearrange them";
+constexpr auto EXTEN_WINDOW_INSTRUCTIONS = u8"Drag and drop extension (.dll) files here from your computer to add them\r\n"
+u8"Drag and drop within the list to reorder\r\n"
+u8"Press delete with an extension selected to remove it";
 constexpr auto WINDOW = u8"Window";
 constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
 constexpr auto FLUSH_DELAY = u8"Flush Delay";
@@ -38,7 +38,7 @@ L"Made by me: Artikash (email: akashmozumdar@gmail.com)\r\n"
 L"Please contact me with any problems, feature requests, or questions relating to Textractor\r\n"
 L"You can do so via the project homepage (issues section) or via email\r\n"
 L"Source code available under GPLv3 at project homepage\r\n"
-L"I'm currently on the job market: please email me if you're hiring US software engineers";
+L"I'm currently looking for a new job: please email me if you're hiring US software engineers";
 constexpr auto UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 constexpr auto ALREADY_INJECTED = L"Textractor: already injected";
 constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
@@ -53,6 +53,9 @@ constexpr auto TOO_MANY_HOOKS = u8"Textractor: too many hooks: can't insert";
 constexpr auto FUNC_MISSING = u8"Textractor: function not present";
 constexpr auto MODULE_MISSING = u8"Textractor: module not present";
 constexpr auto GARBAGE_MEMORY = u8"Textractor: memory constantly changing, useless to read";
+constexpr auto SEND_ERROR = u8"Textractor: Send ERROR (likely an incorrect H-code)";
+constexpr auto READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code)";
+constexpr auto HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 constexpr auto SELECT_LANGUAGE = u8"Select Language";
 constexpr auto BING_PROMPT = u8"What language should Bing translate to?";
 constexpr auto GOOGLE_PROMPT = u8"What language should Google translate to?";
