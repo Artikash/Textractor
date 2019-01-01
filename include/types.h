@@ -9,7 +9,7 @@ template<typename E, typename M = std::mutex>
 class ThreadSafe
 {
 public:
-	template <typename ...Args> ThreadSafe(Args ...args) : contents(args...) {}
+	template <typename... Args> ThreadSafe(Args&&... args) : contents(std::forward<Args>(args)...) {}
 	auto operator->()
 	{
 		struct
@@ -33,7 +33,7 @@ class AutoHandle
 public:
 	AutoHandle(HANDLE h) : h(h) {}
 	operator HANDLE() { return h.get(); }
-	operator PHANDLE() { return &h._Myptr(); }
+	PHANDLE operator&() { return &h._Myptr(); }
 	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
 
 private:

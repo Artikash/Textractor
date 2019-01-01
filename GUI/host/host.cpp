@@ -120,7 +120,7 @@ namespace
 		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
 		{
 			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
-				if (auto text = Util::GetClipboardText()) Host::GetThread(CLIPBOARD)->PushSentence(text.value());
+				if (auto text = Util::GetClipboardText()) Host::GetThread(CLIPBOARD)->AddSentence(text.value());
 			return CallNextHookEx(NULL, statusCode, wParam, lParam);
 		}, NULL, GetCurrentThreadId());
 	}
@@ -206,6 +206,6 @@ namespace Host
 
 	void AddConsoleOutput(std::wstring text)
 	{
-		GetThread(CONSOLE)->PushSentence(text);
+		GetThread(CONSOLE)->AddSentence(text);
 	}
 }

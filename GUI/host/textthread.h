@@ -19,9 +19,8 @@ public:
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 	~TextThread();
 
+	void AddSentence(const std::wstring& sentence);
 	void Push(const BYTE* data, int len);
-	// Flushes ASAP
-	void PushSentence(std::wstring sentence);
 
 	ThreadSafe<std::wstring> storage;
 	const int64_t handle;
@@ -37,5 +36,6 @@ private:
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	DWORD lastPushTime;
+	ThreadSafe<std::vector<std::wstring>> queuedSentences;
 	AutoHandle<TimerDeleter> timer = NULL; // this needs to be last so it's destructed first
 };
