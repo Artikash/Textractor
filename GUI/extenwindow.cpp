@@ -54,28 +54,27 @@ namespace
 	}
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<std::string, int64_t> miscInfo)
+bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<const char*, int64_t> miscInfo)
 {
-	bool success = true;
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 
 	InfoForExtension miscInfoLinkedList{ "", 0, nullptr };
 	InfoForExtension* miscInfoTraverser = &miscInfoLinkedList;
-	for (auto& i : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ i.first.c_str(), i.second, nullptr };
+	for (auto[name, value] : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ name, value, nullptr };
 
 	std::shared_lock sharedLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
 		wchar_t* nextBuffer = extensions[extenName](sentenceBuffer, &miscInfoLinkedList);
-		if (nextBuffer == nullptr) { success = false; break; }
 		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
+		if (nextBuffer == nullptr) return false;
 		sentenceBuffer = nextBuffer;
 	}
 	sentence = sentenceBuffer;
 
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
-	return success;
+	return true;
 }
 
 ExtenWindow::ExtenWindow(QWidget* parent) :

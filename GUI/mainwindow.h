@@ -24,7 +24,7 @@ private:
 	QString TextThreadString(TextThread* thread);
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
-	std::unordered_map<std::string, int64_t> GetMiscInfo(TextThread* thread);
+	std::unordered_map<const char*, int64_t> GetMiscInfo(TextThread* thread);
 	void AttachProcess();
 	void DetachProcess();
 	void AddHook();

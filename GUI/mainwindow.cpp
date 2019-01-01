@@ -169,7 +169,7 @@ DWORD MainWindow::GetSelectedProcessId()
 	return ui->processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
-std::unordered_map<std::string, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
+std::unordered_map<const char*, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
 {
 	return
 	{
