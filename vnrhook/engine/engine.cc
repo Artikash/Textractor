@@ -11318,6 +11318,7 @@ bool InsertAOSHook()
  */
 bool InsertScenarioPlayerHook()
 {
+	PcHooks::hookOtherPcFunctions();
   //const BYTE bytes[] = {
   //  0x53,                    // 00609c0e  |. 53             push ebx
   //  0x8b,0x5d,0x08,          // 00609c0f  |. 8b5d 08        mov ebx,dword ptr ss:[ebp+0x8]
