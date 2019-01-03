@@ -14,10 +14,13 @@ constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 u8"You can also type in the process id";
 constexpr auto CODE_INFODUMP = u8"Enter hook code\r\n"
-u8"/H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
+u8"H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
 u8"OR\r\n"
 u8"Enter read code\r\n"
-u8"/R{S|Q|V}[codepage#][*deref_offset|0]@addr\r\n"
+u8"R{S|Q|V}[codepage#][*deref_offset]@addr\r\n"
+u8"OR\r\n"
+u8"Search for read code\r\n"
+u8"S[codepage#]text\r\n"
 u8"All numbers except codepage in hexadecimal\r\n"
 u8"A/B: Shift-JIS char little/big endian\r\n"
 u8"W: UTF-16 char\r\n"
@@ -50,6 +53,7 @@ constexpr auto INSERTING_HOOK = u8"Textractor: inserting hook: %s";
 constexpr auto REMOVING_HOOK = u8"Textractor: removing hook: %s";
 constexpr auto HOOK_FAILED = u8"Textractor: failed to insert hook";
 constexpr auto TOO_MANY_HOOKS = u8"Textractor: too many hooks: can't insert";
+constexpr auto NOT_ENOUGH_TEXT = u8"Textractor: not enough text to search accurately";
 constexpr auto FUNC_MISSING = u8"Textractor: function not present";
 constexpr auto MODULE_MISSING = u8"Textractor: module not present";
 constexpr auto GARBAGE_MEMORY = u8"Textractor: memory constantly changing, useless to read";

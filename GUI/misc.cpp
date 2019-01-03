@@ -18,10 +18,10 @@ namespace
 		case L'S':
 			break;
 		case L'Q':
-			hp.type |= USING_STRING | USING_UNICODE;
+			hp.type |= USING_UNICODE;
 			break;
 		case L'V':
-			hp.type |= USING_STRING | USING_UTF8;
+			hp.type |= USING_UTF8;
 			break;
 		default:
 			return {};
@@ -36,7 +36,7 @@ namespace
 			RCode.remove(0, codepage.captured(0).length());
 		}
 
-		// [*deref_offset|0]
+		// [*deref_offset]
 		if (RCode.at(0).unicode() == L'0') RCode.remove(0, 1); // Legacy
 		QRegularExpressionMatch deref = QRegularExpression("^\\*(\\-?[[:xdigit:]]+)").match(RCode);
 		if (deref.hasMatch())
@@ -50,6 +50,24 @@ namespace
 		QRegularExpressionMatch address = QRegularExpression("^@([[:xdigit:]]+)$").match(RCode);
 		if (!address.hasMatch()) return {};
 		hp.address = address.captured(1).toULongLong(nullptr, 16);
+		return hp;
+	}
+
+	std::optional<HookParam> ParseSCode(QString SCode)
+	{
+		HookParam hp = {};
+		hp.type |= READ_SEARCH;
+
+		// [codepage#]
+		QRegularExpressionMatch codepage = QRegularExpression("^([0-9]+)#").match(SCode);
+		if (codepage.hasMatch())
+		{
+			hp.codepage = codepage.captured(1).toInt();
+			SCode.remove(0, codepage.captured(0).length());
+		}
+
+		wcscpy_s<MAX_MODULE_SIZE>(hp.text, S(SCode).c_str());
+
 		return hp;
 	}
 
@@ -157,7 +175,7 @@ namespace
 
 	QString GenerateRCode(HookParam hp)
 	{
-		QString RCode = "/R";
+		QString RCode = "R";
 		QTextStream codeBuilder(&RCode);
 
 		if (hp.type & USING_UNICODE) codeBuilder << "Q";
@@ -178,7 +196,7 @@ namespace
 
 	QString GenerateHCode(HookParam hp, DWORD processId)
 	{
-		QString HCode = "/H";
+		QString HCode = "H";
 		QTextStream codeBuilder(&HCode);
 
 		if (hp.type & USING_UNICODE)
@@ -229,8 +247,10 @@ namespace
 
 std::optional<HookParam> ParseCode(QString code)
 {
-	if (code.startsWith("/H")) return ParseHCode(code.remove(0, 2));
-	else if (code.startsWith("/R")) return ParseRCode(code.remove(0, 2));
+	if (code.startsWith("/")) code.remove(0, 1); // legacy/AGTH compatibility
+	if (code.startsWith("R")) return ParseRCode(code.remove(0, 1));
+	else if (code.startsWith("S")) return ParseSCode(code.remove(0, 1));
+	else if (code.startsWith("H")) return ParseHCode(code.remove(0, 1));
 	else return {};
 }
 
@@ -242,7 +262,7 @@ QString GenerateCode(HookParam hp, DWORD processId)
 
 TEST(
 	assert(ParseCode("/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
-	assert(ParseCode("/HB4@0")),
+	assert(ParseCode("HB4@0")),
 	assert(ParseCode("/RS*10@44")),
 	assert(!ParseCode("HQ@4")),
 	assert(!ParseCode("/RW@44")),

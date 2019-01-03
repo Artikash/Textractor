@@ -54,7 +54,11 @@ struct HookParam
 		index, // deref_offset1
 		split, // offset of the split character
 		split_index; // deref_offset2
-	wchar_t module[MAX_MODULE_SIZE];
+	union
+	{
+		wchar_t module[MAX_MODULE_SIZE];
+		wchar_t text[MAX_MODULE_SIZE];
+	};
 	char function[MAX_MODULE_SIZE];
 	DWORD type; // flags
 	UINT codepage; // text encoding

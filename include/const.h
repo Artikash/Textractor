@@ -33,8 +33,9 @@ enum HookParamType : unsigned long
 	USING_SPLIT = 0x10, // aware of split time?
 	SPLIT_INDIRECT = 0x20,
 	MODULE_OFFSET = 0x40, // address is relative to module
-	FUNCTION_OFFSET = 0x80,    // address is relative to function
+	FUNCTION_OFFSET = 0x80, // address is relative to function
 	USING_UTF8 = 0x100,
+	READ_SEARCH = 0x200, // unspecified address: search for text instead
 	NO_CONTEXT = 0x400,
 	HOOK_EMPTY = 0x800,
 	FIXING_SPLIT = 0x1000,

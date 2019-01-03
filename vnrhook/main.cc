@@ -9,6 +9,7 @@
 #include "MinHook.h"
 #include "engine/match.h"
 #include "texthook.h"
+#include "util.h"
 
 std::unique_ptr<WinMutex> viewMutex;
 
@@ -133,11 +134,35 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 
 void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 {
-	if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
-	if (lpname && *lpname) strcpy_s<HOOK_NAME_SIZE>(hp.name, lpname);
-	ConsoleOutput(INSERTING_HOOK, hp.name);
-	RemoveHook(hp.address, 0);
-	if (!hooks[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
+	if (hp.type & READ_SEARCH)
+	{
+		char utf8Text[MAX_MODULE_SIZE * 4] = {};
+		WideCharToMultiByte(CP_UTF8, 0, hp.text, MAX_MODULE_SIZE, utf8Text, MAX_MODULE_SIZE * 4, nullptr, nullptr);
+		char codepageText[MAX_MODULE_SIZE * 4] = {};
+		WideCharToMultiByte(hp.codepage ? hp.codepage : SHIFT_JIS, 0, hp.text, MAX_MODULE_SIZE, codepageText, MAX_MODULE_SIZE * 4, nullptr, nullptr);
+		if (strlen(utf8Text) < 8 || strlen(codepageText) < 8 || wcslen(hp.text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
+		for (auto[addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
+			{ Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8 },
+			{ Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), (HookParamType)0 },
+			{ Util::SearchMemory(hp.text, wcslen(hp.text) * 2, PAGE_READWRITE), USING_UNICODE }
+		})
+			for (auto addr : addrs)
+			{
+				HookParam h = {};
+				h.type = DIRECT_READ | type;
+				h.address = addr;
+				h.codepage = hp.codepage;
+				NewHook(h, lpname, 0);
+			}
+	}
+	else
+	{
+		if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
+		if (lpname && *lpname) strcpy_s<HOOK_NAME_SIZE>(hp.name, lpname);
+		ConsoleOutput(INSERTING_HOOK, hp.name);
+		RemoveHook(hp.address, 0);
+		if (!hooks[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
+	}
 }
 
 void RemoveHook(uint64_t addr, int maxOffset)
