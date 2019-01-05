@@ -22,6 +22,7 @@ public:
 		settings->beginGroup("Extra Window");
 		(new QHBoxLayout(this))->addWidget(display = new QLabel(EXTRA_WINDOW_INFO, this));
 		display->setAlignment(Qt::AlignTop);
+		display->setWordWrap(true);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
 		setSizeGripEnabled(true);
