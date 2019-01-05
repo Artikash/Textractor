@@ -13,18 +13,19 @@ constexpr auto EXTENSIONS = u8"Extensions";
 constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8"If you don't see the process you want to attach, try running with admin rights\r\n"
 u8"You can also type in the process id";
-constexpr auto CODE_INFODUMP = u8"Enter hook code\r\n"
-u8"H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
+constexpr auto CODE_INFODUMP = u8"Search for text\r\n"
+u8"S[codepage#]text\r\n"
 u8"OR\r\n"
 u8"Enter read code\r\n"
 u8"R{S|Q|V}[codepage#][*deref_offset]@addr\r\n"
 u8"OR\r\n"
-u8"Search for read code\r\n"
-u8"S[codepage#]text\r\n"
+u8"Enter hook code\r\n"
+u8"H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
 u8"All numbers except codepage in hexadecimal\r\n"
-u8"A/B: Shift-JIS char little/big endian\r\n"
+u8"Default codepage is 932 (Shift-JIS) but this can be changed in settings"
+u8"A/B: codepage char little/big endian\r\n"
 u8"W: UTF-16 char\r\n"
-u8"S/Q/V: Shift-JIS/UTF-16/UTF-8 string\r\n"
+u8"S/Q/V: codepage/UTF-16/UTF-8 string\r\n"
 u8"Negatives for data_offset/sub_offset refer to registers\r\n"
 u8"-4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI\r\n"
 u8"* means dereference pointer+deref_offset";
@@ -60,6 +61,7 @@ constexpr auto GARBAGE_MEMORY = u8"Textractor: memory constantly changing, usele
 constexpr auto SEND_ERROR = u8"Textractor: Send ERROR (likely an incorrect H-code)";
 constexpr auto READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code)";
 constexpr auto HIJACK_ERROR = u8"Textractor: Hijack ERROR";
+constexpr auto COULD_NOT_FIND = u8"Textractor: could not find text";
 constexpr auto SELECT_LANGUAGE = u8"Select Language";
 constexpr auto BING_PROMPT = u8"What language should Bing translate to?";
 constexpr auto GOOGLE_PROMPT = u8"What language should Google translate to?";
