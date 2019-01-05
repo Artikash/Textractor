@@ -29,7 +29,7 @@ void TextThread::Push(const BYTE* data, int len)
 	if (len < 0) return;
 	LOCK(bufferMutex);
 	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
-	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : defaultCodepage)) buffer += converted.value();
+	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	lastPushTime = GetTickCount();
 

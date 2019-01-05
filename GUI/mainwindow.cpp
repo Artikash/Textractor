@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	setGeometry(settings.value(WINDOW, geometry()).toRect());
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
-	TextThread::defaultCodepage = settings.value(DEFAULT_CODEPAGE, TextThread::defaultCodepage).toInt();
+	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
 
 	Host::Start(
 		[this](DWORD processId) { ProcessConnected(processId); },
@@ -242,7 +242,7 @@ void MainWindow::Settings()
 			save->setText(SAVE_SETTINGS);
 			layout->addWidget(save);
 			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
-				{ TextThread::defaultCodepage, DEFAULT_CODEPAGE },
+				{ Host::defaultCodepage, DEFAULT_CODEPAGE },
 				{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 				{ TextThread::flushDelay, FLUSH_DELAY },
 			})

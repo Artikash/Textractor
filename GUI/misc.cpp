@@ -1,6 +1,7 @@
 #include "misc.h"
 #include "const.h"
 #include "defs.h"
+#include "host/host.h"
 #include "host/util.h"
 #include <Psapi.h>
 #include <QTextStream>
@@ -64,6 +65,10 @@ namespace
 		{
 			hp.codepage = codepage.captured(1).toInt();
 			SCode.remove(0, codepage.captured(0).length());
+		}
+		else
+		{
+			hp.codepage = Host::defaultCodepage;
 		}
 
 		wcscpy_s<MAX_MODULE_SIZE>(hp.text, S(SCode).c_str());

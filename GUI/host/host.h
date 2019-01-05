@@ -16,4 +16,6 @@ namespace Host
 
 	std::shared_ptr<TextThread> GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
+
+	inline int defaultCodepage = SHIFT_JIS;
 }

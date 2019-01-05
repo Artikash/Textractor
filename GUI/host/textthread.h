@@ -13,8 +13,6 @@ public:
 
 	inline static int flushDelay = 400; // flush every 400ms by default
 	inline static int maxBufferSize = 1000;
-	inline static int defaultCodepage = SHIFT_JIS;
-	inline static int threadCounter = 0;
 
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 	~TextThread();
@@ -29,6 +27,8 @@ public:
 	const HookParam hp;
 
 private:
+	inline static int threadCounter = 0;
+
 	void Flush();
 
 	struct TimerDeleter { void operator()(void* h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
