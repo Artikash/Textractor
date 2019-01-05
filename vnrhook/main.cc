@@ -136,10 +136,11 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 {
 	if (hp.type & READ_SEARCH)
 	{
+		bool found = false;
 		char utf8Text[MAX_MODULE_SIZE * 4] = {};
 		WideCharToMultiByte(CP_UTF8, 0, hp.text, MAX_MODULE_SIZE, utf8Text, MAX_MODULE_SIZE * 4, nullptr, nullptr);
 		char codepageText[MAX_MODULE_SIZE * 4] = {};
-		WideCharToMultiByte(hp.codepage ? hp.codepage : SHIFT_JIS, 0, hp.text, MAX_MODULE_SIZE, codepageText, MAX_MODULE_SIZE * 4, nullptr, nullptr);
+		WideCharToMultiByte(hp.codepage, 0, hp.text, MAX_MODULE_SIZE, codepageText, MAX_MODULE_SIZE * 4, nullptr, nullptr);
 		if (strlen(utf8Text) < 8 || strlen(codepageText) < 8 || wcslen(hp.text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
 		for (auto[addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
 			{ Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8 },
@@ -148,12 +149,15 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		})
 			for (auto addr : addrs)
 			{
+				if (abs((long long)(utf8Text - addr)) < 20000) continue; // don't add read code if text is on this thread's stack
+				found = true;
 				HookParam h = {};
 				h.type = DIRECT_READ | type;
 				h.address = addr;
 				h.codepage = hp.codepage;
 				NewHook(h, lpname, 0);
 			}
+		if (!found) ConsoleOutput(COULD_NOT_FIND);
 	}
 	else
 	{
