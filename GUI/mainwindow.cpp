@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->ttCombo, (void(QComboBox::*)(int))&QComboBox::activated, this, &MainWindow::ViewThread);
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
-	setGeometry(settings.value(WINDOW, geometry()).toRect());
+	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();

@@ -67,7 +67,8 @@ constexpr auto BING_PROMPT = u8"What language should Bing translate to?";
 constexpr auto GOOGLE_PROMPT = u8"What language should Google translate to?";
 constexpr auto TOO_MANY_TRANS_REQUESTS = L"\r\nToo many translation requests: refuse to make more";
 constexpr auto TRANSLATION_ERROR = L"Error while translating";
-constexpr auto EXTRA_WINDOW_INFO = u8"Right click to change settings";
+constexpr auto EXTRA_WINDOW_INFO = u8"Right click to change settings\r\n"
+u8"Click and drag on window edges to move, or the bottom right corner to resize";
 constexpr auto BG_COLOR = u8"Background Color";
 constexpr auto TEXT_COLOR = u8"Text Color";
 constexpr auto FONT_SIZE = u8"Font Size";

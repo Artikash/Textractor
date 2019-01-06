@@ -21,11 +21,15 @@ public:
 	{
 		settings->beginGroup("Extra Window");
 		(new QHBoxLayout(this))->addWidget(display = new QLabel(EXTRA_WINDOW_INFO, this));
+		display->setTextFormat(Qt::PlainText);
+		display->setTextInteractionFlags(Qt::TextSelectableByMouse);
 		display->setAlignment(Qt::AlignTop);
 		display->setWordWrap(true);
+		display->setMaximumHeight(600);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
 		setSizeGripEnabled(true);
+		resize(400, 1);
 		show();
 
 		auto setBackgroundColor = [=](QColor color)
@@ -62,15 +66,15 @@ public:
 		setBackgroundColor(settings->value(BG_COLOR, palette().window().color()).value<QColor>());
 		setTextColor(settings->value(TEXT_COLOR, display->palette().windowText().color()).value<QColor>());
 
-		auto menu = new QMenu(this);
+		auto menu = new QMenu(display);
 		auto topmost = menu->addAction(TOPMOST, setTopmost);
 		topmost->setCheckable(true);
-		topmost->setChecked(settings->value(TOPMOST).toBool());
+		topmost->setChecked(settings->value(TOPMOST, false).toBool());
 		menu->addAction(BG_COLOR, [=] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(TEXT_COLOR, [=] { setTextColor(QColorDialog::getColor(display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(FONT_SIZE, [=] { setFontSize(QInputDialog::getInt(this, FONT_SIZE, "", display->font().pointSize(), 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint)); });
-		setContextMenuPolicy(Qt::CustomContextMenu);
-		connect(this, &QDialog::customContextMenuRequested, menu, [=](QPoint point) { menu->exec(mapToGlobal(point)); });
+		display->setContextMenuPolicy(Qt::CustomContextMenu);
+		connect(display, &QLabel::customContextMenuRequested, [=](QPoint point) { menu->exec(mapToGlobal(point)); });
 		connect(this, &QDialog::destroyed, [=] { settings->setValue(WINDOW, geometry()); });
 	}
 
@@ -81,6 +85,12 @@ private:
 	void paintEvent(QPaintEvent*) override
 	{
 		QPainter(this).fillRect(rect(), bgColor);
+	}
+
+	void resizeEvent(QResizeEvent* event) override
+	{
+		display->setMaximumWidth(event->size().width());
+		QDialog::resizeEvent(event);
 	}
 
 	void mousePressEvent(QMouseEvent* event)
@@ -115,7 +125,11 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	case DLL_PROCESS_DETACH:
 	{
 		std::lock_guard l(m);
-		if (window != nullptr) window->settings->setValue(WINDOW, window->geometry());
+		if (window != nullptr)
+		{
+			window->settings->setValue(WINDOW, window->geometry());
+			window->settings->sync();
+		}
 		if (lpReserved == NULL) // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
 		{
 			delete window;
