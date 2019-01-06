@@ -14,7 +14,7 @@ namespace Host
 
 	HookParam GetHookParam(ThreadParam tp);
 
-	std::shared_ptr<TextThread> GetThread(ThreadParam tp);
+	TextThread* GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
 
 	inline int defaultCodepage = SHIFT_JIS;

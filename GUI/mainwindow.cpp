@@ -102,13 +102,19 @@ void MainWindow::ProcessConnected(DWORD processId)
 
 void MainWindow::ProcessDisconnected(DWORD processId)
 {
-	QMetaObject::invokeMethod(this, [this, processId] { ui->processCombo->removeItem(ui->processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith)); });
+	QMetaObject::invokeMethod(this, [this, processId]
+	{
+		ui->processCombo->removeItem(ui->processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
+	}, Qt::BlockingQueuedConnection);
 }
 
 void MainWindow::ThreadAdded(TextThread* thread)
 {
 	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
-	QMetaObject::invokeMethod(this, [this, ttString] { ui->ttCombo->addItem(ttString); });
+	QMetaObject::invokeMethod(this, [this, ttString]
+	{
+		ui->ttCombo->addItem(ttString);
+	});
 }
 
 void MainWindow::ThreadRemoved(TextThread* thread)
@@ -123,7 +129,7 @@ void MainWindow::ThreadRemoved(TextThread* thread)
 			ViewThread(0);
 		}
 		ui->ttCombo->removeItem(threadIndex);
-	});
+	}, Qt::BlockingQueuedConnection);
 }
 
 bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)

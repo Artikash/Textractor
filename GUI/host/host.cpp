@@ -53,15 +53,17 @@ namespace
 		WinMutex viewMutex;
 	};
 
-	ThreadSafe<std::unordered_map<ThreadParam, std::shared_ptr<TextThread>>> textThreadsByParams;
-	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
+	ThreadSafe<std::unordered_map<ThreadParam, std::unique_ptr<TextThread>>, std::recursive_mutex> textThreadsByParams;
+	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
 
 	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
+		std::vector<std::unique_ptr<TextThread>> removedThreads;
 		auto[lock, textThreadsByParams] = ::textThreadsByParams.operator->();
-		for (auto it = textThreadsByParams->begin(); it != textThreadsByParams->end(); removeIf(it->first) ? it = textThreadsByParams->erase(it) : ++it);
+		for (auto it = textThreadsByParams->begin(); it != textThreadsByParams->end(); removeIf(it->first) ? it = textThreadsByParams->erase(it) : ++it)
+			if (removeIf(it->first)) removedThreads.emplace_back(std::move(it->second));
 	}
 
 	void CreatePipe()
@@ -104,7 +106,7 @@ namespace
 				default:
 				{
 					auto tp = *(ThreadParam*)buffer;
-					if (textThreadsByParams->count(tp) == 0) textThreadsByParams->insert({ tp, std::make_shared<TextThread>(tp, Host::GetHookParam(tp)) });
+					if (textThreadsByParams->count(tp) == 0) textThreadsByParams->insert({ tp, std::make_unique<TextThread>(tp, Host::GetHookParam(tp)) });
 					textThreadsByParams->at(tp)->Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
@@ -136,8 +138,8 @@ namespace Host
 		TextThread::OnDestroy = OnDestroy;
 		TextThread::Output = Output;
 		processRecordsByIds->try_emplace(CONSOLE.processId, CONSOLE.processId, INVALID_HANDLE_VALUE);
-		textThreadsByParams->insert({ CONSOLE, std::make_shared<TextThread>(CONSOLE, HookParam{}, L"Console") });
-		textThreadsByParams->insert({ CLIPBOARD, std::make_shared<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
+		textThreadsByParams->insert({ CONSOLE, std::make_unique<TextThread>(CONSOLE, HookParam{}, L"Console") });
+		textThreadsByParams->insert({ CLIPBOARD, std::make_unique<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
 		StartCapturingClipboard();
 		CreatePipe();
 	}
@@ -199,9 +201,9 @@ namespace Host
 		return processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp;
 	}
 
-	std::shared_ptr<TextThread> GetThread(ThreadParam tp)
+	TextThread* GetThread(ThreadParam tp)
 	{
-		return textThreadsByParams->at(tp);
+		return textThreadsByParams->at(tp).get();
 	}
 
 	void AddConsoleOutput(std::wstring text)
