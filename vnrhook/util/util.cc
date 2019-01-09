@@ -304,13 +304,15 @@ bool SearchResourceString(LPCWSTR str)
 
 std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect)
 {
+	SYSTEM_INFO systemInfo;
+	GetNativeSystemInfo(&systemInfo);
 	std::vector<std::pair<uint64_t, uint64_t>> validMemory;
-	for (BYTE* probe = NULL; (uint64_t)probe < 0x80000000;) // end of user memory space
+	for (BYTE* probe = NULL; probe < systemInfo.lpMaximumApplicationAddress;)
 	{
 		MEMORY_BASIC_INFORMATION info = {};
 		if (!VirtualQuery(probe, &info, sizeof(info)))
 		{
-			probe += 0x1000; // page size
+			probe += systemInfo.dwPageSize;
 			continue;
 		}
 		else

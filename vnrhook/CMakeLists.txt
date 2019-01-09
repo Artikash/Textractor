@@ -7,6 +7,7 @@ set(vnrhook_src
   engine/match64.cc
   engine/native/pchooks.cc
   util/ithsys/ithsys.cc
+  util/util.cc
 )
 else()
 set(vnrhook_src
