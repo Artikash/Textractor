@@ -8750,37 +8750,9 @@ bool InsertOldWolfHook()
   return false;
 }
 
-
-struct TextListElement // ecx, this structure saved a list of element
-{
-  DWORD flag1; // should be zero when text is valid
-  LPSTR text;
-  DWORD flag2;
-  DWORD flag3;
-  DWORD flag4;
-  int size,
-      capacity; // 0xe8, capacity of the data including \0
-
-  bool isValid() const
-  {
-	  // Artikash 11/18/2018: I'm not sure why those checks were ever there, but they prevented this hook from working on RJ232953
-    return /*flag1 == 0 && flag2 == 0 && flag3 == 0 && flag4 == 0
-        && */size > 0 && size < capacity
-        && !::IsBadReadPtr(text, capacity) /*&& size == ::strlen(text)*/;
-        //&& (quint8)*text > 127;
-  }
-};
-void SpecialHookWolf2(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *split, DWORD *len)
-{
-  auto self = (TextListElement *)regof(ecx, esp_base); // ecx is actually a list of element
-  if (self && self->isValid()) {
-    *data = (DWORD)self->text;
-    *len = self->size;
-  }
-}
-
-#if 1
 // jichi 6/11/2015: See embed translation source code
+// Artikash 1/10/2019: RJ232953 hooked with HS-8*4@494480
+// CharNextA is called in the middle of target function, and at the start of it ecx points to struct with text at offset 4
 bool InsertWolf2Hook()
 {
   ULONG addr = MemDbg::findCallerAddressAfterInt3((ULONG)::CharNextA, processStartAddress, processStopAddress);
@@ -8791,13 +8763,13 @@ bool InsertWolf2Hook()
 
   HookParam hp = {};
   hp.address = addr;
-  hp.text_fun = SpecialHookWolf2;
-  hp.type = USING_STRING;
+  hp.type = USING_STRING | DATA_INDIRECT;
+  hp.offset = pusha_ecx_off - 4;
+  hp.index = 4;
   ConsoleOutput("vnreng: INSERT WolfRPG2");
   NewHook(hp, "WolfRPG2");
   return true;
 }
-#endif // 0
 
 } // WolfRPG namespace
 

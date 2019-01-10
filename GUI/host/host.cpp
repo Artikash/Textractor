@@ -88,7 +88,7 @@ namespace
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-			processRecordsByIds->emplace(processId, processId, hostPipe);
+			processRecordsByIds->try_emplace(processId, processId, hostPipe);
 
 			CreatePipe();
 
@@ -141,7 +141,7 @@ namespace Host
 		TextThread::OnCreate = OnCreate;
 		TextThread::OnDestroy = OnDestroy;
 		TextThread::Output = Output;
-		processRecordsByIds->emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
+		processRecordsByIds->try_emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
 		textThreadsByParams->insert({ console, std::make_unique<TextThread>(console, HookParam{}, CONSOLE) });
 		textThreadsByParams->insert({ Host::clipboard, std::make_unique<TextThread>(Host::clipboard, HookParam{}, CLIPBOARD) });
 		StartCapturingClipboard();
