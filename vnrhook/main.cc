@@ -78,11 +78,11 @@ DWORD WINAPI Pipe(LPVOID)
 void TextOutput(ThreadParam tp, BYTE* text, int len)
 {
 	if (len < 0) return;
-	if (len > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) len = PIPE_BUFFER_SIZE - sizeof(ThreadParam);
+	if (len > PIPE_BUFFER_SIZE - sizeof(tp)) len = PIPE_BUFFER_SIZE - sizeof(tp);
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	*(ThreadParam*)buffer = tp;
-	memcpy(buffer + sizeof(ThreadParam), text, len);
-	WriteFile(hookPipe, buffer, sizeof(ThreadParam) + len, &DUMMY, nullptr);
+	memcpy(buffer + sizeof(tp), text, len);
+	WriteFile(hookPipe, buffer, sizeof(tp) + len, &DUMMY, nullptr);
 }
 
 void ConsoleOutput(LPCSTR text, ...)

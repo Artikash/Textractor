@@ -5,6 +5,13 @@
 
 template <typename T> using Array = T[];
 
+template <auto F>
+struct Functor
+{
+	template <typename... Args>
+	auto operator()(Args&&... args) const { return std::invoke(F, std::forward<Args>(args)...); }
+};
+
 template<typename E, typename M = std::mutex>
 class ThreadSafe
 {
@@ -26,8 +33,7 @@ private:
 	M mtx;
 };
 
-struct DefHandleCloser { void operator()(void* h) { CloseHandle(h); } };
-template <typename HandleCloser = DefHandleCloser>
+template <typename HandleCloser = Functor<CloseHandle>>
 class AutoHandle
 {
 public:
@@ -74,16 +80,14 @@ struct HookParam
 
 struct ThreadParam
 {
+	bool operator==(ThreadParam other) const { return processId == other.processId && addr == other.addr && ctx == other.ctx && ctx2 == other.ctx2; }
 	DWORD processId;
 	uint64_t addr;
 	uint64_t ctx; // The context of the hook: by default the first value on stack, usually the return address
 	uint64_t ctx2;  // The subcontext of the hook: 0 by default, generated in a method specific to the hook
 };
-// Artikash 5/31/2018: required for unordered_map to work with struct key
-template <> struct std::hash<ThreadParam> { size_t operator()(ThreadParam tp) const { return std::hash<int64_t>()((tp.processId + tp.addr) ^ (tp.ctx + tp.ctx2)); } };
-static bool operator==(ThreadParam one, ThreadParam two) { return one.processId == two.processId && one.addr == two.addr && one.ctx == two.ctx && one.ctx2 == two.ctx2; }
 
-class WinMutex // Like CMutex but works with lock_guard
+class WinMutex // Like CMutex but works with scoped_lock
 {
 public:
 	WinMutex(std::wstring name) : m(CreateMutexW(nullptr, FALSE, name.c_str())) {}
@@ -114,5 +118,3 @@ struct HookRemovedNotif // From hook
 	int command = HOST_NOTIFICATION_RMVHOOK;
 	uint64_t address;
 };
-
-#define LOCK(mutex) std::lock_guard lock(mutex)

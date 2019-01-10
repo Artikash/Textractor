@@ -53,11 +53,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	std::thread([]
 	{
+		using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
 		// Queries GitHub releases API https://developer.github.com/v3/repos/releases/ and checks the last release tag to check if it's the same
-		struct InternetHandleCloser { void operator()(void* h) { WinHttpCloseHandle(h); } };
-		if (AutoHandle<InternetHandleCloser> internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
-			if (AutoHandle<InternetHandleCloser> connection = WinHttpConnect(internet, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-				if (AutoHandle<InternetHandleCloser> request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
+		if (InternetHandle internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
+			if (InternetHandle connection = WinHttpConnect(internet, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+				if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
 						DWORD bytesRead;

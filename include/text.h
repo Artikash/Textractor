@@ -22,7 +22,7 @@ u8"OR\r\n"
 u8"Enter hook code\r\n"
 u8"H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]\r\n"
 u8"All numbers except codepage in hexadecimal\r\n"
-u8"Default codepage is 932 (Shift-JIS) but this can be changed in settings"
+u8"Default codepage is 932 (Shift-JIS) but this can be changed in settings\r\n"
 u8"A/B: codepage char little/big endian\r\n"
 u8"W: UTF-16 char\r\n"
 u8"S/Q/V: codepage/UTF-16/UTF-8 string\r\n"
@@ -37,6 +37,8 @@ constexpr auto WINDOW = u8"Window";
 constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
 constexpr auto FLUSH_DELAY = u8"Flush Delay";
 constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";
+constexpr auto CONSOLE = L"Console";
+constexpr auto CLIPBOARD = L"Clipboard";
 constexpr auto ABOUT = L"Textractor beta v" CURRENT_VERSION L" (project homepage: https://github.com/Artikash/Textractor)\r\n"
 L"Made by me: Artikash (email: akashmozumdar@gmail.com)\r\n"
 L"Please contact me with any problems, feature requests, or questions relating to Textractor\r\n"

@@ -100,7 +100,7 @@ void SetTrigger()
 
 bool TextHook::Insert(HookParam h, DWORD set_flag)
 {
-	LOCK(*viewMutex);
+	std::scoped_lock lock(*viewMutex);
 	hp = h;
 	address = hp.address;
 	hp.type |= set_flag;
@@ -280,7 +280,7 @@ void TextHook::RemoveReadCode()
 
 void TextHook::Clear()
 {
-	LOCK(*viewMutex);
+	std::scoped_lock lock(*viewMutex);
 	ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();

@@ -31,7 +31,7 @@ namespace
 		TextHook GetHook(uint64_t addr)
 		{
 			if (view == nullptr) return {};
-			LOCK(viewMutex);
+			std::scoped_lock lock(viewMutex);
 			auto hooks = (const TextHook*)view;
 			for (int i = 0; i < MAX_HOOK; ++i)
 				if (hooks[i].address == addr) return hooks[i];
@@ -53,14 +53,17 @@ namespace
 		WinMutex viewMutex;
 	};
 
-	ThreadSafe<std::unordered_map<ThreadParam, std::unique_ptr<TextThread>>, std::recursive_mutex> textThreadsByParams;
+	size_t HashThreadParam(ThreadParam tp)
+	{
+		std::hash<int64_t> hash;
+		return hash(hash(tp.processId) + hash(tp.addr) + hash(tp.ctx) + hash(tp.ctx2));
+	}
+	ThreadSafe<std::unordered_map<ThreadParam, std::unique_ptr<TextThread>, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
 	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
-
-	ThreadParam CONSOLE{ 0, -1ULL, -1ULL, -1ULL }, CLIPBOARD{ 0, 0, -1ULL, -1ULL };
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
-		std::vector<std::unique_ptr<TextThread>> removedThreads;
+		std::vector<std::unique_ptr<TextThread>> removedThreads; // delay destruction until after lock is released
 		auto[lock, textThreadsByParams] = ::textThreadsByParams.operator->();
 		for (auto it = textThreadsByParams->begin(); it != textThreadsByParams->end(); removeIf(it->first) ? it = textThreadsByParams->erase(it) : ++it)
 			if (removeIf(it->first)) removedThreads.emplace_back(std::move(it->second));
@@ -73,10 +76,11 @@ namespace
 			SECURITY_DESCRIPTOR pipeSD = {};
 			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
 			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
-			SECURITY_ATTRIBUTES pipeSA = { sizeof(SECURITY_ATTRIBUTES), &pipeSD, FALSE };
+			SECURITY_ATTRIBUTES pipeSA = { sizeof(pipeSA), &pipeSD, FALSE };
 
-			struct NamedPipeHandleCloser { void operator()(void* h) { DisconnectNamedPipe(h); CloseHandle(h); } };
-			AutoHandle<NamedPipeHandleCloser>
+
+			struct PipeCloser { void operator()(HANDLE h) { DisconnectNamedPipe(h); CloseHandle(h); } };
+			AutoHandle<PipeCloser>
 				hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &pipeSA),
 				hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
 			ConnectNamedPipe(hookPipe, nullptr);
@@ -84,7 +88,7 @@ namespace
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
-			processRecordsByIds->try_emplace(processId, processId, hostPipe);
+			processRecordsByIds->emplace(processId, processId, hostPipe);
 
 			CreatePipe();
 
@@ -122,7 +126,7 @@ namespace
 		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
 		{
 			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
-				if (auto text = Util::GetClipboardText()) Host::GetThread(CLIPBOARD)->AddSentence(text.value());
+				if (auto text = Util::GetClipboardText()) Host::GetThread(Host::clipboard)->AddSentence(text.value());
 			return CallNextHookEx(NULL, statusCode, wParam, lParam);
 		}, NULL, GetCurrentThreadId());
 	}
@@ -137,9 +141,9 @@ namespace Host
 		TextThread::OnCreate = OnCreate;
 		TextThread::OnDestroy = OnDestroy;
 		TextThread::Output = Output;
-		processRecordsByIds->try_emplace(CONSOLE.processId, CONSOLE.processId, INVALID_HANDLE_VALUE);
-		textThreadsByParams->insert({ CONSOLE, std::make_unique<TextThread>(CONSOLE, HookParam{}, L"Console") });
-		textThreadsByParams->insert({ CLIPBOARD, std::make_unique<TextThread>(CLIPBOARD, HookParam{}, L"Clipboard") });
+		processRecordsByIds->emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
+		textThreadsByParams->insert({ console, std::make_unique<TextThread>(console, HookParam{}, CONSOLE) });
+		textThreadsByParams->insert({ Host::clipboard, std::make_unique<TextThread>(Host::clipboard, HookParam{}, CLIPBOARD) });
 		StartCapturingClipboard();
 		CreatePipe();
 	}
@@ -169,7 +173,7 @@ namespace Host
 				return false;
 			}
 #endif
-			if (LPVOID remoteData = VirtualAllocEx(process, nullptr, location.size() * 2 + 2, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
+			if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 			{
 				WriteProcessMemory(process, remoteData, location.c_str(), location.size() * 2 + 2, nullptr);
 				if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
@@ -208,6 +212,6 @@ namespace Host
 
 	void AddConsoleOutput(std::wstring text)
 	{
-		GetThread(CONSOLE)->AddSentence(text);
+		GetThread(console)->AddSentence(text);
 	}
 }

@@ -35,21 +35,21 @@ namespace
 		if (!module) return;
 		FARPROC callback = GetProcAddress(module, "OnNewSentence");
 		if (!callback) return;
-		LOCK(extenMutex);
+		std::scoped_lock writeLock(extenMutex);
 		extensions[extenName] = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback;
 		extenNames.push_back(extenName);
 	}
 
 	void Unload(QString extenName)
 	{
-		LOCK(extenMutex);
+		std::scoped_lock writeLock(extenMutex);
 		extenNames.erase(std::remove(extenNames.begin(), extenNames.end(), extenName), extenNames.end());
 		FreeLibrary(GetModuleHandleW(S(extenName).c_str()));
 	}
 
 	void Reorder(QStringList extenNames)
 	{
-		LOCK(extenMutex);
+		std::scoped_lock writeLock(extenMutex);
 		::extenNames = extenNames;
 	}
 }
@@ -63,7 +63,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<con
 	InfoForExtension* miscInfoTraverser = &miscInfoLinkedList;
 	for (auto[name, value] : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ name, value, nullptr };
 
-	std::shared_lock sharedLock(extenMutex);
+	std::shared_lock readLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
 		wchar_t* nextBuffer = extensions[extenName](sentenceBuffer, &miscInfoLinkedList);
@@ -100,7 +100,7 @@ void ExtenWindow::Sync()
 {
 	ui->extenList->clear();
 	QAutoFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
-	std::shared_lock sharedLock(extenMutex);
+	std::shared_lock readLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
 		ui->extenList->addItem(extenName);

@@ -31,11 +31,11 @@ private:
 
 	void Flush();
 
-	struct TimerDeleter { void operator()(void* h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	std::wstring buffer;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	DWORD lastPushTime;
 	ThreadSafe<std::vector<std::wstring>> queuedSentences;
+	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	AutoHandle<TimerDeleter> timer = NULL; // this needs to be last so it's destructed first
 };

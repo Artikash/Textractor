@@ -27,7 +27,7 @@ void TextThread::AddSentence(const std::wstring& sentence)
 void TextThread::Push(const BYTE* data, int len)
 {
 	if (len < 0) return;
-	LOCK(bufferMutex);
+	std::scoped_lock lock(bufferMutex);
 	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
 	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
@@ -49,7 +49,7 @@ void TextThread::Flush()
 	for (auto sentence : sentences)
 		if (Output(this, sentence)) storage->append(sentence);
 
-	LOCK(bufferMutex);
+	std::scoped_lock lock(bufferMutex);
 	if (buffer.empty()) return;
 	if (buffer.size() < maxBufferSize && GetTickCount() - lastPushTime < flushDelay) return;
 	AddSentence(buffer);

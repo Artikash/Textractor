@@ -10,7 +10,7 @@ namespace Util
 		{
 			std::vector<wchar_t> buffer(MAX_PATH);
 			if (GetModuleFileNameExW(process, module, buffer.data(), MAX_PATH)) return buffer.data();
-			else return {};
+			return {};
 		}
 		return {};
 	}
@@ -18,8 +18,8 @@ namespace Util
 	std::optional<std::wstring> GetModuleFilename(HMODULE module)
 	{
 		std::vector<wchar_t> buffer(MAX_PATH);
-		if (::GetModuleFileNameW(module, buffer.data(), MAX_PATH)) return buffer.data();
-		else return {};
+		if (GetModuleFileNameW(module, buffer.data(), MAX_PATH)) return buffer.data();
+		return {};
 	}
 
 	std::optional<std::wstring> GetClipboardText()
@@ -27,22 +27,17 @@ namespace Util
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
 		if (!OpenClipboard(NULL)) return {};
 
-		if (HANDLE clipboard = GetClipboardData(CF_UNICODETEXT))
-		{
-			std::wstring ret = (wchar_t*)GlobalLock(clipboard);
-			GlobalUnlock(clipboard);
-			CloseClipboard();
-			return ret;
-		}
+		std::optional<std::wstring> ret;
+		if (AutoHandle<Functor<GlobalUnlock>> clipboard = GetClipboardData(CF_UNICODETEXT)) ret = (wchar_t*)GlobalLock(clipboard);
 		CloseClipboard();
-		return {};
+		return ret;
 	}
 
 	std::optional<std::wstring> StringToWideString(std::string text, UINT encoding)
 	{
 		std::vector<wchar_t> buffer(text.size() + 1);
 		if (MultiByteToWideChar(encoding, 0, text.c_str(), -1, buffer.data(), buffer.size())) return buffer.data();
-		else return {};
+		return {};
 	}
 
 	bool RemoveRepetition(std::wstring& text)

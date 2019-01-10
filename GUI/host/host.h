@@ -18,4 +18,6 @@ namespace Host
 	void AddConsoleOutput(std::wstring text);
 
 	inline int defaultCodepage = SHIFT_JIS;
+
+	constexpr ThreadParam console{ 0, -1LL, -1LL, -1LL }, clipboard{ 0, 0, -1LL, -1LL };
 }

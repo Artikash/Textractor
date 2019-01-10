@@ -24,7 +24,7 @@ enum HostNotificationType
 	HOST_NOTIFICATION_RMVHOOK = 2
 };
 
-enum HookParamType : unsigned long
+enum HookParamType : unsigned
 {
 	USING_STRING = 0x1, // type(data) is char* or wchar_t* and has length
 	USING_UNICODE = 0x2, // type(data) is wchar_t or wchar_t*
