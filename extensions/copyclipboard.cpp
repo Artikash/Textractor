@@ -2,7 +2,7 @@
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["current select"] && sentenceInfo["hook address"] != -1)
+	if (sentenceInfo["current select"] && sentenceInfo["process id"] != 0)
 	{
 		if (!OpenClipboard(FindWindowW(NULL, L"Textractor"))) return false;
 		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (sentence.size() + 2) * sizeof(wchar_t));
