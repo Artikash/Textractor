@@ -57,8 +57,7 @@ namespace
 
 	size_t HashThreadParam(ThreadParam tp)
 	{
-		std::hash<int64_t> hash;
-		return hash(hash(tp.processId) + hash(tp.addr) + hash(tp.ctx) + hash(tp.ctx2));
+		return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2);
 	}
 	ThreadSafe<std::unordered_map<ThreadParam, std::unique_ptr<TextThread>, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
 	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
@@ -160,8 +159,7 @@ namespace Host
 			return false;
 		}
 
-		static HMODULE vnrhook = LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES);
-		static std::wstring location = Util::GetModuleFilename(vnrhook).value();
+		static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
 
 		if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
 		{
