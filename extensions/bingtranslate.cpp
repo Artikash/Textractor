@@ -150,6 +150,6 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	translation = Translate(sentence, translateFrom, translateTo);
 	for (auto& c : translation) if (c == L'\\') c = 0x200b;
 	if (translation.empty()) translation = TRANSLATION_ERROR;
-	sentence += L"\r\n" + translation;
+	sentence += L"\n" + translation;
 	return true;
 }
