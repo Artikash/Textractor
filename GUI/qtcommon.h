@@ -8,5 +8,6 @@
 #include <QDialog>
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
 #include <QRegularExpression>
 #include <QSettings>

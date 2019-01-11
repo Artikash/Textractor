@@ -265,6 +265,13 @@ QString GenerateCode(HookParam hp, DWORD processId)
 	else return GenerateHCode(hp, processId);
 }
 
+HMODULE LoadLibraryOnce(std::wstring fileName)
+{
+	HMODULE module = GetModuleHandleW(fileName.c_str());
+	if (!module) module = LoadLibraryW(fileName.c_str());
+	return module;
+}
+
 TEST(
 	assert(ParseCode("/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
 	assert(ParseCode("HB4@0")),

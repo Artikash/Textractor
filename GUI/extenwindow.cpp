@@ -7,7 +7,6 @@
 #include <shared_mutex>
 #include <QDragEnterEvent>
 #include <QDropEvent>
-#include <QFileDialog>
 #include <QMimeData>
 #include <QUrl>
 #include <QLabel>
@@ -30,14 +29,12 @@ namespace
 	{
 		if (extenName == ITH_DLL) return;
 		// Extension is dll and exports "OnNewSentence"
-		HMODULE module = GetModuleHandleW(S(extenName).c_str());
-		if (!module) module = LoadLibraryW(S(extenName).c_str());
-		if (!module) return;
-		FARPROC callback = GetProcAddress(module, "OnNewSentence");
-		if (!callback) return;
-		std::scoped_lock writeLock(extenMutex);
-		extensions[extenName] = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback;
-		extenNames.push_back(extenName);
+		if (FARPROC callback = GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+		{
+			std::scoped_lock writeLock(extenMutex);
+			extensions[extenName] = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback;
+			extenNames.push_back(extenName);
+		}
 	}
 
 	void Unload(QString extenName)

@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QInputDialog>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	for (auto[text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
 		{ ATTACH, &MainWindow::AttachProcess },
+		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
 		{ ADD_HOOK, &MainWindow::AddHook },
 		{ SAVE_HOOKS, &MainWindow::SaveHooks },
@@ -90,6 +92,9 @@ void MainWindow::ProcessConnected(DWORD processId)
 	{
 		QString process = S(Util::GetModuleFilename(processId).value_or(L"???"));
 		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
+		if (process == "???") return;
+
+		QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
 
 		QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 		// Can't use QFileInfo::absoluteFilePath since hook save file has '\\' as path separator
@@ -198,11 +203,51 @@ void MainWindow::AttachProcess()
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
-	bool ok;
 	QString process = QInputDialog::getItem(this, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
 	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
 	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
+}
+
+void MainWindow::LaunchProcess()
+{
+	QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
+	savedProcesses.removeDuplicates();
+	savedProcesses.sort(Qt::CaseInsensitive);
+	savedProcesses.push_back(SEARCH_GAME);
+	std::wstring process = S(QInputDialog::getItem(this, SELECT_PROCESS, "", savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint));
+	if (!ok) return;
+	if (S(process) == SEARCH_GAME) process = S(QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, SELECT_PROCESS, "C:\\", PROCESSES)));
+	if (process.empty()) return;
+	std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
+	PROCESS_INFORMATION info = {};
+	if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
+	{
+		// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
+		struct
+		{
+			ULONG AnsiCodePage = Host::defaultCodepage;
+			ULONG OemCodePage = Host::defaultCodepage;
+			ULONG LocaleID = LANG_JAPANESE;
+			ULONG DefaultCharset = DEFAULT_CHARSET;
+			ULONG HookUiLanguageApi = FALSE;
+			WCHAR DefaultFaceName[LF_FACESIZE] = {};
+			TIME_ZONE_INFORMATION Timezone;
+			ULONG64 Unused = 0;
+		} LEB;
+		GetTimeZoneInformation(&LEB.Timezone);
+		((LONG(__stdcall*)(decltype(&LEB), LPCWSTR appName, LPWSTR commandLine, LPCWSTR currentDir, void*, void*, PROCESS_INFORMATION*, void*, void*, void*, void*))
+			GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, path.c_str(), NULL, NULL, &info, NULL, NULL, NULL, NULL);
+	}
+	if (info.hProcess == NULL)
+	{
+		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
+		CreateProcessW(process.c_str(), NULL, nullptr, nullptr, FALSE, 0, nullptr, path.c_str(), &DUMMY, &info);
+	}
+	if (info.hProcess == NULL) return Host::AddConsoleOutput(LAUNCH_FAILED);
+	Host::InjectProcess(info.dwProcessId);
+	CloseHandle(info.hProcess);
+	CloseHandle(info.hThread);
 }
 
 void MainWindow::DetachProcess()
@@ -212,7 +257,6 @@ void MainWindow::DetachProcess()
 
 void MainWindow::AddHook()
 {
-	bool ok;
 	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint);
 	if (!ok) return;
 	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
@@ -233,7 +277,7 @@ void MainWindow::SaveHooks()
 				if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(hp, tp.processId);
 			}
 		}
-		QTextFile(HOOK_SAVE_FILE, QIODevice::Append).write((S(processName.value()) + " , " + QStringList(hookCodes.values()).join(" , ") + "\n").toUtf8());
+		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((S(processName.value()) + " , " + QStringList(hookCodes.values()).join(" , ") + "\n").toUtf8());
 	}
 }
 

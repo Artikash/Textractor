@@ -13,3 +13,4 @@ inline std::wstring S(const QString& S) { return { S.toStdWString() }; }
 inline QString S(const std::wstring& S) { return QString::fromStdWString(S); }
 std::optional<HookParam> ParseCode(QString HCode);
 QString GenerateCode(HookParam hp, DWORD processId);
+HMODULE LoadLibraryOnce(std::wstring fileName);

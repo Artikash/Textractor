@@ -15,6 +15,8 @@ public:
 	~MainWindow();
 
 private:
+	inline static thread_local bool ok = false;
+
 	void closeEvent(QCloseEvent*) override;
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
@@ -26,6 +28,7 @@ private:
 	DWORD GetSelectedProcessId();
 	std::unordered_map<const char*, int64_t> GetMiscInfo(TextThread* thread);
 	void AttachProcess();
+	void LaunchProcess();
 	void DetachProcess();
 	void AddHook();
 	void SaveHooks();

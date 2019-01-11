@@ -23,6 +23,7 @@ constexpr auto ITH_HOOKMAN_MUTEX_ = L"VNR_HOOKMAN_"; // ITH_HOOKMAN_%d
 constexpr auto ITH_DLL = L"vnrhook"; // .dll but LoadLibrary automatically adds that
 constexpr auto CONFIG_FILE = u8"Textractor.ini";
 constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
+constexpr auto GAME_SAVE_FILE = u8"Games.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"Extensions.txt";
 
 // Functions

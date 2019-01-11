@@ -5,6 +5,7 @@
 
 #ifdef ENGLISH
 constexpr auto ATTACH = u8"Attach to game";
+constexpr auto LAUNCH = u8"Launch game";
 constexpr auto DETACH = u8"Detach from game";
 constexpr auto ADD_HOOK = u8"Add hook";
 constexpr auto SAVE_HOOKS = u8"Save hook(s)";
@@ -13,6 +14,8 @@ constexpr auto EXTENSIONS = u8"Extensions";
 constexpr auto SELECT_PROCESS = u8"Select Process";
 constexpr auto ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
 You can also type in the process id)";
+constexpr auto SEARCH_GAME = u8"Select from computer";
+constexpr auto PROCESSES = u8"Processes (*.exe)";
 constexpr auto CODE_INFODUMP = u8R"(Search for text
 S[codepage#]text
 OR
@@ -49,6 +52,7 @@ constexpr auto UPDATE_AVAILABLE = L"Update available: download it from https://g
 constexpr auto ALREADY_INJECTED = L"Textractor: already injected";
 constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
 constexpr auto INJECT_FAILED = L"Textractor: couldn't inject";
+constexpr auto LAUNCH_FAILED = L"Textractor: couldn't launch";
 constexpr auto INVALID_CODE = L"Textractor: invalid code";
 constexpr auto INVALID_CODEPAGE = L"Textractor: couldn't convert text (invalid codepage?)";
 constexpr auto PIPE_CONNECTED = u8"Textractor: pipe connected";
