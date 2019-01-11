@@ -16,7 +16,7 @@ namespace
 			processId(processId),
 			pipe(pipe),
 			mappedFile(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
-			view(MapViewOfFile(mappedFile, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
+			view(*(const TextHook(*)[MAX_HOOK])MapViewOfFile(mappedFile, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
 			viewMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
 		{
 			OnConnect(processId);
@@ -32,24 +32,26 @@ namespace
 		{
 			if (view == nullptr) return {};
 			std::scoped_lock lock(viewMutex);
-			auto hooks = (const TextHook*)view;
-			for (int i = 0; i < MAX_HOOK; ++i)
-				if (hooks[i].address == addr) return hooks[i];
+			for (auto hook : view)
+				if (hook.address == addr) return hook;
 			return {};
 		}
 
 		template <typename T>
 		void Send(T data)
 		{
-			std::enable_if_t<sizeof(data) < PIPE_BUFFER_SIZE, DWORD> DUMMY;
-			WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
+			std::thread([=]
+			{
+				std::enable_if_t<sizeof(data) < PIPE_BUFFER_SIZE, DWORD> DUMMY;
+				WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
+			}).detach();
 		}
 
 	private:
 		DWORD processId;
 		HANDLE pipe;
 		AutoHandle<> mappedFile;
-		LPCVOID view;
+		const TextHook(&view)[MAX_HOOK];
 		WinMutex viewMutex;
 	};
 
@@ -77,7 +79,6 @@ namespace
 			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
 			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
 			SECURITY_ATTRIBUTES pipeSA = { sizeof(pipeSA), &pipeSD, FALSE };
-
 
 			struct PipeCloser { void operator()(HANDLE h) { DisconnectNamedPipe(h); CloseHandle(h); } };
 			AutoHandle<PipeCloser>

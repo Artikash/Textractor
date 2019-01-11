@@ -87,7 +87,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 
 	ui->extenList->installEventFilter(this);
 
-	for (auto extenName : QString(QAutoFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split(">")) Load(extenName);
+	for (auto extenName : QString(QTextFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly).readAll()).split(">")) Load(extenName);
 	Sync();
 }
 
@@ -99,12 +99,12 @@ ExtenWindow::~ExtenWindow()
 void ExtenWindow::Sync()
 {
 	ui->extenList->clear();
-	QAutoFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
+	QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
 	std::shared_lock readLock(extenMutex);
 	for (auto extenName : extenNames)
 	{
 		ui->extenList->addItem(extenName);
-		extenSaveFile->write((extenName + ">").toUtf8());
+		extenSaveFile.write((extenName + ">").toUtf8());
 	}
 }
 

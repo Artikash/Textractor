@@ -3,14 +3,10 @@
 #include "qtcommon.h"
 #include "types.h"
 
-class QAutoFile
+struct QTextFile : QFile
 {
-public:
-	QAutoFile(const QString& name, QIODevice::OpenMode mode) : f(name) { f.open(mode); }
-	QFile* operator->() { return &f; }
-
-private:
-	QFile f;
+	using QFile::QFile;
+	QTextFile(const QString& name, QIODevice::OpenMode mode) : QFile(name) { open(mode | QIODevice::Text); }
 };
 
 inline std::wstring S(const QString& S) { return { S.toStdWString() }; }

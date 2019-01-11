@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	}
 	ui->processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
-	connect(ui->ttCombo, (void(QComboBox::*)(int))&QComboBox::activated, this, &MainWindow::ViewThread);
+	connect(ui->ttCombo, qOverload<int>(&QComboBox::activated), this, &MainWindow::ViewThread);
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
@@ -88,10 +88,10 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (processId == 0) return;
 	QMetaObject::invokeMethod(this, [this, processId]
 	{
-		QString process = S(Util::GetModuleFilename(processId).value());
+		QString process = S(Util::GetModuleFilename(processId).value_or(L"???"));
 		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
 
-		QStringList allProcesses = QString(QAutoFile(HOOK_SAVE_FILE, QIODevice::ReadOnly)->readAll()).split("\r", QString::SkipEmptyParts);
+		QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 		// Can't use QFileInfo::absoluteFilePath since hook save file has '\\' as path separator
 		auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
 		if (hookList != allProcesses.rend())
@@ -136,7 +136,7 @@ bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
 {
 	if (DispatchSentenceToExtensions(sentence, GetMiscInfo(thread)))
 	{
-		sentence += L"\r\n";
+		sentence += L"\n";
 		QString ttString = TextThreadString(thread);
 		QMetaObject::invokeMethod(this, [this, ttString, sentence]
 		{
@@ -227,11 +227,13 @@ void MainWindow::SaveHooks()
 		for (int i = 0; i < ui->ttCombo->count(); ++i)
 		{
 			ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
-			if (tp.processId == GetSelectedProcessId() && !(Host::GetHookParam(tp).type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(Host::GetHookParam(tp), tp.processId);
+			if (tp.processId == GetSelectedProcessId())
+			{
+				HookParam hp = Host::GetHookParam(tp);
+				if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(hp, tp.processId);
+			}
 		}
-		QString hookList = S(processName.value());
-		for (auto hookCode : hookCodes) hookList += " , " + hookCode;
-		QAutoFile(HOOK_SAVE_FILE, QIODevice::Append)->write((hookList + "\r\n").toUtf8());
+		QTextFile(HOOK_SAVE_FILE, QIODevice::Append).write((S(processName.value()) + " , " + QStringList(hookCodes.values()).join(" , ") + "\n").toUtf8());
 	}
 }
 

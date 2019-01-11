@@ -1,6 +1,7 @@
 include(QtUtils)
 msvc_registry_search()
 find_qt5(Core Widgets)
+set(AUTOMOC OFF)
 
 set(RESOURCE_FILES Textractor.rc Textractor.ico)
 add_compile_options(/GL)
