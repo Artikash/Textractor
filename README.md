@@ -49,13 +49,14 @@ Finally, the GUI dispatches the text to extensions before displaying it.
 ## Developers
 
 If you're on this list and want your link changed let me know.
-- Textractor creation/updating by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- Textractor made by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 - Turkish translation by niisokusu
-- ITHVNR updating by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
-- ITHVNR new GUI & VNR engine migration by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- VNR engine making by [jichi](https://archive.is/prJwr)
-- ITH updating by [Andys](https://github.com/AndyScull)
+- ITHVNR updated by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
+- VNR engine made by [jichi](https://archive.is/prJwr)
+- ITH updated by [Andys](https://github.com/AndyScull)
 - ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
+- Locale Emulator library made by [xupefei](https://github.com/xupefei)
 - MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
 
 ## Special Thanks
