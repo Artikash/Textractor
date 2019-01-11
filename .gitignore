@@ -1,5 +1,6 @@
-Build/
-Builds/
+/Textractor*
+/build/
+/builds/
 *.vs/
 *.vscode/
 *.user

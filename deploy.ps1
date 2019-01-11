@@ -1,4 +1,4 @@
-Set-Location "$($PSScriptRoot)/Builds";
+Set-Location $PSScriptRoot;
 
 foreach ($arch in @("86", "64")) {
 	$folder = "Textractor$($arch)";
@@ -14,12 +14,12 @@ foreach ($arch in @("86", "64")) {
 		"Google Translate.dll",
 		"Regex Filter.dll",
 		"Remove Repetition.dll",
-		"Extensions.txt",
 		"platforms",
 		"styles"
-	) | ForEach-Object { "RelWithDebInfo_x$($arch)/$($_)" };
+	) | ForEach-Object { "builds/RelWithDebInfo_x$($arch)/$($_)" };
 	mkdir -Force -Verbose $folder;
 	Remove-Item -Force -Recurse -Verbose "$($folder)/*";
 	Copy-Item -Force -Recurse -Verbose -Destination $folder -Path $targets;
+	Copy-Item -Force -Recurse -Verbose -Destination $folder -Path "release/*";
 	Compress-Archive -Force -Verbose -DestinationPath $folder -Path $folder;
 }
