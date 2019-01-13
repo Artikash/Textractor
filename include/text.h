@@ -37,6 +37,7 @@ constexpr auto EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) f
 Drag and drop within the list to reorder
 Press delete with an extension selected to remove it)";
 constexpr auto WINDOW = u8"Window";
+constexpr auto USE_JP_LOCALE = u8"Emulate japanese locale?";
 constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
 constexpr auto FLUSH_DELAY = u8"Flush Delay";
 constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";

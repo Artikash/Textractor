@@ -10,6 +10,7 @@
 #include <QFormLayout>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
 
@@ -203,10 +204,9 @@ void MainWindow::AttachProcess()
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
-	QString process = QInputDialog::getItem(this, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint);
-	if (!ok) return;
-	if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
-	else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
+	if (QString process = QInputDialog::getItem(this, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint); ok)
+		if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
+		else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
 }
 
 void MainWindow::LaunchProcess()
@@ -219,30 +219,31 @@ void MainWindow::LaunchProcess()
 	if (!ok) return;
 	if (S(process) == SEARCH_GAME) process = S(QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, SELECT_PROCESS, "C:\\", PROCESSES)));
 	if (process.empty()) return;
-	std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
+
 	PROCESS_INFORMATION info = {};
-	if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
-	{
-		// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
-		struct
+	if (QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
+		if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
 		{
-			ULONG AnsiCodePage = Host::defaultCodepage;
-			ULONG OemCodePage = Host::defaultCodepage;
-			ULONG LocaleID = LANG_JAPANESE;
-			ULONG DefaultCharset = DEFAULT_CHARSET;
-			ULONG HookUiLanguageApi = FALSE;
-			WCHAR DefaultFaceName[LF_FACESIZE] = {};
-			TIME_ZONE_INFORMATION Timezone;
-			ULONG64 Unused = 0;
-		} LEB;
-		GetTimeZoneInformation(&LEB.Timezone);
-		((LONG(__stdcall*)(decltype(&LEB), LPCWSTR appName, LPWSTR commandLine, LPCWSTR currentDir, void*, void*, PROCESS_INFORMATION*, void*, void*, void*, void*))
-			GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, path.c_str(), NULL, NULL, &info, NULL, NULL, NULL, NULL);
-	}
+			// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
+			struct
+			{
+				ULONG AnsiCodePage = SHIFT_JIS;
+				ULONG OemCodePage = SHIFT_JIS;
+				ULONG LocaleID = LANG_JAPANESE;
+				ULONG DefaultCharset = SHIFTJIS_CHARSET;
+				ULONG HookUiLanguageApi = FALSE;
+				WCHAR DefaultFaceName[LF_FACESIZE] = {};
+				TIME_ZONE_INFORMATION Timezone;
+				ULONG64 Unused = 0;
+			} LEB;
+			GetTimeZoneInformation(&LEB.Timezone);
+			((LONG(__stdcall*)(decltype(&LEB), LPCWSTR appName, LPWSTR commandLine, LPCWSTR currentDir, void*, void*, PROCESS_INFORMATION*, void*, void*, void*, void*))
+				GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, NULL, NULL, NULL, &info, NULL, NULL, NULL, NULL);
+		}
 	if (info.hProcess == NULL)
 	{
 		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
-		CreateProcessW(process.c_str(), NULL, nullptr, nullptr, FALSE, 0, nullptr, path.c_str(), &DUMMY, &info);
+		CreateProcessW(process.c_str(), NULL, nullptr, nullptr, FALSE, 0, nullptr, NULL, &DUMMY, &info);
 	}
 	if (info.hProcess == NULL) return Host::AddConsoleOutput(LAUNCH_FAILED);
 	Host::InjectProcess(info.dwProcessId);
@@ -257,10 +258,9 @@ void MainWindow::DetachProcess()
 
 void MainWindow::AddHook()
 {
-	QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint);
-	if (!ok) return;
-	if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
-	else Host::AddConsoleOutput(INVALID_CODE);
+	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint); ok)
+		if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
+		else Host::AddConsoleOutput(INVALID_CODE);
 }
 
 void MainWindow::SaveHooks()
