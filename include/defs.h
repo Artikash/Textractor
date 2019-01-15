@@ -23,13 +23,13 @@ constexpr auto ITH_HOOKMAN_MUTEX_ = L"VNR_HOOKMAN_"; // ITH_HOOKMAN_%d
 constexpr auto ITH_DLL = L"vnrhook"; // .dll but LoadLibrary automatically adds that
 constexpr auto CONFIG_FILE = u8"Textractor.ini";
 constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
-constexpr auto GAME_SAVE_FILE = u8"Games.txt";
-constexpr auto EXTEN_SAVE_FILE = u8"Extensions.txt";
+constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
+constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
 
 // Functions
 
-template <typename... Ts>
-inline void FORMAT_MESSAGE(const char* format, Ts ...args)
+template <typename... Args>
+inline void FORMAT_MESSAGE(const char* format, Args... args)
 {
 	char buffer[250] = {};
 	sprintf_s<250>(buffer, format, args...);
