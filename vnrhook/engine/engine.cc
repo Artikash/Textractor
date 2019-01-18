@@ -10394,17 +10394,17 @@ bool InsertArtemis2Hook()
 	0x68, XX4,         // 00544628 | 68 68 7C 6A 00           | push 空のつくりかた体験版_ver3.0.6A7C68           |
 	0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, // 0054462D | 64 A1 00 00 00 00        | mov eax,dword ptr fs:[0]                |
 	0x50,              // 00544633 | 50                       | push eax                                |
-	0x83, 0xEC, 0x28,  // 00544634 | 83 EC 28                 | sub esp,28                              |
+	0x83, 0xEC, XX,  // 00544634 | 83 EC 28                 | sub esp,28                              |
 	0xA1, XX4,         // 00544637 | A1 F0 57 81 00           | mov eax,dword ptr ds:[8157F0]           |
 	0x33, 0xC4,        // 0054463C | 33 C4                    | xor eax,esp                             |
-    0x89, 0x44, 0x24, 0x20, // 0054463E | 89 44 24 20              | mov dword ptr ss:[esp+20],eax           |
+    0x89, 0x44, 0x24, XX, // 0054463E | 89 44 24 20              | mov dword ptr ss:[esp+20],eax           |
     0x53,              // 00544642 | 53                       | push ebx                                |
 	0x56,              // 00544643 | 56                       | push esi                                |
 	0x57,              // 00544644 | 57                       | push edi                                |
 	0xA1, XX4,         // 00544645 | A1 F0 57 81 00           | mov eax,dword ptr ds:[8157F0]           |
 	0x33, 0xC4,        // 0054464A | 33 C4                    | xor eax,esp                             |
 	0x50,              // 0054464C | 50                       | push eax                                |
-	0x8D, 0x44, 0x24, 0x38, // 0054464D | 8D 44 24 38              | lea eax,dword ptr ss:[esp+38]           | [esp+38]:BaseThreadInitThunk
+	0x8D, 0x44, 0x24, XX, // 0054464D | 8D 44 24 38              | lea eax,dword ptr ss:[esp+38]           | [esp+38]:BaseThreadInitThunk
 	0x64, 0xA3, 0x00, 0x00, 0x00, 0x00, // 00544651 | 64 A3 00 00 00 00        | mov dword ptr fs:[0],eax                |
 	0x8B, 0xF1,        // 00544657 | 8B F1                    | mov esi,ecx                             |
 	0x8B, 0x5D, 0x08,  // 00544659 | 8B 5D 08                 | mov ebx,dword ptr ss:[ebp+8]            |
