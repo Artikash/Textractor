@@ -244,7 +244,7 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 
 			if (This->hp.type & USING_UNICODE) dataLen = wcslen((wchar_t*)currentAddress) * 2;
 			else dataLen = strlen((char*)currentAddress);
-
+			if (dataLen > PIPE_BUFFER_SIZE - 1) continue; // results in silly error msg but oh well
 			memcpy(buffer, (void*)currentAddress, dataLen + 1);
 			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
 		}
