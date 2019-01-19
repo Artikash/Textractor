@@ -11885,6 +11885,21 @@ bool InsertSilkysHook()
   return true;
 }
 
+bool InsertSRPGHook()
+{
+	if (DWORD addr = (DWORD)GetProcAddress(GetModuleHandleW(L"oleaut32.dll"), "SysAllocString"))
+	{
+		HookParam hp = {};
+		hp.offset = 4;
+		hp.address = addr;
+		hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT;
+		NewHook(hp, "SRPG");
+		return true;
+	}
+	ConsoleOutput("Textractor: SRPG: couldn't find function");
+	return false;
+}
+
 /** jichi 6/1/2014 Eushully
  *  Insert to the last GetTextExtentPoint32A
  *
