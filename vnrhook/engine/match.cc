@@ -822,28 +822,6 @@ bool DetermineNoEngine()
   return false;
 }
 
-// 12/13/2013: Declare it in a way compatible to EXCEPTION_PROCEDURE
-EXCEPTION_DISPOSITION ExceptHandler(PEXCEPTION_RECORD ExceptionRecord, LPVOID, PCONTEXT, LPVOID)
-{
-  if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) {
-    processStopAddress = ExceptionRecord->ExceptionInformation[1];
-    //OutputDWORD(process_limit);
-    __asm
-    {
-      mov eax,fs:[0x30] // jichi 12/13/2013: get PEB
-      mov eax,[eax+0xc]
-      mov eax,[eax+0xc]
-      mov ecx,processStopAddress
-      sub ecx,processStartAddress
-      mov [eax+0x20],ecx
-    }
-  }
-  //ContextRecord->Esp = recv_esp;
-  //ContextRecord->Eip = recv_eip;
-  //return ExceptionContinueExecution; // jichi 3/11/2014: this will still crash. Not sure why ITH use this. Change to ExceptionContinueSearch
-  return ExceptionContinueSearch; // an unwind is in progress,
-}
-
 // jichi 9/14/2013: Certain ITH functions like FindEntryAligned might raise exception without admin priv
 // Return if succeeded.
 bool UnsafeDetermineEngineType()
@@ -867,7 +845,7 @@ bool DetermineEngineType()
   bool found = false;
 #ifndef ITH_DISABLE_ENGINE
   __try { found = UnsafeDetermineEngineType(); }
-  __except (ExceptHandler((GetExceptionInformation())->ExceptionRecord, 0, 0, 0)) { ConsoleOutput(HIJACK_ERROR); }
+  __except (EXCEPTION_EXECUTE_HANDLER) { ConsoleOutput(HIJACK_ERROR); }
 #endif // ITH_DISABLE_ENGINE
   if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
     PcHooks::hookOtherPcFunctions();
