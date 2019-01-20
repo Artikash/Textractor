@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define CURRENT_VERSION "1.0.0"
+#define CURRENT_VERSION "1.0.1"
 #define ENGLISH
 
 #ifdef ENGLISH
@@ -43,8 +43,9 @@ constexpr auto FLUSH_DELAY = u8"Flush Delay";
 constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";
 constexpr auto CONSOLE = L"Console";
 constexpr auto CLIPBOARD = L"Clipboard";
-constexpr auto ABOUT = L"Textractor v" CURRENT_VERSION LR"( (project homepage: https://github.com/Artikash/Textractor)
-Made by me: Artikash (email: akashmozumdar@gmail.com)
+constexpr auto ABOUT = L"Textractor v" CURRENT_VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
+Project homepage: https://github.com/Artikash/Textractor
+Tutorial video: https://www.youtube.com/watch?v=eecEOacF6mw
 Please contact me with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
