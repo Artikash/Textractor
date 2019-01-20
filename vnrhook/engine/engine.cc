@@ -16570,6 +16570,7 @@ bool InsertMonoHook()
 	bool found = false;
 	for (auto addr : Util::SearchMemory(ins, sizeof(ins)/*,PAGE_EXECUTE_READWRITE*/))
 	{
+		found = true;
 		HookParam hp = {};
 		hp.address = addr;
 		//hp.module = module;
@@ -16581,7 +16582,26 @@ bool InsertMonoHook()
 
 		ConsoleOutput("vnreng: INSERT Mono");
 		NewHook(hp, "Mono");
-		found = true;
+
+		for (int i = 0; i < 75; ++i)
+		{
+			if (((*(DWORD*)(addr - i)) | 0xff000000) == 0xffec8b55) // search backward for function entry: first param is MonoString*
+			{
+				HookParam hp2 = {};
+				hp2.address = addr - i;
+				hp2.type = USING_UNICODE;
+				hp2.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
+				{
+					MonoString* string = (MonoString*)argof(1, esp_base);
+					*data = (DWORD)string->chars;
+					*len = string->length * 2;
+					*split = *(DWORD*)(esp_base + 0x28);
+				};
+				ConsoleOutput("Textractor: INSERT Mono2");
+				NewHook(hp2, "Mono2");
+				break;
+			}
+		}
 	}
 	if (!found) ConsoleOutput("vnreng:Mono: pattern not found");
 	return found;
