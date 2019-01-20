@@ -226,6 +226,7 @@ namespace
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
 
+		if (hp.text_fun || hp.filter_fun || hp.hook_fun) codeBuilder << "X"; // no AGTH equivalent
 		codeBuilder << hp.offset;
 		if (hp.type & DATA_INDIRECT) codeBuilder << "*" << hp.index;
 		if (hp.type & USING_SPLIT) codeBuilder << ":" << hp.split;
