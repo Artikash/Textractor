@@ -21,11 +21,7 @@ namespace
 
 	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)
 	{
-		thread_local static auto _ = std::invoke([]
-		{
-			std::set_terminate(Terminate);
-			return 0;
-		});
+		thread_local static auto _ = std::set_terminate(Terminate);
 
 		MEMORY_BASIC_INFORMATION info = {};
 		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
@@ -47,10 +43,5 @@ namespace
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
 
-	auto _ = std::invoke([]
-	{
-		AddVectoredExceptionHandler(FALSE, ExceptionLogger);
-		SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); });
-		return 0;
-	});
+	auto _ = (AddVectoredExceptionHandler(FALSE, ExceptionLogger), SetUnhandledExceptionFilter([](auto) -> LONG { Terminate(); }));
 }

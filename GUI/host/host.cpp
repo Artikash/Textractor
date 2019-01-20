@@ -120,16 +120,6 @@ namespace
 			processRecordsByIds->erase(processId);
 		}).detach();
 	}
-
-	void StartCapturingClipboard()
-	{
-		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
-		{
-			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
-				if (auto text = Util::GetClipboardText()) Host::GetThread(Host::clipboard)->AddSentence(text.value());
-			return CallNextHookEx(NULL, statusCode, wParam, lParam);
-		}, NULL, GetCurrentThreadId());
-	}
 }
 
 namespace Host
@@ -144,8 +134,14 @@ namespace Host
 		processRecordsByIds->try_emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
 		textThreadsByParams->insert({ console, std::make_unique<TextThread>(console, HookParam{}, CONSOLE) });
 		textThreadsByParams->insert({ Host::clipboard, std::make_unique<TextThread>(Host::clipboard, HookParam{}, CLIPBOARD) });
-		StartCapturingClipboard();
 		CreatePipe();
+
+		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
+		{
+			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
+				if (auto text = Util::GetClipboardText()) Host::GetThread(Host::clipboard)->AddSentence(text.value());
+			return CallNextHookEx(NULL, statusCode, wParam, lParam);
+		}, NULL, GetCurrentThreadId());
 	}
 
 	bool InjectProcess(DWORD processId, DWORD timeout)
@@ -174,7 +170,7 @@ namespace Host
 #endif
 			if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 			{
-				WriteProcessMemory(process, remoteData, location.c_str(), location.size() * 2 + 2, nullptr);
+				WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);
 				if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
 				{
 					WaitForSingleObject(thread, timeout);

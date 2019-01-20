@@ -6,12 +6,9 @@ namespace Util
 {
 	std::optional<std::wstring> GetModuleFilename(DWORD processId, HMODULE module)
 	{
-		if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
-		{
-			std::vector<wchar_t> buffer(MAX_PATH);
+		std::vector<wchar_t> buffer(MAX_PATH);
+		if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId)) 
 			if (GetModuleFileNameExW(process, module, buffer.data(), MAX_PATH)) return buffer.data();
-			return {};
-		}
 		return {};
 	}
 
@@ -27,10 +24,10 @@ namespace Util
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
 		if (!OpenClipboard(NULL)) return {};
 
-		std::optional<std::wstring> ret;
-		if (AutoHandle<Functor<GlobalUnlock>> clipboard = GetClipboardData(CF_UNICODETEXT)) ret = (wchar_t*)GlobalLock(clipboard);
+		std::optional<std::wstring> text;
+		if (AutoHandle<Functor<GlobalUnlock>> clipboard = GetClipboardData(CF_UNICODETEXT)) text = (wchar_t*)GlobalLock(clipboard);
 		CloseClipboard();
-		return ret;
+		return text;
 	}
 
 	std::optional<std::wstring> StringToWideString(std::string text, UINT encoding)
@@ -45,7 +42,7 @@ namespace Util
 		wchar_t* end = text.data() + text.size();
 		for (int len = text.size() / 3; len > 6; --len)
 			if (wcsncmp(end - len * 3, end - len * 2, len) == 0 && wcsncmp(end - len * 3, end - len * 1, len) == 0)
-				return true | RemoveRepetition(text = end - len);
+				return RemoveRepetition(text = end - len), true;
 		return false;
 	}
 }
