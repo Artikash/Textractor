@@ -11,6 +11,7 @@ foreach ($arch in @("86", "64")) {
 		"Bing Translate.dll",
 		"Copy to Clipboard.dll",
 		"Extra Newlines.dll",
+		"Extra Window.dll",
 		"Google Translate.dll",
 		"Regex Filter.dll",
 		"Remove Repetition.dll",
