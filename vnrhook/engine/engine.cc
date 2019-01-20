@@ -7077,6 +7077,30 @@ bool InsertMalie4Hook()
   return true;
 }
 
+// Artikash 1/19/2019: works on https://vndb.org/r52326
+bool InsertMalie5Hook()
+{
+	const BYTE bytes[] = {
+		0x8b, 0x49, 0x10, // mov ecx,[ecx+10]
+		0x03, 0x08, // add ecx,[eax]
+		0x51 // push ecx
+	};
+
+	if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress))
+	{
+		ConsoleOutput("Textractor: INSERT Malie5");
+		HookParam hp = {};
+		hp.address = addr + 5;
+		hp.offset = pusha_ecx_off - 4;
+		hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+		NewHook(hp, "Malie5");
+		return true;
+	}
+
+	ConsoleOutput("Textractor: Malie5 pattern not found");
+	return false;
+}
+
 // jichi 3/12/2015: Return guessed Malie engine year
 //int GetMalieYear()
 //{
@@ -7109,11 +7133,7 @@ bool InsertMalieHook()
     // The main disadvantage of Malie3 is that it cannot find character name
     ok = InsertMalie3Hook() || ok; // jichi 3/7/2014
     ok = InsertMalie4Hook() || ok; 
-
-    if (ok) {
-      ConsoleOutput("vnreng:Malie: disable GDI hooks");
-      
-    }
+	ok = InsertMalie5Hook() || ok;
     return ok;
   }
 }
