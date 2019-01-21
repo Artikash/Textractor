@@ -194,7 +194,16 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 						std::wstring response(wbuffer);
 						for (std::wsmatch results; std::regex_search(response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix())
 							translation += std::wstring(results[1]) + L" ";
-						for (auto& c : translation) if (c == L'\\') c = 0x200b;
+
+						for (int i = 0; i < translation.size(); ++i)
+						{
+							if (translation[i] == L'\\')
+							{
+								translation[i] = 0x200b;
+								if (translation[i + 1] == L'r') translation[i + 1] = L'\r';
+								if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
+							}
+						}
 					}
 					else
 					{

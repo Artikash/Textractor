@@ -148,7 +148,17 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	std::wstring translation, translateFrom;
 	Translate(sentence, translateFrom, translateTo);
 	translation = Translate(sentence, translateFrom, translateTo);
-	for (auto& c : translation) if (c == L'\\') c = 0x200b;
+	
+	for (int i = 0; i < translation.size(); ++i)
+	{
+		if (translation[i] == L'\\')
+		{
+			translation[i] = 0x200b;
+			if (translation[i + 1] == L'r') translation[i + 1] = L'\r';
+			if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
+		}
+	}
+
 	if (translation.empty()) translation = TRANSLATION_ERROR;
 	sentence += L"\n" + translation;
 	return true;
