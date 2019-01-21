@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define CURRENT_VERSION "1.0.1"
+#define CURRENT_VERSION "1.0.2"
 #define ENGLISH
 
 #ifdef ENGLISH
