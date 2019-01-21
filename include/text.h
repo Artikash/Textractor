@@ -138,3 +138,88 @@ constexpr auto FUNC_MISSING = u8"Textractor: Fonksiyon mevcut değil";
 constexpr auto MODULE_MISSING = u8"Textractor: Modül mevcut değil";
 constexpr auto GARBAGE_MEMORY = u8"Textractor: Hafıza sürekli değişiyor, okumak boşa";
 #endif // TURKISH
+
+#ifdef SPANISH
+constexpr auto ATTACH = u8"Adjuntar juego";
+constexpr auto LAUNCH = u8"Iniciar juego";
+constexpr auto DETACH = u8"Desconectar juego";
+constexpr auto ADD_HOOK = u8"Añadir hook";
+constexpr auto SAVE_HOOKS = u8"Guardar hook(s)";
+constexpr auto SETTINGS = u8"Opciones";
+constexpr auto EXTENSIONS = u8"Extensiones";
+constexpr auto SELECT_PROCESS = u8"Seleccionar procreso";
+constexpr auto ATTACH_INFO = u8R"(Si no ves el proceso que quieras adjuntar, ejecuta este programa como administrador
+También puedes escribir la ID del proceso)";
+constexpr auto SEARCH_GAME = u8"Seleccionar desde computadora";
+constexpr auto PROCESSES = u8"Procesos (*.exe)";
+constexpr auto CODE_INFODUMP = u8R"(Buscar texto
+S[codepage#]texto
+O
+Ingresar código de lectura
+R{S|Q|V}[codepage#][*deref_offset]@addr
+O
+Ingresar hook code (H-code)
+H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
+Todos los números excepto codepage en hexedécimal
+Codepage por defecto es 932 (Shift-JIS) pero se puede cambiar en opciones
+A/B: codepage char little/big endian
+W: UTF-16 char
+S/Q/V: codepage/UTF-16/UTF-8 string
+Negatives for data/split offset refer to registers
+-4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
+* means dereference pointer+deref_offset)";
+constexpr auto SAVE_SETTINGS = u8"Guardar opciones";
+constexpr auto EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arrrastra y suelta la extension (.dll) aquí desde tu computadora para añadirlos
+Arrastra y suelta la lista para reordenar
+Presiona supr en una extension seleccionada para removerla)";
+constexpr auto WINDOW = u8"Ventana";
+constexpr auto USE_JP_LOCALE = u8"¿Emular idioma japonés?";
+constexpr auto DEFAULT_CODEPAGE = u8"Default Codepage";
+constexpr auto FLUSH_DELAY = u8"Flush Delay";
+constexpr auto MAX_BUFFER_SIZE = u8"Max Buffer Size";
+constexpr auto CONSOLE = L"Consola";
+constexpr auto CLIPBOARD = L"Portapapeles";
+constexpr auto ABOUT = L"Textractor v" CURRENT_VERSION LR"( hecho por mí: Artikash (correo: akashmozumdar@gmail.com)
+Página del proyecto: https://github.com/Artikash/Textractor
+Video tutorial: https://www.youtube.com/watch?v=eecEOacF6mw
+No dudes en conectarme si tienes algún problema, petición de característica o preguntas relacionadas con Textractor
+Puedes hacerlo en la página del proyecto (en el apartado de "Issues") o por correo. Usa el inglés para comunicarte.
+Código fuente disponible bajo GPLv3 en la página del proyecto
+Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contratando ingenieros de software de EE.UU.)";
+constexpr auto UPDATE_AVAILABLE = L"Actualización disponible: descárguela en https://github.com/Artikash/Textractor/releases";
+constexpr auto ALREADY_INJECTED = L"Textractor: ya inyectado";
+constexpr auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
+constexpr auto INJECT_FAILED = L"Textractor: no se puede inyectar";
+constexpr auto LAUNCH_FAILED = L"Textractor: no se puede iniciar";
+constexpr auto INVALID_CODE = L"Textractor: código inválido";
+constexpr auto INVALID_CODEPAGE = L"Textractor: no se puede convertir texto (¿Codepage inválido?)";
+constexpr auto PIPE_CONNECTED = u8"Textractor: pipe connected";
+constexpr auto INSERTING_HOOK = u8"Textractor: insertando hook: %s";
+constexpr auto REMOVING_HOOK = u8"Textractor: removiendo hook: %s";
+constexpr auto HOOK_FAILED = u8"Textractor: no se puede insertar hook";
+constexpr auto TOO_MANY_HOOKS = u8"Textractor: demasiados hooks: no se puede insertar";
+constexpr auto NOT_ENOUGH_TEXT = u8"Textractor: no hay suficiente texto para buscar con precisión";
+constexpr auto FUNC_MISSING = u8"Textractor: función no presente";
+constexpr auto MODULE_MISSING = u8"Textractor: module not present";
+constexpr auto GARBAGE_MEMORY = u8"Textractor: memory constantly changing, useless to read";
+constexpr auto SEND_ERROR = u8"Textractor: Send ERROR (probablemente un H-code incorrecto)";
+constexpr auto READ_ERROR = u8"Textractor: Reader ERROR (probablemente un R-code incorrecto)";
+constexpr auto HIJACK_ERROR = u8"Textractor: Hijack ERROR";
+constexpr auto COULD_NOT_FIND = u8"Textractor: no se puede encontrar texto";
+constexpr auto SELECT_LANGUAGE = u8"Seleccionar lenguaje";
+constexpr auto BING_PROMPT = u8"¿A qué idioma debe traducir Bing?";
+constexpr auto GOOGLE_PROMPT = u8"¿A qué idioma debe traducir Google?";
+constexpr auto TOO_MANY_TRANS_REQUESTS = LR"(
+Demasiadas peticiones de traducción: no se puede hacer más)";
+constexpr auto TRANSLATION_ERROR = L"Error al traducir";
+constexpr auto EXTRA_WINDOW_INFO = u8R"(Clic derecho para configurar
+Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior derecha para cambiar el tamaño)";
+constexpr auto BG_COLOR = u8"Color de fondo";
+constexpr auto TEXT_COLOR = u8"Color de texto";
+constexpr auto FONT_SIZE = u8"Tamaño de letra";
+constexpr auto TOPMOST = u8"Siempre visible";
+constexpr auto ALWAYS_ON_TOP = u8"Matener esta ventana encima";
+constexpr auto REGEX_FILTER = u8"Filtro Regex";
+constexpr auto INVALID_REGEX = u8"Regex inválido";
+constexpr auto CURRENT_FILTER = u8"Actualmente filtrando: ";
+#endif // SPANISH
