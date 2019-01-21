@@ -230,7 +230,7 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 		while (WaitForSingleObject(This->readerEvent, 500) == WAIT_TIMEOUT)
 		{
 			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uintptr_t*)This->address + This->hp.index;
-			if (memcmp(buffer, (void*)currentAddress, dataLen + 1) == 0)
+			if (memcmp(buffer, (void*)currentAddress, dataLen + 2) == 0)
 			{
 				changeCount = 0;
 				continue;
@@ -244,8 +244,8 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 
 			if (This->hp.type & USING_UNICODE) dataLen = wcslen((wchar_t*)currentAddress) * 2;
 			else dataLen = strlen((char*)currentAddress);
-			if (dataLen > PIPE_BUFFER_SIZE - 1) continue; // results in silly error msg but oh well
-			memcpy(buffer, (void*)currentAddress, dataLen + 1);
+			if (dataLen > PIPE_BUFFER_SIZE - 2) continue; // results in silly error msg but oh well
+			memcpy(buffer, (void*)currentAddress, dataLen + 2);
 			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
 		}
 	}
