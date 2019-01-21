@@ -16560,7 +16560,7 @@ bool InsertRenpyHook()
  */
 bool InsertMonoHook()
 {
-
+	// TO FUTURE ME: If you're looking for a new mono hook, try searching for this assembly and breaking into it: 8d 44 48 10 0f b7 4d ?? 66 89 08
 	// Instruction pattern: 90FF503C83C4208B45EC
 	const BYTE ins[] = {
 	  0x33,0xdb,      // 1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
