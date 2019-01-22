@@ -15,6 +15,7 @@ foreach ($arch in @("86", "64")) {
 		"Google Translate.dll",
 		"Regex Filter.dll",
 		"Remove Repetition.dll",
+		"Thread Linker.dll",
 		"platforms",
 		"styles"
 	) | ForEach-Object { "builds/RelWithDebInfo_x$($arch)/$($_)" };
