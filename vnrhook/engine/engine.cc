@@ -11912,7 +11912,7 @@ bool InsertSRPGHook()
 		HookParam hp = {};
 		hp.offset = 4;
 		hp.address = addr;
-		hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT;
+		hp.type = USING_STRING | USING_UNICODE;
 		NewHook(hp, "SRPG");
 		return true;
 	}

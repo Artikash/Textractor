@@ -218,7 +218,8 @@ void MainWindow::LaunchProcess()
 	std::wstring process = S(QInputDialog::getItem(this, SELECT_PROCESS, "", savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint));
 	if (!ok) return;
 	if (S(process) == SEARCH_GAME) process = S(QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, SELECT_PROCESS, "C:\\", PROCESSES)));
-	if (process.empty()) return;
+	if (process.find(L'\\') == std::wstring::npos) return;
+	std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 	PROCESS_INFORMATION info = {};
 	if (QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
@@ -238,12 +239,12 @@ void MainWindow::LaunchProcess()
 			} LEB;
 			GetTimeZoneInformation(&LEB.Timezone);
 			((LONG(__stdcall*)(decltype(&LEB), LPCWSTR appName, LPWSTR commandLine, LPCWSTR currentDir, void*, void*, PROCESS_INFORMATION*, void*, void*, void*, void*))
-				GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, NULL, NULL, NULL, &info, NULL, NULL, NULL, NULL);
+				GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, path.c_str(), NULL, NULL, &info, NULL, NULL, NULL, NULL);
 		}
 	if (info.hProcess == NULL)
 	{
 		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
-		CreateProcessW(process.c_str(), NULL, nullptr, nullptr, FALSE, 0, nullptr, NULL, &DUMMY, &info);
+		CreateProcessW(process.c_str(), NULL, nullptr, nullptr, FALSE, 0, nullptr, path.c_str(), &DUMMY, &info);
 	}
 	if (info.hProcess == NULL) return Host::AddConsoleOutput(LAUNCH_FAILED);
 	Host::InjectProcess(info.dwProcessId);
