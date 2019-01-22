@@ -89,6 +89,8 @@ namespace { // unnamed
 #endif
 
 	bool trigger = false;
+
+	enum { TEXT_BUFFER_SIZE = PIPE_BUFFER_SIZE - sizeof(ThreadParam) };
 } // unnamed namespace
 
 void SetTrigger()
@@ -141,8 +143,9 @@ void TextHook::Send(uintptr_t dwDataBase)
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
-		if (dwCount == 0 || dwCount > PIPE_BUFFER_SIZE - sizeof(ThreadParam)) return;
-		BYTE pbData[PIPE_BUFFER_SIZE];
+		if (dwCount == 0) return;
+		if (dwCount > TEXT_BUFFER_SIZE) dwCount = TEXT_BUFFER_SIZE;
+		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1) {
 			dwDataIn &= 0xffff;
 			if ((hp.type & BIG_ENDIAN) && (dwDataIn >> 8)) dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
@@ -170,7 +173,8 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		count = GetLength(dwDataBase, data);
 		if (count == 0) return;
-		BYTE pbData[PIPE_BUFFER_SIZE];
+		if (count > TEXT_BUFFER_SIZE) count = TEXT_BUFFER_SIZE;
+		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1)
 		{
 			data &= 0xffff;
@@ -222,7 +226,7 @@ bool TextHook::InsertHookCode()
 DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 {
 	TextHook* This = (TextHook*)hookPtr;
-	BYTE buffer[PIPE_BUFFER_SIZE] = {};
+	BYTE buffer[TEXT_BUFFER_SIZE] = {};
 	int changeCount = 0, dataLen = 0;
 	__try
 	{
@@ -244,7 +248,7 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 
 			if (This->hp.type & USING_UNICODE) dataLen = wcslen((wchar_t*)currentAddress) * 2;
 			else dataLen = strlen((char*)currentAddress);
-			if (dataLen > PIPE_BUFFER_SIZE - 2) continue; // results in silly error msg but oh well
+			if (dataLen > TEXT_BUFFER_SIZE - 2) dataLen = TEXT_BUFFER_SIZE - 2;
 			memcpy(buffer, (void*)currentAddress, dataLen + 2);
 			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
 		}
