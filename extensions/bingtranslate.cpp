@@ -154,7 +154,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (translation[i] == L'\\')
 		{
 			translation[i] = 0x200b;
-			if (translation[i + 1] == L'r') translation[i + 1] = L'\r';
+			if (translation[i + 1] == L'r') translation[i + 1] = 0x200b; // for some reason \r gets displayed as a newline
 			if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
 			if (translation[i + 1] == L't') translation[i + 1] = L'\t';
 		}
