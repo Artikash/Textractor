@@ -66,6 +66,6 @@ TEST(
 		ProcessSentence(empty, { &tester });
 		ProcessSentence(one, { &tester });
 		ProcessSentence(normal, { &tester });
-		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence.　はい");
+		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. はい");
 	}
 );

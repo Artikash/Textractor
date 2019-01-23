@@ -15,6 +15,7 @@ foreach ($arch in @("86", "64")) {
 		"Google Translate.dll",
 		"Regex Filter.dll",
 		"Remove Repetition.dll",
+		"Replacer.dll",
 		"Thread Linker.dll",
 		"platforms",
 		"styles"

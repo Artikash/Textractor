@@ -25,6 +25,7 @@ constexpr auto CONFIG_FILE = u8"Textractor.ini";
 constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
+constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 // Functions
 
