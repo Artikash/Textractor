@@ -39,11 +39,11 @@ class AutoHandle
 public:
 	AutoHandle(HANDLE h) : h(h) {}
 	operator HANDLE() { return h.get(); }
-	PHANDLE operator&() { return &h._Myptr(); }
+	PHANDLE operator&() { static_assert(sizeof(*this) == sizeof(HANDLE)); return (PHANDLE)this; }
 	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
 
 private:
-	struct HandleCleaner : HandleCloser { void operator()(void* h) { if (h != INVALID_HANDLE_VALUE) HandleCloser::operator()(h); } };
+	struct HandleCleaner { void operator()(void* h) { if (h != INVALID_HANDLE_VALUE) HandleCloser()(h); } };
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
