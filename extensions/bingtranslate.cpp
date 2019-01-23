@@ -85,7 +85,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 // This function detects language and puts it in translateFrom if it's empty
 std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstring translateTo)
 {
-	static HINTERNET internet = NULL;
+	static std::atomic<HINTERNET> internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
 	char utf8[10000] = {};
@@ -156,6 +156,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 			translation[i] = 0x200b;
 			if (translation[i + 1] == L'r') translation[i + 1] = L'\r';
 			if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
+			if (translation[i + 1] == L't') translation[i + 1] = L'\t';
 		}
 	}
 

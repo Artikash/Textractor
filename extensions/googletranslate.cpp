@@ -149,9 +149,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		}
 	}
 
-	static HINTERNET internet = NULL;
+	static std::atomic<HINTERNET> internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-	static unsigned TKK = 0;
+	static std::atomic<unsigned> TKK = 0;
 	std::wstring translation;
 	if (internet)
 	{
@@ -202,6 +202,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 								translation[i] = 0x200b;
 								if (translation[i + 1] == L'r') translation[i + 1] = L'\r';
 								if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
+								if (translation[i + 1] == L't') translation[i + 1] = L'\t';
 							}
 						}
 					}
