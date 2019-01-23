@@ -1,4 +1,4 @@
-#include "extension.h"
+Ôªø#include "extension.h"
 #include "defs.h"
 
 void RemoveRepeatedChars(std::wstring& sentence)
@@ -62,10 +62,10 @@ TEST(
 		assert(cyclicRepeats == L"abcdefg");
 
 		InfoForExtension tester{ "hook address", 0, nullptr };
-		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. ÇÕÇ¢ÅB";
+		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. „ÅØ„ÅÑ";
 		ProcessSentence(empty, { &tester });
 		ProcessSentence(one, { &tester });
 		ProcessSentence(normal, { &tester });
-		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. ÇÕÇ¢ÅB");
+		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence.„ÄÄ„ÅØ„ÅÑ");
 	}
 );
