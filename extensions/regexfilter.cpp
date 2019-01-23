@@ -7,7 +7,7 @@
 #include <QTimer>
 
 std::wregex regex;
-std::mutex m;
+std::shared_mutex m;
 
 struct : QMainWindow 
 {
@@ -63,7 +63,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	std::lock_guard l(m);
+	std::shared_lock l(m);
 	if (window == nullptr || sentenceInfo["hook address"] == -1) return false;
 	sentence = std::regex_replace(sentence, regex, L"");
 	return true;

@@ -4,7 +4,6 @@
 #include "text.h"
 #include "types.h"
 #include "misc.h"
-#include <shared_mutex>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
@@ -21,7 +20,7 @@ namespace
 		~InfoForExtension() { if (next) delete next; };
 	};
 
-	QHash<QString, wchar_t*(*)(const wchar_t*, const InfoForExtension*)> extensions;
+	QHash<QString, wchar_t*(*)(wchar_t*, const InfoForExtension*)> extensions;
 	QStringList extenNames;
 	std::shared_mutex extenMutex;
 
@@ -32,7 +31,7 @@ namespace
 		if (FARPROC callback = GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
 		{
 			std::scoped_lock writeLock(extenMutex);
-			extensions[extenName] = (wchar_t*(*)(const wchar_t*, const InfoForExtension*))callback;
+			extensions[extenName] = (wchar_t*(*)(wchar_t*, const InfoForExtension*))callback;
 			extenNames.push_back(extenName);
 		}
 	}

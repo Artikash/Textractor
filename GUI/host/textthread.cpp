@@ -46,7 +46,7 @@ void TextThread::Flush()
 {
 	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
-	for (auto sentence : sentences)
+	for (auto& sentence : sentences)
 		if (Output(this, sentence)) storage->append(sentence);
 
 	std::scoped_lock lock(bufferMutex);

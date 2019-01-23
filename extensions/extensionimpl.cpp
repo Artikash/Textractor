@@ -13,15 +13,16 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo);
 	* Textractor will display the sentence after all extensions have had a chance to process and/or modify it.
 	* THIS FUNCTION MAY BE RUN SEVERAL TIMES CONCURRENTLY: PLEASE ENSURE THAT IT IS THREAD SAFE!
 */
-extern "C" __declspec(dllexport) const wchar_t* OnNewSentence(const wchar_t* sentence, const InfoForExtension* miscInfo)
+extern "C" __declspec(dllexport) wchar_t* OnNewSentence(wchar_t* sentence, const InfoForExtension* miscInfo)
 {
 	try
 	{
 		std::wstring sentenceStr(sentence);
+		int origLength = sentenceStr.size();
 		if (ProcessSentence(sentenceStr, SentenceInfo{ miscInfo }))
 		{
 			// No need to worry about freeing this: Textractor does it for you.
-			wchar_t* newSentence = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentenceStr.size() + 1) * sizeof(wchar_t));
+			wchar_t* newSentence = sentenceStr.size() > origLength ? (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentenceStr.size() + 1) * sizeof(wchar_t)) : sentence;
 			wcscpy_s(newSentence, sentenceStr.size() + 1, sentenceStr.c_str());
 			return newSentence;
 		}
