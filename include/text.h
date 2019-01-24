@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define CURRENT_VERSION "1.1.0"
+#define CURRENT_VERSION "1.2.0"
 
 inline auto ATTACH = u8"Attach to game";
 inline auto LAUNCH = u8"Launch game";
