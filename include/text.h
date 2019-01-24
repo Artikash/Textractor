@@ -84,6 +84,13 @@ inline auto ALWAYS_ON_TOP = u8"Keep this window on top";
 inline auto REGEX_FILTER = u8"Regex Filter";
 inline auto INVALID_REGEX = u8"Invalid regex";
 inline auto CURRENT_FILTER = u8"Currently filtering: ";
+inline auto REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Replacer" extension is used.
+Replacement commands must be formatted like this:
+|ORIG|original_text|BECOMES|replacement_text|END|
+All text in this file outside of a replacement command is ignored.
+Whitespace in original_text is ignored, but replacement_text can contain spaces, newlines, etc.
+This file must be encoded in Unicode (UTF-16 little endian).
+)";
 inline auto THREAD_LINKER = u8"Thread Linker";
 inline auto LINK = u8"Link";
 inline auto THREAD_LINK_FROM = u8"Thread number to link from";
