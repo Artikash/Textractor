@@ -27,6 +27,10 @@ constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
+// Misc
+
+constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repetition>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines";
+
 // Functions
 
 template <typename... Args>

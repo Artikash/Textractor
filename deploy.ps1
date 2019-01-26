@@ -4,10 +4,12 @@ foreach ($arch in @("86", "64")) {
 	$folder = "Textractor$($arch)";
 	$targets = @(
 		"Textractor.exe",
+		"vnrhook.dll",
 		"Qt5Core.dll",
 		"Qt5Gui.dll",
 		"Qt5Widgets.dll",
-		"vnrhook.dll",
+		"LoaderDll.dll",
+		"LocaleEmulator.dll",
 		"Bing Translate.dll",
 		"Copy to Clipboard.dll",
 		"Extra Newlines.dll",

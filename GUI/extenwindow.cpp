@@ -78,11 +78,13 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 	ui(new Ui::ExtenWindow)
 {
 	ui->setupUi(this);
+
 	ui->vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
 	setWindowTitle(EXTENSIONS);
 
 	ui->extenList->installEventFilter(this);
 
+	if (!QFile::exists(EXTEN_SAVE_FILE)) QTextFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly).write(DEFAULT_EXTENSIONS);
 	for (auto extenName : QString(QTextFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly).readAll()).split(">")) Load(extenName);
 	Sync();
 }
