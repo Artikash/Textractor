@@ -14,13 +14,12 @@ struct
 public:
 	void Put(std::wstring original, std::wstring replacement)
 	{
-		if (original.empty()) return;
 		Node* current = &root;
 		for (auto c : original)
 			if (Ignore(c));
 			else if (auto& next = current->next[c]) current = next.get();
 			else current = (next = std::make_unique<Node>()).get();
-		current->value = replacement;
+		if (current != &root) current->value = replacement;
 	}
 
 	std::pair<int, std::wstring> Lookup(const std::wstring& text)
