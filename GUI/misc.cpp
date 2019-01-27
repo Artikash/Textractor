@@ -183,11 +183,15 @@ namespace
 		QString RCode = "R";
 		QTextStream codeBuilder(&RCode);
 
-		if (hp.type & USING_UNICODE) codeBuilder << "Q";
-		else if (hp.type & USING_UTF8) codeBuilder << "V";
-		else codeBuilder << "S";
-
-		if (hp.codepage != 0 && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+		if (hp.type & USING_UNICODE)
+		{
+			codeBuilder << "Q";
+		}
+		else
+		{
+			codeBuilder << "S";
+			if (hp.codepage != 0) codeBuilder << hp.codepage << "#";
+		}
 
 		codeBuilder.setIntegerBase(16);
 		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
@@ -211,14 +215,14 @@ namespace
 		}
 		else
 		{
-			if (hp.type & USING_UTF8) codeBuilder << "V";
-			else if (hp.type & USING_STRING) codeBuilder << "S";
+			if (hp.type & USING_STRING) codeBuilder << "S";
 			else if (hp.type & BIG_ENDIAN) codeBuilder << "A";
 			else codeBuilder << "B";
 		}
 		if (hp.type & NO_CONTEXT) codeBuilder << "N";
+		if (hp.text_fun || hp.filter_fun || hp.hook_fun) codeBuilder << "X"; // no AGTH equivalent
 
-		if (hp.codepage != 0 && hp.codepage != CP_UTF8) codeBuilder << hp.codepage << "#";
+		if (hp.codepage != 0 && !(hp.type & USING_UNICODE)) codeBuilder << hp.codepage << "#";
 
 		codeBuilder.setIntegerBase(16);
 		codeBuilder.setNumberFlags(QTextStream::UppercaseDigits);
@@ -226,7 +230,6 @@ namespace
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
 
-		if (hp.text_fun || hp.filter_fun || hp.hook_fun) codeBuilder << "X"; // no AGTH equivalent
 		codeBuilder << hp.offset;
 		if (hp.type & DATA_INDIRECT) codeBuilder << "*" << hp.index;
 		if (hp.type & USING_SPLIT) codeBuilder << ":" << hp.split;
