@@ -153,6 +153,52 @@ void PcHooks::hookGDIPlusFunctions()
   NEW_MODULE_HOOK(hModule, GdipMeasureDriverString,     s_arg1, 0,s_arg3,0, USING_UNICODE|USING_STRING, s_arg2 / arg_sz)
 }
 
+
+bool PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
+{
+	ConsoleOutput("Textractor: inserting Direct3D hooks (EXPERIMENTAL)");
+	uintptr_t createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DXCreateFontIndirectA");
+	if (!createFont) createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DX10CreateFontIndirectA");
+	if (!createFont)
+	{
+		ConsoleOutput("Textractor: D3DX failed: couldn't find entry function");
+		return false;
+	}
+
+	struct D3DXFont
+	{
+		uintptr_t(*vtable)[20];
+		DWORD data[2000];
+	} font;
+	for (int i = 0, calls = 0; i < 100; ++i)
+	{
+		if (*(BYTE*)(createFont + i) == 0xe8) ++calls;
+		if (calls == 2)
+		{
+			union
+			{
+				void(D3DXFont::*ctor)();
+				uintptr_t addr;
+			} fuckTheTypeSystem;
+			fuckTheTypeSystem.addr = *(uintptr_t*)(createFont + i + 1) + createFont + i + 5;
+			(font.*(fuckTheTypeSystem.ctor))();
+
+			HookParam hp = {};
+			hp.address = (*font.vtable)[14];
+			hp.offset = s_arg3;
+			hp.length_offset = s_arg4 / arg_sz;
+			hp.type = USING_STRING;
+			NewHook(hp, "ID3DXFont::DrawTextA");
+			hp.address = (*font.vtable)[15];
+			hp.type = USING_STRING | USING_UNICODE;
+			NewHook(hp, "ID3DXFont::DrawTextW");
+			return true;
+		}
+	}
+	ConsoleOutput("Textractor: D3DX failed: couldn't find vtable");
+	return false;
+}
+
 // jichi 10/2/2013
 // Note: All functions does not have NO_CONTEXT attribute and will be filtered.
 void PcHooks::hookOtherPcFunctions()
