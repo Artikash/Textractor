@@ -3,6 +3,8 @@
 // pchooks.h
 // 8/1/2014 jichi
 
+#include <Windows.h>
+
 namespace PcHooks {
 
 void hookGDIFunctions();

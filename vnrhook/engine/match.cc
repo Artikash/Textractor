@@ -449,12 +449,6 @@ bool DetermineEngineByFile4()
     return true;
   }
 
-  // Artikash 1/18/2019: SRPG Studio sample game https://www.freem.ne.jp/win/game/16844
-  if (Util::CheckFile(L"*.dts")) {
-	  InsertSRPGHook();
-	  return true;
-  }
-
   return false;
 }
 

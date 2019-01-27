@@ -154,16 +154,12 @@ void PcHooks::hookGDIPlusFunctions()
 }
 
 
-bool PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
+void PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
 {
 	ConsoleOutput("Textractor: inserting Direct3D hooks (EXPERIMENTAL)");
 	uintptr_t createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DXCreateFontIndirectA");
 	if (!createFont) createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DX10CreateFontIndirectA");
-	if (!createFont)
-	{
-		ConsoleOutput("Textractor: D3DX failed: couldn't find entry function");
-		return false;
-	}
+	if (!createFont) return ConsoleOutput("Textractor: D3DX failed: couldn't find entry function");
 
 	struct D3DXFont
 	{
@@ -192,11 +188,10 @@ bool PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
 			hp.address = (*font.vtable)[15];
 			hp.type = USING_STRING | USING_UNICODE;
 			NewHook(hp, "ID3DXFont::DrawTextW");
-			return true;
+			return;
 		}
 	}
 	ConsoleOutput("Textractor: D3DX failed: couldn't find vtable");
-	return false;
 }
 
 // jichi 10/2/2013
@@ -275,6 +270,12 @@ void PcHooks::hookOtherPcFunctions()
   NEW_HOOK(CharPrevW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
   //NEW_HOOK(CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, s_arg1 / (short)sizeof(uintptr_t)) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
   //NEW_HOOK(CharNextExW, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, s_arg1 / (short)sizeof(uintptr_t))
+  if (HMODULE module = GetModuleHandleW(L"OLEAUT32"))
+  {
+    NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
+    NEW_MODULE_HOOK(module, SysAllocStringByteLen, s_arg1, 0, 0, 0, USING_STRING, s_arg2)
+	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2)
+  }
 }
 
 // EOF
