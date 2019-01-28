@@ -2,7 +2,7 @@
 
 **Textractor** は、ビジュアルノベル抽出プログラム。
 
-![How it looks](https://media.discordapp.net/attachments/330538905072041994/486629608456847360/unknown.png?width=1083&height=353)
+![How it looks](https://media.discordapp.net/attachments/330538905072041994/539414661796200448/unknown.png?width=1072&height=398)
 
 
 ## ダウンロード
