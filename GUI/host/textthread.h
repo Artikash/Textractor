@@ -32,9 +32,10 @@ private:
 	void Flush();
 
 	std::wstring buffer;
+	BYTE leadByte = 0;
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
-	DWORD lastPushTime;
+	DWORD lastPushTime = 0;
 	ThreadSafe<std::vector<std::wstring>> queuedSentences;
 	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	AutoHandle<TimerDeleter> timer = NULL; // this needs to be last so it's destructed first

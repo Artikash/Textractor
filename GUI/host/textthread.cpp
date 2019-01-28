@@ -28,6 +28,12 @@ void TextThread::Push(const BYTE* data, int len)
 {
 	if (len < 0) return;
 	std::scoped_lock lock(bufferMutex);
+
+	BYTE doubleByteChar[2];
+	if (len == 1) // doublebyte characters must be processed as pairs
+		if (leadByte) std::tie(doubleByteChar[0], doubleByteChar[1], data, len, leadByte) = std::tuple(leadByte, data[0], doubleByteChar, 2, 0 );
+		else if (IsDBCSLeadByteEx(hp.codepage ? hp.codepage : Host::defaultCodepage, data[0])) std::tie(leadByte, len) = std::tuple(data[0], 0);
+
 	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
 	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
