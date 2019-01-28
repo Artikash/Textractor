@@ -206,7 +206,10 @@ void PcHooks::hookOtherPcFunctions()
   // Needed by Gift
   // Use arg1 address for both split and data
   NEW_HOOK(lstrlenA, s_arg1, 0,s_arg1,0, USING_STRING, 0) // 9/8/2013 jichi: int WINAPI lstrlen(LPCTSTR lpString);
+  NEW_HOOK(lstrcpyA, s_arg2, 0,0,0, USING_STRING, 0)
+
   NEW_HOOK(lstrlenW, s_arg1, 0,s_arg1,0, USING_UNICODE|USING_STRING, 0) // 9/8/2013 jichi: add lstrlen
+  NEW_HOOK(lstrcpyW, s_arg2, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
 
   // size_t strlen(const char *str);
   // size_t strlen_l(const char *str, _locale_t locale);
@@ -268,8 +271,8 @@ void PcHooks::hookOtherPcFunctions()
   NEW_HOOK(CharNextW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
   NEW_HOOK(CharPrevA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharPrev(_In_ LPCTSTR lpszStart, _In_ LPCTSTR lpszCurrent);
   NEW_HOOK(CharPrevW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
-  //NEW_HOOK(CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, s_arg1 / (short)sizeof(uintptr_t)) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
-  //NEW_HOOK(CharNextExW, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, s_arg1 / (short)sizeof(uintptr_t))
+  NEW_HOOK(CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
+  NEW_HOOK(CharPrevExA, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
   if (HMODULE module = GetModuleHandleW(L"OLEAUT32"))
   {
     NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
