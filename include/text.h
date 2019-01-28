@@ -32,6 +32,7 @@ Negatives for data/split offset refer to registers
 * means dereference pointer+deref_offset)";
 inline auto SAVE_SETTINGS = u8"Save settings";
 inline auto EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) files here from your computer to add them
+(Does not work if running as administrator)
 Drag and drop within the list to reorder
 Press delete with an extension selected to remove it)";
 inline auto WINDOW = u8"Window";
@@ -47,7 +48,7 @@ Tutorial video: https://www.youtube.com/watch?v=eecEOacF6mw
 Please contact me with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
-I'm currently looking for a new job: please email me if you're hiring US software engineers)";
+I'm currently looking for a new job: email me if you know anyone hiring US software engineers)";
 inline auto UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 inline auto ALREADY_INJECTED = L"Textractor: already injected";
 inline auto ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
