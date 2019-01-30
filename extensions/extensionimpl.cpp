@@ -21,6 +21,7 @@ extern "C" __declspec(dllexport) wchar_t* OnNewSentence(wchar_t* sentence, const
 		int origLength = sentenceStr.size();
 		if (ProcessSentence(sentenceStr, SentenceInfo{ miscInfo }))
 		{
+			if (sentenceStr.empty()) return nullptr;
 			// No need to worry about freeing this: Textractor does it for you.
 			wchar_t* newSentence = sentenceStr.size() > origLength ? (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentenceStr.size() + 1) * sizeof(wchar_t)) : sentence;
 			wcscpy_s(newSentence, sentenceStr.size() + 1, sentenceStr.c_str());
