@@ -9302,6 +9302,7 @@ bool InsertWillPlusWHook()
 	Hook code for first game: /HQ-8*0@43D620. This seems fairly stable: __thiscall calling convention and first member points to string
 	Method to find hook code: trace call stack from GetGlyphOutlineW
 	Disassembly from first game (damekoi). The first few instructions are actually a common function prologue: not enough to locate hook
+	Hooking SysAllocString also seems to work, but has some garbage
 	0043D61D - C2 0800               - ret 0008 { 8 }
 	0043D620 - 55                    - push ebp
 	0043D621 - 8B EC                 - mov ebp,esp
@@ -9358,11 +9359,10 @@ static bool InsertNewWillPlusHook()
 		hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
 		hp.offset = pusha_ecx_off - 4;
 		hp.index = 0;
-		ConsoleOutput("Textractor: INSERT New WillPlus (ADVHD) hook");
 		NewHook(hp, "WillPlus2");
 		found = true;
 	}
-	if (!found) ConsoleOutput("New WillPlus: failed to find instructions");
+	if (!found) ConsoleOutput("Textractor: WillPlus2: failed to find instructions");
 	return found;
 }
 
@@ -9372,6 +9372,7 @@ bool InsertWillPlusHook()
 {
   bool ok = InsertOldWillPlusHook();
   ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || ok;
+  if (!ok) PcHooks::hookOtherPcFunctions();
   return ok;
 }
 
