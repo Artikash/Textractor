@@ -157,6 +157,15 @@ void PcHooks::hookGDIPlusFunctions()
 void PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
 {
 	ConsoleOutput("Textractor: inserting Direct3D hooks (EXPERIMENTAL)");
+
+	if (GetProcAddress(d3dxModule, "D3DXCreateTextA"))
+	{
+		NEW_MODULE_HOOK(d3dxModule, D3DXCreateTextA, s_arg3, 0, 0, 0, USING_STRING, 0)
+		NEW_MODULE_HOOK(d3dxModule, D3DXCreateTextW, s_arg3, 0, 0, 0, USING_STRING|USING_UNICODE, 0)
+	}
+
+	// Second call in D3DX(10)CreateFontIndirect is D3DXFont constructor, which sets up the vtable
+	// Call it to set up the vtable then extract the function addresses from that vtable
 	uintptr_t createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DXCreateFontIndirectA");
 	if (!createFont) createFont = (uintptr_t)GetProcAddress(d3dxModule, "D3DX10CreateFontIndirectA");
 	if (!createFont) return ConsoleOutput("Textractor: D3DX failed: couldn't find entry function");
@@ -276,8 +285,8 @@ void PcHooks::hookOtherPcFunctions()
   if (HMODULE module = GetModuleHandleW(L"OLEAUT32"))
   {
     NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
-    NEW_MODULE_HOOK(module, SysAllocStringByteLen, s_arg1, 0, 0, 0, USING_STRING, s_arg2)
-	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2)
+    NEW_MODULE_HOOK(module, SysAllocStringByteLen, s_arg1, 0, 0, 0, USING_STRING, s_arg2 / arg_sz)
+	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2 / arg_sz)
   }
 }
 
