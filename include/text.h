@@ -218,5 +218,91 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	INVALID_REGEX = u8"Regex inválido";
 	CURRENT_FILTER = u8"Actualmente filtrando: ";
 #endif // SPANISH
+
+#ifdef SIMPLIFIED_CHINESE
+	ATTACH = u8"附加到游戏";
+	LAUNCH = u8"启动游戏";
+	DETACH = u8"从游戏分离";
+	ADD_HOOK = u8"添加钩子";
+	SAVE_HOOKS = u8"保存钩子";
+	SETTINGS = u8"设置";
+	EXTENSIONS = u8"扩展";
+	SELECT_PROCESS = u8"选择进程";
+	ATTACH_INFO = u8R"(如果没看见想要附加的进程，尝试使用管理员权限运行
+也可以手动输入进程ID)";
+	SEARCH_GAME = u8"从计算机中选择";
+	PROCESSES = u8"进程 (*.exe)";
+	CODE_INFODUMP = u8R"(搜索文本
+S[codepage#]text
+或
+输入 read 码 (R码)
+R{S|Q|V}[codepage#][*deref_offset]@addr
+或
+输入 hook 码 (H码)
+H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
+除代码页外，所有的数字都必须使用16进制
+默认代码页为 932 (Shift-JIS) 但可以通过设置修改
+A/B: 代码页字符为小端 (little endian) / 大端 (big endian)
+W: UTF-16 字符
+S/Q/V: 代码页/UTF-16/UTF-8 字符串
+负数对应相对于寄存器的数据 (data) / 分割 (split) 偏移
+-4 对应 EAX, -8 对应 ECX, -C 对应 EDX, -10 对应 EBX, -14 对应 ESP, -18 对应 EBP, -1C 对应 ESI, -20 对应 EDI
+* 意味着解引用 pointer+deref_offset)";
+	SAVE_SETTINGS = u8"保存设置";
+	EXTEN_WINDOW_INSTRUCTIONS = u8R"(从计算机拖拽扩展 (.dll) 文件到这里来添加
+(如果使用超级管理员运行，则无法工作)
+在列表中拖拽来重新排序
+使用 delete 键移除选中的扩展)";
+	WINDOW = u8"窗口";
+	USE_JP_LOCALE = u8"模拟日本区域设置?";
+	DEFAULT_CODEPAGE = u8"默认代码页";
+	FLUSH_DELAY = u8"刷新延迟";
+	MAX_BUFFER_SIZE = u8"最大缓冲区长度";
+	CONSOLE = L"控制台";
+	CLIPBOARD = L"剪贴板";
+	ABOUT = L"Textractor v" CURRENT_VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
+项目主页: https://github.com/Artikash/Textractor
+教程视频: https://www.youtube.com/watch?v=eecEOacF6mw
+如果有任何关于 Textractor 的困难，功能请求或问题，请联系我
+可以通过项目主页 (问题区) 或通过邮件来联系
+项目主页提供基于 GPLv3 协议的源代码
+我目前正在寻找新的工作: 如果你知道在美国招聘软件工程师岗位的人，请给我发邮件)";
+	UPDATE_AVAILABLE = L"有可用的更新: 请从 https://github.com/Artikash/Textractor/releases 下载";
+	ALREADY_INJECTED = L"Textractor: 已经注入";
+	ARCHITECTURE_MISMATCH = L"Textractor: 架构不匹配: 请尝试使用 32 位的 Textractor";
+	INJECT_FAILED = L"Textractor: 无法注入";
+	LAUNCH_FAILED = L"Textractor: 无法启动";
+	INVALID_CODE = L"Textractor: 无效代码";
+	INVALID_CODEPAGE = L"Textractor: 无法转换文本 (无效的代码页?)";
+	PIPE_CONNECTED = u8"Textractor: 管道已连接";
+	INSERTING_HOOK = u8"Textractor: 注入钩子: %s";
+	REMOVING_HOOK = u8"Textractor: 移除钩子: %s";
+	HOOK_FAILED = u8"Textractor: 钩子注入失败";
+	TOO_MANY_HOOKS = u8"Textractor: 钩子太多: 无法注入";
+	NOT_ENOUGH_TEXT = u8"Textractor: 没有足够的文本来精确搜索";
+	FUNC_MISSING = u8"Textractor: 函数不存在";
+	MODULE_MISSING = u8"Textractor: 模块不存在";
+	GARBAGE_MEMORY = u8"Textractor: 内存一直在变，读了也没用";
+	SEND_ERROR = u8"Textractor: Sender 错误 (H码可能不正确)";
+	READ_ERROR = u8"Textractor: Reader 错误 (R码可能不正确)";
+	HIJACK_ERROR = u8"Textractor: Hijack 错误";
+	COULD_NOT_FIND = u8"Textractor: 无法找到文本";
+	SELECT_LANGUAGE = u8"选择语言";
+	BING_PROMPT = u8"想要使用 Bing 翻译到哪种语言?";
+	GOOGLE_PROMPT = u8"想要使用 Google 翻译到哪种语言?";
+	TOO_MANY_TRANS_REQUESTS = LR"(
+太多翻译请求: 拒绝生成更多)";
+	TRANSLATION_ERROR = L"翻译时出错";
+	EXTRA_WINDOW_INFO = u8R"(右键修改设置
+在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
+	BG_COLOR = u8"背景颜色";
+	TEXT_COLOR = u8"文本颜色";
+	FONT_SIZE = u8"字体大小";
+	TOPMOST = u8"总是位于最上层";
+	ALWAYS_ON_TOP = u8"将本窗口在保持最上层";
+	REGEX_FILTER = u8"正则表达式过滤器";
+	INVALID_REGEX = u8"无效的正则表达式";
+	CURRENT_FILTER = u8"当前过滤中: ";
+#endif // SIMPLIFIED_CHINESE
 	return 0;
 });

@@ -1,6 +1,6 @@
 # Textractor
 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md)
+[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md)
 
 ## [Tutorial Video](https://youtu.be/eecEOacF6mw)
 
@@ -54,6 +54,7 @@ If you're on this list and want your link changed let me know.
 - Textractor made by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by niisokusu
+- Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
 - ITHVNR updated by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
 - ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine made by [jichi](https://archive.is/prJwr)
