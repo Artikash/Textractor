@@ -103,7 +103,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 		auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
 		if (hookList != allProcesses.rend())
 			for (auto hookCode : hookList->split(" , "))
-				if (auto hp = ParseCode(hookCode)) Host::InsertHook(processId, hp.value());
+				if (auto hp = Util::ParseCode(S(hookCode))) Host::InsertHook(processId, hp.value());
 	});
 }
 
@@ -117,7 +117,7 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 
 void MainWindow::ThreadAdded(TextThread* thread)
 {
-	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + GenerateCode(thread->hp, thread->tp.processId) + ")";
+	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + S(Util::GenerateCode(thread->hp, thread->tp.processId)) + ")";
 	QMetaObject::invokeMethod(this, [this, ttString]
 	{
 		ui->ttCombo->addItem(ttString);
@@ -261,7 +261,7 @@ void MainWindow::DetachProcess()
 void MainWindow::AddHook()
 {
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint); ok)
-		if (auto hp = ParseCode(hookCode)) Host::InsertHook(GetSelectedProcessId(), hp.value());
+		if (auto hp = Util::ParseCode(S(hookCode))) Host::InsertHook(GetSelectedProcessId(), hp.value());
 		else Host::AddConsoleOutput(INVALID_CODE);
 }
 
@@ -276,7 +276,7 @@ void MainWindow::SaveHooks()
 			if (tp.processId == GetSelectedProcessId())
 			{
 				HookParam hp = Host::GetHookParam(tp);
-				if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = GenerateCode(hp, tp.processId);
+				if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = S(Util::GenerateCode(hp, tp.processId));
 			}
 		}
 		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((S(processName.value()) + " , " + QStringList(hookCodes.values()).join(" , ") + "\n").toUtf8());

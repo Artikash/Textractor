@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "types.h"
 
 namespace Util
 {
@@ -10,4 +11,6 @@ namespace Util
 	std::optional<std::wstring> StringToWideString(std::string text, UINT encoding = CP_UTF8);
 	// return true if repetition found (see https://github.com/Artikash/Textractor/issues/40)
 	bool RemoveRepetition(std::wstring& text);
+	std::optional<HookParam> ParseCode(std::wstring code);
+	std::wstring GenerateCode(HookParam hp, DWORD processId);
 }
