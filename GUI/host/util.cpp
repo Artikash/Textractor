@@ -169,9 +169,15 @@ namespace
 		return hp;
 	}
 
+	std::wstring HexString(int64_t num) // only needed for signed nums
+	{
+		return (std::wstringstream() << std::uppercase << std::hex << (num < 0 ? "-" : "") << abs(num)).str();
+	}
+
 	std::wstring GenerateRCode(HookParam hp)
 	{
-		std::wstringstream RCode(L"R");
+		std::wstringstream RCode;
+		RCode << "R";
 
 		if (hp.type & USING_UNICODE)
 		{
@@ -185,7 +191,7 @@ namespace
 
 		RCode << std::uppercase << std::hex;
 
-		if (hp.type & DATA_INDIRECT) RCode << "*" << hp.index;
+		if (hp.type & DATA_INDIRECT) RCode << "*" << HexString(hp.index);
 
 		RCode << "@" << hp.address;
 
@@ -194,7 +200,8 @@ namespace
 
 	std::wstring GenerateHCode(HookParam hp, DWORD processId)
 	{
-		std::wstringstream HCode(L"H");
+		std::wstringstream HCode;
+		HCode << "H";
 
 		if (hp.type & USING_UNICODE)
 		{
@@ -217,10 +224,10 @@ namespace
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
 
-		HCode << hp.offset;
-		if (hp.type & DATA_INDIRECT) HCode << "*" << hp.index;
-		if (hp.type & USING_SPLIT) HCode << ":" << hp.split;
-		if (hp.type & SPLIT_INDIRECT) HCode << "*" << hp.split_index;
+		HCode << HexString(hp.offset);
+		if (hp.type & DATA_INDIRECT) HCode << "*" << HexString(hp.index);
+		if (hp.type & USING_SPLIT) HCode << ":" << HexString(hp.split);
+		if (hp.type & SPLIT_INDIRECT) HCode << "*" << HexString(hp.split_index);
 
 		// Attempt to make the address relative
 		if (!(hp.type & MODULE_OFFSET))
