@@ -4,6 +4,8 @@ foreach ($arch in @("86", "64")) {
 	$folder = "Textractor$($arch)";
 	$targets = @(
 		"Textractor.exe",
+		"TextractorCLI.exe",
+		"vc_redist.x$($arch).exe"
 		"vnrhook.dll",
 		"Qt5Core.dll",
 		"Qt5Gui.dll",
@@ -25,6 +27,5 @@ foreach ($arch in @("86", "64")) {
 	mkdir -Force -Verbose $folder;
 	Remove-Item -Force -Recurse -Verbose "$($folder)/*";
 	Copy-Item -Force -Recurse -Verbose -Destination $folder -Path $targets;
-	Copy-Item -Force -Recurse -Verbose -Destination $folder -Path "release/*";
 	Compress-Archive -Force -Verbose -DestinationPath $folder -Path $folder;
 }
