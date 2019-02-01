@@ -1,7 +1,5 @@
 # Textractor
 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
-
 ## [Video tutorial](https://youtu.be/eecEOacF6mw)
 
 ## Descripción general

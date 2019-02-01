@@ -1,6 +1,8 @@
 # Textractor
 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md)
+[Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md)<br>
+[简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md)<br>
+[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
 
 ## [Tutorial Video](https://youtu.be/eecEOacF6mw)
 
