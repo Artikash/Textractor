@@ -4,8 +4,6 @@ find_qt5(Core Widgets)
 set(AUTOMOC OFF)
 
 set(RESOURCE_FILES Textractor.rc Textractor.ico)
-add_compile_options(/GL)
-# Populate a CMake variable with the sources
 set(gui_src
 	main.cpp
 	mainwindow.cpp
@@ -19,4 +17,4 @@ set(gui_src
 add_executable(${PROJECT_NAME} WIN32 ${gui_src})
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets winhttp)
 
-install_qt5_libs(${PROJECT_NAME})
+install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds

@@ -30,6 +30,9 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 file(COPY ${LIBS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 
+add_library(text text.cpp)
+link_libraries(text)
+
 add_subdirectory(GUI)
 add_subdirectory(GUI/host)
 add_subdirectory(vnrhook)

@@ -34,7 +34,7 @@ See the extensions folder for examples of what extensions can do.
 
 All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).<br>
-Contributing a translation is easy: just translate the strings in include/text.h as well as this README.
+Contributing a translation is easy: just translate the strings in text.cpp as well as this README.
 
 ## Compiling
 
