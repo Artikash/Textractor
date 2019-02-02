@@ -156,8 +156,6 @@ void PcHooks::hookGDIPlusFunctions()
 
 void PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
 {
-	ConsoleOutput("Textractor: inserting Direct3D hooks (EXPERIMENTAL)");
-
 	if (GetProcAddress(d3dxModule, "D3DXCreateTextA"))
 	{
 		NEW_MODULE_HOOK(d3dxModule, D3DXCreateTextA, s_arg3, 0, 0, 0, USING_STRING, 0)
@@ -216,9 +214,11 @@ void PcHooks::hookOtherPcFunctions()
   // Use arg1 address for both split and data
   NEW_HOOK(lstrlenA, s_arg1, 0,s_arg1,0, USING_STRING, 0) // 9/8/2013 jichi: int WINAPI lstrlen(LPCTSTR lpString);
   NEW_HOOK(lstrcpyA, s_arg2, 0,0,0, USING_STRING, 0)
+  NEW_HOOK(lstrcpynA, s_arg2, 0,0,0, USING_STRING, 0)
 
   NEW_HOOK(lstrlenW, s_arg1, 0,s_arg1,0, USING_UNICODE|USING_STRING, 0) // 9/8/2013 jichi: add lstrlen
-  NEW_HOOK(lstrcpyW, s_arg2, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
+  NEW_HOOK(lstrcpyW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
+  NEW_HOOK(lstrcpynW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
 
   // size_t strlen(const char *str);
   // size_t strlen_l(const char *str, _locale_t locale);
@@ -286,7 +286,7 @@ void PcHooks::hookOtherPcFunctions()
   {
     NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
     NEW_MODULE_HOOK(module, SysAllocStringByteLen, s_arg1, 0, 0, 0, USING_STRING, s_arg2 / arg_sz)
-	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2 / arg_sz)
+	//NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2 / arg_sz) // gives errors?
   }
 }
 
