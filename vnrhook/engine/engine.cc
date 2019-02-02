@@ -16639,17 +16639,16 @@ bool InsertMonoHooks()
   HookParam hp = {};
   const MonoFunction funcs[] = { MONO_FUNCTIONS_INITIALIZER };
   enum { FunctionCount = sizeof(funcs) / sizeof(*funcs) };
-  for (int i = 0; i < FunctionCount; i++) {
-    const auto &it = funcs[i];
-    if (FARPROC addr = ::GetProcAddress(h, it.functionName)) {
+  for (auto func : funcs) {
+    if (FARPROC addr = ::GetProcAddress(h, func.functionName)) {
       hp.address = (DWORD)addr;
-	  hp.type = it.hookType;
+	  hp.type = func.hookType;
 	  hp.filter_fun = NoAsciiFilter;
-      hp.offset = it.textIndex * 4;
-      hp.length_offset = it.lengthIndex * 4;
-      hp.text_fun = (HookParam::text_fun_t)it.text_fun;
+      hp.offset = func.textIndex * 4;
+      hp.length_offset = func.lengthIndex * 4;
+      hp.text_fun = (decltype(hp.text_fun))func.text_fun;
       ConsoleOutput("vnreng: Mono: INSERT");
-      NewHook(hp, it.functionName);
+      NewHook(hp, func.functionName);
       ret = true;
     }
   }

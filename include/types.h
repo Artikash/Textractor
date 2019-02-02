@@ -50,11 +50,6 @@ private:
 // jichi 3/7/2014: Add guessed comment
 struct HookParam
 {
-	// jichi 8/24/2013: For special hooks.
-	typedef void(*text_fun_t)(DWORD esp, HookParam *hp, BYTE index, DWORD *data, DWORD *split, DWORD *len);
-	typedef bool(*filter_fun_t)(LPVOID str, DWORD *len, HookParam *hp, BYTE index); // jichi 10/24/2014: Add filter function. Return true if skip the text
-	typedef bool(*hook_fun_t)(DWORD esp, HookParam *hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
-
 	uint64_t address; // absolute or relative address
 	int offset, // offset of the data in the memory
 		index, // deref_offset1
@@ -71,9 +66,9 @@ struct HookParam
 	short length_offset; // index of the string length
 	DWORD user_value; // 7/20/2014: jichi additional parameters for PSP games
 
-	text_fun_t text_fun;
-	filter_fun_t filter_fun;
-	hook_fun_t hook_fun;
+	void(*text_fun)(DWORD stack, HookParam* hp, BYTE obsoleteAlwaysZero, DWORD* data, DWORD* split, DWORD* len);
+	bool(*filter_fun)(void* data, DWORD* len, HookParam* hp, BYTE obsoleteAlwaysZero); // jichi 10/24/2014: Add filter function. Return true if skip the text
+	bool(*hook_fun)(DWORD stack, HookParam* hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
 
 	char name[HOOK_NAME_SIZE];
 };
