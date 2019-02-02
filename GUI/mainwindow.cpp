@@ -214,7 +214,7 @@ void MainWindow::LaunchProcess()
 {
 	QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 	savedProcesses.removeDuplicates();
-	savedProcesses.sort(Qt::CaseInsensitive);
+	std::reverse(savedProcesses.begin(), savedProcesses.end());
 	savedProcesses.push_back(SEARCH_GAME);
 	std::wstring process = S(QInputDialog::getItem(this, SELECT_PROCESS, "", savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint));
 	if (!ok) return;
