@@ -38,4 +38,6 @@ private:
 
 	Ui::MainWindow* ui;
 	QWidget* extenWindow;
+	std::pair<uint64_t, uint64_t> savedThreadCtx;
+	wchar_t savedThreadCode[1000];
 };
