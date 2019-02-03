@@ -2501,7 +2501,7 @@ bool InsertSiglus4Hook()
 
   HookParam hp = {};
   hp.address = addr + addr_offset;
-  hp.type = NO_CONTEXT;
+  hp.type = NO_CONTEXT|USING_UNICODE;
   hp.text_fun = SpecialHookSiglus4;
   hp.filter_fun = Siglus4Filter;
   //hp.offset = pusha_eax_off - 4;
