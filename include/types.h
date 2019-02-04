@@ -16,7 +16,8 @@ template<typename E, typename M = std::mutex>
 class ThreadSafe
 {
 public:
-	template <typename... Args> ThreadSafe(Args&&... args) : contents(std::forward<Args>(args)...) {}
+	template <typename... Args>
+	ThreadSafe(Args&&... args) : contents(std::forward<Args>(args)...) {}
 	auto operator->()
 	{
 		struct
