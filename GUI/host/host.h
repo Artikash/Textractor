@@ -5,8 +5,9 @@
 
 namespace Host
 {
-	using ProcessEventCallback = std::function<void(DWORD)>;
-	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output);
+	using ProcessEventHandler = std::function<void(DWORD)>;
+	using ThreadEventHandler = std::function<void(TextThread&)>;
+	void Start(ProcessEventHandler Connect, ProcessEventHandler Disconnect, ThreadEventHandler Create, ThreadEventHandler Destroy, TextThread::OutputCallback Output);
 
 	bool InjectProcess(DWORD processId, DWORD timeout = 5000);
 	void DetachProcess(DWORD processId);
@@ -14,7 +15,7 @@ namespace Host
 
 	HookParam GetHookParam(ThreadParam tp);
 
-	TextThread* GetThread(ThreadParam tp);
+	TextThread& GetThread(ThreadParam tp);
 	void AddConsoleOutput(std::wstring text);
 
 	inline int defaultCodepage = SHIFT_JIS;

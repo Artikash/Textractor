@@ -9,14 +9,16 @@ TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring>
 	name(name.value_or(Util::StringToWideString(hp.name).value())),
 	tp(tp),
 	hp(hp)
+{}
+
+void TextThread::Start()
 {
 	CreateTimerQueueTimer(&timer, NULL, [](void* This, BOOLEAN) { ((TextThread*)This)->Flush(); }, this, 10, 10, WT_EXECUTELONGFUNCTION);
-	OnCreate(this);
 }
 
-TextThread::~TextThread()
+void TextThread::Stop()
 {
-	OnDestroy(this);
+	timer = NULL;
 }
 
 void TextThread::AddSentence(const std::wstring& sentence)
@@ -40,7 +42,7 @@ void TextThread::Push(const BYTE* data, int len)
 	lastPushTime = GetTickCount();
 
 	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
-	if (Util::RemoveRepetition(buffer)) // repetition detected, which means the entire sentence has already been received
+	if (Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 	{
 		repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
 		AddSentence(buffer);
@@ -53,11 +55,13 @@ void TextThread::Flush()
 	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
 	for (auto& sentence : sentences)
-		if (Output(this, sentence)) storage->append(sentence);
+		if (Output(*this, sentence)) storage->append(sentence);
 
 	std::scoped_lock lock(bufferMutex);
 	if (buffer.empty()) return;
-	if (buffer.size() < maxBufferSize && GetTickCount() - lastPushTime < flushDelay) return;
-	AddSentence(buffer);
-	buffer.clear();
+	if (buffer.size() > maxBufferSize || GetTickCount() - lastPushTime > flushDelay)
+	{
+		AddSentence(buffer);
+		buffer.clear();
+	}
 }

@@ -49,9 +49,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	Host::Start(
 		[this](DWORD processId) { ProcessConnected(processId); },
 		[this](DWORD processId) { ProcessDisconnected(processId); },
-		[this](TextThread* thread) { ThreadAdded(thread); },
-		[this](TextThread* thread) { ThreadRemoved(thread); },
-		[this](TextThread* thread, std::wstring& output) { return SentenceReceived(thread, output); }
+		[this](TextThread& thread) { ThreadAdded(thread); },
+		[this](TextThread& thread) { ThreadRemoved(thread); },
+		[this](TextThread& thread, std::wstring& output) { return SentenceReceived(thread, output); }
 	);
 	Host::AddConsoleOutput(ABOUT);
 
@@ -104,7 +104,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
-			if (auto hp = Util::ParseCode(S(hookInfo))) QMetaObject::invokeMethod(this, [processId, hp] { Host::InsertHook(processId, hp.value()); });
+			if (auto hp = Util::ParseCode(S(hookInfo))) Host::InsertHook(processId, hp.value());
 			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, ARRAYSIZE(savedThreadCode));
 }
 
@@ -116,11 +116,11 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 	}, Qt::BlockingQueuedConnection);
 }
 
-void MainWindow::ThreadAdded(TextThread* thread)
+void MainWindow::ThreadAdded(TextThread& thread)
 {
-	std::wstring threadCode = Util::GenerateCode(thread->hp, thread->tp.processId);
-	QString ttString = TextThreadString(thread) + S(thread->name) + " (" + S(threadCode) + ")";
-	bool savedMatch = savedThreadCtx.first == thread->tp.ctx && savedThreadCtx.second == thread->tp.ctx2 && savedThreadCode == threadCode;
+	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
+	QString ttString = TextThreadString(thread) + S(thread.name) + " (" + S(threadCode) + ")";
+	bool savedMatch = savedThreadCtx.first == thread.tp.ctx && savedThreadCtx.second == thread.tp.ctx2 && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx.first = savedThreadCtx.second = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
 	{
@@ -129,7 +129,7 @@ void MainWindow::ThreadAdded(TextThread* thread)
 	});
 }
 
-void MainWindow::ThreadRemoved(TextThread* thread)
+void MainWindow::ThreadRemoved(TextThread& thread)
 {
 	QString ttString = TextThreadString(thread);
 	QMetaObject::invokeMethod(this, [this, ttString]
@@ -140,7 +140,7 @@ void MainWindow::ThreadRemoved(TextThread* thread)
 	}, Qt::BlockingQueuedConnection);
 }
 
-bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
+bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
 	if (DispatchSentenceToExtensions(sentence, GetMiscInfo(thread)))
 	{
@@ -160,14 +160,14 @@ bool MainWindow::SentenceReceived(TextThread* thread, std::wstring& sentence)
 	return false;
 }
 
-QString MainWindow::TextThreadString(TextThread* thread)
+QString MainWindow::TextThreadString(TextThread& thread)
 {
 	return QString("%1:%2:%3:%4:%5: ").arg(
-		QString::number(thread->handle, 16),
-		QString::number(thread->tp.processId, 16),
-		QString::number(thread->tp.addr, 16),
-		QString::number(thread->tp.ctx, 16),
-		QString::number(thread->tp.ctx2, 16)
+		QString::number(thread.handle, 16),
+		QString::number(thread.tp.processId, 16),
+		QString::number(thread.tp.addr, 16),
+		QString::number(thread.tp.ctx, 16),
+		QString::number(thread.tp.ctx2, 16)
 	).toUpper();
 }
 
@@ -182,16 +182,16 @@ DWORD MainWindow::GetSelectedProcessId()
 	return ui->processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
-std::unordered_map<const char*, int64_t> MainWindow::GetMiscInfo(TextThread* thread)
+std::unordered_map<const char*, int64_t> MainWindow::GetMiscInfo(TextThread& thread)
 {
 	return
 	{
 	{ "current select", ui->ttCombo->currentText().startsWith(TextThreadString(thread)) },
-	{ "text number", thread->handle },
-	{ "process id", thread->tp.processId },
-	{ "hook address", thread->tp.addr },
-	{ "text handle", thread->handle },
-	{ "text name", (int64_t)thread->name.c_str() }
+	{ "text number", thread.handle },
+	{ "process id", thread.tp.processId },
+	{ "hook address", thread.tp.addr },
+	{ "text handle", thread.handle },
+	{ "text name", (int64_t)thread.name.c_str() }
 	};
 }
 
@@ -280,9 +280,9 @@ void MainWindow::SaveHooks()
 			}
 		}
 		auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
-		TextThread* current = Host::GetThread(ParseTextThreadString(ui->ttCombo->currentText()));
-		if (current->tp.processId == GetSelectedProcessId())
-			hookInfo << QString("|%1:%2:%3").arg(current->tp.ctx).arg(current->tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(current->tp), current->tp.processId)));
+		TextThread& current = Host::GetThread(ParseTextThreadString(ui->ttCombo->currentText()));
+		if (current.tp.processId == GetSelectedProcessId())
+			hookInfo << QString("|%1:%2:%3").arg(current.tp.ctx).arg(current.tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(current.tp), current.tp.processId)));
 		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 	}
 }
@@ -328,6 +328,6 @@ void MainWindow::Extensions()
 void MainWindow::ViewThread(int index)
 {
 	ui->ttCombo->setCurrentIndex(index);
-	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index)))->storage->c_str()));
+	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))).storage->c_str()));
 	ui->textOutput->moveCursor(QTextCursor::End);
 }

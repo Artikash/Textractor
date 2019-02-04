@@ -6,17 +6,16 @@
 class TextThread
 {
 public:
-	using EventCallback = std::function<void(TextThread*)>;
-	using OutputCallback = std::function<bool(TextThread*, std::wstring&)>;
-	inline static EventCallback OnCreate, OnDestroy;
+	using OutputCallback = std::function<bool(TextThread&, std::wstring&)>;
 	inline static OutputCallback Output;
 
 	inline static int flushDelay = 400; // flush every 400ms by default
 	inline static int maxBufferSize = 1000;
 
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
-	~TextThread();
 
+	void Start();
+	void Stop();
 	void AddSentence(const std::wstring& sentence);
 	void Push(const BYTE* data, int len);
 
@@ -38,5 +37,5 @@ private:
 	DWORD lastPushTime = 0;
 	ThreadSafe<std::vector<std::wstring>> queuedSentences;
 	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
-	AutoHandle<TimerDeleter> timer = NULL; // this needs to be last so it's destructed first
+	AutoHandle<TimerDeleter> timer = NULL;
 };

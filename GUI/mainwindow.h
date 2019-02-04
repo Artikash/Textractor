@@ -20,13 +20,13 @@ private:
 	void closeEvent(QCloseEvent*) override;
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
-	void ThreadAdded(TextThread* thread);
-	void ThreadRemoved(TextThread* thread);
-	bool SentenceReceived(TextThread* thread, std::wstring& sentence);
-	QString TextThreadString(TextThread* thread);
+	void ThreadAdded(TextThread& thread);
+	void ThreadRemoved(TextThread& thread);
+	bool SentenceReceived(TextThread& thread, std::wstring& sentence);
+	QString TextThreadString(TextThread& thread);
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
-	std::unordered_map<const char*, int64_t> GetMiscInfo(TextThread* thread);
+	std::unordered_map<const char*, int64_t> GetMiscInfo(TextThread& thread);
 	void AttachProcess();
 	void LaunchProcess();
 	void DetachProcess();

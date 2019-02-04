@@ -10,21 +10,16 @@ namespace
 	class ProcessRecord
 	{
 	public:
-		inline static Host::ProcessEventCallback OnConnect, OnDisconnect;
-
 		ProcessRecord(DWORD processId, HANDLE pipe) :
 			processId(processId),
 			pipe(pipe),
 			mappedFile(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
 			view(*(const TextHook(*)[MAX_HOOK])MapViewOfFile(mappedFile, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
 			viewMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId))
-		{
-			OnConnect(processId);
-		}
+		{}
 
 		~ProcessRecord()
 		{
-			OnDisconnect(processId);
 			UnmapViewOfFile(view);
 		}
 
@@ -59,15 +54,21 @@ namespace
 	{
 		return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2);
 	}
-	ThreadSafe<std::unordered_map<ThreadParam, std::unique_ptr<TextThread>, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
+	ThreadSafe<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
 	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
+
+	Host::ProcessEventHandler OnConnect, OnDisconnect;
+	Host::ThreadEventHandler OnCreate, OnDestroy;
 
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
-		std::vector<std::unique_ptr<TextThread>> removedThreads; // delay destruction until after lock is released
-		auto[lock, textThreadsByParams] = ::textThreadsByParams.operator->();
-		for (auto it = textThreadsByParams->begin(); it != textThreadsByParams->end(); removeIf(it->first) ? it = textThreadsByParams->erase(it) : ++it)
-			if (removeIf(it->first)) removedThreads.emplace_back(std::move(it->second));
+		std::vector<TextThread*> threadsToRemove;
+		std::for_each(textThreadsByParams->begin(), textThreadsByParams->end(), [&](auto& it) { if (removeIf(it.first)) threadsToRemove.push_back(&it.second); });
+		for (auto thread : threadsToRemove)
+		{
+			OnDestroy(*thread);
+			textThreadsByParams->erase(thread->tp);
+		}
 	}
 
 	void CreatePipe()
@@ -89,6 +90,7 @@ namespace
 			DWORD bytesRead, processId;
 			ReadFile(hookPipe, &processId, sizeof(processId), &bytesRead, nullptr);
 			processRecordsByIds->try_emplace(processId, processId, hostPipe);
+			OnConnect(processId);
 
 			CreatePipe();
 
@@ -110,13 +112,18 @@ namespace
 				default:
 				{
 					auto tp = *(ThreadParam*)buffer;
-					if (textThreadsByParams->count(tp) == 0) textThreadsByParams->insert({ tp, std::make_unique<TextThread>(tp, Host::GetHookParam(tp)) });
-					textThreadsByParams->at(tp)->Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
+					if (textThreadsByParams->count(tp) == 0)
+					{
+						TextThread& created = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first->second;
+						OnCreate(created);
+					}
+					textThreadsByParams->find(tp)->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
 				}
 
 			RemoveThreads([&](ThreadParam tp) { return tp.processId == processId; });
+			OnDisconnect(processId);
 			processRecordsByIds->erase(processId);
 		}).detach();
 	}
@@ -124,22 +131,27 @@ namespace
 
 namespace Host
 {
-	void Start(ProcessEventCallback OnConnect, ProcessEventCallback OnDisconnect, TextThread::EventCallback OnCreate, TextThread::EventCallback OnDestroy, TextThread::OutputCallback Output)
+	void Start(ProcessEventHandler Connect, ProcessEventHandler Disconnect, ThreadEventHandler Create, ThreadEventHandler Destroy, TextThread::OutputCallback Output)
 	{
-		ProcessRecord::OnConnect = OnConnect;
-		ProcessRecord::OnDisconnect = OnDisconnect;
-		TextThread::OnCreate = OnCreate;
-		TextThread::OnDestroy = OnDestroy;
+		OnConnect = Connect;
+		OnDisconnect = Disconnect;
+		OnCreate = [Create](TextThread& thread) { Create(thread); thread.Start(); };
+		OnDestroy = [Destroy](TextThread& thread) { thread.Stop(); Destroy(thread); };
 		TextThread::Output = Output;
+
 		processRecordsByIds->try_emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
-		textThreadsByParams->insert({ console, std::make_unique<TextThread>(console, HookParam{}, CONSOLE) });
-		textThreadsByParams->insert({ Host::clipboard, std::make_unique<TextThread>(Host::clipboard, HookParam{}, CLIPBOARD) });
+		OnConnect(console.processId);
+		textThreadsByParams->try_emplace(console, console, HookParam{}, CONSOLE);
+		OnCreate(GetThread(console));
+		textThreadsByParams->try_emplace(clipboard, clipboard, HookParam{}, CLIPBOARD);
+		OnCreate(GetThread(clipboard));
+
 		CreatePipe();
 
 		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
 		{
 			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
-				if (auto text = Util::GetClipboardText()) Host::GetThread(Host::clipboard)->AddSentence(text.value());
+				if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(text.value());
 			return CallNextHookEx(NULL, statusCode, wParam, lParam);
 		}, NULL, GetCurrentThreadId());
 	}
@@ -200,13 +212,13 @@ namespace Host
 		return processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp;
 	}
 
-	TextThread* GetThread(ThreadParam tp)
+	TextThread& GetThread(ThreadParam tp)
 	{
-		return textThreadsByParams->at(tp).get();
+		return textThreadsByParams->at(tp);
 	}
 
 	void AddConsoleOutput(std::wstring text)
 	{
-		GetThread(console)->AddSentence(text);
+		GetThread(console).AddSentence(text);
 	}
 }
