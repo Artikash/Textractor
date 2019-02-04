@@ -285,7 +285,7 @@ void TextHook::RemoveReadCode()
 void TextHook::Clear()
 {
 	std::scoped_lock lock(*viewMutex);
-	ConsoleOutput(REMOVING_HOOK, hp.name);
+	if (*hp.name) ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(address);
