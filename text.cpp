@@ -39,6 +39,7 @@ Drag and drop within the list to reorder
 Press delete with an extension selected to remove it)";
 const char* WINDOW = u8"Window";
 const char* USE_JP_LOCALE = u8"Emulate japanese locale?";
+const char* FILTER_REPETITION = u8"Repetition Filter";
 const char* DEFAULT_CODEPAGE = u8"Default Codepage";
 const char* FLUSH_DELAY = u8"Flush Delay";
 const char* MAX_BUFFER_SIZE = u8"Max Buffer Size";

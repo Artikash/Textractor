@@ -18,6 +18,7 @@ extern const char* SAVE_SETTINGS;
 extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 extern const char* WINDOW;
 extern const char* USE_JP_LOCALE;
+extern const char* FILTER_REPETITION;
 extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;

@@ -9,6 +9,7 @@
 #include <winhttp.h>
 #include <QFormLayout>
 #include <QPushButton>
+#include <QCheckBox>
 #include <QSpinBox>
 #include <QMessageBox>
 #include <QInputDialog>
@@ -42,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
+	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
@@ -310,6 +312,15 @@ void MainWindow::Settings()
 				spinBox->setValue(value);
 				layout->insertRow(0, label, spinBox);
 				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = spinBox->value()); });
+			}
+			for (auto[value, label] : Array<std::tuple<bool&, const char*>>{
+				{ TextThread::filterRepetition, FILTER_REPETITION },
+			})
+			{
+				auto checkBox = new QCheckBox(this);
+				checkBox->setChecked(value);
+				layout->insertRow(0, label, checkBox);
+				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = checkBox->isChecked()); });
 			}
 			connect(save, &QPushButton::clicked, this, &QDialog::accept);
 			setWindowTitle(SETTINGS);

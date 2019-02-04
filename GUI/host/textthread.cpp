@@ -42,7 +42,7 @@ void TextThread::Push(const BYTE* data, int len)
 	lastPushTime = GetTickCount();
 
 	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
-	if (Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
+	if (filterRepetition && Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 	{
 		repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
 		AddSentence(buffer);
