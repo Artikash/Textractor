@@ -10,9 +10,9 @@ int main()
 	_setmode(_fileno(stdin), _O_U16TEXT);
 	wprintf_s(L"Usage: {'attach'|'detach'|hookcode} -Pprocessid\n");
 	fflush(stdout);
-	Host::Start([](auto) {}, [](auto) {}, [](auto) {}, [](auto) {}, [](TextThread* thread, std::wstring& output)
+	Host::Start([](auto) {}, [](auto) {}, [](auto&) {}, [](auto&) {}, [](TextThread& thread, std::wstring& output)
 	{
-		wprintf_s(L"[%I64X:%I32X:%I64X:%I64X:%I64X:%s] %s\n", thread->handle, thread->tp.processId, thread->tp.addr, thread->tp.ctx, thread->tp.ctx2, thread->name.c_str(), output.c_str());
+		wprintf_s(L"[%I64X:%I32X:%I64X:%I64X:%I64X:%s:%s] %s\n", thread.handle, thread.tp.processId, thread.tp.addr, thread.tp.ctx, thread.tp.ctx2, thread.name.c_str(), Util::GenerateCode(thread.hp, thread.tp.processId).c_str(), output.c_str());
 		fflush(stdout);
 		return false;
 	});
