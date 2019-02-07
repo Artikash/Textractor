@@ -40,13 +40,16 @@ void TextThread::Push(const BYTE* data, int len)
 	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	lastPushTime = GetTickCount();
-
-	if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t c) { return repeatingChars.count(c) > 0; })) buffer.clear();
-	if (filterRepetition && Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
+	
+	if (filterRepetition)
 	{
-		repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
-		AddSentence(buffer);
-		buffer.clear();
+		if (std::all_of(buffer.begin(), buffer.end(), [&](auto ch) { return repeatingChars.find(ch) != repeatingChars.end(); })) buffer.clear();
+		if (Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
+		{
+			repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
+			AddSentence(buffer);
+			buffer.clear();
+		}
 	}
 }
 
