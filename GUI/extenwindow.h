@@ -7,7 +7,13 @@ namespace Ui
 	class ExtenWindow;
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<const char*, int64_t> miscInfo);
+struct InfoForExtension
+{
+	const char* name;
+	int64_t value;
+};
+
+bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* miscInfo);
 
 class ExtenWindow : public QMainWindow
 {

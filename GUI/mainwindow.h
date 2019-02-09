@@ -1,6 +1,7 @@
 #pragma once
 
 #include "qtcommon.h"
+#include "extenwindow.h"
 #include "host/host.h"
 
 namespace Ui
@@ -26,7 +27,7 @@ private:
 	QString TextThreadString(TextThread& thread);
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
-	std::unordered_map<const char*, int64_t> GetMiscInfo(TextThread& thread);
+	std::array<InfoForExtension, 10> GetMiscInfo(TextThread& thread);
 	void AttachProcess();
 	void LaunchProcess();
 	void DetachProcess();
@@ -40,4 +41,5 @@ private:
 	QWidget* extenWindow;
 	std::pair<uint64_t, uint64_t> savedThreadCtx;
 	wchar_t savedThreadCode[1000];
+	std::atomic<TextThread*> current;
 };

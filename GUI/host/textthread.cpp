@@ -21,23 +21,23 @@ void TextThread::Stop()
 	timer = NULL;
 }
 
-void TextThread::AddSentence(const std::wstring& sentence)
+void TextThread::AddSentence(std::wstring&& sentence)
 {
-	queuedSentences->push_back(sentence);
+	queuedSentences->emplace_back(std::move(sentence));
 }
 
-void TextThread::Push(const BYTE* data, int len)
+void TextThread::Push(const BYTE* data, int length)
 {
-	if (len < 0) return;
+	if (length < 0) return;
 	std::scoped_lock lock(bufferMutex);
 
 	BYTE doubleByteChar[2];
-	if (len == 1) // doublebyte characters must be processed as pairs
-		if (leadByte) std::tie(doubleByteChar[0], doubleByteChar[1], data, len, leadByte) = std::tuple(leadByte, data[0], doubleByteChar, 2, 0 );
-		else if (IsDBCSLeadByteEx(hp.codepage ? hp.codepage : Host::defaultCodepage, data[0])) std::tie(leadByte, len) = std::tuple(data[0], 0);
+	if (length == 1) // doublebyte characters must be processed as pairs
+		if (leadByte) std::tie(doubleByteChar[0], doubleByteChar[1], data, length, leadByte) = std::tuple(leadByte, data[0], doubleByteChar, 2, 0 );
+		else if (IsDBCSLeadByteEx(hp.codepage ? hp.codepage : Host::defaultCodepage, data[0])) std::tie(leadByte, length) = std::tuple(data[0], 0);
 
-	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, len / 2);
-	else if (auto converted = Util::StringToWideString(std::string((char*)data, len), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
+	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, length / sizeof(wchar_t));
+	else if (auto converted = Util::StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	lastPushTime = GetTickCount();
 	
@@ -47,7 +47,7 @@ void TextThread::Push(const BYTE* data, int len)
 		if (Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 		{
 			repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
-			AddSentence(buffer);
+			AddSentence(std::move(buffer));
 			buffer.clear();
 		}
 	}
@@ -64,7 +64,7 @@ void TextThread::Flush()
 	if (buffer.empty()) return;
 	if (buffer.size() > maxBufferSize || GetTickCount() - lastPushTime > flushDelay)
 	{
-		AddSentence(buffer);
+		AddSentence(std::move(buffer));
 		buffer.clear();
 	}
 }

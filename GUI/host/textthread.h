@@ -17,8 +17,8 @@ public:
 
 	void Start();
 	void Stop();
-	void AddSentence(const std::wstring& sentence);
-	void Push(const BYTE* data, int len);
+	void AddSentence(std::wstring&& sentence);
+	void Push(const BYTE* data, int length);
 
 	ThreadSafe<std::wstring> storage;
 	const int64_t handle;

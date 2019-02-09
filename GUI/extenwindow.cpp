@@ -12,57 +12,53 @@
 
 namespace
 {
-	struct InfoForExtension
+
+	struct Extension
 	{
-		const char* name;
-		int64_t value;
-		InfoForExtension* next;
-		~InfoForExtension() { if (next) delete next; };
+		std::wstring name;
+		wchar_t*(*callback)(wchar_t*, const InfoForExtension*);
 	};
 
-	QHash<QString, wchar_t*(*)(wchar_t*, const InfoForExtension*)> extensions;
-	QStringList extenNames;
+	std::vector<Extension> extensions;
 	std::shared_mutex extenMutex;
 
 	void Load(QString extenName)
 	{
 		if (extenName == ITH_DLL) return;
 		// Extension is dll and exports "OnNewSentence"
-		if (FARPROC callback = GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+		if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
 		{
 			std::scoped_lock writeLock(extenMutex);
-			extensions[extenName] = (wchar_t*(*)(wchar_t*, const InfoForExtension*))callback;
-			extenNames.push_back(extenName);
+			extensions.push_back({ S(extenName), callback });
 		}
 	}
 
-	void Unload(QString extenName)
+	void Unload(int index)
 	{
 		std::scoped_lock writeLock(extenMutex);
-		extenNames.erase(std::remove(extenNames.begin(), extenNames.end(), extenName), extenNames.end());
-		FreeLibrary(GetModuleHandleW(S(extenName).c_str()));
+		FreeLibrary(GetModuleHandleW(extensions.at(index).name.c_str()));
+		extensions.erase(extensions.begin() + index);
 	}
 
 	void Reorder(QStringList extenNames)
 	{
 		std::scoped_lock writeLock(extenMutex);
-		::extenNames = extenNames;
+		std::vector<Extension> extensions;
+		for (auto extenName : extenNames) 
+			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](auto extension) { return extension.name == S(extenName); }));
+		::extensions = extensions;
 	}
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, std::unordered_map<const char*, int64_t> miscInfo)
+bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* miscInfo)
 {
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 
-	InfoForExtension miscInfoLinkedList{ "", 0, nullptr };
-	InfoForExtension* miscInfoTraverser = &miscInfoLinkedList;
-	for (auto[name, value] : miscInfo) miscInfoTraverser = miscInfoTraverser->next = new InfoForExtension{ name, value, nullptr };
-
 	std::shared_lock readLock(extenMutex);
-	for (auto extenName : extenNames)
+	for (const auto& extension : extensions)
 	{
-		wchar_t* nextBuffer = extensions[extenName](sentenceBuffer, &miscInfoLinkedList);
+		wchar_t* nextBuffer = extension.callback(sentenceBuffer, miscInfo);
 		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 		if (nextBuffer == nullptr) return false;
 		sentenceBuffer = nextBuffer;
@@ -99,10 +95,10 @@ void ExtenWindow::Sync()
 	ui->extenList->clear();
 	QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
 	std::shared_lock readLock(extenMutex);
-	for (auto extenName : extenNames)
+	for (auto extension : extensions)
 	{
-		ui->extenList->addItem(extenName);
-		extenSaveFile.write((extenName + ">").toUtf8());
+		ui->extenList->addItem(S(extension.name));
+		extenSaveFile.write((S(extension.name) + ">").toUtf8());
 	}
 }
 
@@ -129,9 +125,9 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 
 void ExtenWindow::keyPressEvent(QKeyEvent* event)
 {
-	if (event->key() == Qt::Key_Delete) if (auto extenName = ui->extenList->currentItem())
+	if (event->key() == Qt::Key_Delete && ui->extenList->currentItem() != nullptr)
 	{
-		Unload(extenName->text());
+		Unload(ui->extenList->currentIndex().row());
 		Sync();
 	}
 }

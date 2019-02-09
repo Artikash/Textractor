@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		[this](TextThread& thread) { ThreadRemoved(thread); },
 		[this](TextThread& thread, std::wstring& output) { return SentenceReceived(thread, output); }
 	);
+	current = &Host::GetThread(Host::console);
 	Host::AddConsoleOutput(ABOUT);
 
 	std::thread([]
@@ -144,22 +145,15 @@ void MainWindow::ThreadRemoved(TextThread& thread)
 
 bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
-	if (DispatchSentenceToExtensions(sentence, GetMiscInfo(thread)))
+	if (!DispatchSentenceToExtensions(sentence, GetMiscInfo(thread).data())) return false;
+	sentence += L'\n';
+	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence]
 	{
-		sentence += L"\n";
-		QString ttString = TextThreadString(thread);
-		QMetaObject::invokeMethod(this, [this, ttString, sentence]
-		{
-			if (ui->ttCombo->currentText().startsWith(ttString))
-			{
-				ui->textOutput->moveCursor(QTextCursor::End);
-				ui->textOutput->insertPlainText(S(sentence));
-				ui->textOutput->moveCursor(QTextCursor::End);
-			}
-		});
-		return true;
-	}
-	return false;
+		ui->textOutput->moveCursor(QTextCursor::End);
+		ui->textOutput->insertPlainText(S(sentence));
+		ui->textOutput->moveCursor(QTextCursor::End);
+	});
+	return true;
 }
 
 QString MainWindow::TextThreadString(TextThread& thread)
@@ -184,17 +178,18 @@ DWORD MainWindow::GetSelectedProcessId()
 	return ui->processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
-std::unordered_map<const char*, int64_t> MainWindow::GetMiscInfo(TextThread& thread)
+std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 {
 	return
-	{
-	{ "current select", ui->ttCombo->currentText().startsWith(TextThreadString(thread)) },
+	{ {
+	{ "current select", &thread == current },
 	{ "text number", thread.handle },
 	{ "process id", thread.tp.processId },
-	{ "hook address", thread.tp.addr },
+	{ "hook address", (int64_t)thread.tp.addr },
 	{ "text handle", thread.handle },
-	{ "text name", (int64_t)thread.name.c_str() }
-	};
+	{ "text name", (int64_t)thread.name.c_str() },
+	{ nullptr, 0 } // nullptr marks end of info array
+	} };
 }
 
 void MainWindow::AttachProcess()
@@ -339,6 +334,6 @@ void MainWindow::Extensions()
 void MainWindow::ViewThread(int index)
 {
 	ui->ttCombo->setCurrentIndex(index);
-	ui->textOutput->setPlainText(S(Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))).storage->c_str()));
+	ui->textOutput->setPlainText(S((current = &Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))))->storage->c_str()));
 	ui->textOutput->moveCursor(QTextCursor::End);
 }
