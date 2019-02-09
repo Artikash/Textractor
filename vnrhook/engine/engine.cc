@@ -4775,9 +4775,9 @@ static bool InsertSystem43OldHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
   const BYTE bytes[] = {
     0xe8, XX4,          //   005506a9  |. e8 f2fb1600    call rance01.006c02a0 ; hook here
     0x83,0xc4, 0x0c,    //   005506ae  |. 83c4 0c        add esp,0xc
-    0x5f,               //   005506b1  |. 5f             pop edi
-    0x5e,               //   005506b2  |. 5e             pop esi
-    0xb0, 0x01,         //   005506b3  |. b0 01          mov al,0x1
+    XX,                 //   005506b1  |. 5f             pop edi ; Artikash 2/9/2019 change these to wildcards: Evenicle 2 has the pops and moves switched order
+    XX,                 //   005506b2  |. 5e             pop esi
+    XX, XX,             //   005506b3  |. b0 01          mov al,0x1
     0x5b,               //   005506b5  |. 5b             pop ebx
     0xc2, 0x04,0x00,    //   005506b6  \. c2 0400        retn 0x4
     0xcc, 0xcc // patching a few int3 to make sure that this is at the end of the code block
