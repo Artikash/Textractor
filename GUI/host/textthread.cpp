@@ -26,18 +26,18 @@ void TextThread::AddSentence(std::wstring&& sentence)
 	queuedSentences->emplace_back(std::move(sentence));
 }
 
-void TextThread::Push(const BYTE* data, int length)
+void TextThread::Push(BYTE* data, int length)
 {
 	if (length < 0) return;
 	std::scoped_lock lock(bufferMutex);
 
 	BYTE doubleByteChar[2];
 	if (length == 1) // doublebyte characters must be processed as pairs
-		if (leadByte) std::tie(doubleByteChar[0], doubleByteChar[1], data, length, leadByte) = std::tuple(leadByte, data[0], doubleByteChar, 2, 0 );
+		if (leadByte) std::tie(doubleByteChar[0], doubleByteChar[1], data, length, leadByte) = std::tuple(leadByte, data[0], doubleByteChar, 2, 0);
 		else if (IsDBCSLeadByteEx(hp.codepage ? hp.codepage : Host::defaultCodepage, data[0])) std::tie(leadByte, length) = std::tuple(data[0], 0);
 
-	if (hp.type & USING_UNICODE) buffer += std::wstring((wchar_t*)data, length / sizeof(wchar_t));
-	else if (auto converted = Util::StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer += converted.value();
+	if (hp.type & USING_UNICODE) buffer.append((wchar_t*)data, length / sizeof(wchar_t));
+	else if (auto converted = Util::StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	lastPushTime = GetTickCount();
 	

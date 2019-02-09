@@ -33,11 +33,11 @@ namespace
 		}
 
 		template <typename T>
-		void Send(T data)
+		std::enable_if_t<sizeof(T) < PIPE_BUFFER_SIZE> Send(T data)
 		{
 			std::thread([=]
 			{
-				std::enable_if_t<sizeof(data) < PIPE_BUFFER_SIZE, DWORD> DUMMY;
+				DWORD DUMMY;
 				WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
 			}).detach();
 		}
