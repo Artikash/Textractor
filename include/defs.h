@@ -42,7 +42,7 @@ inline void FORMAT_MESSAGE(const char* format, Args... args)
 }
 
 #ifdef _DEBUG
-#define TEST(...) inline auto TEST__RUNNER__DUMMY = std::invoke([]{ __VA_ARGS__; return 0; }) 
+#define TEST(...) inline auto TEST__RUNNER__DUMMY = (CloseHandle(CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr)), 0); 
 #else
 #define TEST(...)
 #endif

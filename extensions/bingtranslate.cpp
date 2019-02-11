@@ -1,6 +1,7 @@
-#include "extension.h"
+﻿#include "extension.h"
+#include "defs.h"
 #include "text.h"
-#include <winhttp.h>
+#include "network.h"
 #include <QInputDialog>
 #include <QTimer>
 
@@ -53,7 +54,7 @@ QStringList languages
 	"Welsh: cy"
 };
 
-std::wstring translateTo;
+std::wstring translateTo = L"en";
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -82,49 +83,33 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	return TRUE;
 }
 
-// This function detects language and puts it in translateFrom if it's empty
-std::wstring Translate(std::wstring text, std::wstring& translateFrom, std::wstring translateTo)
+// This function detects language and returns it if translateFrom is empty
+std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std::wstring translateTo)
 {
 	static std::atomic<HINTERNET> internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 
-	char utf8[10000] = {};
-	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, utf8, 10000, NULL, NULL);
-	text.clear();
-	for (int i = 0; utf8[i];)
+	std::wstring escapedText;
+	for (unsigned char ch : WideStringToString(text))
 	{
-		wchar_t utf8char[3] = {};
-		swprintf_s<3>(utf8char, L"%02X", (int)(unsigned char)utf8[i++]);
-		text += L"%" + std::wstring(utf8char);
+		wchar_t escapedChar[4] = {};
+		swprintf_s<4>(escapedChar, L"%%%02X", (int)ch);
+		escapedText = escapedChar;
 	}
 
+	std::wstring location = translateFrom.empty()
+		? L"/tdetect?text=" + text
+		: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + text;
 	std::wstring translation;
 	if (internet)
-	{
-		std::wstring location = translateFrom.empty()
-			? L"/tdetect?text=" + text
-			: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + text;
-		if (HINTERNET connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-		{
-			if (HINTERNET request = WinHttpOpenRequest(connection, L"POST", location.c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
-			{
+		if (InternetHandle connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
+			if (InternetHandle request = WinHttpOpenRequest(connection, L"POST", location.c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
 				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-				{
-					DWORD bytesRead;
-					char buffer[10000] = {};
-					WinHttpReceiveResponse(request, NULL);
-					WinHttpReadData(request, buffer, 10000, &bytesRead);
-					wchar_t wbuffer[10000] = {};
-					MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, 10000);
-					if (translateFrom.empty()) translateFrom = wbuffer;
-					// Response formatted as JSON: translation starts with :" and ends with "}
-					if (std::wcmatch results; std::regex_search(wbuffer, results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
-				}
-				WinHttpCloseHandle(request);
-			}
-			WinHttpCloseHandle(connection);
-		}
-	}
+					if (auto response = ReceiveHttpRequest(request))
+						if (translateFrom.empty()) translation = response.value();
+						else if (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
+
+	Escape(translation);
 	return translation;
 }
 
@@ -132,35 +117,20 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (sentenceInfo["hook address"] == -1) return false;
 
-	{
-		static std::mutex m;
-		static std::vector<DWORD> requestTimes;
-		std::lock_guard l(m);
-		requestTimes.push_back(GetTickCount());
-		requestTimes.erase(std::remove_if(requestTimes.begin(), requestTimes.end(), [&](DWORD requestTime) { return GetTickCount() - requestTime > 60 * 1000; }), requestTimes.end());
-		if (!sentenceInfo["current select"] && requestTimes.size() > 30)
-		{
-			sentence += TOO_MANY_TRANS_REQUESTS;
-			return true;
-		}
-	}
+	static RateLimiter rateLimiter(30, 60 * 1000);
 
-	std::wstring translation, translateFrom;
-	Translate(sentence, translateFrom, translateTo);
-	translation = Translate(sentence, translateFrom, translateTo);
-	
-	for (int i = 0; i < translation.size(); ++i)
-	{
-		if (translation[i] == L'\\')
-		{
-			translation[i] = 0x200b;
-			if (translation[i + 1] == L'r') translation[i + 1] = 0x200b; // for some reason \r gets displayed as a newline
-			if (translation[i + 1] == L'n') translation[i + 1] = L'\n';
-			if (translation[i + 1] == L't') translation[i + 1] = L'\t';
-		}
-	}
-
+	std::wstring translation;
+	if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
+	else translation = Translate(sentence, Translate(sentence, L"", translateTo), translateTo);
 	if (translation.empty()) translation = TRANSLATION_ERROR;
 	sentence += L"\n" + translation;
 	return true;
 }
+
+TEST(
+	{
+		std::wstring test = L"こんにちは";
+		ProcessSentence(test, SentenceInfo{ SentenceInfo::DUMMY });
+		assert(test.find(L"Hello") != std::wstring::npos);
+	}
+);

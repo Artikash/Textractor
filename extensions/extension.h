@@ -17,6 +17,8 @@ struct SentenceInfo
 		for (auto info = infoArray; info->name != nullptr; ++info) if (propertyName == info->name) return info->value;
 		throw;
 	}
+
+	inline static InfoForExtension DUMMY[2] = { { "hook address", 0 } };
 };
 
 struct SKIP {};

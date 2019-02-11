@@ -76,8 +76,7 @@ const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* SELECT_LANGUAGE = u8"Select Language";
 const char* BING_PROMPT = u8"What language should Bing translate to?";
 const char* GOOGLE_PROMPT = u8"What language should Google translate to?";
-const wchar_t* TOO_MANY_TRANS_REQUESTS = LR"(
-Too many translation requests: refuse to make more)";
+const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
@@ -208,8 +207,7 @@ Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contrata
 	SELECT_LANGUAGE = u8"Seleccionar lenguaje";
 	BING_PROMPT = u8"¿A qué idioma debe traducir Bing?";
 	GOOGLE_PROMPT = u8"¿A qué idioma debe traducir Google?";
-	TOO_MANY_TRANS_REQUESTS = LR"(
-Demasiadas peticiones de traducción: no se puede hacer más)";
+	TOO_MANY_TRANS_REQUESTS = L"Demasiadas peticiones de traducción: no se puede hacer más";
 	TRANSLATION_ERROR = L"Error al traducir";
 	EXTRA_WINDOW_INFO = u8R"(Clic derecho para configurar
 Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior derecha para cambiar el tamaño)";
@@ -294,8 +292,7 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 	SELECT_LANGUAGE = u8"选择语言";
 	BING_PROMPT = u8"想要使用 Bing 翻译到哪种语言?";
 	GOOGLE_PROMPT = u8"想要使用 Google 翻译到哪种语言?";
-	TOO_MANY_TRANS_REQUESTS = LR"(
-太多翻译请求: 拒绝生成更多)";
+	TOO_MANY_TRANS_REQUESTS = L"太多翻译请求: 拒绝生成更多";
 	TRANSLATION_ERROR = L"翻译时出错";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
 在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
