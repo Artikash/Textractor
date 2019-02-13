@@ -103,7 +103,7 @@ struct InsertHookCmd // From host
 
 struct ConsoleOutputNotif // From hook
 {
-	ConsoleOutputNotif(std::string message = "") { strcpy_s<MESSAGE_SIZE>(this->message, message.c_str()); }
+	ConsoleOutputNotif(std::string message = "") { strncpy_s(this->message, message.c_str(), MESSAGE_SIZE - 1); }
 	int command = HOST_NOTIFICATION_TEXT;
 	char message[MESSAGE_SIZE] = {};
 };

@@ -162,7 +162,7 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 	else
 	{
 		if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
-		if (lpname && *lpname) strcpy_s<HOOK_NAME_SIZE>(hp.name, lpname);
+		if (lpname && *lpname) strncpy_s(hp.name, lpname, HOOK_NAME_SIZE - 1);
 		ConsoleOutput(INSERTING_HOOK, hp.name);
 		RemoveHook(hp.address, 0);
 		if (!hooks[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);

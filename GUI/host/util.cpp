@@ -67,7 +67,7 @@ namespace
 			hp.codepage = Host::defaultCodepage;
 		}
 
-		wcscpy_s<MAX_MODULE_SIZE>(hp.text, SCode.c_str());
+		wcsncpy_s(hp.text, SCode.c_str(), MAX_MODULE_SIZE - 1);
 
 		return hp;
 	}
@@ -153,13 +153,13 @@ namespace
 		if (match[2].matched)
 		{
 			hp.type |= MODULE_OFFSET;
-			wcscpy_s<MAX_MODULE_SIZE>(hp.module, match[2].str().erase(0, 1).c_str());
+			wcsncpy_s(hp.module, match[2].str().erase(0, 1).c_str(), MAX_MODULE_SIZE - 1);
 		}
 		if (match[3].matched)
 		{
 			hp.type |= FUNCTION_OFFSET;
 			std::wstring func = match[3];
-			strcpy_s<MAX_MODULE_SIZE>(hp.function, std::string(func.begin(), func.end()).erase(0, 1).c_str());
+			strncpy_s(hp.function, std::string(func.begin(), func.end()).erase(0, 1).c_str(), MAX_MODULE_SIZE - 1);
 		}
 
 		// ITH has registers offset by 4 vs AGTH: need this to correct
@@ -237,7 +237,7 @@ namespace
 					{
 						hp.type |= MODULE_OFFSET;
 						hp.address -= (uint64_t)info.AllocationBase;
-						wcscpy_s<MAX_MODULE_SIZE>(hp.module, moduleName->c_str() + moduleName->rfind(L'\\') + 1);
+						wcsncpy_s(hp.module, moduleName->c_str() + moduleName->rfind(L'\\') + 1, MAX_MODULE_SIZE - 1);
 					}
 
 		HCode << "@" << hp.address;
