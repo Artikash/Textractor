@@ -19,8 +19,18 @@ namespace
 		wchar_t*(*callback)(wchar_t*, const InfoForExtension*);
 	};
 
+	class : std::shared_mutex
+	{
+	public:
+		void lock() { ++queuedWrites; shared_mutex::lock(); }
+		void unlock() { --queuedWrites; shared_mutex::unlock(); }
+		void lock_shared() { while (queuedWrites) Sleep(100); shared_mutex::lock_shared(); }
+		void unlock_shared() { shared_mutex::unlock_shared(); }
+
+	private:
+		std::atomic<int> queuedWrites = 0;
+	} extenMutex;
 	std::vector<Extension> extensions;
-	std::shared_mutex extenMutex;
 
 	void Load(QString extenName)
 	{
@@ -44,7 +54,7 @@ namespace
 	{
 		std::scoped_lock writeLock(extenMutex);
 		std::vector<Extension> extensions;
-		for (auto extenName : extenNames) 
+		for (auto extenName : extenNames)
 			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](auto extension) { return extension.name == S(extenName); }));
 		::extensions = extensions;
 	}
@@ -105,7 +115,7 @@ void ExtenWindow::Sync()
 void ExtenWindow::Add(QFileInfo extenFile)
 {
 	if (extenFile.suffix() != "dll") return;
-	QFile::copy(extenFile.fileName(), extenFile.absoluteFilePath());
+	QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName());
 	Load(extenFile.completeBaseName());
 	Sync();
 }
