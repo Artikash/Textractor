@@ -267,6 +267,7 @@ namespace Util
 
 	std::optional<std::wstring> GetClipboardText()
 	{
+		Sleep(10); // for some reason this function sometimes fails if I don't wait a little
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
 		if (!OpenClipboard(NULL)) return {};
 
