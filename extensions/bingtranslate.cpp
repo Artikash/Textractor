@@ -130,7 +130,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 TEST(
 	{
 		std::wstring test = L"こんにちは";
-		ProcessSentence(test, SentenceInfo{ SentenceInfo::DUMMY });
+		ProcessSentence(test, { SentenceInfo::DUMMY });
 		assert(test.find(L"Hello") != std::wstring::npos);
 	}
 );

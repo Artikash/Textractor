@@ -5,7 +5,7 @@
 
 using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
 
-std::optional<std::wstring> ReceiveHttpRequest(HINTERNET request)
+inline std::optional<std::wstring> ReceiveHttpRequest(HINTERNET request)
 {
 	WinHttpReceiveResponse(request, NULL);
 	std::string data;
@@ -17,14 +17,14 @@ std::optional<std::wstring> ReceiveHttpRequest(HINTERNET request)
 		if (!dwSize) break;
 		std::vector<char> buffer(dwSize);
 		WinHttpReadData(request, buffer.data(), dwSize, &dwDownloaded);
-		data += std::string(buffer.data(), dwDownloaded);
+		data.append(buffer.data(), dwDownloaded);
 	} while (dwSize > 0);
 
 	if (data.empty()) return {};
 	return StringToWideString(data);
 }
 
-void Escape(std::wstring& text)
+inline void Escape(std::wstring& text)
 {
 	for (int i = 0; i < text.size(); ++i)
 	{

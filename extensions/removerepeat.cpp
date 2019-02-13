@@ -61,11 +61,10 @@ TEST(
 		RemoveCyclicRepeats(cyclicRepeats);
 		assert(cyclicRepeats == L"abcdefg");
 
-		InfoForExtension tester{ "hook address", 0 };
 		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. はい";
-		ProcessSentence(empty, { &tester });
-		ProcessSentence(one, { &tester });
-		ProcessSentence(normal, { &tester });
+		ProcessSentence(empty, { SentenceInfo::DUMMY });
+		ProcessSentence(one, { SentenceInfo::DUMMY });
+		ProcessSentence(normal, { SentenceInfo::DUMMY });
 		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. はい");
 	}
 );
