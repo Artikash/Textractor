@@ -55,7 +55,7 @@ extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
 extern const char* FONT_SIZE;
 extern const char* TOPMOST;
-extern const char* ALWAYS_ON_TOP;
+extern const wchar_t* LUA_ERROR;
 extern const char* REGEX_FILTER;
 extern const char* INVALID_REGEX;
 extern const char* CURRENT_FILTER;

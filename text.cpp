@@ -84,7 +84,7 @@ const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
 const char* FONT_SIZE = u8"Font Size";
 const char* TOPMOST = u8"Always on Top";
-const char* ALWAYS_ON_TOP = u8"Keep this window on top";
+const wchar_t* LUA_ERROR = L"Lua error: ";
 const char* REGEX_FILTER = u8"Regex Filter";
 const char* INVALID_REGEX = u8"Invalid regex";
 const char* CURRENT_FILTER = u8"Currently filtering: ";
@@ -215,7 +215,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	TEXT_COLOR = u8"Color de texto";
 	FONT_SIZE = u8"Tamaño de letra";
 	TOPMOST = u8"Siempre visible";
-	ALWAYS_ON_TOP = u8"Matener esta ventana encima";
 	REGEX_FILTER = u8"Filtro Regex";
 	INVALID_REGEX = u8"Regex inválido";
 	CURRENT_FILTER = u8"Actualmente filtrando: ";
@@ -300,7 +299,6 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 	TEXT_COLOR = u8"文本颜色";
 	FONT_SIZE = u8"字体大小";
 	TOPMOST = u8"总是位于最上层";
-	ALWAYS_ON_TOP = u8"将本窗口在保持最上层";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
 	CURRENT_FILTER = u8"当前过滤中: ";

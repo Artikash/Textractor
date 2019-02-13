@@ -29,7 +29,7 @@ constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 // Misc
 
-constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repetition>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines";
+constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repetition>Lua>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
 
 // Functions
 
