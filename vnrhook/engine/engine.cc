@@ -2138,26 +2138,6 @@ bool InsertBGI3Hook()
 bool InsertBGIHook()
 { return InsertBGI2Hook() ||  InsertBGI1Hook(); }
 
-// Artikash 8/28/2018: reimplement baldr sky zero hook. see ok123's post https://web.archive.org/web/20140815231753/http://9gal.com/read.php?tid=411756
-bool InsertBaldrHook()
-{
-	const BYTE ins[] = { 0x90,0xff,0x50,0x3c,0x83,0xc4,0x20,0x8b,0x45,0xec };
-	for (auto addr : Util::SearchMemory(ins, sizeof(ins)))
-	{
-		HookParam hp = {};
-		hp.address = addr;
-		hp.offset = 4;
-		hp.type = NO_CONTEXT | USING_STRING | USING_UNICODE; // 0x403
-		ConsoleOutput("Textractor: INSERT BALDR");
-		NewHook(hp, "BALDR");
-
-		return true;
-	}
-
-	ConsoleOutput("Textractor: BALDR failed: could not find instructions");
-	return false;
-}
-
 /********************************************************************************************
 Reallive hook:
   Process name is reallive.exe or reallive*.exe.
@@ -16490,139 +16470,57 @@ bool InsertRenpyHook()
 	return true;
 }
 
-
-/**
- *  jichi 4/21/2014: Mono (Unity3D)
- *  See (ok123): http://sakuradite.com/topic/214
- *  Pattern: 33DB66390175
- *
- *  FIXME: This approach won't work before mono is loaded into the memory.
- *
- *  Example: /HWN-8*0:3C@ mono.dll search 33DB66390175
- *  - length_offset: 1
- *  - module: 1690566707 = 0x64c40033
- *  - off: 4294967284 = 0xfffffff4 = -0xc
- *  - split: 60 = 0x3c
- *  - type: 1114 = 0x45a
- *
- *  Function starts:
- *  1003b818  /$ 55             push ebp
- *  1003b819  |. 8bec           mov ebp,esp
- *  1003b81b  |. 51             push ecx
- *  1003b81c  |. 807d 10 00     cmp byte ptr ss:[ebp+0x10],0x0
- *  1003b820  |. 8b50 08        mov edx,dword ptr ds:[eax+0x8]
- *  1003b823  |. 53             push ebx
- *  1003b824  |. 8b5d 08        mov ebx,dword ptr ss:[ebp+0x8]
- *  1003b827  |. 56             push esi
- *  1003b828  |. 8b75 0c        mov esi,dword ptr ss:[ebp+0xc]
- *  1003b82b  |. 57             push edi
- *  1003b82c  |. 8d78 0c        lea edi,dword ptr ds:[eax+0xc]
- *  1003b82f  |. 897d 08        mov dword ptr ss:[ebp+0x8],edi
- *  1003b832  |. 74 44          je short mono.1003b878
- *  1003b834  |. 2bf2           sub esi,edx
- *  1003b836  |. 03f1           add esi,ecx
- *  1003b838  |. 894d 10        mov dword ptr ss:[ebp+0x10],ecx
- *  1003b83b  |. 8975 08        mov dword ptr ss:[ebp+0x8],esi
- *  1003b83e  |. 3bce           cmp ecx,esi
- *  1003b840  |. 7f 67          jg short mono.1003b8a9
- *  1003b842  |. 8d4c4b 0c      lea ecx,dword ptr ds:[ebx+ecx*2+0xc]
- *  1003b846  |> 0fb707         /movzx eax,word ptr ds:[edi]
- *  1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
- *  1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
- *  1003b84e  |. 75 16          |jnz short mono.1003b866
- *  1003b850  |. 8bf1           |mov esi,ecx
- *  1003b852  |> 43             |/inc ebx
- *  1003b853  |. 83c6 02        ||add esi,0x2
- *  1003b856  |. 3bda           ||cmp ebx,edx
- *  1003b858  |. 74 19          ||je short mono.1003b873
- *  1003b85a  |. 66:8b06        ||mov ax,word ptr ds:[esi]
- *  1003b85d  |. 66:3b045f      ||cmp ax,word ptr ds:[edi+ebx*2]
- *  1003b861  |.^74 ef          |\je short mono.1003b852
- *  1003b863  |. 8b75 08        |mov esi,dword ptr ss:[ebp+0x8]
- *  1003b866  |> ff45 10        |inc dword ptr ss:[ebp+0x10]
- *  1003b869  |. 83c1 02        |add ecx,0x2
- *  1003b86c  |. 3975 10        |cmp dword ptr ss:[ebp+0x10],esi
- *  1003b86f  |.^7e d5          \jle short mono.1003b846
- */
-bool InsertMonoHook()
+void InsertMonoHook(HMODULE mono)
 {
-	// TO FUTURE ME: If you're looking for a new mono hook, try searching for this assembly and breaking into it: 8d 44 48 10 0f b7 4d ?? 66 89 08
-	// Instruction pattern: 90FF503C83C4208B45EC
-	const BYTE ins[] = {
-	  0x33,0xdb,      // 1003b849  |. 33db           |xor ebx,ebx    ; jichi hook here
-	  0x66,0x39,0x01, // 1003b84b  |. 66:3901        |cmp word ptr ds:[ecx],ax
-	  0x75 //,0x16    // 1003b84e  |. 75 16          |jnz short mono.1003b866
-	};
-	bool found = false;
-	for (auto addr : Util::SearchMemory(ins, sizeof(ins)/*,PAGE_EXECUTE_READWRITE*/))
+	/* Artikash 2/13/2019:
+	How to hook Mono/Unity3D:
+	Find all standard function prologs in memory with write/execute permission: these represent possible JIT compiled functions
+	Then use Mono APIs to reflect what these functions are, and hook them if they are string member functions
+	Mono calling convention uses 'this' as first argument on stack
+	Must be dynamic hook bootstrapped from other mono api or mono_domain_get won't work
+	*/
+	trigger_fun_ = [](LPVOID addr, DWORD, DWORD)
 	{
-		found = true;
-		HookParam hp = {};
-		hp.address = addr;
-		//hp.module = module;
-		hp.length_offset = 1;
-		hp.offset = -0xc;
-		hp.split = 0x3c;
-		//hp.type = NO_CONTEXT|USING_SPLIT|MODULE_OFFSET|USING_UNICODE|DATA_INDIRECT; // 0x45a;
-		hp.type = NO_CONTEXT | USING_SPLIT | USING_UNICODE | DATA_INDIRECT;
-
-		ConsoleOutput("vnreng: INSERT Mono");
-		NewHook(hp, "Mono");
-
-		for (int i = 0; i < 75; ++i)
+		HMODULE mono = GetModuleHandleW(L"mono");
+		static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
+		static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
+		static auto getName = (char*(*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
+		if (!getDomain || !getName || !getJitInfo) goto failed;
+		static auto domain = getDomain();
+		if (!domain) goto failed;
+		const BYTE prolog[] = { 0x55, 0x8b, 0xec };
+		for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
 		{
-			if (((*(DWORD*)(addr - i)) | 0xff000000) == 0xffec8b55) // search backward for function entry: first param is MonoString*
+			[](uint64_t addr)
 			{
-				HookParam hp2 = {};
-				hp2.address = addr - i;
-				hp2.type = USING_UNICODE;
-				hp2.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
+				__try
 				{
-					MonoString* string = (MonoString*)argof(1, esp_base);
-					*data = (DWORD)string->chars;
-					*len = string->length * 2;
-					*split = *(DWORD*)(esp_base + 0x28);
-				};
-				ConsoleOutput("Textractor: INSERT Mono2");
-				NewHook(hp2, "Mono2");
-				break;
-			}
+					if (getJitInfo(domain, addr))
+						if (char* name = getName(addr))
+							if (strstr(name, "string:") && !strstr(name, "string:mem"))
+							{
+								HookParam hp = {};
+								hp.address = addr;
+								hp.type = USING_UNICODE;
+								hp.offset = 4;
+								hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
+								{
+									MonoString* string = (MonoString*)argof(1, esp_base);
+									*data = (DWORD)string->chars;
+									*len = string->length * 2;
+								};
+								NewHook(hp, name);
+							}
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER) {}
+			}(addr);
 		}
-	}
-	if (!found) ConsoleOutput("vnreng:Mono: pattern not found");
-	return found;
-}
-
-void InsertMonoHook3()
-{
-	const BYTE bytes[] = { // Characteristic pattern of System.String.CharCopy in Venus Blood Lagoon https://vndb.org/v23125 and レイジングループ
-		// Cheat Engine 'Dissect Mono' feature is very useful in finding Mono hooks. Gives functions to look at in the stacktrace
-		0x55, // push ebp
-		0x8b, 0xec, // mov ebp,esp
-		0x53, // push ebx
-		0x57, // push edi
-		0x56, // push esi
-		0x83, 0xec, 0x0c, // sub esp,0x0c
-		0x8b, 0x5d, 0x08, // mov ebx,[ebp+0x08] ; wchar_t*
-		0x8b, 0x75, 0x0c, // mov esi,[ebp+0x0c] ; length
-		0x8b, 0x7d, 0x10, // mov edi,[ebp+0x10] ; ?
-		0x8b, 0xc3, // mov eax,ebx
-		0x0b, 0xc6, // or eax,esi
-		0x25, 0x03, 0x00, 0x00, 0x00, // and eax,0x03
-		0x85, 0xc0, // test eax,eax
-		0x0f, 0x84, XX4, // je ??
-		0x8b, 0xc3, // mov eax,ebx
-		0x25, 0x02, 0x00, 0x00, 0x00 // and eax,0x02
+		return true;
+	failed:
+		ConsoleOutput("Textractor: Mono Dynamic failed");
+		return true;
 	};
-	for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE))
-	{
-		HookParam hp = {};
-		hp.address = addr;
-		hp.type = USING_UNICODE | USING_STRING;
-		hp.offset = 8;
-		hp.length_offset = 3;
-		NewHook(hp, "Mono3");
-	}
+	SetTrigger();
 }
 
 /** jichi 12/26/2014 Mono
@@ -16662,9 +16560,7 @@ bool InsertMonoHooks()
   if (!h)
     return false;
 
-  InsertBaldrHook(); // Artikash 8/28/2018: insert for all mono games: maybe itll work for more than baldr sky zero?
-  InsertMonoHook(); // Artikash 10/20/2018: dunno why this was removed, works for some stuff so readd
-  InsertMonoHook3();
+  InsertMonoHook(h); // Artikash 10/20/2018: dunno why this was removed, works for some stuff so readd
   bool ret = false;
 
   // mono_unichar2* mono_string_to_utf16       (MonoString *s);
