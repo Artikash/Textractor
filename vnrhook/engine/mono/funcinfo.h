@@ -33,10 +33,10 @@
 // gchar*         mono_unicode_to_external   (const gunichar2 *uni);
 // gchar*         mono_utf8_from_external    (const gchar *in);
 
-struct MonoFunction {
+struct MonoFunction { // argument indices start from 0 for SpecialHookMonoString, otherwise 1
   const char *functionName;
-  size_t textIndex; // argument index, starting from 0
-  size_t lengthIndex; // argument index, start from 0
+  size_t textIndex; // argument index
+  short lengthIndex; // argument index
   unsigned long hookType; // HookParam type
   void *text_fun; // HookParam::text_fun_t
 };
@@ -47,13 +47,17 @@ struct MonoFunction {
   , { "mono_string_to_utf16", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
   , { "mono_string_intern", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
   , { "mono_string_is_interned", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
+  , { "mono_marshal_string_to_utf16", 0, 0, USING_UNICODE|NO_CONTEXT, SpecialHookMonoString } \
   , { "mono_string_hash", 0, 0, USING_UNICODE, SpecialHookMonoString } \
+  , { "mono_string_chars", 0, 0, USING_UNICODE, SpecialHookMonoString } \
+  , { "mono_string_length", 0, 0, USING_UNICODE, SpecialHookMonoString } \
   , { "mono_utf8_from_external", 1, 0, USING_STRING|USING_UTF8, nullptr } \
   , { "mono_string_from_utf16", 1, 0, USING_UNICODE, nullptr } \
   , { "mono_string_new_utf16", 2, 3, USING_UNICODE, nullptr } \
   , { "mono_unicode_from_external", 1, 0, USING_UNICODE, nullptr } \
   , { "mono_unicode_to_external", 1, 0, USING_UNICODE, nullptr } \
   , { "mono_string_new", 2, 0, USING_STRING|USING_UTF8, nullptr } \
+  , { "mono_string_new_len", 2, 3, USING_STRING|USING_UTF8, nullptr } \
   , { "mono_string_new_wrapper", 1, 0, USING_STRING|USING_UTF8, nullptr }
 
 // EOF

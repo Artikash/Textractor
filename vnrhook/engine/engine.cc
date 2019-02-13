@@ -16593,6 +16593,38 @@ bool InsertMonoHook()
 	return found;
 }
 
+void InsertMonoHook3()
+{
+	const BYTE bytes[] = { // Characteristic pattern of System.String.CharCopy in Venus Blood Lagoon https://vndb.org/v23125 and レイジングループ
+		// Cheat Engine 'Dissect Mono' feature is very useful in finding Mono hooks. Gives functions to look at in the stacktrace
+		0x55, // push ebp
+		0x8b, 0xec, // mov ebp,esp
+		0x53, // push ebx
+		0x57, // push edi
+		0x56, // push esi
+		0x83, 0xec, 0x0c, // sub esp,0x0c
+		0x8b, 0x5d, 0x08, // mov ebx,[ebp+0x08] ; wchar_t*
+		0x8b, 0x75, 0x0c, // mov esi,[ebp+0x0c] ; length
+		0x8b, 0x7d, 0x10, // mov edi,[ebp+0x10] ; ?
+		0x8b, 0xc3, // mov eax,ebx
+		0x0b, 0xc6, // or eax,esi
+		0x25, 0x03, 0x00, 0x00, 0x00, // and eax,0x03
+		0x85, 0xc0, // test eax,eax
+		0x0f, 0x84, XX4, // je ??
+		0x8b, 0xc3, // mov eax,ebx
+		0x25, 0x02, 0x00, 0x00, 0x00 // and eax,0x02
+	};
+	for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE))
+	{
+		HookParam hp = {};
+		hp.address = addr;
+		hp.type = USING_UNICODE | USING_STRING;
+		hp.offset = 8;
+		hp.length_offset = 3;
+		NewHook(hp, "Mono3");
+	}
+}
+
 /** jichi 12/26/2014 Mono
  *  Sample game: [141226] ハ�レ�めいと
  */
@@ -16632,6 +16664,7 @@ bool InsertMonoHooks()
 
   InsertBaldrHook(); // Artikash 8/28/2018: insert for all mono games: maybe itll work for more than baldr sky zero?
   InsertMonoHook(); // Artikash 10/20/2018: dunno why this was removed, works for some stuff so readd
+  InsertMonoHook3();
   bool ret = false;
 
   // mono_unichar2* mono_string_to_utf16       (MonoString *s);
