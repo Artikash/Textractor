@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define CURRENT_VERSION "1.3.0"
+#define CURRENT_VERSION "2.0.0"
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
