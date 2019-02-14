@@ -14,9 +14,9 @@
 
 ## Downloads
 
-Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).
-
-Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVNR/releases).
+Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
+Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVNR/releases).<br>
+If you get a dll missing error, you probably need to (re)install the [Microsoft Visual C++ Redistributable](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
 
 ## Features
 
@@ -24,6 +24,11 @@ Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVN
 - Auto hook many game engines (including some not supported by VNR!)
 - Hook text using /H "hook" codes (most AGTH codes supported)
 - Directly extract text using /R "read" codes
+
+## Support
+
+Please let me know of any bugs, games that Textractor has trouble hooking, feature requests, or other suggestions.<br>
+If you have trouble hooking a game please email me a place where I can freely download it, or gift it to me on [Steam](https://steamcommunity.com/profiles/76561198097566313/).
 
 ## Extensions
 
