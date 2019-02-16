@@ -4,6 +4,7 @@
 #include "text.h"
 #include "types.h"
 #include "misc.h"
+#include <concrt.h>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
@@ -19,17 +20,7 @@ namespace
 		wchar_t*(*callback)(wchar_t*, const InfoForExtension*);
 	};
 
-	class : std::shared_mutex
-	{
-	public:
-		void lock() { ++queuedWrites; shared_mutex::lock(); }
-		void unlock() { --queuedWrites; shared_mutex::unlock(); }
-		void lock_shared() { while (queuedWrites) Sleep(100); shared_mutex::lock_shared(); }
-		void unlock_shared() { shared_mutex::unlock_shared(); }
-
-	private:
-		std::atomic<int> queuedWrites = 0;
-	} extenMutex;
+	concurrency::reader_writer_lock extenMutex;
 	std::vector<Extension> extensions;
 
 	void Load(QString extenName)
@@ -65,7 +56,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 
-	std::shared_lock readLock(extenMutex);
+	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 	for (const auto& extension : extensions)
 	{
 		wchar_t* nextBuffer = extension.callback(sentenceBuffer, miscInfo);
@@ -104,7 +95,7 @@ void ExtenWindow::Sync()
 {
 	ui->extenList->clear();
 	QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
-	std::shared_lock readLock(extenMutex);
+	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 	for (auto extension : extensions)
 	{
 		ui->extenList->addItem(S(extension.name));
