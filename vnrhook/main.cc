@@ -6,7 +6,6 @@
 #include "main.h"
 #include "defs.h"
 #include "text.h"
-#include "MinHook.h"
 #include "engine/match.h"
 #include "texthook.h"
 #include "util.h"

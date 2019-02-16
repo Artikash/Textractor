@@ -4,7 +4,6 @@
 // 8/24/2013 TODO: Clean up this file
 
 #include "texthook.h"
-#include "MinHook.h"
 #include "engine/match.h"
 #include "main.h"
 #include "const.h"
