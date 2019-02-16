@@ -9,7 +9,7 @@ namespace Host
 	using ThreadEventHandler = std::function<void(TextThread&)>;
 	void Start(ProcessEventHandler Connect, ProcessEventHandler Disconnect, ThreadEventHandler Create, ThreadEventHandler Destroy, TextThread::OutputCallback Output);
 
-	bool InjectProcess(DWORD processId, DWORD timeout = 5000);
+	void InjectProcess(DWORD processId);
 	void DetachProcess(DWORD processId);
 	void InsertHook(DWORD processId, HookParam hp);
 

@@ -267,7 +267,6 @@ namespace Util
 
 	std::optional<std::wstring> GetClipboardText()
 	{
-		Sleep(10); // for some reason this function sometimes fails if I don't wait a little
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
 		if (!OpenClipboard(NULL)) return {};
 
@@ -277,7 +276,7 @@ namespace Util
 		return text;
 	}
 
-	std::optional<std::wstring> StringToWideString(std::string text, UINT encoding)
+	std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
 	{
 		std::vector<wchar_t> buffer(text.size() + 1);
 		if (MultiByteToWideChar(encoding, 0, text.c_str(), -1, buffer.data(), buffer.size())) return buffer.data();

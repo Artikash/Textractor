@@ -148,53 +148,49 @@ namespace Host
 
 		CreatePipe();
 
+		static AutoHandle<> clipboardUpdate = CreateEventW(nullptr, FALSE, TRUE, NULL);
 		SetWindowsHookExW(WH_GETMESSAGE, [](int statusCode, WPARAM wParam, LPARAM lParam)
 		{
-			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE)
-				if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(text.value()));
+			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE) SetEvent(clipboardUpdate);
 			return CallNextHookEx(NULL, statusCode, wParam, lParam);
 		}, NULL, GetCurrentThreadId());
+		std::thread([]
+		{
+			while (WaitForSingleObject(clipboardUpdate, INFINITE) == WAIT_OBJECT_0)
+				if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(text.value()));
+			throw;
+		}).detach();
 	}
 
-	bool InjectProcess(DWORD processId, DWORD timeout)
+	void InjectProcess(DWORD processId)
 	{
-		if (processId == GetCurrentProcessId()) return false;
-
-		WinMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId));
-		if (GetLastError() == ERROR_ALREADY_EXISTS)
+		std::thread([processId]
 		{
-			AddConsoleOutput(ALREADY_INJECTED);
-			return false;
-		}
+			if (processId == GetCurrentProcessId()) return;
 
-		static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
+			WinMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId));
+			if (GetLastError() == ERROR_ALREADY_EXISTS) return AddConsoleOutput(ALREADY_INJECTED);
 
-		if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
-		{
+			static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
+
+			if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
+			{
 #ifdef _WIN64
-			BOOL invalidProcess = FALSE;
-			IsWow64Process(process, &invalidProcess);
-			if (invalidProcess)
-			{
-				AddConsoleOutput(ARCHITECTURE_MISMATCH);
-				return false;
-			}
+				BOOL invalidProcess = FALSE;
+				IsWow64Process(process, &invalidProcess);
+				if (invalidProcess) return AddConsoleOutput(ARCHITECTURE_MISMATCH);
 #endif
-			if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
-			{
-				WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);
-				if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr))
+				if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 				{
-					WaitForSingleObject(thread, timeout);
+					WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);
+					if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr)) WaitForSingleObject(thread, INFINITE);
 					VirtualFreeEx(process, remoteData, 0, MEM_RELEASE);
-					return true;
+					return;
 				}
-				VirtualFreeEx(process, remoteData, 0, MEM_RELEASE);
 			}
-		}
 
-		AddConsoleOutput(INJECT_FAILED);
-		return false;
+			AddConsoleOutput(INJECT_FAILED);
+		}).detach();
 	}
 
 	void DetachProcess(DWORD processId)
