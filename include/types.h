@@ -87,7 +87,7 @@ class WinMutex // Like CMutex but works with scoped_lock
 {
 public:
 	WinMutex(std::wstring name) : m(CreateMutexW(nullptr, FALSE, name.c_str())) {}
-	void lock() { if (m) WaitForSingleObject(m, 0); }
+	void lock() { if (m) WaitForSingleObject(m, INFINITE); }
 	void unlock() { if (m) ReleaseMutex(m); }
 
 private:
