@@ -151,14 +151,21 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 			if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", GetTranslationUri(sentence, TKK).c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
 				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					if (auto response = ReceiveHttpRequest(request))
+						// Response formatted as JSON: starts with [[["
 						if (response.value()[0] == L'[')
+						{
 							for (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix())
 								translation += std::wstring(results[1]) + L" ";
-						else std::tie(translation, TKK) = std::tuple(TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")"), 0);
+							Escape(translation);
+						}
+						else
+						{
+							translation = TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")");
+							TKK = 0;
+						}
 	}
 
 	if (translation.empty()) translation = TRANSLATION_ERROR;
-	Escape(translation);
 	sentence += L"\n" + translation;
 	return true;
 }

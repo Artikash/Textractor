@@ -94,12 +94,12 @@ std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std
 	{
 		wchar_t escapedChar[4] = {};
 		swprintf_s<4>(escapedChar, L"%%%02X", (int)ch);
-		escapedText = escapedChar;
+		escapedText += escapedChar;
 	}
 
 	std::wstring location = translateFrom.empty()
-		? L"/tdetect?text=" + text
-		: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + text;
+		? L"/tdetect?text=" + escapedText
+		: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + escapedText;
 	std::wstring translation;
 	if (internet)
 		if (InternetHandle connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
@@ -107,6 +107,7 @@ std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std
 				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					if (auto response = ReceiveHttpRequest(request))
 						if (translateFrom.empty()) translation = response.value();
+						// Response formatted as JSON: translation starts with :" and ends with "}
 						else if (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
 
 	Escape(translation);
