@@ -33,8 +33,9 @@ namespace
 		}
 
 		template <typename T>
-		std::enable_if_t<sizeof(T) < PIPE_BUFFER_SIZE> Send(T data)
+		void Send(T data)
 		{
+			static_assert(sizeof(data) < PIPE_BUFFER_SIZE);
 			std::thread([=]
 			{
 				DWORD DUMMY;
@@ -75,15 +76,12 @@ namespace
 	{
 		std::thread([]
 		{
-			SECURITY_DESCRIPTOR pipeSD = {};
-			InitializeSecurityDescriptor(&pipeSD, SECURITY_DESCRIPTOR_REVISION);
-			SetSecurityDescriptorDacl(&pipeSD, TRUE, NULL, FALSE); // Allow non-admin processes to connect to pipe created by admin host
-			SECURITY_ATTRIBUTES pipeSA = { sizeof(pipeSA), &pipeSD, FALSE };
-
 			struct PipeCloser { void operator()(HANDLE h) { DisconnectNamedPipe(h); CloseHandle(h); } };
 			AutoHandle<PipeCloser>
-				hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &pipeSA),
-				hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &pipeSA);
+				hookPipe = CreateNamedPipeW(HOOK_PIPE, PIPE_ACCESS_INBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, 0, PIPE_BUFFER_SIZE, MAXDWORD, &allAccess),
+				hostPipe = CreateNamedPipeW(HOST_PIPE, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_SIZE, 0, MAXDWORD, &allAccess);
+			static AutoHandle<> pipeAvailableEvent = CreateEventW(&allAccess, FALSE, FALSE, PIPE_AVAILABLE_EVENT);
+			SetEvent(pipeAvailableEvent);
 			ConnectNamedPipe(hookPipe, nullptr);
 
 			BYTE buffer[PIPE_BUFFER_SIZE] = {};
@@ -171,8 +169,6 @@ namespace Host
 			WinMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(processId));
 			if (GetLastError() == ERROR_ALREADY_EXISTS) return AddConsoleOutput(ALREADY_INJECTED);
 
-			static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
-
 			if (AutoHandle<> process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId))
 			{
 #ifdef _WIN64
@@ -180,6 +176,7 @@ namespace Host
 				IsWow64Process(process, &invalidProcess);
 				if (invalidProcess) return AddConsoleOutput(ARCHITECTURE_MISMATCH);
 #endif
+				static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
 				if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 				{
 					WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);

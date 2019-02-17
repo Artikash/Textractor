@@ -48,6 +48,17 @@ private:
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
+class WinMutex // Like CMutex but works with scoped_lock
+{
+public:
+	WinMutex(std::wstring name = L"", LPSECURITY_ATTRIBUTES sa = nullptr) : m(CreateMutexW(sa, FALSE, name.empty() ? NULL : name.c_str())) {}
+	void lock() { if (m) WaitForSingleObject(m, INFINITE); }
+	void unlock() { if (m) ReleaseMutex(m); }
+
+private:
+	AutoHandle<> m;
+};
+
 // jichi 3/7/2014: Add guessed comment
 struct HookParam
 {
@@ -83,16 +94,6 @@ struct ThreadParam
 	uint64_t ctx2;  // The subcontext of the hook: 0 by default, generated in a method specific to the hook
 };
 
-class WinMutex // Like CMutex but works with scoped_lock
-{
-public:
-	WinMutex(std::wstring name) : m(CreateMutexW(nullptr, FALSE, name.c_str())) {}
-	void lock() { if (m) WaitForSingleObject(m, INFINITE); }
-	void unlock() { if (m) ReleaseMutex(m); }
-
-private:
-	AutoHandle<> m;
-};
 
 struct InsertHookCmd // From host
 {

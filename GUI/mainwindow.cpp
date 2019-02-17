@@ -78,9 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
-	settings.setValue(WINDOW, geometry());
-	settings.sync();
+	QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(WINDOW, geometry());
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);
 }

@@ -11,7 +11,7 @@
 #include "text.h"
 #include "ithsys/ithsys.h"
 
-extern std::unique_ptr<WinMutex> viewMutex;
+extern WinMutex viewMutex;
 
 // - Unnamed helpers -
 
@@ -101,7 +101,7 @@ void SetTrigger()
 
 bool TextHook::Insert(HookParam h, DWORD set_flag)
 {
-	std::scoped_lock lock(*viewMutex);
+	std::scoped_lock lock(viewMutex);
 	hp = h;
 	address = hp.address;
 	hp.type |= set_flag;
@@ -283,7 +283,7 @@ void TextHook::RemoveReadCode()
 
 void TextHook::Clear()
 {
-	std::scoped_lock lock(*viewMutex);
+	std::scoped_lock lock(viewMutex);
 	if (*hp.name) ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();

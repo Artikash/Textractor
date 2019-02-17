@@ -10,12 +10,12 @@
 #include "texthook.h"
 #include "util.h"
 
-std::unique_ptr<WinMutex> viewMutex;
+WinMutex viewMutex;
 
 namespace
 {
 	AutoHandle<> hookPipe = INVALID_HANDLE_VALUE, mappedFile = INVALID_HANDLE_VALUE;
-	TextHook* hooks;
+	TextHook (*hooks)[MAX_HOOK];
 	bool running;
 	int currentHook = 0;
 	DWORD DUMMY;
@@ -30,21 +30,16 @@ DWORD WINAPI Pipe(LPVOID)
 		AutoHandle<> hostPipe = INVALID_HANDLE_VALUE;
 		hookPipe = INVALID_HANDLE_VALUE;
 
-		while (!hookPipe || !hostPipe)
+		while (!hostPipe || !hookPipe)
 		{
-			if (!hookPipe)
-			{
-				hookPipe = CreateFileW(HOOK_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-			}
-			if (hookPipe && !hostPipe)
-			{
-				hostPipe = CreateFileW(HOST_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-				DWORD mode = PIPE_READMODE_MESSAGE;
-				SetNamedPipeHandleState(hostPipe, &mode, NULL, NULL);
-				continue;
-			}
-			Sleep(50);
+			WinMutex connectionMutex(CONNECTING_MUTEX, &allAccess);
+			std::scoped_lock lock(connectionMutex);
+			WaitForSingleObject(AutoHandle<>(CreateEventW(&allAccess, FALSE, FALSE, PIPE_AVAILABLE_EVENT)), INFINITE);
+			hostPipe = CreateFileW(HOST_PIPE, GENERIC_READ | FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+			hookPipe = CreateFileW(HOOK_PIPE, GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 		}
+		DWORD mode = PIPE_READMODE_MESSAGE;
+		SetNamedPipeHandleState(hostPipe, &mode, NULL, NULL);
 
 		*(DWORD*)buffer = GetCurrentProcessId();
 		WriteFile(hookPipe, buffer, sizeof(DWORD), &count, nullptr);
@@ -69,7 +64,7 @@ DWORD WINAPI Pipe(LPVOID)
 			}
 	}
 	hookPipe = INVALID_HANDLE_VALUE;
-	for (int i = 0; i < MAX_HOOK; ++i) if (hooks[i].address) hooks[i].Clear();
+	for (auto& hook : *hooks) if (hook.address) hook.Clear();
 	FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
 	return 0;
 }
@@ -105,19 +100,19 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		viewMutex = std::make_unique<WinMutex>(ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId()));
+		viewMutex = WinMutex(ITH_HOOKMAN_MUTEX_ + std::to_wstring(GetCurrentProcessId()), &allAccess);
 		if (GetLastError() == ERROR_ALREADY_EXISTS) return FALSE;
 		DisableThreadLibraryCalls(hModule);
 
 		// jichi 9/25/2013: Interprocedural communication with vnrsrv.
-		mappedFile = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, (ITH_SECTION_ + std::to_wstring(GetCurrentProcessId())).c_str());
-		hooks = (TextHook*)MapViewOfFile(mappedFile, FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE, 0, 0, HOOK_BUFFER_SIZE);
+		mappedFile = CreateFileMappingW(INVALID_HANDLE_VALUE, &allAccess, PAGE_EXECUTE_READWRITE, 0, HOOK_SECTION_SIZE, (ITH_SECTION_ + std::to_wstring(GetCurrentProcessId())).c_str());
+		hooks = (TextHook(*)[MAX_HOOK])MapViewOfFile(mappedFile, FILE_MAP_ALL_ACCESS | FILE_MAP_EXECUTE, 0, 0, HOOK_BUFFER_SIZE);
 		memset(hooks, 0, HOOK_BUFFER_SIZE);
 
 		MH_Initialize();
 		running = true;
 
-		CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr); // Using std::thread here = deadlock
+		CloseHandle(CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr)); // Using std::thread here = deadlock
 	} 
 	break;
 	case DLL_PROCESS_DETACH:
@@ -143,7 +138,7 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		if (strlen(utf8Text) < 8 || strlen(codepageText) < 8 || wcslen(hp.text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
 		for (auto[addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
 			{ Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8 },
-			{ Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), (HookParamType)0 },
+			{ Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), USING_STRING },
 			{ Util::SearchMemory(hp.text, wcslen(hp.text) * 2, PAGE_READWRITE), USING_UNICODE }
 		})
 			for (auto addr : addrs)
@@ -164,14 +159,13 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		if (lpname && *lpname) strncpy_s(hp.name, lpname, HOOK_NAME_SIZE - 1);
 		ConsoleOutput(INSERTING_HOOK, hp.name);
 		if (hp.address) RemoveHook(hp.address, 0);
-		if (!hooks[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
+		if (!(*hooks)[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
 	}
 }
 
 void RemoveHook(uint64_t addr, int maxOffset)
 {
-	for (int i = 0; i < MAX_HOOK; i++)
-		if (abs((long long)(hooks[i].address - addr)) <= maxOffset) return hooks[i].Clear();
+	for (auto& hook : *hooks) if (abs((long long)(hook.address - addr)) <= maxOffset) return hook.Clear();
 }
 
 // EOF
