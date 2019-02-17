@@ -31,6 +31,7 @@ constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
 constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
+constexpr auto LUA_SAVE_FILE = u8"Textractor.lua";
 
 // Misc
 

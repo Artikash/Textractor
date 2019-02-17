@@ -55,6 +55,8 @@ extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
 extern const char* FONT_SIZE;
 extern const char* TOPMOST;
+extern const char* LUA_INTRO;
+extern const char* LOAD_LUA_SCRIPT;
 extern const wchar_t* LUA_ERROR;
 extern const char* REGEX_FILTER;
 extern const char* INVALID_REGEX;

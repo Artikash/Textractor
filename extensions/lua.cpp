@@ -2,6 +2,7 @@
 #include "util.h"
 #include "text.h"
 #include "defs.h"
+#include <fstream>
 #include <QMainWindow>
 #include <QLayout>
 #include <QPlainTextEdit>
@@ -37,32 +38,38 @@ bool luaL_dostring(lua_State* L, const char* str)
 }
 
 bool logErrors = true;
-
-std::mutex m;
-std::string script;
-int revCount = 0;
+ThreadSafe<std::string> script;
+std::atomic<int> revCount = 0;
 
 struct : QMainWindow
 {
 	void launch()
 	{
 		auto centralWidget = new QWidget(this);
-		auto layout = new QVBoxLayout(centralWidget);
-		auto scriptEditor = new QPlainTextEdit(centralWidget);
-		auto loadButton = new QPushButton("Load Script", centralWidget);
+		auto layout = new QHBoxLayout(centralWidget);
+		auto scriptEditor = new QPlainTextEdit(std::string(std::istreambuf_iterator<char>(std::ifstream(LUA_SAVE_FILE, std::ios::in)), {}).c_str(), centralWidget);
+		auto loadButton = new QPushButton(LOAD_LUA_SCRIPT, centralWidget);
+		if (scriptEditor->toPlainText().isEmpty()) scriptEditor->setPlainText(LUA_INTRO);
 		layout->addWidget(scriptEditor);
 		layout->addWidget(loadButton);
+		save = [=]
+		{
+			auto script = scriptEditor->toPlainText().toUtf8();
+			std::ofstream(LUA_SAVE_FILE, std::ios::out | std::ios::trunc).write(script, strlen(script));
+		};
 		connect(loadButton, &QPushButton::clicked, [=](bool)
 		{
-			std::lock_guard l(m);
 			++revCount;
-			script = scriptEditor->toPlainText().toUtf8();
+			script->assign(scriptEditor->toPlainText().toUtf8());
+			save();
 		});
 		resize(800, 600);
 		setCentralWidget(centralWidget);
 		setWindowTitle("Lua");
 		show();
 	}
+
+	std::function<void()> save;
 }*window = nullptr;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -73,18 +80,16 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 		QTimer::singleShot(0, []
 		{
-			std::lock_guard l(m);
 			(window = new std::remove_pointer_t<decltype(window)>)->launch();
 		});
 	}
 	break;
 	case DLL_PROCESS_DETACH:
 	{
+		window->save();
 		if (lpReserved == NULL) // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
 		{
-			std::lock_guard l(m);
 			delete window;
-			window = nullptr;
 		}
 	}
 	break;
@@ -101,12 +106,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	if (::revCount > revCount)
 	{
-		std::lock_guard l(m);
 		revCount = ::revCount;
 		luaL_dostring(L, "ProcessSentence = nil");
-		if (luaL_dostring(L, script.c_str()) != LUA_OK)
+		if (luaL_dostring(L, script->c_str()) != LUA_OK)
 		{
-			sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, -1, nullptr));
+			sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, 1, nullptr));
 			lua_settop(L, 0);
 			return logErrors;
 		}
@@ -128,11 +132,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	}
 	if (lua_pcallk(L, 2, 1, 0, NULL, NULL) != LUA_OK)
 	{
-		sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, -1, nullptr));
+		sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, 1, nullptr));
 		lua_settop(L, 0);
 		return logErrors;
 	}
-	if (const char* newSentence = lua_tolstring(L, -1, nullptr))
+	if (const char* newSentence = lua_tolstring(L, 1, nullptr))
 	{
 		sentence = StringToWideString(newSentence);
 		lua_settop(L, 0);

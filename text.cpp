@@ -84,6 +84,27 @@ const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
 const char* FONT_SIZE = u8"Font Size";
 const char* TOPMOST = u8"Always on Top";
+const char* LUA_INTRO = u8R"(--[[
+ProcessSentence is called each time Textractor receives a sentence of text.
+
+Param sentence: sentence received by Textractor (UTF-8).
+Param sentenceInfo: table of miscellaneous info about the sentence.
+
+If you return a string, the sentence will be turned into that string.
+If you return nil, the sentence will be unmodified.
+
+This extension uses several copies of the Lua interpreter for thread safety.
+Modifications to global variables from ProcessSentence are not guaranteed to persist.
+
+Properties in sentenceInfo:
+"current select": 0 unless sentence is in the text thread currently selected by the user.
+"process id": process id that the sentence is coming from. 0 for console and clipboard.
+"text number": number of the current text thread. Counts up one by one as text threads are created. 0 for console, 1 for clipboard.
+--]]
+function ProcessSentence(sentence, sentenceInfo)
+  --Your code here...
+end)";
+const char* LOAD_LUA_SCRIPT = u8"Load Script";
 const wchar_t* LUA_ERROR = L"Lua error: ";
 const char* REGEX_FILTER = u8"Regex Filter";
 const char* INVALID_REGEX = u8"Invalid regex";
