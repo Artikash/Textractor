@@ -8,52 +8,27 @@
 #include <QPushButton>
 #include <QTimer>
 
-extern "C"
+extern "C" // Lua library
 {
-	enum LuaType
-	{
-		LUA_TNONE = -1,
-		LUA_TNIL = 0,
-		LUA_TBOOLEAN = 1,
-		LUA_TLIGHTUSERDATA = 2,
-		LUA_TNUMBER = 3,
-		LUA_TSTRING = 4,
-		LUA_TTABLE = 5,
-		LUA_TFUNCTION = 6,
-		LUA_TUSERDATA = 7,
-		LUA_TTHREAD = 8
-	};
+	enum LuaType { LUA_TNIL, LUA_TBOOLEAN, LUA_TLIGHTUSERDATA, LUA_TNUMBER, LUA_TSTRING, LUA_TTABLE, LUA_TFUNCTION, LUA_TUSERDATA, LUA_TTHREAD };
 
-	enum LuaStatus
-	{
-		LUA_OK = 0,
-		LUA_YIELD = 1,
-		LUA_ERRRUN = 2,
-		LUA_ERRSYNTAX = 3,
-		LUA_ERRMEM = 4,
-		LUA_ERRGCMM = 5,
-		LUA_ERRERR = 6
-	};
+	enum LuaStatus { LUA_OK, LUA_YIELD, LUA_ERRRUN, LUA_ERRSYNTAX, LUA_ERRMEM, LUA_ERRGCMM, LUA_ERRERR };
 
 	struct lua_State;
-	__declspec(dllimport) lua_State* luaL_newstate();
-	__declspec(dllimport) void luaL_openlibs(lua_State*);
-	__declspec(dllimport) void lua_close(lua_State*);
+	lua_State* luaL_newstate();
+	void luaL_openlibs(lua_State*);
+	void lua_close(lua_State*);
+	LuaStatus luaL_loadstring(lua_State*, const char* str);
 
-	__declspec(dllimport) LuaStatus luaL_loadstring(lua_State*, const char* str);
+	const char* lua_tolstring(lua_State*, int index, size_t* size);
+	const char* lua_pushstring(lua_State*, const char* str);
+	void lua_pushinteger(lua_State*, int64_t n);
+	void lua_createtable(lua_State*, int narr, int nrec);
+	void lua_settable(lua_State*, int index);
 
-	__declspec(dllimport) LuaStatus lua_pcallk(lua_State*, int nargs, int nresults, int msgh, void*, void*);
-
-	__declspec(dllimport) const char* lua_tolstring(lua_State*, int index, size_t* size);
-	__declspec(dllimport) const char* lua_pushstring(lua_State*, const char* str);
-
-	__declspec(dllimport) void lua_pushinteger(lua_State*, int64_t n);
-
-	__declspec(dllimport) void lua_createtable(lua_State*, int narr, int nrec);
-	__declspec(dllimport) void lua_settable(lua_State*, int index);
-
-	__declspec(dllimport) void lua_settop(lua_State*, int index);
-	__declspec(dllimport) LuaType lua_getglobal(lua_State*, const char* name);
+	void lua_settop(lua_State*, int index);
+	LuaType lua_getglobal(lua_State*, const char* name);
+	LuaStatus lua_pcallk(lua_State*, int nargs, int nresults, int msgh, void*, void*);
 }
 
 bool luaL_dostring(lua_State* L, const char* str)

@@ -11,7 +11,6 @@ $targets = @(
 	"Qt5Widgets.dll",
 	"LoaderDll.dll",
 	"LocaleEmulator.dll",
-	"lua53.dll",
 	"Bing Translate.dll",
 	"Copy to Clipboard.dll",
 	"Extra Newlines.dll",
