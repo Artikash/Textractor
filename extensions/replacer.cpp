@@ -15,9 +15,9 @@ public:
 	void Put(std::wstring original, std::wstring replacement)
 	{
 		Node* current = &root;
-		for (auto c : original)
-			if (Ignore(c));
-			else if (auto& next = current->next[c]) current = next.get();
+		for (auto ch : original)
+			if (Ignore(ch));
+			else if (auto& next = current->next[ch]) current = next.get();
 			else current = (next = std::make_unique<Node>()).get();
 		if (current != &root) current->value = replacement;
 	}
@@ -26,17 +26,17 @@ public:
 	{
 		int length = 0;
 		Node* current = &root;
-		for (auto c : text)
-			if (Ignore(c)) ++length;
-			else if (auto& next = current->next[c]) ++length, current = next.get();
+		for (auto ch : text)
+			if (Ignore(ch)) ++length;
+			else if (auto& next = current->next[ch]) ++length, current = next.get();
 			else break;
 		return { length, current->value };
 	}
 
 private:
-	static bool Ignore(wchar_t c)
+	static bool Ignore(wchar_t ch)
 	{
-		return c <= 0x20 || std::iswspace(c);
+		return ch <= 0x20 || std::iswspace(ch);
 	}
 
 	struct Node

@@ -18,7 +18,7 @@ struct SentenceInfo
 		throw;
 	}
 
-	inline static InfoForExtension DUMMY[2] = { { "hook address", 0 } };
+	inline static InfoForExtension DUMMY[2] = { { "text number", 1 } };
 };
 
 struct SKIP {};

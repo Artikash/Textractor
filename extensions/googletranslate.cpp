@@ -129,7 +129,7 @@ std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["hook address"] == -1) return false;
+	if (sentenceInfo["text number"] == 0) return false;
 
 	static std::atomic<HINTERNET> internet = NULL;
 	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);

@@ -116,7 +116,7 @@ std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["hook address"] == -1) return false;
+	if (sentenceInfo["text number"] == 0) return false;
 
 	static RateLimiter rateLimiter(30, 60 * 1000);
 

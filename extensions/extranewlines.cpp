@@ -2,7 +2,7 @@
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["hook address"] == -1) return false;
+	if (sentenceInfo["text number"] == 0) return false;
 	sentence += L"\n";
 	return true;
 }
