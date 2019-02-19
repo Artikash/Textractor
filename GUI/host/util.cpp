@@ -265,6 +265,15 @@ namespace Util
 		return {};
 	}
 
+	std::vector<DWORD> GetAllProcessIds()
+	{
+		std::vector<DWORD> processIds(10000);
+		DWORD spaceUsed = 0;
+		EnumProcesses(processIds.data(), 10000 * sizeof(DWORD), &spaceUsed);
+		processIds.resize(spaceUsed / sizeof(DWORD));
+		return processIds;
+	}
+
 	std::optional<std::wstring> GetClipboardText()
 	{
 		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};

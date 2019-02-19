@@ -5,7 +5,7 @@
 #include "extenwindow.h"
 #include "misc.h"
 #include "host/util.h"
-#include <Psapi.h>
+#include <shellapi.h>
 #include <winhttp.h>
 #include <QFormLayout>
 #include <QPushButton>
@@ -57,6 +57,18 @@ MainWindow::MainWindow(QWidget *parent) :
 	);
 	current = &Host::GetThread(Host::console);
 	Host::AddConsoleOutput(ABOUT);
+
+	std::vector<DWORD> processIds = Util::GetAllProcessIds();
+	std::vector<std::wstring> processNames;
+	for (auto processId : processIds) processNames.emplace_back(Util::GetModuleFilename(processId).value_or(L""));
+	int argc;
+	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
+	for (int i = 0; i < argc; ++i)
+		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
+			if (arg[1] == L'P')
+				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
+				else for (int i = 0; i < processIds.size(); ++i)
+					if (processNames[i].find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processIds[i]);
 
 	std::thread([]
 	{
@@ -193,10 +205,8 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 void MainWindow::AttachProcess()
 {
 	QMultiHash<QString, DWORD> allProcesses;
-	DWORD allProcessIds[5000] = {}, spaceUsed = 0;
-	EnumProcesses(allProcessIds, sizeof(allProcessIds), &spaceUsed);
-	for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i)
-		if (auto processName = Util::GetModuleFilename(allProcessIds[i])) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), allProcessIds[i]);
+	for (auto processId : Util::GetAllProcessIds())
+		if (auto processName = Util::GetModuleFilename(processId)) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
