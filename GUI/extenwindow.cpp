@@ -53,21 +53,14 @@ namespace
 
 bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* miscInfo)
 {
-	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), 0, (sentence.size() + 1) * sizeof(wchar_t));
+	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
-
 	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 	for (const auto& extension : extensions)
-	{
-		wchar_t* nextBuffer = extension.callback(sentenceBuffer, miscInfo);
-		if (nextBuffer != sentenceBuffer) HeapFree(GetProcessHeap(), 0, sentenceBuffer);
-		if (nextBuffer == nullptr) return false;
-		sentenceBuffer = nextBuffer;
-	}
+		if (*(sentenceBuffer = extension.callback(sentenceBuffer, miscInfo)) == L'\0') break;
 	sentence = sentenceBuffer;
-
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
-	return true;
+	return !sentence.empty();
 }
 
 ExtenWindow::ExtenWindow(QWidget* parent) :
