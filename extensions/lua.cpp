@@ -1,13 +1,14 @@
 ﻿#include "extension.h"
 #include "util.h"
 #include "text.h"
-#include "defs.h"
 #include <fstream>
 #include <QMainWindow>
 #include <QLayout>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTimer>
+
+constexpr auto LUA_SAVE_FILE = u8"Textractor.lua";
 
 extern "C" // Lua library
 {

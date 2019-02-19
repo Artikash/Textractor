@@ -1,5 +1,4 @@
 ﻿#include "util.h"
-#include "defs.h"
 #include "host.h"
 #include <sstream>
 #include <Psapi.h>

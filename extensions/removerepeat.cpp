@@ -1,5 +1,4 @@
 ﻿#include "extension.h"
-#include "defs.h"
 
 void RemoveRepeatedChars(std::wstring& sentence)
 {

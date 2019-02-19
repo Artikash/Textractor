@@ -1,5 +1,4 @@
 ﻿#include "extension.h"
-#include "defs.h"
 #include "text.h"
 #include "util.h"
 #include "network.h"

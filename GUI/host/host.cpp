@@ -1,5 +1,4 @@
 #include "host.h"
-#include "const.h"
 #include "text.h"
 #include "defs.h"
 #include "util.h"

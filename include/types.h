@@ -3,51 +3,6 @@
 #include "common.h"
 #include "const.h"
 
-template <typename T> using Array = T[];
-
-template <auto F>
-struct Functor
-{
-	template <typename... Args>
-	auto operator()(Args&&... args) const { return std::invoke(F, std::forward<Args>(args)...); }
-};
-
-template<typename E, typename M = std::mutex>
-class ThreadSafe
-{
-public:
-	template <typename... Args>
-	ThreadSafe(Args&&... args) : contents(std::forward<Args>(args)...) {}
-	auto operator->()
-	{
-		struct
-		{
-			E* operator->() { return ptr; }
-			std::unique_lock<M> lock;
-			E* ptr;
-		} lockedProxy{ std::unique_lock(mtx), &contents };
-		return lockedProxy;
-	}
-
-private:
-	E contents;
-	M mtx;
-};
-
-template <typename HandleCloser = Functor<CloseHandle>>
-class AutoHandle
-{
-public:
-	AutoHandle(HANDLE h) : h(h) {}
-	operator HANDLE() { return h.get(); }
-	PHANDLE operator&() { static_assert(sizeof(*this) == sizeof(HANDLE)); return (PHANDLE)this; }
-	operator bool() { return h.get() != NULL && h.get() != INVALID_HANDLE_VALUE; }
-
-private:
-	struct HandleCleaner { void operator()(void* h) { if (h != INVALID_HANDLE_VALUE) HandleCloser()(h); } };
-	std::unique_ptr<void, HandleCleaner> h;
-};
-
 class WinMutex // Like CMutex but works with scoped_lock
 {
 public:
@@ -58,6 +13,14 @@ public:
 private:
 	AutoHandle<> m;
 };
+
+inline SECURITY_ATTRIBUTES allAccess = std::invoke([] // allows non-admin processes to access kernel objects made by admin processes
+{
+	static SECURITY_DESCRIPTOR sd = {};
+	InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
+	SetSecurityDescriptorDacl(&sd, TRUE, NULL, FALSE);
+	return SECURITY_ATTRIBUTES{ sizeof(SECURITY_ATTRIBUTES), &sd, FALSE };
+});
 
 // jichi 3/7/2014: Add guessed comment
 struct HookParam

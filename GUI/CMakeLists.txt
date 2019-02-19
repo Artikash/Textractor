@@ -1,10 +1,8 @@
 include(QtUtils)
 msvc_registry_search()
 find_qt5(Core Widgets)
-set(AUTOMOC OFF)
 
-set(RESOURCE_FILES Textractor.rc Textractor.ico)
-set(gui_src
+add_executable(${PROJECT_NAME} WIN32 
 	main.cpp
 	mainwindow.cpp
     extenwindow.cpp
@@ -12,9 +10,9 @@ set(gui_src
 	host/host.cpp
 	host/textthread.cpp
 	host/util.cpp
-	${RESOURCE_FILES}
+	Textractor.rc
+	Textractor.ico
 )
-add_executable(${PROJECT_NAME} WIN32 ${gui_src})
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets winhttp)
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets shell32 winhttp)
 
-install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds
+#install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds

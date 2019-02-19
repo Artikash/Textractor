@@ -1,5 +1,4 @@
 #include "textthread.h"
-#include "const.h"
 #include "text.h"
 #include "host.h"
 #include "util.h"

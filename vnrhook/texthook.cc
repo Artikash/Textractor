@@ -6,8 +6,6 @@
 #include "texthook.h"
 #include "engine/match.h"
 #include "main.h"
-#include "const.h"
-#include "defs.h"
 #include "text.h"
 #include "ithsys/ithsys.h"
 

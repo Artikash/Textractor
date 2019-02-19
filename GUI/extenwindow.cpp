@@ -2,7 +2,6 @@
 #include "ui_extenwindow.h"
 #include "defs.h"
 #include "text.h"
-#include "types.h"
 #include "misc.h"
 #include <concrt.h>
 #include <QDragEnterEvent>

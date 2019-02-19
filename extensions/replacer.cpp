@@ -1,11 +1,12 @@
 ﻿#include "extension.h"
-#include "defs.h"
 #include "text.h"
 #include <cwctype>
 #include <fstream>
 #include <atomic>
 #include <filesystem>
 #include <process.h>
+
+constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 std::atomic<std::filesystem::file_time_type> replaceFileLastWrite;
 
