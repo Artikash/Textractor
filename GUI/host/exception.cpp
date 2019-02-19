@@ -11,17 +11,23 @@ namespace
 		__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
 	}
 
+	const char* GetCppExceptionMessage(EXCEPTION_POINTERS* exception)
+	{
+		__try { return ((std::exception*)exception->ExceptionRecord->ExceptionInformation[1])->what(); }
+		__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
+	}
+
 	thread_local std::wstring lastError = L"Unknown error";
 
 	__declspec(noreturn) void Terminate()
 	{
 		MessageBoxW(NULL, lastError.c_str(), L"Textractor ERROR", MB_ICONERROR);
-		std::abort();
+		abort();
 	}
 
 	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)
 	{
-		thread_local static auto _ = std::set_terminate(Terminate);
+		thread_local static auto _ = set_terminate(Terminate);
 
 		MEMORY_BASIC_INFORMATION info = {};
 		VirtualQuery(exception->ExceptionRecord->ExceptionAddress, &info, sizeof(info));
@@ -34,7 +40,10 @@ namespace
 			L"Additional info: " << info.AllocationBase << std::endl;
 
 		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)
-			errorMsg << L"Additional info: " << GetCppExceptionInfo(exception) << std::endl;
+		{
+			if (char* info = GetCppExceptionInfo(exception)) errorMsg << L"Additional info: " << info << std::endl;
+			if (const char* info = GetCppExceptionMessage(exception)) errorMsg << L"Additional info: " << info << std::endl;
+		}
 
 		for (int i = 0; i < exception->ExceptionRecord->NumberParameters; ++i)
 			errorMsg << L"Additional info: " << exception->ExceptionRecord->ExceptionInformation[i] << std::endl;
