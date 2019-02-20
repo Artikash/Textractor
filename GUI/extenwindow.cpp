@@ -12,7 +12,6 @@
 
 namespace
 {
-
 	struct Extension
 	{
 		std::wstring name;

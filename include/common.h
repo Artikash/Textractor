@@ -65,7 +65,7 @@ private:
 };
 
 #ifdef _DEBUG
-#define TEST(...) inline AutoHandle<> TEST__RUNNER__DUMMY = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
+#define TEST(...) inline auto TEST__RUNNER__DUMMY = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
 #else
 #define TEST(...)
 #endif

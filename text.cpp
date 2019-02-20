@@ -114,8 +114,7 @@ Replacement commands must be formatted like this:
 |ORIG|original_text|BECOMES|replacement_text|END|
 All text in this file outside of a replacement command is ignored.
 Whitespace in original_text is ignored, but replacement_text can contain spaces, newlines, etc.
-This file must be encoded in Unicode (UTF-16 little endian).
-)";
+This file must be encoded in Unicode (UTF-16 little endian).)";
 const char* THREAD_LINKER = u8"Thread Linker";
 const char* LINK = u8"Link";
 const char* THREAD_LINK_FROM = u8"Thread number to link from";

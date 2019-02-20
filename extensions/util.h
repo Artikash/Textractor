@@ -10,9 +10,9 @@ public:
 	int delay;
 
 private:
+	inline static HANDLE DUMMY;
 	std::atomic<int> requestsLeft;
 	AutoHandle<Functor<DeleteTimerQueue>> timerQueue = CreateTimerQueue();
-	HANDLE DUMMY;
 };
 
 inline std::wstring StringToWideString(const std::string& text)

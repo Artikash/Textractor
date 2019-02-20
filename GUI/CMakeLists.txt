@@ -15,4 +15,4 @@ add_executable(${PROJECT_NAME} WIN32
 )
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets shell32 winhttp)
 
-#install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds
+install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds
