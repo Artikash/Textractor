@@ -23,7 +23,7 @@ public:
 		if (current != &root) current->value = replacement;
 	}
 
-	std::pair<int, std::wstring> Lookup(const std::wstring& text)
+	std::pair<int, std::optional<std::wstring>> Lookup(const std::wstring& text)
 	{
 		int length = 0;
 		Node* current = &root;
@@ -43,14 +43,14 @@ private:
 	struct Node
 	{
 		std::unordered_map<wchar_t, std::unique_ptr<Node>> next;
-		std::wstring value;
+		std::optional<std::wstring> value;
 	} root;
 } replacementTrie;
 
 int Parse(const std::wstring& file)
 {
 	replacementTrie = {};
-	int replacementCount = 0;
+	int count = 0;
 	size_t end = 0;
 	while (true)
 	{
@@ -58,16 +58,22 @@ int Parse(const std::wstring& file)
 		size_t becomes = file.find(L"|BECOMES|", original);
 		if ((end = file.find(L"|END|", becomes)) == std::wstring::npos) break;
 		replacementTrie.Put(file.substr(original + 6, becomes - original - 6), file.substr(becomes + 9, end - becomes - 9));
-		++replacementCount;
+		count += 1;
 	}
-	return replacementCount;
+	return count;
 }
 
 bool Replace(std::wstring& sentence)
 {
 	for (int i = 0; i < sentence.size(); ++i)
-		if (sentence.size() > 10000) return false; // defend against infinite looping
-		else if (auto[length, replacement] = replacementTrie.Lookup(sentence.substr(i)); !replacement.empty()) sentence.replace(i, length, replacement);
+	{
+		auto[length, replacement] = replacementTrie.Lookup(sentence.substr(i));
+		if (replacement)
+		{
+			sentence.replace(i, length, replacement.value());
+			i += replacement.value().size() - 1; // iterate to end of replacement
+		}
+	}
 	return true;
 }
 
