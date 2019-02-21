@@ -61,20 +61,20 @@ struct ThreadParam
 struct InsertHookCmd // From host
 {
 	InsertHookCmd(HookParam hp) : hp(hp) {}
-	int command = HOST_COMMAND_NEW_HOOK;
+	HostCommandType command = HOST_COMMAND_NEW_HOOK;
 	HookParam hp;
 };
 
 struct ConsoleOutputNotif // From hook
 {
 	ConsoleOutputNotif(std::string message = "") { strncpy_s(this->message, message.c_str(), MESSAGE_SIZE - 1); }
-	int command = HOST_NOTIFICATION_TEXT;
+	HostNotificationType command = HOST_NOTIFICATION_TEXT;
 	char message[MESSAGE_SIZE] = {};
 };
 
 struct HookRemovedNotif // From hook
 {
 	HookRemovedNotif(uint64_t address) : address(address) {};
-	int command = HOST_NOTIFICATION_RMVHOOK;
+	HostNotificationType command = HOST_NOTIFICATION_RMVHOOK;
 	uint64_t address;
 };

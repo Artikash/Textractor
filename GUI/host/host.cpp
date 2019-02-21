@@ -191,7 +191,7 @@ namespace Host
 
 	void DetachProcess(DWORD processId)
 	{
-		processRecordsByIds->at(processId).Send(HostCommandType(HOST_COMMAND_DETACH));
+		processRecordsByIds->at(processId).Send(HOST_COMMAND_DETACH);
 	}
 
 	void InsertHook(DWORD processId, HookParam hp)
