@@ -6,11 +6,11 @@ void RemoveRepeatedChars(std::wstring& sentence)
 	int repeatNumber = 1;
 	wchar_t prevChar = L'\0';
 	for (auto nextChar : sentence)
-		if (nextChar == prevChar) repeatNumber++;
+		if (nextChar == prevChar) repeatNumber += 1;
 		else
 		{
 			prevChar = nextChar;
-			++repeatNumbers.at(repeatNumber);
+			repeatNumbers.at(repeatNumber) += 1;
 			repeatNumber = 1;
 		}
 	if ((repeatNumber = std::distance(repeatNumbers.begin(), std::max_element(repeatNumbers.begin(), repeatNumbers.end()))) == 1) return;
@@ -33,13 +33,24 @@ void RemoveRepeatedChars(std::wstring& sentence)
 
 void RemoveCyclicRepeats(std::wstring& sentence)
 {
-remove:
-	for (std::wstring junk = sentence; junk.size() > 4; junk.pop_back())
-		if (sentence.rfind(junk) > 0)
+	auto data = std::make_unique<wchar_t[]>(sentence.size() + 1);
+	wcscpy_s(data.get(), sentence.size() + 1, sentence.c_str());
+	wchar_t* dataEnd = data.get() + sentence.size();
+	int skip = 0, count = 0;
+	for (wchar_t* end = dataEnd; end - data.get() > skip; --end)
+	{
+		std::swap(*end, *dataEnd);
+		int junkLength = end - data.get() - skip;
+		auto junkFound = wcsstr(sentence.c_str() + skip + junkLength, data.get() + skip);
+		std::swap(*end, *dataEnd);
+		if (junkFound)
 		{
-			sentence.erase(0, junk.size());
-			goto remove;
+			skip += junkLength;
+			count += 1;
+			end = dataEnd;
 		}
+	}
+	if (count && skip / count >= 3) sentence = data.get() + skip;
 }
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
@@ -57,8 +68,11 @@ TEST(
 		assert(repeatedChars.find(L"aaaabbcd") == 0);
 
 		std::wstring cyclicRepeats = L"abcdeabcdefabcdefgabcdefgabcdefgabcdefgabcdefg";
+		std::wstring buildupRepeats = L"aababcabcdabcdeabcdefabcdefg";
 		RemoveCyclicRepeats(cyclicRepeats);
+		RemoveCyclicRepeats(buildupRepeats);
 		assert(cyclicRepeats == L"abcdefg");
+		assert(buildupRepeats == L"abcdefg");
 
 		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. はい";
 		ProcessSentence(empty, { SentenceInfo::DUMMY });
