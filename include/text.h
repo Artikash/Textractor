@@ -25,6 +25,7 @@ extern const char* MAX_BUFFER_SIZE;
 extern const wchar_t* CONSOLE;
 extern const wchar_t* CLIPBOARD;
 extern const wchar_t* ABOUT;
+extern const wchar_t* CL_OPTIONS;
 extern const wchar_t* UPDATE_AVAILABLE;
 extern const wchar_t* ALREADY_INJECTED;
 extern const wchar_t* ARCHITECTURE_MISMATCH;

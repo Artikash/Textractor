@@ -58,6 +58,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	current = &Host::GetThread(Host::console);
 	Host::AddConsoleOutput(ABOUT);
 
+	DWORD DUMMY;
+	AttachConsole(ATTACH_PARENT_PROCESS);
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), CL_OPTIONS, wcslen(CL_OPTIONS), &DUMMY, NULL);
 	std::vector<DWORD> processIds = Util::GetAllProcessIds();
 	std::vector<std::wstring> processNames;
 	for (auto processId : processIds) processNames.emplace_back(Util::GetModuleFilename(processId).value_or(L""));
@@ -65,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
 	for (int i = 0; i < argc; ++i)
 		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
-			if (arg[1] == L'P')
+			if (arg[1] == L'p')
 				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
 				else for (int i = 0; i < processIds.size(); ++i)
 					if (processNames[i].find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processIds[i]);

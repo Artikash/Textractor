@@ -53,6 +53,7 @@ You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
 I'm currently looking for a new job: email me if you know anyone hiring US software engineers
 If you like this project, please tell everyone about it :))";
+const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
 const wchar_t* ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
