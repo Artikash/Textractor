@@ -16470,8 +16470,9 @@ bool InsertRenpyHook()
 	return true;
 }
 
-void InsertMonoHook(HMODULE mono)
+void InsertMonoHook(HMODULE h)
 {
+	static HMODULE mono = h;
 	/* Artikash 2/13/2019:
 	How to hook Mono/Unity3D:
 	Find all standard function prologs in memory with write/execute permission: these represent possible JIT compiled functions
@@ -16481,7 +16482,6 @@ void InsertMonoHook(HMODULE mono)
 	*/
 	trigger_fun_ = [](LPVOID addr, DWORD, DWORD)
 	{
-		HMODULE mono = GetModuleHandleW(L"mono");
 		static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
 		static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
 		static auto getName = (char*(*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
@@ -16557,17 +16557,17 @@ bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 bool InsertMonoHooks()
 {
   HMODULE h = ::GetModuleHandleA("mono.dll");
+  if (!h) h = GetModuleHandleA("mono-2.0-bdwgc.dll");
   if (!h)
     return false;
 
-  InsertMonoHook(h); // Artikash 10/20/2018: dunno why this was removed, works for some stuff so readd
+  InsertMonoHook(h);
   bool ret = false;
 
   // mono_unichar2* mono_string_to_utf16       (MonoString *s);
   // char*          mono_string_to_utf8        (MonoString *s);
   HookParam hp = {};
   const MonoFunction funcs[] = { MONO_FUNCTIONS_INITIALIZER };
-  enum { FunctionCount = sizeof(funcs) / sizeof(*funcs) };
   for (auto func : funcs) {
     if (FARPROC addr = ::GetProcAddress(h, func.functionName)) {
       hp.address = (DWORD)addr;

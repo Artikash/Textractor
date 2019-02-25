@@ -96,8 +96,7 @@ bool DeterminePCEngine()
   if (HMODULE module = GetModuleHandleW(L"nw.dll"))
 	  InsertV8Hook(module);
 
-  if (::GetModuleHandleA("mono.dll")) {
-    InsertMonoHooks();
+  if (InsertMonoHooks()) {
     return true;
   }
 
