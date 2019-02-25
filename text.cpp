@@ -81,10 +81,11 @@ const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
+const char* TOPMOST = u8"Always on Top";
+const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
 const char* FONT_SIZE = u8"Font Size";
-const char* TOPMOST = u8"Always on Top";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 
