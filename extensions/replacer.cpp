@@ -25,13 +25,24 @@ public:
 
 	std::pair<int, std::optional<std::wstring>> Lookup(const std::wstring& text)
 	{
+		std::pair<int, std::optional<std::wstring>> result = {};
 		int length = 0;
 		Node* current = &root;
 		for (auto ch : text)
-			if (Ignore(ch)) ++length;
-			else if (auto& next = current->next[ch]) ++length, current = next.get();
+		{
+			if (Ignore(ch))
+			{
+				length += 1;
+			}
+			else if (auto& next = current->next[ch])
+			{
+				length += 1;
+				current = next.get();
+				if (current->value) result = { length, current->value };
+			}
 			else break;
-		return { length, current->value };
+		}	
+		return result;
 	}
 
 private:
@@ -124,12 +135,15 @@ TEST(
 		assert(Parse(LR"(|ORIG| さよなら|BECOMES|goodbye|END|
 |ORIG|バカ|BECOMES|idiot|END|
 |ORIG|こんにちは |BECOMES|hello|END|)") == 3);
-		std::wstring replaced = LR"(hello　
+		std::wstring replaced = LR"(blahblah　
  さよなら バカ こんにちは)";
 		Replace(replaced);
 		assert(replaced.find(L"さよなら") == std::wstring::npos &&
 			replaced.find(L"バカ") == std::wstring::npos &&
-			replaced.find(L"こんにちは") == std::wstring::npos
+			replaced.find(L"こんにちは") == std::wstring::npos &&
+			replaced.find(L"goodbye") != std::wstring::npos &&
+			replaced.find(L"idiot") != std::wstring::npos &&
+			replaced.find(L"hello") != std::wstring::npos
 		);
 	}
 );
