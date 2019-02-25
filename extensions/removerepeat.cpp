@@ -6,13 +6,18 @@ void RemoveRepeatedChars(std::wstring& sentence)
 	int repeatNumber = 1;
 	wchar_t prevChar = L'\0';
 	for (auto nextChar : sentence)
-		if (nextChar == prevChar) repeatNumber += 1;
+	{
+		if (nextChar == prevChar)
+		{
+			repeatNumber += 1;
+		}
 		else
 		{
 			prevChar = nextChar;
 			repeatNumbers.at(repeatNumber) += 1;
 			repeatNumber = 1;
 		}
+	}
 	if ((repeatNumber = std::distance(repeatNumbers.begin(), std::max_element(repeatNumbers.begin(), repeatNumbers.end()))) == 1) return;
 
 	std::wstring newSentence;
@@ -33,6 +38,7 @@ void RemoveRepeatedChars(std::wstring& sentence)
 
 void RemoveCyclicRepeats(std::wstring& sentence)
 {
+	if (sentence.size() > 15000) return; // this algorithm is O(N^3) so if N > 15000 it's extremely slow
 	auto data = std::make_unique<wchar_t[]>(sentence.size() + 1);
 	wcscpy_s(data.get(), sentence.size() + 1, sentence.c_str());
 	wchar_t* dataEnd = data.get() + sentence.size();
@@ -45,6 +51,7 @@ void RemoveCyclicRepeats(std::wstring& sentence)
 		std::swap(*end, *dataEnd);
 		if (junkFound)
 		{
+			if (count && junkLength < min(skip / count, 4)) break;
 			skip += junkLength;
 			count += 1;
 			end = dataEnd;
@@ -67,12 +74,12 @@ TEST(
 		RemoveRepeatedChars(repeatedChars);
 		assert(repeatedChars.find(L"aaaabbcd") == 0);
 
-		std::wstring cyclicRepeats = L"abcdeabcdefabcdefgabcdefgabcdefgabcdefgabcdefg";
-		std::wstring buildupRepeats = L"aababcabcdabcdeabcdefabcdefg";
+		std::wstring cyclicRepeats = L"_abcde_abcdef_abcdefg_abcdefg_abcdefg_abcdefg_abcdefg";
+		std::wstring buildupRepeats = L"__a_ab_abc_abcd_abcde_abcdef_abcdefg";
 		RemoveCyclicRepeats(cyclicRepeats);
 		RemoveCyclicRepeats(buildupRepeats);
-		assert(cyclicRepeats == L"abcdefg");
-		assert(buildupRepeats == L"abcdefg");
+		assert(cyclicRepeats == L"_abcdefg");
+		assert(buildupRepeats == L"_abcdefg");
 
 		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. はい";
 		ProcessSentence(empty, { SentenceInfo::DUMMY });
