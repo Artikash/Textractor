@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ EXTENSIONS, &MainWindow::Extensions }
 	})
 	{
-		QPushButton* button = new QPushButton(ui->processFrame);
+		auto button = new QPushButton(ui->processFrame);
 		connect(button, &QPushButton::clicked, this, slot);
 		button->setText(text);
 		ui->processLayout->addWidget(button);
