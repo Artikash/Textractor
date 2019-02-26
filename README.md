@@ -1,24 +1,20 @@
 # Textractor
 
-[Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md)<br>
-[简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md)<br>
+![How it looks](screenshot.png)
+
+[Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
 [日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
 
-## [Tutorial Video](https://youtu.be/eecEOacF6mw)
+**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a super quick rundown on its usage.
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
 
-## Overview
-
-**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-
-![How it looks](screenshot.png)
-
-## Downloads
+## Download
 
 Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
-Previous releases of ITHVNR can be found [here](https://github.com/mireado/ITHVNR/releases).<br>
-If you get a dll missing error, you probably need to (re)install the [Microsoft Visual C++ Redistributable](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
+The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
+If you get a dll missing error, you probably need to (download and re)install the [Microsoft Visual C++ Redistributable](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
 
 ## Features
 
