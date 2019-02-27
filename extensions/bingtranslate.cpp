@@ -1,8 +1,12 @@
 ﻿#include "extension.h"
-#include "text.h"
 #include "network.h"
 #include <QInputDialog>
 #include <QTimer>
+
+extern const char* SELECT_LANGUAGE;
+extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
+extern const wchar_t* TRANSLATION_ERROR;
+extern const char* BING_PROMPT;
 
 QStringList languages
 {

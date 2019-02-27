@@ -1,10 +1,14 @@
 ﻿#include "extension.h"
-#include "text.h"
 #include "util.h"
 #include "network.h"
 #include <ctime>
 #include <QInputDialog>
 #include <QTimer>
+
+extern const char* SELECT_LANGUAGE;
+extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
+extern const wchar_t* TRANSLATION_ERROR;
+extern const char* GOOGLE_PROMPT;
 
 QStringList languages
 {

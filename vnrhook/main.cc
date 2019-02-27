@@ -5,10 +5,17 @@
 
 #include "main.h"
 #include "defs.h"
-#include "text.h"
 #include "engine/match.h"
 #include "texthook.h"
 #include "util.h"
+
+extern const char* PIPE_CONNECTED;
+extern const char* INSERTING_HOOK;
+extern const char* REMOVING_HOOK;
+extern const char* HOOK_FAILED;
+extern const char* TOO_MANY_HOOKS;
+extern const char* NOT_ENOUGH_TEXT;
+extern const char* COULD_NOT_FIND;
 
 WinMutex viewMutex;
 
@@ -88,8 +95,9 @@ void ConsoleOutput(LPCSTR text, ...)
 	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 }
 
-void NotifyHookRemove(uint64_t addr)
+void NotifyHookRemove(uint64_t addr, LPCSTR name)
 {
+	if (name) ConsoleOutput(REMOVING_HOOK, name);
 	HookRemovedNotif buffer(addr);
 	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 }

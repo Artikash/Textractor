@@ -1,7 +1,8 @@
 #include "textthread.h"
-#include "text.h"
 #include "host.h"
 #include "util.h"
+
+extern const wchar_t* INVALID_CODEPAGE;
 
 TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) :
 	handle(threadCounter++),

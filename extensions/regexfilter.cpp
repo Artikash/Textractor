@@ -1,10 +1,13 @@
 #include "extension.h"
-#include "text.h"
 #include <QMainWindow>
 #include <QLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QTimer>
+
+extern const char* REGEX_FILTER;
+extern const char* INVALID_REGEX;
+extern const char* CURRENT_FILTER;
 
 std::wregex regex;
 std::shared_mutex m;

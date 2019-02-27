@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
-#include "text.h"
 #include "extenwindow.h"
 #include "misc.h"
 #include "host/util.h"
@@ -14,6 +13,30 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
+
+extern const char* ATTACH;
+extern const char* LAUNCH;
+extern const char* DETACH;
+extern const char* ADD_HOOK;
+extern const char* SAVE_HOOKS;
+extern const char* SETTINGS;
+extern const char* EXTENSIONS;
+extern const char* SELECT_PROCESS;
+extern const char* ATTACH_INFO;
+extern const char* SEARCH_GAME;
+extern const char* PROCESSES;
+extern const char* CODE_INFODUMP;
+extern const char* SAVE_SETTINGS;
+extern const char* USE_JP_LOCALE;
+extern const char* FILTER_REPETITION;
+extern const char* DEFAULT_CODEPAGE;
+extern const char* FLUSH_DELAY;
+extern const char* MAX_BUFFER_SIZE;
+extern const wchar_t* ABOUT;
+extern const wchar_t* CL_OPTIONS;
+extern const wchar_t* UPDATE_AVAILABLE;
+extern const wchar_t* LAUNCH_FAILED;
+extern const wchar_t* INVALID_CODE;
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -121,7 +144,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
 			if (auto hp = Util::ParseCode(S(hookInfo))) Host::InsertHook(processId, hp.value());
-			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, std::size(savedThreadCode));
+			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, (unsigned)std::size(savedThreadCode));
 }
 
 void MainWindow::ProcessDisconnected(DWORD processId)

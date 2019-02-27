@@ -13,8 +13,9 @@
 #include "util/growl.h"
 #include "util/util.h"
 #include "main.h"
-#include "text.h"
 #include "ithsys/ithsys.h"
+
+extern const char* HIJACK_ERROR;
 
 //#define ConsoleOutput(...)  (void)0     // jichi 8/18/2013: I don't need ConsoleOutput
 

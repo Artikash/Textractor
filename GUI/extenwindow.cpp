@@ -1,7 +1,6 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
 #include "defs.h"
-#include "text.h"
 #include "misc.h"
 #include <concrt.h>
 #include <QDragEnterEvent>
@@ -9,6 +8,9 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QLabel>
+
+extern const char* EXTENSIONS;
+extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 
 namespace
 {

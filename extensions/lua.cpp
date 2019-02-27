@@ -1,12 +1,15 @@
 ﻿#include "extension.h"
 #include "util.h"
-#include "text.h"
 #include <fstream>
 #include <QMainWindow>
 #include <QLayout>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTimer>
+
+extern const char* LUA_INTRO;
+extern const char* LOAD_LUA_SCRIPT;
+extern const wchar_t* LUA_ERROR;
 
 constexpr auto LUA_SAVE_FILE = u8"Textractor.lua";
 

@@ -1,4 +1,4 @@
-﻿#include "text.h"
+﻿#include "defs.h"
 
 //#define TURKISH
 //#define SPANISH
@@ -37,7 +37,6 @@ const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) file
 (Does not work if running as administrator)
 Drag and drop within the list to reorder
 Press delete with an extension selected to remove it)";
-const char* WINDOW = u8"Window";
 const char* USE_JP_LOCALE = u8"Emulate japanese locale?";
 const char* FILTER_REPETITION = u8"Repetition Filter";
 const char* DEFAULT_CODEPAGE = u8"Default Codepage";
@@ -133,7 +132,6 @@ inline auto _ = []
 	EXTENSIONS = u8"Uzantılar";
 	SELECT_PROCESS = u8"İşlem Seçin";
 	ATTACH_INFO = u8"Bağlanmak istediğiniz işlemi görmüyorsanız yönetici olarak çalıştırmayı deneyin";
-	WINDOW = u8"Pencere";
 	DEFAULT_CODEPAGE = u8"Varsayılan Kod Sayfası";
 	FLUSH_DELAY = u8"Temizleme Gecikmesi";
 	MAX_BUFFER_SIZE = u8"Maksimum Arabellek Boyu";
@@ -192,7 +190,6 @@ Negatives for data/split offset refer to registers
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arrrastra y suelta la extension (.dll) aquí desde tu computadora para añadirlos
 Arrastra y suelta la lista para reordenar
 Presiona supr en una extension seleccionada para removerla)";
-	WINDOW = u8"Ventana";
 	USE_JP_LOCALE = u8"¿Emular idioma japonés?";
 	DEFAULT_CODEPAGE = u8"Default Codepage";
 	FLUSH_DELAY = u8"Flush Delay";
@@ -276,7 +273,6 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 (如果使用超级管理员运行，则无法工作)
 在列表中拖拽来重新排序
 使用 delete 键移除选中的扩展)";
-	WINDOW = u8"窗口";
 	USE_JP_LOCALE = u8"模拟日本区域设置?";
 	DEFAULT_CODEPAGE = u8"默认代码页";
 	FLUSH_DELAY = u8"刷新延迟";

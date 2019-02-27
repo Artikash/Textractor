@@ -1,11 +1,11 @@
 ﻿#include "extension.h"
-#include "text.h"
 #include <cwctype>
 #include <fstream>
 #include <atomic>
 #include <filesystem>
 #include <process.h>
 
+extern const wchar_t* REPLACER_INSTRUCTIONS;
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 std::atomic<std::filesystem::file_time_type> replaceFileLastWrite;

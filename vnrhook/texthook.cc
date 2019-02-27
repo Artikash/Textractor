@@ -4,10 +4,15 @@
 // 8/24/2013 TODO: Clean up this file
 
 #include "texthook.h"
-#include "engine/match.h"
 #include "main.h"
-#include "text.h"
+#include "engine/match.h"
 #include "ithsys/ithsys.h"
+
+extern const char* FUNC_MISSING;
+extern const char* MODULE_MISSING;
+extern const char* GARBAGE_MEMORY;
+extern const char* SEND_ERROR;
+extern const char* READ_ERROR;
 
 extern WinMutex viewMutex;
 
@@ -282,10 +287,9 @@ void TextHook::RemoveReadCode()
 void TextHook::Clear()
 {
 	std::scoped_lock lock(viewMutex);
-	if (*hp.name) ConsoleOutput(REMOVING_HOOK, hp.name);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
-	NotifyHookRemove(address);
+	NotifyHookRemove(address, hp.name);
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
 }
 

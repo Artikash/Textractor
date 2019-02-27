@@ -1,5 +1,4 @@
 #include "extension.h"
-#include "text.h"
 #include <QMainWindow>
 #include <QLayout>
 #include <QPushButton>
@@ -7,6 +6,11 @@
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QTimer>
+
+extern const char* THREAD_LINKER;
+extern const char* LINK;
+extern const char* THREAD_LINK_FROM;
+extern const char* THREAD_LINK_TO;
 
 std::mutex m;
 std::unordered_map<int64_t, std::unordered_multiset<int64_t>> linkedTextHandles;

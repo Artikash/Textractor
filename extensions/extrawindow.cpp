@@ -1,6 +1,5 @@
 #include "extension.h"
 #include "defs.h"
-#include "text.h"
 #include <QDialog>
 #include <QInputDialog>
 #include <QColorDialog>
@@ -11,6 +10,13 @@
 #include <QMouseEvent>
 #include <QSettings>
 #include <QTimer>
+
+extern const char* EXTRA_WINDOW_INFO;
+extern const char* TOPMOST;
+extern const char* SIZE_LOCK;
+extern const char* BG_COLOR;
+extern const char* TEXT_COLOR;
+extern const char* FONT_SIZE;
 
 std::mutex m;
 

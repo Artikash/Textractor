@@ -1,7 +1,8 @@
 #include "match.h"
 #include "main.h"
-#include "text.h"
 #include "native/pchooks.h"
+
+extern const char* HIJACK_ERROR;
 
 namespace Engine
 {

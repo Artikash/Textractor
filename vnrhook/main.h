@@ -9,7 +9,7 @@
 
 void TextOutput(ThreadParam tp, BYTE* text, int len);
 void ConsoleOutput(LPCSTR text, ...);
-void NotifyHookRemove(uint64_t addr);
+void NotifyHookRemove(uint64_t addr, LPCSTR name);
 void NewHook(HookParam hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 void RemoveHook(uint64_t addr, int maxOffset = 9);
 

@@ -1,8 +1,13 @@
 #include "host.h"
-#include "text.h"
 #include "defs.h"
 #include "util.h"
 #include "../vnrhook/texthook.h"
+
+extern const wchar_t* ALREADY_INJECTED;
+extern const wchar_t* ARCHITECTURE_MISMATCH;
+extern const wchar_t* INJECT_FAILED;
+extern const wchar_t* CONSOLE;
+extern const wchar_t* CLIPBOARD;
 
 namespace
 {
