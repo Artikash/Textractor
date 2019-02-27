@@ -121,7 +121,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
 			if (auto hp = Util::ParseCode(S(hookInfo))) Host::InsertHook(processId, hp.value());
-			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, (unsigned)ARRAYSIZE(savedThreadCode));
+			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, std::size(savedThreadCode));
 }
 
 void MainWindow::ProcessDisconnected(DWORD processId)

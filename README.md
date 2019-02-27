@@ -6,7 +6,7 @@
 [日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
 
 **Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a super quick rundown on its usage.
+Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a quick rundown on using it.
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
 
@@ -14,7 +14,7 @@ Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a super quick rundo
 
 Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-If you get a dll missing error, you probably need to (download and re)install the [Microsoft Visual C++ Redistributable](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
+Try running vc_redist.x86.exe if you get an error when starting Textractor.
 
 ## Features
 
