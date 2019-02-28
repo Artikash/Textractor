@@ -69,3 +69,9 @@ private:
 #else
 #define TEST(...)
 #endif
+
+#ifdef _DEBUG
+#define TEST_SYNC(...) inline auto TEST__RUNNER__DUMMY = std::invoke([] { __VA_ARGS__; return 0UL; }); 
+#else
+#define TEST_SYNC(...)
+#endif

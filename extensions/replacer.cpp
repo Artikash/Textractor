@@ -9,6 +9,7 @@ extern const wchar_t* REPLACER_INSTRUCTIONS;
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 std::atomic<std::filesystem::file_time_type> replaceFileLastWrite;
+std::shared_mutex m;
 
 struct
 {
@@ -34,8 +35,9 @@ public:
 			{
 				length += 1;
 			}
-			else if (auto& next = current->next[ch])
+			else if (current->next.count(ch) != 0)
 			{
+				auto& next = current->next.at(ch);
 				length += 1;
 				current = next.get();
 				if (current->value) result = { length, current->value };
@@ -60,6 +62,7 @@ private:
 
 int Parse(const std::wstring& file)
 {
+	std::lock_guard l(m);
 	replacementTrie = {};
 	int count = 0;
 	size_t end = 0;
@@ -76,6 +79,7 @@ int Parse(const std::wstring& file)
 
 bool Replace(std::wstring& sentence)
 {
+	std::shared_lock l(m);
 	for (int i = 0; i < sentence.size(); ++i)
 	{
 		auto[length, replacement] = replacementTrie.Lookup(sentence.substr(i));
@@ -116,21 +120,17 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 {
-	static std::shared_mutex m;
-
 	static_assert(std::has_unique_object_representations_v<decltype(replaceFileLastWrite)::value_type>);
 	if (!replaceFileLastWrite.compare_exchange_strong(std::filesystem::last_write_time(REPLACE_SAVE_FILE), std::filesystem::last_write_time(REPLACE_SAVE_FILE)))
 	{
-		std::lock_guard l(m);
 		std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
 		Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t)));
 	}
 
-	std::shared_lock l(m);
 	return Replace(sentence);
 }
 
-TEST(
+TEST_SYNC(
 	{
 		assert(Parse(LR"(|ORIG| さよなら|BECOMES|goodbye|END|
 |ORIG|バカ|BECOMES|idiot|END|
