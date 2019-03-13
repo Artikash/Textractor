@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "defs.h"
 #include "extenwindow.h"
-#include "misc.h"
 #include "host/util.h"
 #include <shellapi.h>
 #include <winhttp.h>

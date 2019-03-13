@@ -1,7 +1,6 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
 #include "defs.h"
-#include "misc.h"
 #include <concrt.h>
 #include <QDragEnterEvent>
 #include <QDropEvent>
