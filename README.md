@@ -46,9 +46,9 @@ You should then be able to simply open the folder in Visual Studio, and build. R
 
 ## Project Architecture
 
-The host (see GUI/host folder) injects vnrhook.dll (created from the vnrhook folder) into the target process and connects to it via 2 pipe files.<br>
-Host writes to hostPipe, vnrhook writes to hookPipe.<br>
-vnrhook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
+The host (see GUI/host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
+Host writes to hostPipe, texthook writes to hookPipe.<br>
+texthook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
 Additional information about hooks is shared through a file view (a.k.a. section object) that is mapped to a reference to the TextHook class.<br>
 The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI.<br>
 Finally, the GUI dispatches the text to extensions before displaying it.

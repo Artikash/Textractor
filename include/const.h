@@ -1,6 +1,6 @@
 #pragma once
 
-// vnrhook/const.h
+// texthook/const.h
 // 8/23/2013 jichi
 // Branch: ITH/common.h, rev 128
 

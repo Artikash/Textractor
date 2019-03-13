@@ -1,7 +1,7 @@
 #include "host.h"
 #include "defs.h"
 #include "util.h"
-#include "../vnrhook/texthook.h"
+#include "../texthook/texthook.h"
 
 extern const wchar_t* ALREADY_INJECTED;
 extern const wchar_t* ARCHITECTURE_MISMATCH;

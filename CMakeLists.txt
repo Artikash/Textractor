@@ -38,5 +38,5 @@ link_libraries(text)
 
 add_subdirectory(GUI)
 add_subdirectory(GUI/host)
-add_subdirectory(vnrhook)
+add_subdirectory(texthook)
 add_subdirectory(extensions)

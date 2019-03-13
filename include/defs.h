@@ -1,6 +1,6 @@
 #pragma once
 
-// vnrhook/defs.h
+// texthook/defs.h
 // 8/23/2013 jichi
 
 // Pipes
@@ -23,7 +23,7 @@ constexpr auto PIPE_AVAILABLE_EVENT = L"TEXTRACTOR_PIPE_AVAILABLE";
 
 // Files
 
-constexpr auto ITH_DLL = L"vnrhook"; // .dll but LoadLibrary automatically adds that
+constexpr auto ITH_DLL = L"texthook"; // .dll but LoadLibrary automatically adds that
 constexpr auto CONFIG_FILE = u8"Textractor.ini";
 
 // Misc

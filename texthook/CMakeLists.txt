@@ -1,7 +1,7 @@
 include_directories(. util)
 
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-set(vnrhook_src
+set(texthook_src
   main.cc
   texthook.cc
   engine/match64.cc
@@ -10,7 +10,7 @@ set(vnrhook_src
   util/util.cc
 )
 else()
-set(vnrhook_src
+set(texthook_src
   main.cc
   texthook.cc
   engine/engine.cc
@@ -23,20 +23,20 @@ set(vnrhook_src
 )
 endif()
 
-add_library(vnrhook SHARED ${vnrhook_src})
+add_library(texthook SHARED ${texthook_src})
 
-set_target_properties(vnrhook PROPERTIES
+set_target_properties(texthook PROPERTIES
   LINK_FLAGS "/SUBSYSTEM:WINDOWS /MANIFEST:NO"
 )
 
-set(vnrhook_libs
+set(texthook_libs
   Version.lib
   minhook
 )
 
-target_link_libraries(vnrhook ${vnrhook_libs})
+target_link_libraries(texthook ${texthook_libs})
 
-target_compile_definitions(vnrhook
+target_compile_definitions(texthook
   PRIVATE
   _CRT_NON_CONFORMING_SWPRINTFS
   _SCL_SECURE_NO_WARNINGS # config.pri

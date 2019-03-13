@@ -37,9 +37,9 @@ Textractor 的发行版可以在[这里](https://github.com/Artikash/Textractor/
 
 ## 项目架构
 
-宿主 (位于 GUI/host 文件夹) 向目标进程注入 vnrhook.dll (由 vnrhook 文件夹创建) 并通过两个管道文件互联.<br>
-宿主向 hostPipe 写入, vnrhook 向 hookPipe 写入.<br>
-vnrhook 等待管道连接, 之后向一些文本输出函数 (如 TextOut, GetGlyphOutline) 注入一系列指令, 使得它们的输入被沿着管道发送.<br>
+宿主 (位于 GUI/host 文件夹) 向目标进程注入 texthook.dll (由 texthook 文件夹创建) 并通过两个管道文件互联.<br>
+宿主向 hostPipe 写入, texthook 向 hookPipe 写入.<br>
+texthook 等待管道连接, 之后向一些文本输出函数 (如 TextOut, GetGlyphOutline) 注入一系列指令, 使得它们的输入被沿着管道发送.<br>
 其它关于钩子的信息通过一个被 TextHook 类保有引用的文件视图 (曾用名: 段对象) 共享.<br>
 之后, 宿主通过管道接收到的文本在传回 GUI 前被简单处理.<br>
 最后, GUI 在显示文本前将其分发给扩展.

@@ -5,7 +5,7 @@ Set-Location $PSScriptRoot;
 $targets = @(
 	"Textractor.exe",
 	"TextractorCLI.exe",
-	"vnrhook.dll",
+	"texthook.dll",
 	"Qt5Core.dll",
 	"Qt5Gui.dll",
 	"Qt5Widgets.dll",
