@@ -22,6 +22,7 @@ private:
 	inline static thread_local bool ok = false;
 
 	void closeEvent(QCloseEvent*) override;
+	bool isProcessSaved(const QString& process);
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);
 	void ThreadAdded(TextThread& thread);

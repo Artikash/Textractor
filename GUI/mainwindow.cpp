@@ -12,6 +12,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QTextStream>
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
@@ -125,6 +126,31 @@ void MainWindow::closeEvent(QCloseEvent*)
 	QCoreApplication::quit(); // Need to do this to kill any windows that might've been made by extensions
 }
 
+bool MainWindow::isProcessSaved(const QString& process)
+{
+	bool result = false;
+
+	QFile file(GAME_SAVE_FILE);
+	if (file.open(QIODevice::ReadOnly))
+	{
+		QTextStream stream(&file);
+
+		while (!stream.atEnd())
+		{
+			QString line = stream.readLine();
+			if (process == line)
+			{
+				result = true;
+				break;
+			}
+		}
+
+		file.close();
+	}
+
+	return result;
+}
+
 void MainWindow::ProcessConnected(DWORD processId)
 {
 	if (processId == 0) return;
@@ -135,7 +161,9 @@ void MainWindow::ProcessConnected(DWORD processId)
 	});
 	if (process == "???") return;
 
-	QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
+	if (!isProcessSaved(process)) {
+		QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
+	}
 
 	QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 	// Can't use QFileInfo::absoluteFilePath since hook save file has '\\' as path separator
@@ -244,7 +272,19 @@ void MainWindow::LaunchProcess()
 {
 	QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 	std::reverse(savedProcesses.begin(), savedProcesses.end());
-	savedProcesses.removeDuplicates();
+	int num = savedProcesses.removeDuplicates();
+
+	if (num > 0)
+	{
+		//Clean-up duplicates from saved games
+		auto file = QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
+		for (const auto& process : savedProcesses)
+		{
+			file.write(process.toUtf8());
+			file.write(u8"\n");
+		}
+	}
+
 	savedProcesses.push_back(SEARCH_GAME);
 	std::wstring process = S(QInputDialog::getItem(this, SELECT_PROCESS, "", savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint));
 	if (!ok) return;
