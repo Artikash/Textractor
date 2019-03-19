@@ -10436,8 +10436,9 @@ bool InsertArtemis2Hook()
   // Artikash 1/1/2019: Recent games seem to use utf8 encoding instead, other than that the hook is identical.
   // Not sure how to differentiate which games are sjis/utf8 so insert both
   hp.address = addr + 6;
-  hp.offset = 8; // ebp was also pushed
-  hp.type = USING_UTF8 | USING_STRING | NO_CONTEXT;
+  hp.offset = pusha_ebp_off - 4; 
+  hp.index = 8; // ebp was also pushed
+  hp.type = USING_UTF8 | USING_STRING | DATA_INDIRECT | NO_CONTEXT;
   NewHook(hp, "Artemis2");
   //ConsoleOutput("Artemis2");
   return true;
