@@ -13,27 +13,34 @@
 // http://bytes.com/topic/c/answers/135834-defining-wide-character-strings-macros
 //#define LPASTE(s) L##s
 //#define L(s) LPASTE(s)
-#define NEW_HOOK_AT(_addr, _fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
+#define NEW_HOOK(_dll, _fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
   { \
     HookParam hp = {}; \
-    hp.address = _addr; \
+	wcsncpy_s(hp.module, _dll, MAX_MODULE_SIZE - 1); \
+	strncpy_s(hp.function, #_fun, MAX_MODULE_SIZE - 1); \
     hp.offset = _data; \
     hp.index = _data_ind; \
     hp.split = _split_off; \
     hp.split_index = _split_ind; \
-    hp.type = _type; \
+    hp.type = _type | MODULE_OFFSET | FUNCTION_OFFSET; \
     hp.length_offset = _len_off; \
     NewHook(hp, #_fun); \
   }
 
-// Static hook
-#define NEW_HOOK(_fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
-  NEW_HOOK_AT((uintptr_t)_fun, _fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
-
 #define NEW_MODULE_HOOK(_module, _fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
   { \
-    uintptr_t addr = (uintptr_t)::GetProcAddress(_module, #_fun); \
-      NEW_HOOK_AT(addr, _fun, _data, _data_ind, _split_off, _split_ind, _type, _len_off) \
+	HookParam hp = {}; \
+	wchar_t path[MAX_PATH]; \
+	if (GetModuleFileNameW(_module, path, MAX_PATH)) \
+		wcsncpy_s(hp.module, wcsrchr(path, L'\\') + 1, MAX_MODULE_SIZE - 1); \
+	strncpy_s(hp.function, #_fun, MAX_MODULE_SIZE - 1); \
+	hp.offset = _data; \
+	hp.index = _data_ind; \
+	hp.split = _split_off; \
+	hp.split_index = _split_ind; \
+	hp.type = _type | MODULE_OFFSET | FUNCTION_OFFSET; \
+	hp.length_offset = _len_off; \
+	NewHook(hp, #_fun); \
   }
 
 #ifndef _WIN64
@@ -96,39 +103,40 @@ void PcHooks::hookGDIFunctions()
   // 7/26/2014 jichi: Why there is no USING_SPLIT type?
 
   // gdi32.dll
-  NEW_HOOK(GetTextExtentPoint32A,  s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // BOOL GetTextExtentPoint32(HDC hdc, LPCTSTR lpString, int c, LPSIZE lpSize);
-  NEW_HOOK(GetTextExtentExPointA,  s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // BOOL GetTextExtentExPoint(HDC hdc, LPCTSTR lpszStr, int cchString, int nMaxExtent, LPINT lpnFit, LPINT alpDx, LPSIZE lpSize);
-  NEW_HOOK(GetTabbedTextExtentA,   s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // DWORD GetTabbedTextExtent(HDC hDC, LPCTSTR lpString, int nCount, int nTabPositions, const LPINT lpnTabStopPositions);
-  NEW_HOOK(GetCharacterPlacementA, s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) //  DWORD GetCharacterPlacement(HDC hdc, LPCTSTR lpString, int nCount, int nMaxExtent, LPGCP_RESULTS lpResults, DWORD dwFlags);
-  NEW_HOOK(GetGlyphIndicesA,       s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // DWORD GetGlyphIndices( HDC hdc, LPCTSTR lpstr, int c, LPWORD pgi, DWORD fl);
-  NEW_HOOK(GetGlyphOutlineA,       s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // DWORD GetGlyphOutline(HDC hdc,  UINT uChar,  UINT uFormat, LPGLYPHMETRICS lpgm, DWORD cbBuffer, LPVOID lpvBuffer, const MAT2 *lpmat2);
-  NEW_HOOK(ExtTextOutA,            s_arg6, 0,s_arg1,0, USING_STRING,  s_arg7 / arg_sz) // BOOL ExtTextOut(HDC hdc, int X, int Y, UINT fuOptions, const RECT *lprc, LPCTSTR lpString, UINT cbCount, const INT *lpDx);
-  NEW_HOOK(TextOutA,               s_arg4, 0,s_arg1,0, USING_STRING,  s_arg5 / arg_sz) // BOOL TextOut(HDC hdc, int nXStart, int nYStart, LPCTSTR lpString, int cchString);
-  NEW_HOOK(TabbedTextOutA,         s_arg4, 0,s_arg1,0, USING_STRING,  s_arg5 / arg_sz) // LONG TabbedTextOut(HDC hDC, int X, int Y, LPCTSTR lpString, int nCount, int nTabPositions, const LPINT lpnTabStopPositions, int nTabOrigin);
-  NEW_HOOK(GetCharABCWidthsA,      s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharABCWidths(HDC hdc, UINT uFirstChar, UINT uLastChar,  LPABC lpabc);
-  NEW_HOOK(GetCharABCWidthsFloatA, s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharABCWidthsFloat(HDC hdc, UINT iFirstChar, UINT iLastChar, LPABCFLOAT lpABCF);
-  NEW_HOOK(GetCharWidth32A,        s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharWidth32(HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT lpBuffer);
-  NEW_HOOK(GetCharWidthFloatA,     s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharWidthFloat(HDC hdc, UINT iFirstChar, UINT iLastChar, PFLOAT pxBuffer);
+  NEW_HOOK(L"gdi32.dll", GetTextExtentPoint32A,  s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // BOOL GetTextExtentPoint32(HDC hdc, LPCTSTR lpString, int c, LPSIZE lpSize);
+  NEW_HOOK(L"gdi32.dll", GetTextExtentExPointA,  s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // BOOL GetTextExtentExPoint(HDC hdc, LPCTSTR lpszStr, int cchString, int nMaxExtent, LPINT lpnFit, LPINT alpDx, LPSIZE lpSize);
+  NEW_HOOK(L"gdi32.dll", GetCharacterPlacementA, s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) //  DWORD GetCharacterPlacement(HDC hdc, LPCTSTR lpString, int nCount, int nMaxExtent, LPGCP_RESULTS lpResults, DWORD dwFlags);
+  NEW_HOOK(L"gdi32.dll", GetGlyphIndicesA,       s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // DWORD GetGlyphIndices( HDC hdc, LPCTSTR lpstr, int c, LPWORD pgi, DWORD fl);
+  NEW_HOOK(L"gdi32.dll", GetGlyphOutlineA,       s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // DWORD GetGlyphOutline(HDC hdc,  UINT uChar,  UINT uFormat, LPGLYPHMETRICS lpgm, DWORD cbBuffer, LPVOID lpvBuffer, const MAT2 *lpmat2);
+  NEW_HOOK(L"gdi32.dll", ExtTextOutA,            s_arg6, 0,s_arg1,0, USING_STRING,  s_arg7 / arg_sz) // BOOL ExtTextOut(HDC hdc, int X, int Y, UINT fuOptions, const RECT *lprc, LPCTSTR lpString, UINT cbCount, const INT *lpDx);
+  NEW_HOOK(L"gdi32.dll", TextOutA,               s_arg4, 0,s_arg1,0, USING_STRING,  s_arg5 / arg_sz) // BOOL TextOut(HDC hdc, int nXStart, int nYStart, LPCTSTR lpString, int cchString);
+  NEW_HOOK(L"gdi32.dll", GetCharABCWidthsA,      s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharABCWidths(HDC hdc, UINT uFirstChar, UINT uLastChar,  LPABC lpabc);
+  NEW_HOOK(L"gdi32.dll", GetCharABCWidthsFloatA, s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharABCWidthsFloat(HDC hdc, UINT iFirstChar, UINT iLastChar, LPABCFLOAT lpABCF);
+  NEW_HOOK(L"gdi32.dll", GetCharWidth32A,        s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharWidth32(HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT lpBuffer);
+  NEW_HOOK(L"gdi32.dll", GetCharWidthFloatA,     s_arg2, 0,s_arg1,0, BIG_ENDIAN,    1) // BOOL GetCharWidthFloat(HDC hdc, UINT iFirstChar, UINT iLastChar, PFLOAT pxBuffer);
 
-  NEW_HOOK(GetTextExtentPoint32W,  s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(GetTextExtentExPointW,  s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(GetTabbedTextExtentW,   s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(GetCharacterPlacementW, s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(GetGlyphIndicesW,       s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(GetGlyphOutlineW,       s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(ExtTextOutW,            s_arg6, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg7 / arg_sz)
-  NEW_HOOK(TextOutW,               s_arg4, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg5 / arg_sz)
-  NEW_HOOK(TabbedTextOutW,         s_arg4, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg5 / arg_sz)
-  NEW_HOOK(GetCharABCWidthsW,      s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(GetCharABCWidthsFloatW, s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(GetCharWidth32W,        s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
-  NEW_HOOK(GetCharWidthFloatW,     s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(L"gdi32.dll", GetTextExtentPoint32W,  s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", GetTextExtentExPointW,  s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", GetCharacterPlacementW, s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", GetGlyphIndicesW,       s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", GetGlyphOutlineW,       s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(L"gdi32.dll", ExtTextOutW,            s_arg6, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg7 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", TextOutW,               s_arg4, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg5 / arg_sz)
+  NEW_HOOK(L"gdi32.dll", GetCharABCWidthsW,      s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(L"gdi32.dll", GetCharABCWidthsFloatW, s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(L"gdi32.dll", GetCharWidth32W,        s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
+  NEW_HOOK(L"gdi32.dll", GetCharWidthFloatW,     s_arg2, 0,s_arg1,0, USING_UNICODE, 1)
 
   // user32.dll
-  NEW_HOOK(DrawTextA,              s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // int DrawText(HDC hDC, LPCTSTR lpchText, int nCount, LPRECT lpRect, UINT uFormat);
-  NEW_HOOK(DrawTextExA,            s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // int DrawTextEx(HDC hdc, LPTSTR lpchText,int cchText, LPRECT lprc, UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
-  NEW_HOOK(DrawTextW,              s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
-  NEW_HOOK(DrawTextExW,            s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"user32.dll", DrawTextA,              s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // int DrawText(HDC hDC, LPCTSTR lpchText, int nCount, LPRECT lpRect, UINT uFormat);
+  NEW_HOOK(L"user32.dll", DrawTextExA,            s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // int DrawTextEx(HDC hdc, LPTSTR lpchText,int cchText, LPRECT lprc, UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);NEW_HOOK(L"gdi32.dll", GetTabbedTextExtentA,   s_arg2, 0,s_arg1,0, USING_STRING,  s_arg3 / arg_sz) // DWORD GetTabbedTextExtent(HDC hDC, LPCTSTR lpString, int nCount, int nTabPositions, const LPINT lpnTabStopPositions);
+  NEW_HOOK(L"user32.dll", TabbedTextOutA,         s_arg4, 0, s_arg1, 0, USING_STRING, s_arg5 / arg_sz) // LONG TabbedTextOut(HDC hDC, int X, int Y, LPCTSTR lpString, int nCount, int nTabPositions, const LPINT lpnTabStopPositions, int nTabOrigin);
+  NEW_HOOK(L"user32.dll", GetTabbedTextExtentA,   s_arg2, 0, s_arg1, 0, USING_STRING, s_arg3 / arg_sz) // DWORD GetTabbedTextExtent(HDC hDC, LPCTSTR lpString, int nCount, int nTabPositions, const LPINT lpnTabStopPositions);
+
+  NEW_HOOK(L"user32.dll", DrawTextW,              s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"user32.dll", DrawTextExW,            s_arg2, 0,s_arg1,0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"user32.dll", TabbedTextOutW,         s_arg4, 0, s_arg1, 0, USING_UNICODE|USING_STRING, s_arg5 / arg_sz)
+  NEW_HOOK(L"user32.dll", GetTabbedTextExtentW,   s_arg2, 0, s_arg1, 0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
 }
 
 // jichi 6/18/2015: GDI+ functions
@@ -212,13 +220,13 @@ void PcHooks::hookOtherPcFunctions()
   // Lstr functions usually extracts rubbish, and might crash certain games like 「Magical Marriage Lunatics!!」
   // Needed by Gift
   // Use arg1 address for both split and data
-  NEW_HOOK(lstrlenA, s_arg1, 0,s_arg1,0, USING_STRING, 0) // 9/8/2013 jichi: int WINAPI lstrlen(LPCTSTR lpString);
-  NEW_HOOK(lstrcpyA, s_arg2, 0,0,0, USING_STRING, 0)
-  NEW_HOOK(lstrcpynA, s_arg2, 0,0,0, USING_STRING, 0)
+  NEW_HOOK(L"kernel32.dll", lstrlenA, s_arg1, 0,s_arg1,0, USING_STRING, 0) // 9/8/2013 jichi: int WINAPI lstrlen(LPCTSTR lpString);
+  NEW_HOOK(L"kernel32.dll", lstrcpyA, s_arg2, 0,0,0, USING_STRING, 0)
+  NEW_HOOK(L"kernel32.dll", lstrcpynA, s_arg2, 0,0,0, USING_STRING, 0)
 
-  NEW_HOOK(lstrlenW, s_arg1, 0,s_arg1,0, USING_UNICODE|USING_STRING, 0) // 9/8/2013 jichi: add lstrlen
-  NEW_HOOK(lstrcpyW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
-  NEW_HOOK(lstrcpynW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
+  NEW_HOOK(L"kernel32.dll", lstrlenW, s_arg1, 0,s_arg1,0, USING_UNICODE|USING_STRING, 0) // 9/8/2013 jichi: add lstrlen
+  NEW_HOOK(L"kernel32.dll", lstrcpyW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
+  NEW_HOOK(L"kernel32.dll", lstrcpynW, s_arg2, 0,0,0, USING_UNICODE|USING_STRING, 0)
 
   // size_t strlen(const char *str);
   // size_t strlen_l(const char *str, _locale_t locale);
@@ -273,16 +281,16 @@ void PcHooks::hookOtherPcFunctions()
 
   // 3/17/2014 jichi: Temporarily disabled
   // http://sakuradite.com/topic/159
-  NEW_HOOK(MultiByteToWideChar, s_arg3, 0,4,0, USING_STRING, s_arg4 / arg_sz)
-  NEW_HOOK(WideCharToMultiByte, s_arg3, 0,4,0, USING_UNICODE|USING_STRING, s_arg4 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", MultiByteToWideChar, s_arg3, 0,4,0, USING_STRING, s_arg4 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", WideCharToMultiByte, s_arg3, 0,4,0, USING_UNICODE|USING_STRING, s_arg4 / arg_sz)
 
-  NEW_HOOK(CharNextA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharNext(_In_ LPCTSTR lpsz);
-  NEW_HOOK(CharNextW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
-  NEW_HOOK(CharPrevA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharPrev(_In_ LPCTSTR lpszStart, _In_ LPCTSTR lpszCurrent);
-  NEW_HOOK(CharPrevW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
-  NEW_HOOK(CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
-  NEW_HOOK(CharPrevExA, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
-  if (HMODULE module = GetModuleHandleW(L"OLEAUT32"))
+  NEW_HOOK(L"user32.dll", CharNextA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharNext(_In_ LPCTSTR lpsz);
+  NEW_HOOK(L"user32.dll", CharNextW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
+  NEW_HOOK(L"user32.dll", CharPrevA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharPrev(_In_ LPCTSTR lpszStart, _In_ LPCTSTR lpszCurrent);
+  NEW_HOOK(L"user32.dll", CharPrevW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
+  NEW_HOOK(L"user32.dll", CharNextExA, s_arg2, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPSTR WINAPI CharNextExA(_In_ WORD   CodePage, _In_ LPCSTR lpCurrentChar, _In_ DWORD  dwFlags);
+  NEW_HOOK(L"user32.dll", CharPrevExA, s_arg2, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
+  if (HMODULE module = GetModuleHandleW(L"OLEAUT32.dll"))
   {
     NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
     //NEW_MODULE_HOOK(module, SysAllocStringByteLen, s_arg1, 0, 0, 0, USING_STRING, s_arg2 / arg_sz)
