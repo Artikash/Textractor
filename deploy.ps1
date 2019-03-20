@@ -27,4 +27,3 @@ $targets = @(
 mkdir -Force -Verbose $folder;
 Remove-Item -Force -Recurse -Verbose "$($folder)/*";
 Copy-Item -Force -Recurse -Verbose -Destination $folder -Path $targets;
-Compress-Archive -Force -Verbose -DestinationPath "$($folder).zip" -Path $folder;
