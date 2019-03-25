@@ -2,7 +2,7 @@
 
 ![Как это выглядит](screenshot.png)
 
-[English](https://github.com/Artikash/Textractor/blob/master/README.md) ● [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
+[English/Original](https://github.com/Artikash/Textractor/blob/master/README.md) ● [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
 [日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
 
 **Textractor** (a.k.a. NextHooker) это проект x86/x64 Windows/Wine программы для захвата текста из видеоигр, основанный на [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
