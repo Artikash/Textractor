@@ -380,7 +380,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	LAUNCH_FAILED = L"Textractor: невозможно запустить";
 	INVALID_CODE = L"Textractor: неверный код";
 	INVALID_CODEPAGE = L"Textractor: невозможно конвертировать тект (неверная кодировка?)";
-	PIPE_CONNECTED = u8"Textractor: туннель присоединен";
+	PIPE_CONNECTED = u8"Textractor: канал присоединен";
 	INSERTING_HOOK = u8"Textractor: вставка хука: %s";
 	REMOVING_HOOK = u8"Textractor: удаление хука: %s";
 	HOOK_FAILED = u8"Textractor: не удалось вставить хук";
