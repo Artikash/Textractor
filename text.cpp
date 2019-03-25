@@ -3,6 +3,7 @@
 //#define TURKISH
 //#define SPANISH
 //#define SIMPLIFIED_CHINESE
+//#define RUSSIAN
 
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
@@ -321,5 +322,124 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 	INVALID_REGEX = u8"无效的正则表达式";
 	CURRENT_FILTER = u8"当前过滤中: ";
 #endif // SIMPLIFIED_CHINESE
+
+#ifdef RUSSIAN
+	ATTACH = u8"Присоединить к игре";
+	LAUNCH = u8"Запустить игру";
+	DETACH = u8"Отсоединить от игры";
+	ADD_HOOK = u8"Добавить хук";
+	SAVE_HOOKS = u8"Сохранить хук(и)";
+	SETTINGS = u8"Настройки";
+	EXTENSIONS = u8"Расширения";
+	SELECT_PROCESS = u8"Выберете процесс";
+	ATTACH_INFO = u8R"(Если вы не видите процесс, к которому хотите присоединить, попробуйте запуск с правами администратора
+Вы также можете ввести id процесса)";
+	SEARCH_GAME = u8"Найти в проводнике";
+	PROCESSES = u8"Процессы (*.exe)";
+	CODE_INFODUMP = u8R"(Искать текст
+S[codepage#]текст
+ИЛИ
+Введите код чтения (R-code)
+R{S|Q|V}[codepage#][*deref_offset]@addr
+ИЛИ
+Введите код хука (H-code)
+H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
+Все числа, кроме кодовой страницы в шестнадцатеричном формате
+Кодировка по умолчанию 932 (Shift-JIS), но она может быть изменена в настройках
+A/B: codepage char little/big endian
+W: UTF-16 char
+S/Q/V: codepage/UTF-16/UTF-8 string
+Отрицательное для data/split офсетов, ссылающихся на регистры
+-4 для EAX, -8 для ECX, -C для EDX, -10 для EBX, -14 для ESP, -18 для EBP, -1C для ESI, -20 для EDI
+* значит dereference pointer+deref_offset)";
+	SAVE_SETTINGS = u8"Сохранить настройки";
+	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Перетащите сюда (.dll) файлы расширений из проводника для их добавления
+(Не работает при запуске от администратора)
+Перетаскивайте по списку для изменения порядка
+Нажмите клавишу удаления, чтобы удалить выбранное расширение)";
+	USE_JP_LOCALE = u8"Симулировать японскую локаль";
+	FILTER_REPETITION = u8"Фильтр повторений";
+	DEFAULT_CODEPAGE = u8"Кодировка по умолчанию";
+	FLUSH_DELAY = u8"Задержка сброса";
+	MAX_BUFFER_SIZE = u8"Максимальный размер буфера";
+	CONSOLE = L"Консоль";
+	CLIPBOARD = L"Буфер обмена";
+	ABOUT = L"Textractor в." CURRENT_VERSION LR"( автор: Artikash (email: akashmozumdar@gmail.com)
+Домашняя страница: https://github.com/Artikash/Textractor
+Обучающее видео: https://www.youtube.com/watch?v=eecEOacF6mw
+Сообщайте о любых проблемах, желаемых для добавления функциях, или задавайте вопросы, касающиеся Textractor
+Сделать это вы можете домашней странице (секция issues) или через электронную почту
+Исходный код доступен по лицензии GPLv3 на домашней странице проекта
+I'm currently looking for a new job: email me if you know anyone hiring US software engineers
+Если эта программа вам понравилась, расскажите всем о ней :))";
+	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
+	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
+	ALREADY_INJECTED = L"Textractor: уже присоединен";
+	ARCHITECTURE_MISMATCH = L"Textractor: несоответствие архитектуры: попробуйте 32-битный Textractor вместо этого";
+	INJECT_FAILED = L"Textractor: невозможно присоединиться";
+	LAUNCH_FAILED = L"Textractor: невозможно запустить";
+	INVALID_CODE = L"Textractor: неверный код";
+	INVALID_CODEPAGE = L"Textractor: невозможно конвертировать тект (неверная кодировка?)";
+	PIPE_CONNECTED = u8"Textractor: туннель присоединен";
+	INSERTING_HOOK = u8"Textractor: вставка хука: %s";
+	REMOVING_HOOK = u8"Textractor: удаление хука: %s";
+	HOOK_FAILED = u8"Textractor: не удалось вставить хук";
+	TOO_MANY_HOOKS = u8"Textractor: слишком много хуков: невозможно вставить";
+	NOT_ENOUGH_TEXT = u8"Textractor: не достаточно текста для точного поиска";
+	FUNC_MISSING = u8"Textractor: функция отсутствует";
+	MODULE_MISSING = u8"Textractor: модуль отсутствует";
+	GARBAGE_MEMORY = u8"Textractor: память постоянно изменяется, бесполезно читать";
+	SEND_ERROR = u8"Textractor: Send ERROR (вероятно неверный H-code)";
+	READ_ERROR = u8"Textractor: Reader ERROR (вероятно неверный R-code)";
+	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
+	COULD_NOT_FIND = u8"Textractor: невозможно найти текст";
+	SELECT_LANGUAGE = u8"Выберете язык";
+	BING_PROMPT = u8"На какой язык переводить в Bing?";
+	GOOGLE_PROMPT = u8"На какой язык переводить в Google?";
+	TOO_MANY_TRANS_REQUESTS = L"Слишком много запросов для перевода: отклонено";
+	TRANSLATION_ERROR = L"Ошибка при переводе";
+	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
+Нажмите и перетазите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
+	TOPMOST = u8"Поверх всех окон";
+	SIZE_LOCK = u8"Фиксированный размер";
+	BG_COLOR = u8"Цвет заднего фона";
+	TEXT_COLOR = u8"Цвет текста";
+	FONT_SIZE = u8"Размер шрифта";
+	LUA_INTRO = u8R"(--[[
+ProcessSentence вызывается каждый раз, когда Textractor получает предложение с текстом.
+
+Param sentence: предложение полученое в Textractor (UTF-8).
+Param sentenceInfo: таблица различной информации о предложении.
+
+При возвращении строки предложение будет изменено на эту строку.
+При возвращении нуля, предложение останетсябез изменения.
+
+Это расширение использует несколько копий интерпретатора Lua для безопасности нити.
+Модификации глобальных переменных из ProcessSentence не обязательно сохраняется.
+
+Параметры в sentenceInfo:
+"current select": равно 0, если предложение не находится в текстовой нити, выбранной в данный момент пользователем.
+"process id": id процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
+"text number": номер текущей текстовой нити. Растет один за другим по мере создания текстовых нитей. 0 для консоли, 1 для буфера обмена.
+--]]
+function ProcessSentence(sentence, sentenceInfo)
+  --Ваш код здесь...
+end)";
+	LOAD_LUA_SCRIPT = u8"Загрузить скрипт";
+	LUA_ERROR = L"Ошибка Lua: ";
+	REGEX_FILTER = u8"Фильтр Regex";
+	INVALID_REGEX = u8"Неверный regex";
+	CURRENT_FILTER = u8"Сейчас фильтруется: ";
+	REPLACER_INSTRUCTIONS = LR"(Этот файл делает что-то только когда используется расширение "Replacer".
+Команды для замены должны выглядеть так:
+|ORIG|текст_оригинала|BECOMES|текст_замены|END|
+Весь текст в этом файле вне команд заменителей будет проигнорирован.
+Пробелы в текст_оригинала игнорируются, но текст_замены может содержать пробелы, новые строки и пр.
+Этот файл должен быть в кодировке Unicode (UTF-16 little endian).)";
+	THREAD_LINKER = u8"Связыватель нитей";
+	LINK = u8"Связь";
+	THREAD_LINK_FROM = u8"Номер нити, от которой связывать";
+	THREAD_LINK_TO = u8"Номер нити, к которой привязывать";
+#endif // RUSSIAN
 	return 0;
 }();
