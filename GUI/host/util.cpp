@@ -27,6 +27,13 @@ namespace
 		}
 		RCode.erase(0, 1);
 
+		// [null_length<]
+		if (std::regex_search(RCode, match, std::wregex(L"^([0-9]+)<")))
+		{
+			hp.null_length = std::stoi(match[1]);
+			RCode.erase(0, match[0].length());
+		}
+
 		// [codepage#]
 		if (std::regex_search(RCode, match, std::wregex(L"^([0-9]+)#")))
 		{
@@ -103,6 +110,13 @@ namespace
 			return {};
 		}
 		HCode.erase(0, 1);
+
+		// [null_length<]
+		if ((hp.type & USING_STRING) && std::regex_search(HCode, match, std::wregex(L"^([0-9]+)<")))
+		{
+			hp.null_length = std::stoi(match[1]);
+			HCode.erase(0, match[0].length());
+		}
 
 		// [N]
 		if (HCode[0] == L'N')
@@ -181,10 +195,12 @@ namespace
 		if (hp.type & USING_UNICODE)
 		{
 			RCode << "Q";
+			if (hp.null_length != 0) RCode << hp.null_length << "<";
 		}
 		else
 		{
 			RCode << "S";
+			if (hp.null_length != 0) RCode << hp.null_length << "<";
 			if (hp.codepage != 0) RCode << hp.codepage << "#";
 		}
 
@@ -213,6 +229,9 @@ namespace
 			else if (hp.type & BIG_ENDIAN) HCode << "A";
 			else HCode << "B";
 		}
+
+		if (hp.null_length != 0) HCode << hp.null_length << "<";
+
 		if (hp.type & NO_CONTEXT) HCode << "N";
 		if (hp.text_fun || hp.filter_fun || hp.hook_fun) HCode << "X"; // no AGTH equivalent
 
@@ -287,7 +306,8 @@ namespace Util
 	std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
 	{
 		std::vector<wchar_t> buffer(text.size() + 1);
-		if (MultiByteToWideChar(encoding, 0, text.c_str(), -1, buffer.data(), buffer.size())) return buffer.data();
+		if (int length = MultiByteToWideChar(encoding, 0, text.c_str(), text.size() + 1, buffer.data(), buffer.size())) 
+			return std::wstring(buffer.data(), length - 1);
 		return {};
 	}
 

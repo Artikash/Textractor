@@ -29,7 +29,8 @@ struct HookParam
 	int offset, // offset of the data in the memory
 		index, // deref_offset1
 		split, // offset of the split character
-		split_index; // deref_offset2
+		split_index, // deref_offset2
+		null_length;
 	union
 	{
 		wchar_t module[MAX_MODULE_SIZE];

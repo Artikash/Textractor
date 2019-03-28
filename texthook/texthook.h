@@ -34,6 +34,7 @@ private:
 	bool InsertReadCode();
 	void Send(uintptr_t dwDatabase);
 	int GetLength(uintptr_t base, uintptr_t in); // jichi 12/25/2013: Return 0 if failed
+	int HookStrlen(BYTE* data);
 	void RemoveHookCode();
 	void RemoveReadCode();
 

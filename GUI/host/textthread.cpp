@@ -58,7 +58,10 @@ void TextThread::Flush()
 	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
 	for (auto& sentence : sentences)
+	{
+		sentence.erase(std::remove(sentence.begin(), sentence.end(), L'\0'));
 		if (Output(*this, sentence)) storage->append(sentence);
+	}
 
 	std::scoped_lock lock(bufferMutex);
 	if (buffer.empty()) return;

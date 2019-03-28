@@ -229,14 +229,14 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 {
 	TextHook* This = (TextHook*)hookPtr;
 	BYTE buffer[TEXT_BUFFER_SIZE] = {};
-	int changeCount = 0, dataLen = 0;
+	int changeCount = 0, dataLen = 1;
 	__try
 	{
 		uint64_t currentAddress = This->address;
 		while (WaitForSingleObject(This->readerEvent, 500) == WAIT_TIMEOUT)
 		{
 			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uintptr_t*)This->address + This->hp.index;
-			if (memcmp(buffer, (void*)currentAddress, dataLen + 2) == 0)
+			if (memcmp(buffer, (void*)currentAddress, dataLen) == 0)
 			{
 				changeCount = 0;
 				continue;
@@ -248,10 +248,8 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 				break;
 			}
 
-			if (This->hp.type & USING_UNICODE) dataLen = wcslen((wchar_t*)currentAddress) * 2;
-			else dataLen = strlen((char*)currentAddress);
-			if (dataLen > TEXT_BUFFER_SIZE - 2) dataLen = TEXT_BUFFER_SIZE - 2;
-			memcpy(buffer, (void*)currentAddress, dataLen + 2);
+			dataLen = min(This->HookStrlen((BYTE*)currentAddress), TEXT_BUFFER_SIZE);
+			memcpy(buffer, (void*)currentAddress, dataLen);
 			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
 		}
 	}
@@ -308,10 +306,7 @@ int TextHook::GetLength(uintptr_t base, uintptr_t in)
 			break;
 		//len == -1 then continue to case 0.
 	case 0:
-		if (hp.type & USING_UNICODE)
-			len = wcslen((const wchar_t *)in) << 1;
-		else
-			len = strlen((const char *)in);
+		len = HookStrlen((BYTE*)in);
 		break;
 	case 1:
 		if (hp.type & USING_UNICODE)
@@ -326,6 +321,14 @@ int TextHook::GetLength(uintptr_t base, uintptr_t in)
 	// jichi 12/25/2013: This function originally return -1 if failed
 	//return len;
 	return max(0, len);
+}
+
+int TextHook::HookStrlen(BYTE* data)
+{
+	BYTE* orig = data;
+	for (int nullsRemaining = hp.null_length ? hp.null_length : hp.type & USING_UNICODE ? 2 : 1; nullsRemaining >= 0; ++data)
+		if (*data == 0) nullsRemaining -= 1;
+	return data - orig;
 }
 
 // EOF

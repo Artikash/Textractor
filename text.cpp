@@ -21,15 +21,16 @@ const char* CODE_INFODUMP = u8R"(Search for text
 S[codepage#]text
 OR
 Enter read code
-R{S|Q|V}[codepage#][*deref_offset]@addr
+R{S|Q|V}[null_length<][codepage#][*deref_offset]@addr
 OR
 Enter hook code
-H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
+H{A|B|W|S|Q|V}[null_length<][N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
 All numbers except codepage in hexadecimal
 Default codepage is 932 (Shift-JIS) but this can be changed in settings
 A/B: codepage char little/big endian
 W: UTF-16 char
 S/Q/V: codepage/UTF-16/UTF-8 string
+null_length: length of null terminator used for string
 Negatives for data/split offset refer to registers
 -4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
 * means dereference pointer+deref_offset)";
