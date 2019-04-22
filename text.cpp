@@ -57,7 +57,8 @@ If you like this project, please tell everyone about it :))";
 const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
-const wchar_t* ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
+const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
+const wchar_t* NEED_64_BIT = L"Textractor: architecture mismatch: try 64 bit Textractor instead (contact Artikash for the download location)";
 const wchar_t* INJECT_FAILED = L"Textractor: couldn't inject";
 const wchar_t* LAUNCH_FAILED = L"Textractor: couldn't launch";
 const wchar_t* INVALID_CODE = L"Textractor: invalid code";
@@ -145,7 +146,7 @@ Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut
 Şu anda iş aramaktayım: Eğer ABD’li yazılım mühendislerini işe alıyorsanız lütfen bana e-posta atın)";
 	UPDATE_AVAILABLE = L"Güncelleme mevcut: https://github.com/Artikash/Textractor/releases adresinden indirin";
 	ALREADY_INJECTED = L"Textractor: Zaten enjekte edili";
-	ARCHITECTURE_MISMATCH = L"Textractor: Mimari uyumsuzluğu: Lütfen Textractor’ın 32 bitlik sürümünü deneyin";
+	NEED_32_BIT = L"Textractor: Mimari uyumsuzluğu: Lütfen Textractor’ın 32 bitlik sürümünü deneyin";
 	INJECT_FAILED = L"Textractor: Enjekte edilemedi";
 	INVALID_CODE = L"Textractor: Geçersiz kod";
 	INVALID_CODEPAGE = L"Textractor: Metne dönüştürülemedi (geçersiz kod sayfası?)";
@@ -207,7 +208,7 @@ Código fuente disponible bajo GPLv3 en la página del proyecto
 Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contratando ingenieros de software de EE.UU.)";
 	UPDATE_AVAILABLE = L"Actualización disponible: descárguela en https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: ya inyectado";
-	ARCHITECTURE_MISMATCH = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
+	NEED_32_BIT = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
 	INJECT_FAILED = L"Textractor: no se puede inyectar";
 	LAUNCH_FAILED = L"Textractor: no se puede iniciar";
 	INVALID_CODE = L"Textractor: código inválido";
@@ -290,7 +291,7 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 我目前正在寻找新的工作: 如果你知道在美国招聘软件工程师岗位的人，请给我发邮件)";
 	UPDATE_AVAILABLE = L"有可用的更新: 请从 https://github.com/Artikash/Textractor/releases 下载";
 	ALREADY_INJECTED = L"Textractor: 已经注入";
-	ARCHITECTURE_MISMATCH = L"Textractor: 架构不匹配: 请尝试使用 32 位的 Textractor";
+	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用 32 位的 Textractor";
 	INJECT_FAILED = L"Textractor: 无法注入";
 	LAUNCH_FAILED = L"Textractor: 无法启动";
 	INVALID_CODE = L"Textractor: 无效代码";
@@ -376,7 +377,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
-	ARCHITECTURE_MISMATCH = L"Textractor: несоответствие архитектуры: попробуйте 32-битный Textractor вместо этого";
+	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте 32-битный Textractor вместо этого";
 	INJECT_FAILED = L"Textractor: невозможно присоединиться";
 	LAUNCH_FAILED = L"Textractor: невозможно запустить";
 	INVALID_CODE = L"Textractor: неверный код";

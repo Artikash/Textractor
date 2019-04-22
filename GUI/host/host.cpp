@@ -4,7 +4,8 @@
 #include "../texthook/texthook.h"
 
 extern const wchar_t* ALREADY_INJECTED;
-extern const wchar_t* ARCHITECTURE_MISMATCH;
+extern const wchar_t* NEED_32_BIT;
+extern const wchar_t* NEED_64_BIT;
 extern const wchar_t* INJECT_FAILED;
 extern const wchar_t* CONSOLE;
 extern const wchar_t* CLIPBOARD;
@@ -178,13 +179,14 @@ namespace Host
 #ifdef _WIN64
 				BOOL invalidProcess = FALSE;
 				IsWow64Process(process, &invalidProcess);
-				if (invalidProcess) return AddConsoleOutput(ARCHITECTURE_MISMATCH);
+				if (invalidProcess) return AddConsoleOutput(NEED_32_BIT);
 #endif
 				static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
 				if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 				{
 					WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);
 					if (AutoHandle<> thread = CreateRemoteThread(process, nullptr, 0, (LPTHREAD_START_ROUTINE)LoadLibraryW, remoteData, 0, nullptr)) WaitForSingleObject(thread, INFINITE);
+					else if (GetLastError() == ERROR_ACCESS_DENIED) AddConsoleOutput(NEED_64_BIT); // https://stackoverflow.com/questions/16091141/createremotethread-access-denied
 					VirtualFreeEx(process, remoteData, 0, MEM_RELEASE);
 					return;
 				}
