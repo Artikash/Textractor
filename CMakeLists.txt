@@ -13,7 +13,6 @@ add_compile_options(
   /D_UNICODE
 )
 
-
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
   set(CMAKE_FINAL_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/${CMAKE_BUILD_TYPE}_x64)
   set(LIBDIR x64libs)

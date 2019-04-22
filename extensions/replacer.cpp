@@ -24,11 +24,11 @@ public:
 		if (current != &root) current->value = replacement;
 	}
 
-	std::pair<int, std::optional<std::wstring>> Lookup(const std::wstring& text)
+	std::pair<int, std::optional<std::wstring>> Lookup(const std::wstring& text) const
 	{
 		std::pair<int, std::optional<std::wstring>> result = {};
 		int length = 0;
-		Node* current = &root;
+		const Node* current = &root;
 		for (auto ch : text)
 		{
 			if (Ignore(ch))

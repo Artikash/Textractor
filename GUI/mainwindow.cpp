@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
 #include "extenwindow.h"
@@ -135,6 +135,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	});
 	if (process == "???") return;
 
+	// This does add (potentially tons of) duplicates to the file, but as long as I don't perform Ω(N^2) operations it shouldn't be an issue
 	QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
 
 	QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
@@ -310,9 +311,8 @@ void MainWindow::SaveHooks()
 			}
 		}
 		auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
-		TextThread& current = Host::GetThread(ParseTextThreadString(ui->ttCombo->currentText()));
-		if (current.tp.processId == GetSelectedProcessId())
-			hookInfo << QString("|%1:%2:%3").arg(current.tp.ctx).arg(current.tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(current.tp), current.tp.processId)));
+		ThreadParam tp = current.load()->tp;
+		if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(tp), tp.processId)));
 		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 	}
 }
