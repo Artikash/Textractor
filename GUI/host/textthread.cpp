@@ -55,6 +55,8 @@ void TextThread::Push(BYTE* data, int length)
 
 void TextThread::Flush()
 {
+	if (storage->size() > 10'000'000) storage->erase(0, 8'000'000); // https://github.com/Artikash/Textractor/issues/127#issuecomment-486882983
+
 	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
 	for (auto& sentence : sentences)
