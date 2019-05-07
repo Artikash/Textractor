@@ -5763,15 +5763,15 @@ int GetShinaRioVersion()
   if (hFile != INVALID_HANDLE_VALUE)  {
     //char *buffer,*version;//,*ptr;
     enum { BufferSize = 0x40 };
-    char buffer[BufferSize];
+	char buffer[BufferSize]{};
 	DWORD DUMMY;
     ReadFile(hFile, buffer, BufferSize, &DUMMY, nullptr);
     CloseHandle(hFile);
-    if (buffer[0] == '[') {
+    //if (buffer[0] == '[') {
       buffer[0x3f] = 0; // jichi 8/24/2013: prevent strstr from overflow
       if (char *version = ::strstr(buffer, "v2."))
         ::sscanf(version + 3, "%d", &ret); // +3 to skip "v2."
-    }
+    //}
   }
   return ret;
 }
