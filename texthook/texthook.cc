@@ -326,8 +326,10 @@ int TextHook::GetLength(uintptr_t base, uintptr_t in)
 int TextHook::HookStrlen(BYTE* data)
 {
 	BYTE* orig = data;
-	for (int nullsRemaining = hp.null_length ? hp.null_length : hp.type & USING_UNICODE ? 2 : 1; nullsRemaining >= 0; ++data)
+	int nulls = hp.null_length ? hp.null_length : hp.type & USING_UNICODE ? 2 : 1;
+	for (int nullsRemaining = nulls; nullsRemaining >= 0; ++data)
 		if (*data == 0) nullsRemaining -= 1;
+		else nullsRemaining = nulls;
 	return data - orig;
 }
 
