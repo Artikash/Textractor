@@ -13,8 +13,10 @@ add_executable(${PROJECT_NAME} WIN32
 	Textractor.rc
 	Textractor.ico
 )
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:RelWithDebInfo>:/GL>)
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets shell32 winhttp $<$<CONFIG:RelWithDebInfo>:-LTCG>)
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets shell32 winhttp)
 
-
-install_qt5_libs(${PROJECT_NAME}) # can be commented out for consecutive builds
+if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Core.dll)
+	if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Cored.dll)
+		install_qt5_libs(${PROJECT_NAME})
+	endif()
+endif()

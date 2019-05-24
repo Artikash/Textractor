@@ -8,7 +8,7 @@
       "inheritEnvironments": [ "msvc_x86" ]
     },
     {
-      "name": "x86-Release",
+      "name": "x86-RelWithDebInfo",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
       "inheritEnvironments": [ "msvc_x86" ]
@@ -20,7 +20,7 @@
       "inheritEnvironments": [ "msvc_x64" ]
     },
     {
-      "name": "x64-Release",
+      "name": "x64-RelWithDebInfo",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
       "inheritEnvironments": [ "msvc_x64" ]

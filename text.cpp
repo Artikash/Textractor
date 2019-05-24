@@ -1,10 +1,5 @@
 ﻿#include "defs.h"
 
-//#define TURKISH
-//#define SPANISH
-//#define SIMPLIFIED_CHINESE
-//#define RUSSIAN
-
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
@@ -12,7 +7,7 @@ const char* ADD_HOOK = u8"Add hook";
 const char* SAVE_HOOKS = u8"Save hook(s)";
 const char* SETTINGS = u8"Settings";
 const char* EXTENSIONS = u8"Extensions";
-const char* SELECT_PROCESS = u8"Select Process";
+const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
 You can also type in the process id)";
 const char* SEARCH_GAME = u8"Select from computer";
@@ -33,6 +28,7 @@ S/Q/V: codepage/UTF-16/UTF-8 string
 null_length: length of null terminator used for string
 Negatives for data/split offset refer to registers
 -4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
+-4 for RAX, -C for RBX, -14 for RCX, -1C for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
 const char* SAVE_SETTINGS = u8"Save settings";
 const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) files here from your computer to add them
@@ -57,8 +53,8 @@ If you like this project, please tell everyone about it :))";
 const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
-const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
-const wchar_t* NEED_64_BIT = L"Textractor: architecture mismatch: try 64 bit Textractor instead (contact Artikash for the download location)";
+const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: try x86 Textractor instead";
+const wchar_t* NEED_64_BIT = L"Textractor: architecture mismatch: try x64 Textractor instead";
 const wchar_t* INJECT_FAILED = L"Textractor: couldn't inject";
 const wchar_t* LAUNCH_FAILED = L"Textractor: couldn't launch";
 const wchar_t* INVALID_CODE = L"Textractor: invalid code";
