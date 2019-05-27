@@ -1,5 +1,11 @@
 ﻿#include "defs.h"
 
+#ifdef _WIN64
+#define ARCH "x64"
+#else
+#define ARCH "x86"
+#endif
+
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
@@ -20,13 +26,13 @@ R{S|Q|V}[null_length<][codepage#][*deref_offset]@addr
 OR
 Enter hook code
 H{A|B|W|S|Q|V}[null_length<][N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
-All numbers except codepage in hexadecimal
+All numbers except codepage/null_length in hexadecimal
 Default codepage is 932 (Shift-JIS) but this can be changed in settings
 A/B: codepage char little/big endian
 W: UTF-16 char
 S/Q/V: codepage/UTF-16/UTF-8 string
 null_length: length of null terminator used for string
-Negatives for data/split offset refer to registers
+Negatives for data_offset/split_offset refer to registers
 -4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
 -4 for RAX, -C for RBX, -14 for RCX, -1C for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
@@ -42,7 +48,7 @@ const char* FLUSH_DELAY = u8"Flush Delay";
 const char* MAX_BUFFER_SIZE = u8"Max Buffer Size";
 const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
-const wchar_t* ABOUT = L"Textractor v" CURRENT_VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
+const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
 Project homepage: https://github.com/Artikash/Textractor
 Tutorial video: https://www.youtube.com/watch?v=eecEOacF6mw
 Please contact me with any problems, feature requests, or questions relating to Textractor
@@ -53,8 +59,8 @@ If you like this project, please tell everyone about it :))";
 const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
-const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: try x86 Textractor instead";
-const wchar_t* NEED_64_BIT = L"Textractor: architecture mismatch: try x64 Textractor instead";
+const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: only Textractor x86 can inject this process";
+const wchar_t* NEED_64_BIT = L"Textractor: architecture mismatch: only Textractor x64 can inject this process";
 const wchar_t* INJECT_FAILED = L"Textractor: couldn't inject";
 const wchar_t* LAUNCH_FAILED = L"Textractor: couldn't launch";
 const wchar_t* INVALID_CODE = L"Textractor: invalid code";
@@ -72,7 +78,7 @@ const char* SEND_ERROR = u8"Textractor: Send ERROR (likely an incorrect H-code)"
 const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code)";
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
-const char* SELECT_LANGUAGE = u8"Select Language";
+const char* SELECT_LANGUAGE = u8"Select language";
 const char* BING_PROMPT = u8"What language should Bing translate to?";
 const char* GOOGLE_PROMPT = u8"What language should Google translate to?";
 const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
@@ -129,12 +135,12 @@ inline auto _ = []
 	SAVE_HOOKS = u8"Kancaları kaydet";
 	SETTINGS = u8"Ayarlar";
 	EXTENSIONS = u8"Uzantılar";
-	SELECT_PROCESS = u8"İşlem Seçin";
+	SELECT_PROCESS = u8"İşlem seçin";
 	ATTACH_INFO = u8"Bağlanmak istediğiniz işlemi görmüyorsanız yönetici olarak çalıştırmayı deneyin";
 	DEFAULT_CODEPAGE = u8"Varsayılan Kod Sayfası";
 	FLUSH_DELAY = u8"Temizleme Gecikmesi";
 	MAX_BUFFER_SIZE = u8"Maksimum Arabellek Boyu";
-	ABOUT = L"Textractor v" CURRENT_VERSION LR"( (proje ana sayfası: https://github.com/Artikash/Textractor)
+	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( (proje ana sayfası: https://github.com/Artikash/Textractor)
 Benim tarafımdan yapıldı: Artikash (e-posta: akashmozumdar@gmail.com)
 Textractor ile ilgili tüm sorunlarınız, istekleriniz ve sorularınız için lütfen benimle iletişime geçin
 Benimle, proje ana sayfasından (“issues” kısmından) ya da e-posta aracılığıyla iletişime geçebilirsiniz
@@ -169,22 +175,6 @@ Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut
 También puedes escribir la ID del proceso)";
 	SEARCH_GAME = u8"Seleccionar desde computadora";
 	PROCESSES = u8"Procesos (*.exe)";
-	CODE_INFODUMP = u8R"(Buscar texto
-S[codepage#]texto
-O
-Ingresar código de lectura
-R{S|Q|V}[codepage#][*deref_offset]@addr
-O
-Ingresar hook code (H-code)
-H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
-Todos los números excepto codepage en hexedécimal
-Codepage por defecto es 932 (Shift-JIS) pero se puede cambiar en opciones
-A/B: codepage char little/big endian
-W: UTF-16 char
-S/Q/V: codepage/UTF-16/UTF-8 string
-Negatives for data/split offset refer to registers
--4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
-* means dereference pointer+deref_offset)";
 	SAVE_SETTINGS = u8"Guardar opciones";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arrrastra y suelta la extension (.dll) aquí desde tu computadora para añadirlos
 Arrastra y suelta la lista para reordenar
@@ -195,7 +185,7 @@ Presiona supr en una extension seleccionada para removerla)";
 	MAX_BUFFER_SIZE = u8"Max Buffer Size";
 	CONSOLE = L"Consola";
 	CLIPBOARD = L"Portapapeles";
-	ABOUT = L"Textractor v" CURRENT_VERSION LR"( hecho por mí: Artikash (correo: akashmozumdar@gmail.com)
+	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( hecho por mí: Artikash (correo: akashmozumdar@gmail.com)
 Página del proyecto: https://github.com/Artikash/Textractor
 Video tutorial: https://www.youtube.com/watch?v=eecEOacF6mw
 No dudes en conectarme si tienes algún problema, petición de característica o preguntas relacionadas con Textractor
@@ -204,7 +194,6 @@ Código fuente disponible bajo GPLv3 en la página del proyecto
 Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contratando ingenieros de software de EE.UU.)";
 	UPDATE_AVAILABLE = L"Actualización disponible: descárguela en https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: ya inyectado";
-	NEED_32_BIT = L"Textractor: architecture mismatch: try 32 bit Textractor instead";
 	INJECT_FAILED = L"Textractor: no se puede inyectar";
 	LAUNCH_FAILED = L"Textractor: no se puede iniciar";
 	INVALID_CODE = L"Textractor: código inválido";
@@ -251,22 +240,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 也可以手动输入进程ID)";
 	SEARCH_GAME = u8"从计算机中选择";
 	PROCESSES = u8"进程 (*.exe)";
-	CODE_INFODUMP = u8R"(搜索文本
-S[codepage#]text
-或
-输入 read 码 (R码)
-R{S|Q|V}[codepage#][*deref_offset]@addr
-或
-输入 hook 码 (H码)
-H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
-除代码页外，所有的数字都必须使用16进制
-默认代码页为 932 (Shift-JIS) 但可以通过设置修改
-A/B: 代码页字符为小端 (little endian) / 大端 (big endian)
-W: UTF-16 字符
-S/Q/V: 代码页/UTF-16/UTF-8 字符串
-负数对应相对于寄存器的数据 (data) / 分割 (split) 偏移
--4 对应 EAX, -8 对应 ECX, -C 对应 EDX, -10 对应 EBX, -14 对应 ESP, -18 对应 EBP, -1C 对应 ESI, -20 对应 EDI
-* 意味着解引用 pointer+deref_offset)";
 	SAVE_SETTINGS = u8"保存设置";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(从计算机拖拽扩展 (.dll) 文件到这里来添加
 (如果使用超级管理员运行，则无法工作)
@@ -278,7 +251,7 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 	MAX_BUFFER_SIZE = u8"最大缓冲区长度";
 	CONSOLE = L"控制台";
 	CLIPBOARD = L"剪贴板";
-	ABOUT = L"Textractor v" CURRENT_VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
+	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
 项目主页: https://github.com/Artikash/Textractor
 教程视频: https://www.youtube.com/watch?v=eecEOacF6mw
 如果有任何关于 Textractor 的困难，功能请求或问题，请联系我
@@ -287,7 +260,7 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 我目前正在寻找新的工作: 如果你知道在美国招聘软件工程师岗位的人，请给我发邮件)";
 	UPDATE_AVAILABLE = L"有可用的更新: 请从 https://github.com/Artikash/Textractor/releases 下载";
 	ALREADY_INJECTED = L"Textractor: 已经注入";
-	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用 32 位的 Textractor";
+	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用 Textractor x86";
 	INJECT_FAILED = L"Textractor: 无法注入";
 	LAUNCH_FAILED = L"Textractor: 无法启动";
 	INVALID_CODE = L"Textractor: 无效代码";
@@ -334,22 +307,6 @@ S/Q/V: 代码页/UTF-16/UTF-8 字符串
 Вы также можете ввести id процесса)";
 	SEARCH_GAME = u8"Найти в проводнике";
 	PROCESSES = u8"Процессы (*.exe)";
-	CODE_INFODUMP = u8R"(Искать текст
-S[codepage#]текст
-ИЛИ
-Введите код чтения (R-code)
-R{S|Q|V}[codepage#][*deref_offset]@addr
-ИЛИ
-Введите код хука (H-code)
-H{A|B|W|S|Q|V}[N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
-Все числа, кроме кодовой страницы в шестнадцатеричном формате
-Кодировка по умолчанию 932 (Shift-JIS), но она может быть изменена в настройках
-A/B: codepage char little/big endian
-W: UTF-16 char
-S/Q/V: codepage/UTF-16/UTF-8 string
-Отрицательное для data/split офсетов, ссылающихся на регистры
--4 для EAX, -8 для ECX, -C для EDX, -10 для EBX, -14 для ESP, -18 для EBP, -1C для ESI, -20 для EDI
-* значит dereference pointer+deref_offset)";
 	SAVE_SETTINGS = u8"Сохранить настройки";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Перетащите сюда (.dll) файлы расширений из проводника для их добавления
 (Не работает при запуске от администратора)
@@ -362,7 +319,7 @@ S/Q/V: codepage/UTF-16/UTF-8 string
 	MAX_BUFFER_SIZE = u8"Максимальный размер буфера";
 	CONSOLE = L"Консоль";
 	CLIPBOARD = L"Буфер обмена";
-	ABOUT = L"Textractor в." CURRENT_VERSION LR"( автор: Artikash (email: akashmozumdar@gmail.com)
+	ABOUT = L"Textractor " ARCH L" в." VERSION LR"( автор: Artikash (email: akashmozumdar@gmail.com)
 Домашняя страница: https://github.com/Artikash/Textractor
 Обучающее видео: https://www.youtube.com/watch?v=eecEOacF6mw
 Сообщайте о любых проблемах, желаемых для добавления функциях, или задавайте вопросы, касающиеся Textractor
@@ -373,7 +330,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
-	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте 32-битный Textractor вместо этого";
+	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте Textractor x86 вместо этого";
 	INJECT_FAILED = L"Textractor: невозможно присоединиться";
 	LAUNCH_FAILED = L"Textractor: невозможно запустить";
 	INVALID_CODE = L"Textractor: неверный код";
