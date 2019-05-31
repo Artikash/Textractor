@@ -407,7 +407,7 @@ end)";
 	EXTENSIONS = u8"Ekstensi";
 	SELECT_PROCESS = u8"Pilih Proses";
 	ATTACH_INFO = u8R"(Jika kamu tidak dapat melihat proses yang akan ditempelkan, coba menjalankan dengan mode administrator
-	Kamu juga dapat mengetik process id game yang akan ditempel)";
+Kamu juga dapat mengetik process id game yang akan ditempel)";
 	SEARCH_GAME = u8"Pilih dari komputer";
 	PROCESSES = u8"Proses (*.exe)";
 	SAVE_SETTINGS = u8"Simpan pengaturan";
