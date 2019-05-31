@@ -461,7 +461,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	TOPMOST = u8"Selalu berada di atas";
 	REGEX_FILTER = u8"Filter regex";
 	INVALID_REGEX = u8"Regex tidak sesuai";
-	CURRENT_FILTER = u8": Regex yang digunakan sekarang: ";
+	CURRENT_FILTER = u8"Regex yang digunakan sekarang: ";
 #endif // INDONESIAN
 	return 0;
 }();
