@@ -19,6 +19,14 @@
 #include <cstdint>
 #include <cassert>
 
+#ifdef _WIN64
+constexpr bool x64 = true;
+#else
+constexpr bool x64 = false;
+#endif
+
+#define MESSAGE(text) MessageBoxW(NULL, text, L"Textractor", MB_OK)
+
 template <typename T> using Array = T[];
 
 template<typename E, typename M = std::mutex>

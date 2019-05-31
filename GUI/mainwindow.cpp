@@ -108,7 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
 						char buffer[1000] = {};
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 1000, &bytesRead);
-						if (abs(strstr(buffer, "/tag/") - strstr(buffer, CURRENT_VERSION)) > 10) Host::AddConsoleOutput(UPDATE_AVAILABLE);
+						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) MESSAGE(UPDATE_AVAILABLE);
 					}
 	}).detach();
 }
@@ -326,8 +326,7 @@ void MainWindow::Settings()
 		{
 			auto settings = new QSettings(CONFIG_FILE, QSettings::IniFormat, this);
 			auto layout = new QFormLayout(this);
-			auto save = new QPushButton(this);
-			save->setText(SAVE_SETTINGS);
+			auto save = new QPushButton(SAVE_SETTINGS, this);
 			layout->addWidget(save);
 			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
 				{ Host::defaultCodepage, DEFAULT_CODEPAGE },
