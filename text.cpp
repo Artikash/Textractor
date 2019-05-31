@@ -412,7 +412,9 @@ Kamu juga dapat mengetik process id game yang akan ditempel)";
 	PROCESSES = u8"Proses (*.exe)";
 	SAVE_SETTINGS = u8"Simpan pengaturan";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop file ekstensi (.dll) kedalam sini dari komputer kamu untuk menambah ekstensi
-(Tidak bekerja dalam mode administrator)";
+(Tidak bekerja dalam mode administrator)
+Drag and drop ekstensi di dalam list untuk mengatur list
+Tekan delete pada ekstensi yang dipilih untuk menghapus ekstensi)";
 	USE_JP_LOCALE = u8"Gunakan locale jepang?";
 	DEFAULT_CODEPAGE = u8"Codepage standar";
 	FLUSH_DELAY = u8"Flush Delay";
@@ -459,7 +461,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	TOPMOST = u8"Selalu berada di atas";
 	REGEX_FILTER = u8"Filter regex";
 	INVALID_REGEX = u8"Regex tidak sesuai";
-	CURRENT_FILTER = u8": Regex yang digunakan sekarang";
+	CURRENT_FILTER = u8": Regex yang digunakan sekarang: ";
 #endif // INDONESIAN
 	return 0;
 }();
