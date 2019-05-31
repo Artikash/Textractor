@@ -12,6 +12,7 @@ foreach ($language in @{
 	SIMPLIFIED_CHINESE="简体中文";
 	RUSSIAN="Русский";
 	TURKISH="Türkçe";
+	INDONESIAN="Bahasa";
 }.GetEnumerator())
 {
 	$folder = "Textractor-$($language.Value)-$version";
