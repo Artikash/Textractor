@@ -46,35 +46,35 @@ Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahka
 
 ## Compiling
 
-Before compiling *Textractor*, you should get Visual Studio with CMake support, as well as Qt version 5.11<br>
-You should then be able to simply open the folder in Visual Studio, and build. Run Textractor.exe.
+Sebelum melakukan proses compile *Textractor*, kamu harus memiliki Visual Studio dengan dukungan Cmake, juga dengan Qt version 5.11<br>
+Lalu kamu dapat membuka folder di Visual Studio, dan build. Run Textractor.exe.
 
 
-## Project Architecture
+## Arsitektur Project
 
-The host (see GUI/host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
-Host writes to hostPipe, texthook writes to hookPipe.<br>
-texthook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
-Additional information about hooks is exchanged via shared memory.<br>
-The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI.<br>
-Finally, the GUI dispatches the text to extensions before displaying it.
+Host (lihat folder GUI/host) menginject texthook.dll (dibuat dari folder texthook) kedalam target process dan disambungkan lewat 2 file pipe.<br>
+Host menulis ke hostPipe, texthook menulis ke hookPipe.<br>
+texthook menunggu pipe tersambung, lalu menginject beberapa instruksi ke teks yang menghasilkan fungsi (contoh: TextOut, GetGlyphOutline) yang membuat input dikirim melewati pipa.<br>
+Informasi tambahan tentang hook dipindahkan melewati shared memory.<br>
+Text yang diterima host melewati pipe lalu diproses lagi sebelum dikembalikan ke GUI.<br>
+Dan pada akhirnya, GUI melepas text ke ekstensi sebelum menampilkan teks.
 
-## Developers
+## Pengembang
 
-If you're on this list and want your link changed let me know.
-- Textractor made by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
-- Spanish translation by [scese250](https://github.com/scese250)
-- Turkish translation by niisokusu
-- Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
-- Russian translation by [TokcDK](https://github.com/TokcDK)
-- ITHVNR updated by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
-- ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- VNR engine made by [jichi](https://archive.is/prJwr)
-- ITH updated by [Andys](https://github.com/AndyScull)
-- ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
-- Locale Emulator library made by [xupefei](https://github.com/xupefei)
-- MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
+Jika kamu berada di list ini dan ingin link kamu diganti, beritahu saya.
+- Textractor dibuat oleh saya [Saya](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- Terjemahan bahasa Spanyol oleh [scese250](https://github.com/scese250)
+- Terjemahan bahasa Turki oleh niisokusu
+- Terjemahan bahasa Mandarin oleh [tinyAdapter](https://github.com/tinyAdapter)
+- Terjemahan bahasa Rusia oleh [TokcDK](https://github.com/TokcDK)
+- ITHVNR diperbaharui oleh [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- ITHVNR dibuat oleh [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
+- VNR engine dibuat oleh [jichi](https://archive.is/prJwr)
+- ITH diperbaharui oleh [Andys](https://github.com/AndyScull)
+- ITH dibuat oleh [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
+- Locale Emulator library dibuat oleh [xupefei](https://github.com/xupefei)
+- MinHook library dibuat oleh [TsudaKageyu](https://github.com/TsudaKageyu)
 
 ## Special Thanks
 
-- Everybody adding issues!
+- Semua yang berkontribusi pada bagian Issues!
