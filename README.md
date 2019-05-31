@@ -2,8 +2,7 @@
 
 ![How it looks](screenshot.png)
 
-[Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) ● [Русский](https://github.com/Artikash/Textractor/blob/master/README_RU.md) ● [Bahasa](https://github.com/Artikash/Textractor/blob/master/README_ID.md)
+[Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md)
 
 **Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a quick rundown on using it.
@@ -14,11 +13,11 @@ Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a quick rundown on 
 
 Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Try running vc_redist.x86.exe if you get an error when starting Textractor.
+Try running vc_redist if you get an error when starting Textractor.
 
 ## Features
 
-- Highly extensible
+- Highly extensible and customizable
 - Auto hook many game engines (including some not supported by VNR!)
 - Hook text using /H "hook" codes (most AGTH codes supported)
 - Directly extract text using /R "read" codes
@@ -61,6 +60,7 @@ If you're on this list and want your link changed let me know.
 - Turkish translation by niisokusu
 - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
 - Russian translation by [TokcDK](https://github.com/TokcDK)
+- Indonesian translation by [Hawxone](https://github.com/Hawxone)
 - ITHVNR updated by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
 - ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine made by [jichi](https://archive.is/prJwr)
