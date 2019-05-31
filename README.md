@@ -3,7 +3,7 @@
 ![How it looks](screenshot.png)
 
 [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) ● [Русский](https://github.com/Artikash/Textractor/blob/master/README_RU.md) ● [Bahasa](https://github.com/Artikash/Textractor/blob/master/README_RU.md)
+[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) ● [Русский](https://github.com/Artikash/Textractor/blob/master/README_RU.md) ● [Bahasa](https://github.com/Artikash/Textractor/blob/master/README_ID.md)
 
 **Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Watch the [tutorial video](https://youtu.be/eecEOacF6mw) for a quick rundown on using it.
