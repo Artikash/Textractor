@@ -63,7 +63,7 @@ struct : QMainWindow
 		};
 		connect(loadButton, &QPushButton::clicked, [=](bool)
 		{
-			++revCount;
+			revCount += 1;
 			script->assign(scriptEditor->toPlainText().toUtf8());
 			save();
 		});
@@ -103,8 +103,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	thread_local static std::unique_ptr<lua_State, Functor<lua_close>> L_(luaL_newstate());
-	thread_local static lua_State* L = L_.get();
+	thread_local static struct { std::unique_ptr<lua_State, Functor<lua_close>> L{ luaL_newstate() }; operator lua_State*() { return L.get(); } } L;
 	thread_local static auto _ = (luaL_openlibs(L), luaL_dostring(L, "function ProcessSentence() end"));
 	thread_local static int revCount = 0;
 
@@ -114,7 +113,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		luaL_dostring(L, "ProcessSentence = nil");
 		if (luaL_dostring(L, script->c_str()) != LUA_OK)
 		{
-			sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, 1, nullptr));
+			sentence += L"\n" + FormatWideString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)).c_str());
 			lua_settop(L, 0);
 			return logErrors;
 		}
@@ -122,7 +121,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	if (lua_getglobal(L, "ProcessSentence") != LUA_TFUNCTION)
 	{
-		sentence += NEWLINE + LUA_ERROR + L"ProcessSentence is not a function";
+		sentence += L"\n" + FormatWideString(LUA_ERROR, L"ProcessSentence is not a function");
 		lua_settop(L, 0);
 		return logErrors;
 	}
@@ -136,7 +135,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	}
 	if (lua_pcallk(L, 2, 1, 0, NULL, NULL) != LUA_OK)
 	{
-		sentence += NEWLINE + LUA_ERROR + StringToWideString(lua_tolstring(L, 1, nullptr));
+		sentence += L"\n" + FormatWideString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)).c_str());
 		lua_settop(L, 0);
 		return logErrors;
 	}

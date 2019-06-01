@@ -72,14 +72,33 @@ private:
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
+#pragma warning(push)
+#pragma warning(disable: 4996)
+template <typename... Args>
+inline std::string FormatString(const char* format, Args... args)
+{
+	std::string buffer(snprintf(nullptr, 0, format, args...), '\0');
+	sprintf(buffer.data(), format, args...);
+	return buffer;
+}
+
+template <typename... Args>
+inline std::wstring FormatWideString(const wchar_t* format, Args... args)
+{
+	std::wstring buffer(_snwprintf(nullptr, 0, format, args...), L'\0');
+	_swprintf(buffer.data(), format, args...);
+	return buffer;
+}
+#pragma warning(pop)
+
 #ifdef _DEBUG
-#define TEST(...) inline auto TEST__RUNNER__DUMMY = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
+#define TEST(...) inline auto TEST_RUNNER_DUMMY = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
 #else
 #define TEST(...)
 #endif
 
 #ifdef _DEBUG
-#define TEST_SYNC(...) inline auto TEST__RUNNER__DUMMY = std::invoke([] { __VA_ARGS__; return 0UL; }); 
+#define TEST_SYNC(...) inline auto TEST_RUNNER_DUMMY = [] { __VA_ARGS__; return 0UL; }(); 
 #else
 #define TEST_SYNC(...)
 #endif

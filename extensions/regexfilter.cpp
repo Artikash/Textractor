@@ -28,7 +28,7 @@ struct : QMainWindow
 			std::lock_guard l(m);
 			try { regex = newRegex.toStdWString(); }
 			catch (...) { return output->setText(INVALID_REGEX); }
-			output->setText(CURRENT_FILTER + newRegex);
+			output->setText(QString(CURRENT_FILTER).arg(newRegex));
 		});
 		resize(350, 60);
 		setCentralWidget(centralWidget);

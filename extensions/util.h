@@ -6,7 +6,7 @@ class RateLimiter
 {
 public:
 	RateLimiter(int requests, int delay) : requestsLeft(requests), delay(delay) {}
-	bool Request() { CreateTimerQueueTimer(&DUMMY, timerQueue, [](void* This, BOOLEAN) { ++((RateLimiter*)This)->requestsLeft; }, this, delay, 0, 0); return --requestsLeft > 0; }
+	bool Request() { CreateTimerQueueTimer(&DUMMY, timerQueue, [](void* This, BOOLEAN) { ((RateLimiter*)This)->requestsLeft += 1; }, this, delay, 0, 0); return --requestsLeft > 0; }
 	int delay;
 
 private:
@@ -28,5 +28,3 @@ inline std::string WideStringToString(const std::wstring& text)
 	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer.data(), buffer.size(), nullptr, nullptr);
 	return buffer.data();
 }
-
-inline const std::wstring NEWLINE = L"\n";

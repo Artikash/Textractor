@@ -111,10 +111,10 @@ function ProcessSentence(sentence, sentenceInfo)
   --Your code here...
 end)";
 const char* LOAD_LUA_SCRIPT = u8"Load Script";
-const wchar_t* LUA_ERROR = L"Lua error: ";
+const wchar_t* LUA_ERROR = L"Lua error: %s";
 const char* REGEX_FILTER = u8"Regex Filter";
 const char* INVALID_REGEX = u8"Invalid regex";
-const char* CURRENT_FILTER = u8"Currently filtering: ";
+const char* CURRENT_FILTER = u8"Currently filtering: %1";
 const wchar_t* REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Replacer" extension is used.
 Replacement commands must be formatted like this:
 |ORIG|original_text|BECOMES|replacement_text|END|
@@ -224,7 +224,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	TOPMOST = u8"Siempre visible";
 	REGEX_FILTER = u8"Filtro Regex";
 	INVALID_REGEX = u8"Regex inválido";
-	CURRENT_FILTER = u8"Actualmente filtrando: ";
+	CURRENT_FILTER = u8"Actualmente filtrando: %1";
 #endif // SPANISH
 
 #ifdef SIMPLIFIED_CHINESE
@@ -291,7 +291,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	TOPMOST = u8"总是位于最上层";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
-	CURRENT_FILTER = u8"当前过滤中: ";
+	CURRENT_FILTER = u8"当前过滤中: %1";
 #endif // SIMPLIFIED_CHINESE
 
 #ifdef RUSSIAN
@@ -381,10 +381,10 @@ function ProcessSentence(sentence, sentenceInfo)
   --Ваш код здесь...
 end)";
 	LOAD_LUA_SCRIPT = u8"Загрузить скрипт";
-	LUA_ERROR = L"Ошибка Lua: ";
+	LUA_ERROR = L"Ошибка Lua: %s";
 	REGEX_FILTER = u8"Фильтр Regex";
 	INVALID_REGEX = u8"Неверный regex";
-	CURRENT_FILTER = u8"Сейчас фильтруется: ";
+	CURRENT_FILTER = u8"Сейчас фильтруется: %1";
 	REPLACER_INSTRUCTIONS = LR"(Этот файл делает что-то только когда используется расширение "Replacer".
 Команды для замены должны выглядеть так:
 |ORIG|текст_оригинала|BECOMES|текст_замены|END|
