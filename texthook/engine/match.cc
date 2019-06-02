@@ -2,15 +2,9 @@
 // 8/9/2013 jichi
 // Branch: ITH_Engine/engine.cpp, revision 133
 
-#ifdef _MSC_VER
-# pragma warning (disable:4100)   // C4100: unreference formal parameter
-//# pragma warning (disable:4733)   // C4733: Inline asm assigning to 'FS:0' : handler not registered as safe handler
-#endif // _MSC_VER
-
 #include "engine/match.h"
 #include "engine/engine.h"
 #include "engine/native/pchooks.h"
-#include "util/growl.h"
 #include "util/util.h"
 #include "main.h"
 #include "ithsys/ithsys.h"
@@ -455,8 +449,8 @@ bool DetermineEngineByFile4()
 bool DetermineEngineByProcessName()
 {
   WCHAR str[MAX_PATH];
-  wcscpy(str, processName);
-  _wcslwr(str); // lower case
+  wcscpy_s(str, processName);
+  _wcslwr_s(str); // lower case
 
   if (wcsstr(str,L"reallive") || Util::CheckFile(L"Reallive.exe") || Util::CheckFile(L"REALLIVEDATA\\Start.ini")) {
     InsertRealliveHook();
@@ -541,8 +535,8 @@ bool DetermineEngineByProcessName()
   }
 
   // This must appear at last since str is modified
-  wcscpy(str + len - 4, L"_checksum.exe");
-  if (Util::CheckFile(str)) {
+  //wcscpy(str + len - 4, L"_checksum.exe");
+  if (Util::CheckFile(L"*_checksum.exe")) {
     InsertRyokuchaHook();
 
     if (Util::CheckFile(L"*.iar") && Util::CheckFile(L"*.sec5")) // jichi 9/27/2014: For new Ryokucha games

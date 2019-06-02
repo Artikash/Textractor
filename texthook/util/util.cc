@@ -6,7 +6,6 @@
 #include "util/util.h"
 #include "ithsys/ithsys.h"
 #include "main.h"
-#include "growl.h"
 
 namespace { // unnamed
 
@@ -215,7 +214,7 @@ bool CheckFile(LPCWSTR name)
 	wchar_t path[MAX_PATH * 2];
 	wchar_t* end = path + GetModuleFileNameW(nullptr, path, MAX_PATH);
 	while (*(--end) != L'\\');
-	wcscpy(end + 1, name);
+	wcscpy_s(end + 1, MAX_PATH, name);
 	file = FindFirstFileW(path, &unused);
 	if (file != INVALID_HANDLE_VALUE)
 	{

@@ -36,6 +36,7 @@ private:
 	void DetachProcess();
 	void AddHook();
 	void SaveHooks();
+	void FindHooks();
 	void Settings();
 	void Extensions();
 	void ViewThread(int index);

@@ -48,6 +48,11 @@ namespace
 			}).detach();
 		}
 
+		Host::HookEventHandler OnHookFound = [](HookParam hp, DWORD processId, const std::wstring& text)
+		{
+			Host::AddConsoleOutput(Util::GenerateCode(hp, 0) + L": " + text);
+		};
+
 	private:
 		DWORD processId;
 		HANDLE pipe;
@@ -100,6 +105,17 @@ namespace
 			while (ReadFile(hookPipe, buffer, PIPE_BUFFER_SIZE, &bytesRead, nullptr))
 				switch (*(HostNotificationType*)buffer)
 				{
+				case HOST_NOTIFICATION_FOUND_HOOK:
+				{
+					auto info = *(HookFoundNotif*)buffer;
+					auto& OnHookFound = processRecordsByIds->at(processId).OnHookFound;
+					OnHookFound(info.hp, processId, info.text);
+					info.hp.type = USING_STRING;
+					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage)) if (converted->size() > 12) OnHookFound(info.hp, processId, converted.value());
+					info.hp.codepage = CP_UTF8;
+					if (auto converted = Util::StringToWideString((char*)info.text, CP_UTF8)) if (converted->size() > 12) OnHookFound(info.hp, processId, converted.value());
+				}
+				break;
 				case HOST_NOTIFICATION_RMVHOOK:
 				{
 					auto info = *(HookRemovedNotif*)buffer;
@@ -204,6 +220,12 @@ namespace Host
 	void InsertHook(DWORD processId, HookParam hp)
 	{
 		processRecordsByIds->at(processId).Send(InsertHookCmd(hp));
+	}
+
+	void FindHooks(DWORD processId, SearchParam sp, HookEventHandler HookFound)
+	{
+		if (HookFound) processRecordsByIds->at(processId).OnHookFound = HookFound;
+		processRecordsByIds->at(processId).Send(FindHookCmd(sp));
 	}
 
 	HookParam GetHookParam(ThreadParam tp)

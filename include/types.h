@@ -58,6 +58,14 @@ struct ThreadParam
 	uint64_t ctx2;  // The subcontext of the hook: 0 by default, generated in a method specific to the hook
 };
 
+struct SearchParam
+{
+	BYTE pattern[25] = {}; // pattern in memory to search for
+	int length, // length of pattern
+		offset = 0, // offset from start of pattern to add hook
+		searchTime = 30000; // ms
+	uintptr_t minAddress = 0, maxAddress = (uintptr_t)-1LL;
+};
 
 struct InsertHookCmd // From host
 {
@@ -66,14 +74,29 @@ struct InsertHookCmd // From host
 	HookParam hp;
 };
 
-struct ConsoleOutputNotif // From hook
+struct FindHookCmd // From host
+{
+	FindHookCmd(SearchParam sp) : sp(sp) {}
+	HostCommandType command = HOST_COMMAND_FIND_HOOK;
+	SearchParam sp;
+};
+
+struct ConsoleOutputNotif // From dll
 {
 	ConsoleOutputNotif(std::string message = "") { strncpy_s(this->message, message.c_str(), MESSAGE_SIZE - 1); }
 	HostNotificationType command = HOST_NOTIFICATION_TEXT;
 	char message[MESSAGE_SIZE] = {};
 };
 
-struct HookRemovedNotif // From hook
+struct HookFoundNotif // From dll
+{
+	HookFoundNotif(HookParam hp, wchar_t* text) : hp(hp) { wcsncpy_s(this->text, text, MESSAGE_SIZE - 1); }
+	HostNotificationType command = HOST_NOTIFICATION_FOUND_HOOK;
+	HookParam hp;
+	wchar_t text[MESSAGE_SIZE] = {}; // though type is wchar_t, may not be encoded in UTF-16 (it's just convenient to use wcs* functions)
+};
+
+struct HookRemovedNotif // From dll
 {
 	HookRemovedNotif(uint64_t address) : address(address) {};
 	HostNotificationType command = HOST_NOTIFICATION_RMVHOOK;

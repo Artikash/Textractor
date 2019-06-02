@@ -6,6 +6,7 @@
 #include <shellapi.h>
 #include <winhttp.h>
 #include <QFormLayout>
+#include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSpinBox>
@@ -18,6 +19,7 @@ extern const char* LAUNCH;
 extern const char* DETACH;
 extern const char* ADD_HOOK;
 extern const char* SAVE_HOOKS;
+extern const char* FIND_HOOKS;
 extern const char* SETTINGS;
 extern const char* EXTENSIONS;
 extern const char* SELECT_PROCESS;
@@ -25,6 +27,15 @@ extern const char* ATTACH_INFO;
 extern const char* SEARCH_GAME;
 extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
+extern const char* HOOH_SEARCH_UNSTABLE_WARNING;
+extern const char* SEARCH_PATTERN;
+extern const char* SEARCH_DURATION;
+extern const char* PATTERN_OFFSET;
+extern const char* MIN_ADDRESS;
+extern const char* MAX_ADDRESS;
+extern const char* START_HOOK_SEARCH;
+extern const char* SAVE_SEARCH_RESULTS;
+extern const char* TEXT_FILES;
 extern const char* SAVE_SETTINGS;
 extern const char* USE_JP_LOCALE;
 extern const char* FILTER_REPETITION;
@@ -49,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ DETACH, &MainWindow::DetachProcess },
 		{ ADD_HOOK, &MainWindow::AddHook },
 		{ SAVE_HOOKS, &MainWindow::SaveHooks },
+		{ "Find hooks", &MainWindow::FindHooks },
 		{ SETTINGS, &MainWindow::Settings },
 		{ EXTENSIONS, &MainWindow::Extensions }
 	})
@@ -315,6 +327,74 @@ void MainWindow::SaveHooks()
 		if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(tp), tp.processId)));
 		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 	}
+}
+
+void MainWindow::FindHooks()
+{
+	QMessageBox::information(this, FIND_HOOKS, HOOH_SEARCH_UNSTABLE_WARNING);
+	struct : QDialog
+	{
+		using QDialog::QDialog;
+		void launch()
+		{
+			auto layout = new QFormLayout(this);
+			auto patternInput = new QLineEdit("8B FF 55 8B EC", this);
+			layout->addRow(SEARCH_PATTERN, patternInput);
+			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
+				{ sp.searchTime, SEARCH_DURATION },
+				{ sp.offset, PATTERN_OFFSET },
+			})
+			{
+				auto spinBox = new QSpinBox(this);
+				spinBox->setMaximum(INT_MAX);
+				spinBox->setValue(value);
+				layout->addRow(label, spinBox);
+				connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [=, &value] { value = spinBox->value(); });
+			}
+			for (auto[value, label] : Array<std::tuple<uintptr_t&, const char*>>{
+				{ sp.minAddress, MIN_ADDRESS },
+				{ sp.maxAddress, MAX_ADDRESS },
+			})
+			{
+				auto input = new QLineEdit(QString::number(value, 16), this);
+				layout->addRow(label, input);
+				connect(input, &QLineEdit::textEdited, [&value](QString input)
+				{
+					bool ok;
+					if (uintptr_t newValue = input.toULongLong(&ok, 16); ok) value = newValue;
+				});
+			}			
+			auto save = new QPushButton(START_HOOK_SEARCH, this);
+			layout->addWidget(save);
+			connect(save, &QPushButton::clicked, this, &QDialog::accept);
+			connect(save, &QPushButton::clicked, [this, patternInput]
+			{
+				QByteArray pattern = QByteArray::fromHex(patternInput->text().toUtf8());
+				if (pattern.size() < 3) return;
+				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
+				auto hooks = std::make_shared<QString>();
+				Host::FindHooks(processId, sp, [hooks](HookParam hp, DWORD processId, const std::wstring& text)
+				{
+					hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
+				});
+				QString fileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
+				if (fileName.isEmpty()) fileName = "Hooks.txt";
+				std::thread([hooks, fileName]
+				{
+					for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
+					QTextFile(fileName, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
+					hooks->clear();
+				}).detach();	
+			});
+			setWindowTitle(FIND_HOOKS);
+			exec();
+		}
+
+		SearchParam sp = {};
+		DWORD processId;
+	} searchDialog(this, Qt::WindowCloseButtonHint);
+	searchDialog.processId = GetSelectedProcessId();
+	searchDialog.launch();
 }
 
 void MainWindow::Settings()
