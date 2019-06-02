@@ -9,6 +9,7 @@
 
 void TextOutput(ThreadParam tp, BYTE* text, int len);
 void ConsoleOutput(LPCSTR text, ...);
+void NotifyHookFound(uint64_t addr, int offset, wchar_t* text);
 void NotifyHookRemove(uint64_t addr, LPCSTR name);
 void NewHook(HookParam hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 void RemoveHook(uint64_t addr, int maxOffset = 9);
@@ -48,8 +49,13 @@ extern "C" // minhook library
 	MH_STATUS WINAPI MH_EnableHook(LPVOID pTarget);
 	MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget);
 	MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget);
+	MH_STATUS WINAPI MH_QueueEnableHook(LPVOID pTarget);
+	MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget);
+	MH_STATUS WINAPI MH_ApplyQueued(VOID);
 	const char* WINAPI MH_StatusToString(MH_STATUS status);
 }
+
+#define MH_ALL_HOOKS NULL
 
 #define ITH_RAISE  (*(int*)0 = 0) // raise C000005, for debugging only
 #define ITH_TRY    __try

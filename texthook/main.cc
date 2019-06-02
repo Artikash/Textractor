@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "engine/match.h"
 #include "texthook.h"
+#include "hookfinder.h"
 #include "util.h"
 
 extern const char* PIPE_CONNECTED;
@@ -14,6 +15,7 @@ extern const char* INSERTING_HOOK;
 extern const char* REMOVING_HOOK;
 extern const char* HOOK_FAILED;
 extern const char* TOO_MANY_HOOKS;
+extern const char* STARTING_SEARCH;
 extern const char* NOT_ENOUGH_TEXT;
 extern const char* COULD_NOT_FIND;
 
@@ -63,6 +65,12 @@ DWORD WINAPI Pipe(LPVOID)
 				NewHook(info.hp, "UserHook", 0);
 			}
 			break;
+			case HOST_COMMAND_FIND_HOOK:
+			{
+				auto info = *(FindHookCmd*)buffer;
+				SearchForHooks(info.sp);
+			}
+			break;
 			case HOST_COMMAND_DETACH:
 			{
 				running = false;
@@ -91,7 +99,17 @@ void ConsoleOutput(LPCSTR text, ...)
 	ConsoleOutputNotif buffer;
 	va_list args;
 	va_start(args, text);
-	vsprintf_s<MESSAGE_SIZE>(buffer.message, text, args);
+	vsnprintf(buffer.message, MESSAGE_SIZE, text, args);
+	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+}
+
+void NotifyHookFound(uint64_t addr, int offset, wchar_t* text)
+{
+	HookParam hp = {};
+	hp.offset = offset;
+	hp.type = USING_UNICODE | USING_STRING;
+	hp.address = addr;
+	HookFoundNotif buffer(hp, text);
 	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
 }
 
@@ -144,6 +162,7 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		char codepageText[MAX_MODULE_SIZE * 4] = {};
 		WideCharToMultiByte(hp.codepage, 0, hp.text, MAX_MODULE_SIZE, codepageText, MAX_MODULE_SIZE * 4, nullptr, nullptr);
 		if (strlen(utf8Text) < 8 || strlen(codepageText) < 8 || wcslen(hp.text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
+		ConsoleOutput(STARTING_SEARCH);
 		for (auto[addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
 			{ Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8 },
 			{ Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), USING_STRING },

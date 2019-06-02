@@ -7,6 +7,9 @@
 # pragma warning (disable:4819)
 #endif // _MSC_VER
 
+#define _SCL_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "engine/engine.h"
 #include "engine/match.h"
 #include "util/util.h"
@@ -19,7 +22,6 @@
 #include "disasm/disasm.h"
 #include "cpputil/cppcstring.h"
 #include "mono/monoobject.h"
-#include "growl.h"
 #include "const.h"
 #include "native/pchooks.h"
 //#include <boost/foreach.hpp>
@@ -16876,25 +16878,25 @@ bool InsertPPSSPPHooks()
 
   // http://stackoverflow.com/questions/940707/how-do-i-programatically-get-the-version-of-a-dll-or-exe-file
     // get the version info for the file requested
-	  if (DWORD dwSize = ::GetFileVersionInfoSizeW(processPath, nullptr)) {
-	  UINT len = 0;
-	  BYTE * buf = new BYTE[dwSize];
-	  VS_FIXEDFILEINFO * info = nullptr;
-	  if (::GetFileVersionInfoW(processPath, 0, dwSize, buf)
-		   && ::VerQueryValueW(buf, L"\\", (LPVOID*)&info, &len)
-		   && info) 
-	  {
-		  PPSSPP_VERSION[0] = HIWORD(info->dwFileVersionMS),
-			  PPSSPP_VERSION[1] = LOWORD(info->dwFileVersionMS),
-			  PPSSPP_VERSION[2] = HIWORD(info->dwFileVersionLS),
-			  PPSSPP_VERSION[3] = LOWORD(info->dwFileVersionLS);
-		  
-	  } 
-	  else 
-		  ConsoleOutput("vnreng: failed to get PPSSPP version");
-	  delete[] buf;
-	  
-  }
+	 // if (DWORD dwSize = ::GetFileVersionInfoSizeW(processPath, nullptr)) {
+	 // UINT len = 0;
+	 // BYTE * buf = new BYTE[dwSize];
+	 // VS_FIXEDFILEINFO * info = nullptr;
+	 // if (::GetFileVersionInfoW(processPath, 0, dwSize, buf)
+		//   && ::VerQueryValueW(buf, L"\\", (LPVOID*)&info, &len)
+		//   && info) 
+	 // {
+		//  PPSSPP_VERSION[0] = HIWORD(info->dwFileVersionMS),
+		//	  PPSSPP_VERSION[1] = LOWORD(info->dwFileVersionMS),
+		//	  PPSSPP_VERSION[2] = HIWORD(info->dwFileVersionLS),
+		//	  PPSSPP_VERSION[3] = LOWORD(info->dwFileVersionLS);
+		//  
+	 // } 
+	 // else 
+		//  ConsoleOutput("vnreng: failed to get PPSSPP version");
+	 // delete[] buf;
+	 // 
+  //}
 
   InsertPPSSPPHLEHooks();
 
