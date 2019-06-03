@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent) :
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
 						DWORD bytesRead;
-						char buffer[1000] = {};
+						char buffer[2000] = {};
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 1000, &bytesRead);
 						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) MESSAGE(UPDATE_AVAILABLE);
