@@ -1,8 +1,5 @@
 #include "extension.h"
-#include <QMainWindow>
-#include <QLayout>
-#include <QLabel>
-#include <QLineEdit>
+#include "ui_regexfilter.h"
 #include <QTimer>
 
 extern const char* REGEX_FILTER;
@@ -16,25 +13,19 @@ struct : QMainWindow
 {
 	void launch()
 	{
-		auto centralWidget = new QWidget(this);
-		auto layout = new QVBoxLayout(centralWidget);
-		auto input = new QLineEdit(centralWidget);
-		auto output = new QLabel(centralWidget);
-		output->setAlignment(Qt::AlignCenter);
-		layout->addWidget(input);
-		layout->addWidget(output);
-		connect(input, &QLineEdit::textEdited, [=](QString newRegex) 
+		ui.setupUi(this);
+		connect(ui.input, &QLineEdit::textEdited, [=](QString newRegex) 
 		{
 			std::lock_guard l(m);
 			try { regex = newRegex.toStdWString(); }
-			catch (...) { return output->setText(INVALID_REGEX); }
-			output->setText(QString(CURRENT_FILTER).arg(newRegex));
+			catch (...) { return ui.output->setText(INVALID_REGEX); }
+			ui.output->setText(QString(CURRENT_FILTER).arg(newRegex));
 		});
-		resize(350, 60);
-		setCentralWidget(centralWidget);
 		setWindowTitle(REGEX_FILTER);
 		show();
 	}
+
+	Ui::FilterWindow ui;
 }*window = nullptr;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
