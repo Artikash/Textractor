@@ -27,7 +27,6 @@ namespace
 	TextHook (*hooks)[MAX_HOOK];
 	bool running;
 	int currentHook = 0;
-	DWORD DUMMY;
 }
 
 DWORD WINAPI Pipe(LPVOID)
@@ -91,7 +90,7 @@ void TextOutput(ThreadParam tp, BYTE* text, int len)
 	BYTE buffer[PIPE_BUFFER_SIZE] = {};
 	*(ThreadParam*)buffer = tp;
 	memcpy(buffer + sizeof(tp), text, len);
-	WriteFile(hookPipe, buffer, sizeof(tp) + len, &DUMMY, nullptr);
+	WriteFile(hookPipe, buffer, sizeof(tp) + len, DUMMY, nullptr);
 }
 
 void ConsoleOutput(LPCSTR text, ...)
@@ -100,7 +99,7 @@ void ConsoleOutput(LPCSTR text, ...)
 	va_list args;
 	va_start(args, text);
 	vsnprintf(buffer.message, MESSAGE_SIZE, text, args);
-	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+	WriteFile(hookPipe, &buffer, sizeof(buffer), DUMMY, nullptr);
 }
 
 void NotifyHookFound(uint64_t addr, int offset, wchar_t* text)
@@ -110,14 +109,14 @@ void NotifyHookFound(uint64_t addr, int offset, wchar_t* text)
 	hp.type = USING_UNICODE | USING_STRING;
 	hp.address = addr;
 	HookFoundNotif buffer(hp, text);
-	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+	WriteFile(hookPipe, &buffer, sizeof(buffer), DUMMY, nullptr);
 }
 
 void NotifyHookRemove(uint64_t addr, LPCSTR name)
 {
 	if (name) ConsoleOutput(REMOVING_HOOK, name);
 	HookRemovedNotif buffer(addr);
-	WriteFile(hookPipe, &buffer, sizeof(buffer), &DUMMY, nullptr);
+	WriteFile(hookPipe, &buffer, sizeof(buffer), DUMMY, nullptr);
 }
 
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)

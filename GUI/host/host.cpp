@@ -43,8 +43,7 @@ namespace
 			static_assert(sizeof(data) < PIPE_BUFFER_SIZE);
 			std::thread([=]
 			{
-				DWORD DUMMY;
-				WriteFile(pipe, &data, sizeof(data), &DUMMY, nullptr);
+				WriteFile(pipe, &data, sizeof(data), DUMMY, nullptr);
 			}).detach();
 		}
 

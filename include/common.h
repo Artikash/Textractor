@@ -72,6 +72,13 @@ private:
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
+inline struct
+{
+	BYTE DUMMY[100];
+	template <typename T> 
+	operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
+} DUMMY;
+
 #pragma warning(push)
 #pragma warning(disable: 4996)
 template <typename... Args>

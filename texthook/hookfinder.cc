@@ -25,7 +25,6 @@ namespace
 	uint64_t addressCharCache[CACHE_SIZE] = {};
 	long sumCache[CACHE_SIZE] = {};
 
-	DWORD DUMMY;
 #ifndef _WIN64
 	BYTE trampoline[32] =
 	{
@@ -171,7 +170,7 @@ void SearchForHooks(SearchParam sp)
 		}), addresses.end());
 		*(void**)(trampoline + send_offset) = Send;
 		auto trampolines = (decltype(trampoline)*)VirtualAlloc(NULL, sizeof(trampoline) * addresses.size(), MEM_COMMIT, PAGE_READWRITE);
-		VirtualProtect(trampolines, addresses.size() * sizeof(trampoline), PAGE_EXECUTE_READWRITE, &DUMMY);
+		VirtualProtect(trampolines, addresses.size() * sizeof(trampoline), PAGE_EXECUTE_READWRITE, DUMMY);
 		for (int i = 0; i < addresses.size(); ++i)
 		{
 			void* original;

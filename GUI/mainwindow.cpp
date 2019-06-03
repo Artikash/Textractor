@@ -92,9 +92,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	current = &Host::GetThread(Host::console);
 	Host::AddConsoleOutput(ABOUT);
 
-	DWORD DUMMY;
 	AttachConsole(ATTACH_PARENT_PROCESS);
-	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), CL_OPTIONS, wcslen(CL_OPTIONS), &DUMMY, NULL);
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), CL_OPTIONS, wcslen(CL_OPTIONS), DUMMY, NULL);
 	std::vector<DWORD> processIds = Util::GetAllProcessIds();
 	std::vector<std::wstring> processNames;
 	for (auto processId : processIds) processNames.emplace_back(Util::GetModuleFilename(processId).value_or(L""));
@@ -116,10 +115,9 @@ MainWindow::MainWindow(QWidget *parent) :
 				if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
 					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
 					{
-						DWORD bytesRead;
-						char buffer[2000] = {};
+						char buffer[1000] = {};
 						WinHttpReceiveResponse(request, NULL);
-						WinHttpReadData(request, buffer, 1000, &bytesRead);
+						WinHttpReadData(request, buffer, 1000, DUMMY);
 						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) MESSAGE(UPDATE_AVAILABLE);
 					}
 	}).detach();

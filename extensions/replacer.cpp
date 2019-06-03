@@ -1,7 +1,6 @@
 ﻿#include "extension.h"
 #include <cwctype>
 #include <fstream>
-#include <atomic>
 #include <filesystem>
 #include <process.h>
 

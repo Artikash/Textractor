@@ -6,11 +6,10 @@ class RateLimiter
 {
 public:
 	RateLimiter(int requests, int delay) : requestsLeft(requests), delay(delay) {}
-	bool Request() { CreateTimerQueueTimer(&DUMMY, timerQueue, [](void* This, BOOLEAN) { ((RateLimiter*)This)->requestsLeft += 1; }, this, delay, 0, 0); return --requestsLeft > 0; }
+	bool Request() { CreateTimerQueueTimer(DUMMY, timerQueue, [](void* This, BOOLEAN) { ((RateLimiter*)This)->requestsLeft += 1; }, this, delay, 0, 0); return --requestsLeft > 0; }
 	int delay;
 
 private:
-	inline static HANDLE DUMMY;
 	std::atomic<int> requestsLeft;
 	AutoHandle<Functor<DeleteTimerQueue>> timerQueue = CreateTimerQueue();
 };
