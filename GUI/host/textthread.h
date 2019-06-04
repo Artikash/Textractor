@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "types.h"
-#include <deque>
 
 class TextThread
 {

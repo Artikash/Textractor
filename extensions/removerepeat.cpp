@@ -1,5 +1,23 @@
 ﻿#include "extension.h"
 
+void RemoveRepeatedSentences(std::wstring& sentence, uint64_t textNumber)
+{
+	static std::deque<ThreadSafe<std::vector<std::wstring>>> cache;
+	static std::mutex m;
+	m.lock();
+	if (textNumber + 1 > cache.size()) cache.resize(textNumber + 1);
+	auto[lock, prevSentences] = cache.at(textNumber).operator->();
+	m.unlock();
+	auto& inserted = prevSentences->emplace_back(sentence);
+	auto firstLocation = std::find(prevSentences->begin(), prevSentences->end(), sentence);
+	if (&*firstLocation != &inserted)
+	{
+		prevSentences->erase(firstLocation);
+		sentence.clear();
+	}
+	if (prevSentences->size() > 50) prevSentences->erase(prevSentences->begin());
+}
+
 void RemoveRepeatedChars(std::wstring& sentence)
 {
 	std::vector<int> repeatNumbers(sentence.size() + 1, 0);
@@ -63,6 +81,7 @@ void RemoveCyclicRepeats(std::wstring& sentence)
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (sentenceInfo["text number"] == 0) return false;
+	RemoveRepeatedSentences(sentence, sentenceInfo["text number"]);
 	RemoveRepeatedChars(sentence);
 	RemoveCyclicRepeats(sentence);
 	return true;
