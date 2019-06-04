@@ -23,7 +23,7 @@ void TextThread::Stop()
 
 void TextThread::AddSentence(std::wstring&& sentence)
 {
-	queuedSentences.push(std::move(sentence));
+	queuedSentences->emplace_back(std::move(sentence));
 }
 
 void TextThread::Push(BYTE* data, int length)
@@ -63,8 +63,9 @@ void TextThread::Flush()
 {
 	if (storage->size() > 10'000'000) storage->erase(0, 8'000'000); // https://github.com/Artikash/Textractor/issues/127#issuecomment-486882983
 
-	std::wstring sentence;
-	while (queuedSentences.try_pop(sentence))
+	std::deque<std::wstring> sentences;
+	queuedSentences->swap(sentences);
+	for (auto& sentence : sentences)
 	{
 		sentence.erase(std::remove(sentence.begin(), sentence.end(), L'\0'));
 		if (Output(*this, sentence)) storage->append(sentence);

@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <deque>
 #include <array>
 #include <unordered_map>
 #include <unordered_set>

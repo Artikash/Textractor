@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "types.h"
-#include <concurrent_queue.h>
+#include <deque>
 
 class TextThread
 {
@@ -37,7 +37,7 @@ private:
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	DWORD lastPushTime = 0;
-	concurrency::concurrent_queue<std::wstring> queuedSentences;
+	ThreadSafe<std::deque<std::wstring>> queuedSentences;
 	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	AutoHandle<TimerDeleter> timer = NULL;
 };
