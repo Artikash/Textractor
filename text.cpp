@@ -64,7 +64,7 @@ const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
 const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
 Project homepage: https://github.com/Artikash/Textractor
-Tutorial video: https://www.youtube.com/watch?v=eecEOacF6mw
+Tutorial video: https://tinyurl.com/textractor-tutorial
 Please contact me with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
@@ -205,7 +205,7 @@ Presiona supr en una extension seleccionada para removerla)";
 	CLIPBOARD = L"Portapapeles";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( hecho por mí: Artikash (correo: akashmozumdar@gmail.com)
 Página del proyecto: https://github.com/Artikash/Textractor
-Video tutorial: https://www.youtube.com/watch?v=eecEOacF6mw
+Video tutorial: https://tinyurl.com/textractor-tutorial
 No dudes en conectarme si tienes algún problema, petición de característica o preguntas relacionadas con Textractor
 Puedes hacerlo en la página del proyecto (en el apartado de "Issues") o por correo. Usa el inglés para comunicarte.
 Código fuente disponible bajo GPLv3 en la página del proyecto
@@ -271,7 +271,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	CLIPBOARD = L"剪贴板";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
 项目主页: https://github.com/Artikash/Textractor
-教程视频: https://www.youtube.com/watch?v=eecEOacF6mw
+教程视频: https://tinyurl.com/textractor-tutorial
 如果有任何关于 Textractor 的困难，功能请求或问题，请联系我
 可以通过项目主页 (问题区) 或通过邮件来联系
 项目主页提供基于 GPLv3 协议的源代码
@@ -339,7 +339,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	CLIPBOARD = L"Буфер обмена";
 	ABOUT = L"Textractor " ARCH L" в." VERSION LR"( автор: Artikash (email: akashmozumdar@gmail.com)
 Домашняя страница: https://github.com/Artikash/Textractor
-Обучающее видео: https://www.youtube.com/watch?v=eecEOacF6mw
+Обучающее видео: https://tinyurl.com/textractor-tutorial
 Сообщайте о любых проблемах, желаемых для добавления функциях, или задавайте вопросы, касающиеся Textractor
 Сделать это вы можете домашней странице (секция issues) или через электронную почту
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
@@ -441,7 +441,7 @@ Tekan delete pada ekstensi yang dipilih untuk menghapus ekstensi)";
 	CLIPBOARD = L"Papan clipboard";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( dibuat oleh saya: Artikash (email: akashmozumdar@gmail.com)
 Halaman project: https://github.com/Artikash/Textractor
-Video tutorial : https://www.youtube.com/watch?v=eecEOacF6mw
+Video tutorial : https://tinyurl.com/textractor-tutorial
 Tolong hubungi saya jika kamu memiliki masalah terkait masalah, permintaan fitur, atau pertanyaan terkait Textractor
 Kamu dapat melakukannya lewat halaman utama project (bagian issues) atau lewat email
 Source code tersedia dibawah lisensi GPLv3 di halaman utama project

@@ -1,6 +1,6 @@
 # Textractor
 
-## [Video tutorial](https://youtu.be/eecEOacF6mw)
+## [Video tutorial](https://tinyurl.com/textractor-tutorial)
 
 ## Descripción general
 

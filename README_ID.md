@@ -8,7 +8,7 @@
 
 
 **Textractor** (a.k.a NextHooker) adalah text hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Lihat [video tutorial](https://youtu.be/eecEOacF6mw) untuk mengetahui bagaimana cara menggunakannya.
+Lihat [video tutorial](https://tinyurl.com/textractor-tutorial) untuk mengetahui bagaimana cara menggunakannya.
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
 
