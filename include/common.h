@@ -27,25 +27,26 @@ constexpr bool x64 = false;
 #endif
 
 #define MESSAGE(text) MessageBoxW(NULL, text, L"Textractor", MB_OK)
+#define CRITIAL_SECTION static std::mutex m; std::scoped_lock l(m)
 
 template <typename T> using Array = T[];
 
 template<typename E, typename M = std::mutex>
-class ThreadSafe
+class Synchronized
 {
 public:
 	template <typename... Args>
-	ThreadSafe(Args&&... args) : contents(std::forward<Args>(args)...) {}
-	auto operator->()
+	Synchronized(Args&&... args) : contents(std::forward<Args>(args)...) {}
+
+	struct Locker
 	{
-		struct
-		{
-			E* operator->() { return ptr; }
-			std::unique_lock<M> lock;
-			E* ptr;
-		} lockedProxy{ std::unique_lock(mtx), &contents };
-		return lockedProxy;
-	}
+		E* operator->() { return ptr; }
+		std::unique_lock<M> lock;
+		E* ptr;
+	};
+
+	Locker Acquire() { return { std::unique_lock(mtx), &contents }; }
+	Locker operator->() { return Acquire(); }
 
 private:
 	E contents;

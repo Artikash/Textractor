@@ -64,8 +64,8 @@ namespace
 	{
 		return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2);
 	}
-	ThreadSafe<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
-	ThreadSafe<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
+	Synchronized<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
+	Synchronized<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
 
 	Host::ProcessEventHandler OnConnect, OnDisconnect;
 	Host::ThreadEventHandler OnCreate, OnDestroy;
@@ -130,6 +130,7 @@ namespace
 				default:
 				{
 					auto tp = *(ThreadParam*)buffer;
+					auto textThreadsByParams = ::textThreadsByParams.Acquire();
 					if (textThreadsByParams->count(tp) == 0)
 					{
 						TextThread& created = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first->second;

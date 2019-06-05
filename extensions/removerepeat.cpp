@@ -2,11 +2,11 @@
 
 void RemoveRepeatedSentences(std::wstring& sentence, uint64_t textNumber)
 {
-	static std::deque<ThreadSafe<std::vector<std::wstring>>> cache;
+	static std::deque<Synchronized<std::vector<std::wstring>>> cache;
 	static std::mutex m;
 	m.lock();
 	if (textNumber + 1 > cache.size()) cache.resize(textNumber + 1);
-	auto[lock, prevSentences] = cache.at(textNumber).operator->();
+	auto prevSentences = cache.at(textNumber).Acquire();
 	m.unlock();
 	auto& inserted = prevSentences->emplace_back(sentence);
 	auto firstLocation = std::find(prevSentences->begin(), prevSentences->end(), sentence);

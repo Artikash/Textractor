@@ -42,7 +42,7 @@ bool luaL_dostring(lua_State* L, const char* str)
 }
 
 bool logErrors = true;
-ThreadSafe<std::string> script;
+Synchronized<std::string> script;
 std::atomic<int> revCount = 0;
 
 struct : QMainWindow

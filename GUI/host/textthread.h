@@ -20,7 +20,7 @@ public:
 	void AddSentence(std::wstring&& sentence);
 	void Push(BYTE* data, int length);
 
-	ThreadSafe<std::wstring> storage;
+	Synchronized<std::wstring> storage;
 	const int64_t handle;
 	const std::wstring name;
 	const ThreadParam tp;
@@ -36,7 +36,7 @@ private:
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	DWORD lastPushTime = 0;
-	ThreadSafe<std::deque<std::wstring>> queuedSentences;
+	Synchronized<std::deque<std::wstring>> queuedSentences;
 	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	AutoHandle<TimerDeleter> timer = NULL;
 };
