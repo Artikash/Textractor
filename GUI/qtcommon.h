@@ -5,12 +5,9 @@
 #include <QVector>
 #include <QHash>
 #include <QMainWindow>
-#include <QDialog>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
-#include <QRegularExpression>
-#include <QSettings>
 
 struct QTextFile : QFile { QTextFile(QString name, QIODevice::OpenMode mode) : QFile(name) { open(mode | QIODevice::Text); } };
 inline std::wstring S(const QString& S) { return { S.toStdWString() }; }

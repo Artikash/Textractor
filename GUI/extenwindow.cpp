@@ -7,8 +7,12 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QLabel>
+#include <QMessageBox>
 
 extern const char* EXTENSIONS;
+extern const char* INVALID_EXTENSION;
+extern const char* CONFIRM_EXTENSION_OVERWRITE;
+extern const char* EXTENSION_WRITE_ERROR;
 extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 
 namespace
@@ -22,15 +26,19 @@ namespace
 	concurrency::reader_writer_lock extenMutex;
 	std::vector<Extension> extensions;
 
-	void Load(QString extenName)
+	bool Load(QString extenName)
 	{
-		if (extenName == ITH_DLL) return;
 		// Extension is dll and exports "OnNewSentence"
-		if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+		if (QTextFile(extenName + ".dll", QIODevice::ReadOnly).readAll().contains("OnNewSentence"))
 		{
-			std::scoped_lock writeLock(extenMutex);
-			extensions.push_back({ S(extenName), callback });
+			if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+			{
+				std::scoped_lock writeLock(extenMutex);
+				extensions.push_back({ S(extenName), callback });
+				return true;
+			}
 		}
+		return false;
 	}
 
 	void Unload(int index)
@@ -95,14 +103,6 @@ void ExtenWindow::Sync()
 	}
 }
 
-void ExtenWindow::Add(QFileInfo extenFile)
-{
-	if (extenFile.suffix() != "dll") return;
-	QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName());
-	Load(extenFile.completeBaseName());
-	Sync();
-}
-
 bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 {
 	// See https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215
@@ -132,5 +132,16 @@ void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void ExtenWindow::dropEvent(QDropEvent* event)
 {
-	for (auto file : event->mimeData()->urls()) Add(file.toLocalFile());
+	for (auto file : event->mimeData()->urls())
+	{
+		QFileInfo extenFile = file.toLocalFile();
+		if (extenFile.suffix() != "dll") continue;
+		if (QFile::exists(extenFile.fileName()) && extenFile.absolutePath() != QDir::currentPath())
+		{
+			if (QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
+			if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(this, EXTENSIONS, EXTENSION_WRITE_ERROR);
+		}
+		if (Load(extenFile.completeBaseName())) Sync();
+		else QMessageBox::information(this, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
+	}
 }

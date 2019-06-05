@@ -41,7 +41,11 @@ const char* SAVE_SETTINGS = u8"Save settings";
 const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) files here from your computer to add them
 (Does not work if running as administrator)
 Drag and drop within the list to reorder
+(Extensions are used from top to bottom: order DOES matter)
 Press delete with an extension selected to remove it)";
+const char* INVALID_EXTENSION = u8"%1 is an invalid extension";
+const char* CONFIRM_EXTENSION_OVERWRITE = u8"Another version of this extension already exists, do you want to delete and overwrite it?";
+const char* EXTENSION_WRITE_ERROR = u8"Failed to save extension";
 const char* USE_JP_LOCALE = u8"Emulate japanese locale?";
 extern const char* HOOH_SEARCH_UNSTABLE_WARNING = u8"Searching for hooks is unstable! Be prepared for your game to crash!";
 extern const char* SEARCH_PATTERN = u8"Search pattern (hex byte array)";

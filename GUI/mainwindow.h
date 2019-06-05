@@ -3,6 +3,7 @@
 #include "qtcommon.h"
 #include "extenwindow.h"
 #include "host/host.h"
+#include <QSettings>
 
 namespace Ui
 {
