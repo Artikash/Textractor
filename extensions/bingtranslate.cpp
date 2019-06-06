@@ -113,7 +113,7 @@ std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std
 						// Response formatted as JSON: translation starts with :" and ends with "}
 						else if (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
 
-	Escape(translation);
+	Unescape(translation);
 	return translation;
 }
 

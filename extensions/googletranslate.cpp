@@ -159,7 +159,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 						{
 							for (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix())
 								translation += std::wstring(results[1]) + L" ";
-							Escape(translation);
+							Unescape(translation);
 						}
 						else
 						{

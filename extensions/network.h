@@ -24,7 +24,7 @@ inline std::optional<std::wstring> ReceiveHttpRequest(HINTERNET request)
 	return StringToWideString(data);
 }
 
-inline void Escape(std::wstring& text)
+inline void Unescape(std::wstring& text)
 {
 	for (int i = 0; i < text.size(); ++i)
 	{
@@ -37,3 +37,24 @@ inline void Escape(std::wstring& text)
 		}
 	}
 }
+
+
+class RateLimiter
+{
+public:
+	RateLimiter(int tokenCount, int delay) : tokenCount(tokenCount), delay(delay) {}
+
+	bool Request()
+	{
+		auto tokens = this->tokens.Acquire();
+		tokens->push_back(GetTickCount());
+		if (tokens->size() > tokenCount * 5) tokens->erase(tokens->begin(), tokens->begin() + tokenCount * 3);
+		tokens->erase(std::remove_if(tokens->begin(), tokens->end(), [this](DWORD token) { return GetTickCount() - token > delay; }), tokens->end());
+		return tokens->size() < tokenCount;
+	}
+
+	const int tokenCount, delay;
+
+private:
+	Synchronized<std::vector<DWORD>> tokens;
+};
