@@ -62,9 +62,9 @@ struct SearchParam
 {
 	BYTE pattern[25] = {}; // pattern in memory to search for
 	int length, // length of pattern
-		offset = 0, // offset from start of pattern to add hook
-		searchTime = 30000; // ms
-	uintptr_t minAddress = 0, maxAddress = (uintptr_t)-1LL;
+		offset, // offset from start of pattern to add hook
+		searchTime; // ms
+	uintptr_t minAddress, maxAddress;
 };
 
 struct InsertHookCmd // From host

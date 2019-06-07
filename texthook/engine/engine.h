@@ -8,7 +8,7 @@
 
 struct HookParam; // defined in ith types.h
 
-extern DWORD processStartAddress, processStopAddress;
+extern uintptr_t processStartAddress, processStopAddress;
 
 namespace Engine {
 
@@ -16,9 +16,13 @@ namespace Engine {
 extern wchar_t *processName, // cached
                processPath[MAX_PATH]; // cached
 
-//extern LPVOID trigger_addr;
-typedef bool (* trigger_fun_t)(LPVOID addr, DWORD frame, DWORD stack);
-extern trigger_fun_t trigger_fun_;
+/** jichi 12/24/2014
+	  *  @param  addr  function address
+	  *  @param  frame  real address of the function, supposed to be the same as addr
+	  *  @param  stack  address of current stack - 4
+	  *  @return  If success, which is reverted
+  */
+inline bool (*trigger_fun)(LPVOID addr, DWORD frame, DWORD stack);
 
 bool InsertMonoHooks(); // Mono
 

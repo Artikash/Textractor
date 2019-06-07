@@ -33,6 +33,7 @@ extern const char* SEARCH_DURATION;
 extern const char* PATTERN_OFFSET;
 extern const char* MIN_ADDRESS;
 extern const char* MAX_ADDRESS;
+extern const char* HOOK_SEARCH_FILTER;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
 extern const char* TEXT_FILES;
@@ -336,11 +337,11 @@ void MainWindow::FindHooks()
 		void launch()
 		{
 			auto layout = new QFormLayout(this);
-			auto patternInput = new QLineEdit("8B FF 55 8B EC", this);
+			auto patternInput = new QLineEdit(x64 ? "CC CC 48 89" : "CC CC 55 8B EC", this);
 			layout->addRow(SEARCH_PATTERN, patternInput);
 			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
-				{ sp.searchTime, SEARCH_DURATION },
-				{ sp.offset, PATTERN_OFFSET },
+				{ sp.searchTime = 20000, SEARCH_DURATION },
+				{ sp.offset = 2, PATTERN_OFFSET },
 			})
 			{
 				auto spinBox = new QSpinBox(this);
@@ -350,8 +351,8 @@ void MainWindow::FindHooks()
 				connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [=, &value] { value = spinBox->value(); });
 			}
 			for (auto[value, label] : Array<std::tuple<uintptr_t&, const char*>>{
-				{ sp.minAddress, MIN_ADDRESS },
-				{ sp.maxAddress, MAX_ADDRESS },
+				{ sp.minAddress = 0, MIN_ADDRESS },
+				{ sp.maxAddress = -1ULL, MAX_ADDRESS },
 			})
 			{
 				auto input = new QLineEdit(QString::number(value, 16), this);
@@ -361,19 +362,23 @@ void MainWindow::FindHooks()
 					bool ok;
 					if (uintptr_t newValue = input.toULongLong(&ok, 16); ok) value = newValue;
 				});
-			}			
+			}
+			auto filterInput = new QLineEdit(this);
+			layout->addRow(HOOK_SEARCH_FILTER, filterInput);
 			auto save = new QPushButton(START_HOOK_SEARCH, this);
 			layout->addWidget(save);
 			connect(save, &QPushButton::clicked, this, &QDialog::accept);
-			connect(save, &QPushButton::clicked, [this, patternInput]
+			connect(save, &QPushButton::clicked, [this, patternInput, filterInput]
 			{
-				QByteArray pattern = QByteArray::fromHex(patternInput->text().toUtf8());
+				QByteArray pattern = QByteArray::fromHex(patternInput->text().replace("??", "11").toUtf8());
 				if (pattern.size() < 3) return;
+				std::wregex filter(L".");
+				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error&) {};
 				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
 				auto hooks = std::make_shared<QString>();
-				Host::FindHooks(processId, sp, [hooks](HookParam hp, DWORD processId, const std::wstring& text)
+				Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, DWORD processId, const std::wstring& text)
 				{
-					hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
+					if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
 				});
 				QString fileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
 				if (fileName.isEmpty()) fileName = "Hooks.txt";

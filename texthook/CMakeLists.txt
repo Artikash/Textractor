@@ -5,6 +5,7 @@ set(texthook_src
   main.cc
   texthook.cc
   hookfinder.cc
+  engine/match.cc
   engine/match64.cc
   engine/native/pchooks.cc
   util/ithsys/ithsys.cc
@@ -17,6 +18,7 @@ set(texthook_src
   hookfinder.cc
   engine/engine.cc
   engine/match.cc
+  engine/match32.cc
   engine/native/pchooks.cc
   util/util.cc
   util/ithsys/ithsys.cc

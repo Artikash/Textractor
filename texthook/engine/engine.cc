@@ -1618,7 +1618,7 @@ bool InsertBGI1Hook()
 
   //ConsoleOutput("Probably BGI. Wait for text.");
   //SwitchTrigger(true);
-  //trigger_fun_=InsertBGIDynamicHook;
+  //trigger_fun=InsertBGIDynamicHook;
   ConsoleOutput("vnreng:BGI: failed");
   return false;
 }
@@ -2232,7 +2232,7 @@ void InsertRealliveHook()
 {
   //ConsoleOutput("Probably Reallive. Wait for text.");
   ConsoleOutput("vnreng: TRIGGER Reallive");
-  trigger_fun_ = InsertRealliveDynamicHook;
+  trigger_fun = InsertRealliveDynamicHook;
   SetTrigger();
 }
 
@@ -5787,7 +5787,7 @@ bool InsertShinaHook()
   int ver = GetShinaRioVersion();
   if (ver >= 50) {
 	  SetTrigger();
-	  trigger_fun_ = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
+	  trigger_fun = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
 	  ConsoleOutput("Textractor: ShinaRio 2.50+: adding trigger");
 	  return true;
   }
@@ -5960,7 +5960,7 @@ void InsertWaffleHook()
       return;
     }
   //ConsoleOutput("Probably Waffle. Wait for text.");
-  trigger_fun_ = InsertWaffleDynamicHook;
+  trigger_fun = InsertWaffleDynamicHook;
   SetTrigger();
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
@@ -7656,7 +7656,7 @@ bool InsertLiveDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 //void InsertLiveHook()
 //{
 //  ConsoleOutput("Probably Live. Wait for text.");
-//  trigger_fun_=InsertLiveDynamicHook;
+//  trigger_fun=InsertLiveDynamicHook;
 //  SwitchTrigger(true);
 //}
 bool InsertLiveHook()
@@ -8524,7 +8524,7 @@ bool InsertSystemAoiDynamic()
 {
   ConsoleOutput("vnreng: DYNAMIC SystemAoi");
   //ConsoleOutput("Probably SoftHouseChara. Wait for text.");
-  trigger_fun_ = InsertSystemAoiDynamicHook;
+  trigger_fun = InsertSystemAoiDynamicHook;
   SetTrigger();
   return true;
 }
@@ -8811,7 +8811,7 @@ bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 void InsertIronGameSystemHook()
 {
   //ConsoleOutput("Probably IronGameSystem. Wait for text.");
-  trigger_fun_ = InsertIGSDynamicHook;
+  trigger_fun = InsertIGSDynamicHook;
   SetTrigger();
   ConsoleOutput("vnreng: TRIGGER IronGameSystem");
 }
@@ -9448,7 +9448,7 @@ bool InsertRyokuchaDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 void InsertRyokuchaHook()
 {
   //ConsoleOutput("Probably Ryokucha. Wait for text.");
-  trigger_fun_ = InsertRyokuchaDynamicHook;
+  trigger_fun = InsertRyokuchaDynamicHook;
   SetTrigger();
   ConsoleOutput("vnreng: TRIGGER Ryokucha");
 }
@@ -16512,7 +16512,7 @@ void InsertMonoHook(HMODULE h)
 	Mono calling convention uses 'this' as first argument on stack
 	Must be dynamic hook bootstrapped from other mono api or mono_domain_get won't work
 	*/
-	trigger_fun_ = [](LPVOID addr, DWORD, DWORD)
+	trigger_fun = [](LPVOID addr, DWORD, DWORD)
 	{
 		static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
 		static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
