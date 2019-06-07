@@ -22,10 +22,9 @@ foreach ($language in @{
 	foreach ($arch in @("x86", "x64"))
 	{
 		cd $arch;
-		$cmakeArch = if ($arch -eq "x86") {""} else {" Win64"};
-		$vsArch = if ($arch -eq "x86") {"Win32"} else {"x64"};
-		cmake -G "Visual Studio 15 2017$cmakeArch" -DVERSION="$version" -DTEXT_LANGUAGE="$($language.Key)" -DCMAKE_BUILD_TYPE="Release" ../..;
-		&"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\devenv" Textractor.sln /build "Release|$vsArch";
+		$VS_arch = if ($arch -eq "x86") {"Win32"} else {"x64"};
+		cmake -G "Visual Studio 16 2019" -A"$VS_arch" -DVERSION="$version" -DTEXT_LANGUAGE="$($language.Key)" -DCMAKE_BUILD_TYPE="Release" ../..;
+		&"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv" Textractor.sln /build "Release|$VS_arch";
 		cd ..;
 		mkdir -Force -Verbose "$folder/$arch";
 		foreach ($file in @(

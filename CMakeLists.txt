@@ -25,6 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 
 include_directories(include)
 link_directories(${LIBDIR})
+file(GLOB LIBS ${LIBDIR}/*)
+file(COPY ${LIBS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 
 add_library(text text.cpp)
 target_compile_definitions(text PRIVATE ${TEXT_LANGUAGE})
