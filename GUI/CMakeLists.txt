@@ -2,7 +2,7 @@ include(QtUtils)
 msvc_registry_search()
 find_qt5(Core Widgets)
 
-add_executable(${PROJECT_NAME} WIN32 
+add_executable(Textractor WIN32 
 	main.cpp
 	mainwindow.cpp
     extenwindow.cpp
