@@ -102,12 +102,8 @@ void ConsoleOutput(LPCSTR text, ...)
 	WriteFile(hookPipe, &buffer, sizeof(buffer), DUMMY, nullptr);
 }
 
-void NotifyHookFound(uint64_t addr, int offset, wchar_t* text)
+void NotifyHookFound(HookParam hp, wchar_t* text)
 {
-	HookParam hp = {};
-	hp.offset = offset;
-	hp.type = USING_UNICODE | USING_STRING;
-	hp.address = addr;
 	HookFoundNotif buffer(hp, text);
 	WriteFile(hookPipe, &buffer, sizeof(buffer), DUMMY, nullptr);
 }

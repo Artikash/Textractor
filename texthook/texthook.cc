@@ -63,7 +63,10 @@ namespace { // unnamed
 		0x48, 0x8d, 0x94, 0x24, 0xa8, 0x00, 0x00, 0x00, // lea rdx,[rsp+0xa8]
 		0x48, 0xb9, 0,0,0,0,0,0,0,0, // mov rcx,@this
 		0x48, 0xb8, 0,0,0,0,0,0,0,0, // mov rax,@TextHook::Send
+		0x48, 0x89, 0xe3, // mov rbx,rsp
+		0x48, 0x83, 0xe4, 0xf0, // and rsp,0xfffffffffffffff0 ; align stack
 		0xff, 0xd0, // call rax
+		0x48, 0x89, 0xdc, // mov rsp,rbx
 		0xc5, 0xfa, 0x6f, 0x6c, 0x24, 0x10, // vmovdqu xmm5,XMMWORD PTR[rsp + 0x10]
 		0xc5, 0xfa, 0x6f, 0x24, 0x24, // vmovdqu xmm4,XMMWORD PTR[rsp]
 		0x48, 0x83, 0xc4, 0x20, // add rsp,0x20
@@ -87,7 +90,7 @@ namespace { // unnamed
 		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [0] ; relative to next instruction (i.e. jmp @original)
 		0,0,0,0,0,0,0,0 // @original
 	};
-	int this_offset = 50, send_offset = 60, original_offset = 116;
+	int this_offset = 50, send_offset = 60, original_offset = 126;
 #endif
 
 	bool trigger = false;
@@ -142,6 +145,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 				if (hp.type & SPLIT_INDIRECT) dwSplit = *(DWORD *)(dwSplit + hp.split_index);
 			}
 			if (hp.type & DATA_INDIRECT) dwDataIn = *(DWORD *)(dwDataIn + hp.index);
+			dwDataIn += hp.padding;
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
@@ -173,6 +177,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 		}
 		if (hp.type & DATA_INDIRECT) data = *(uintptr_t*)(data + hp.index);
 
+		data += hp.padding;
 		count = GetLength(dwDataBase, data);
 		if (count == 0) return;
 		if (count > TEXT_BUFFER_SIZE) count = TEXT_BUFFER_SIZE;
@@ -225,18 +230,15 @@ bool TextHook::InsertHookCode()
 	return MH_EnableHook(location) == MH_OK;
 }
 
-DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
+void TextHook::Read()
 {
-	TextHook* This = (TextHook*)hookPtr;
 	BYTE buffer[TEXT_BUFFER_SIZE] = {};
 	int changeCount = 0, dataLen = 1;
 	__try
 	{
-		uint64_t currentAddress = This->address;
-		while (WaitForSingleObject(This->readerEvent, 500) == WAIT_TIMEOUT)
+		while (WaitForSingleObject(readerEvent, 500) == WAIT_TIMEOUT)
 		{
-			if (This->hp.type & DATA_INDIRECT) currentAddress = *(uintptr_t*)This->address + This->hp.index;
-			if (memcmp(buffer, (void*)currentAddress, dataLen) == 0)
+			if (memcmp(buffer, location, dataLen) == 0)
 			{
 				changeCount = 0;
 				continue;
@@ -244,26 +246,25 @@ DWORD WINAPI TextHook::Reader(LPVOID hookPtr)
 			if (++changeCount > 10)
 			{
 				ConsoleOutput(GARBAGE_MEMORY);
-				This->Clear();
+				Clear();
 				break;
 			}
 
-			dataLen = min(This->HookStrlen((BYTE*)currentAddress), TEXT_BUFFER_SIZE);
-			memcpy(buffer, (void*)currentAddress, dataLen);
-			TextOutput({ GetCurrentProcessId(), This->address, 0, 0 }, buffer, dataLen);
+			dataLen = min(HookStrlen((BYTE*)location), TEXT_BUFFER_SIZE);
+			memcpy(buffer, location, dataLen);
+			TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
 		}
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
 		ConsoleOutput(READ_ERROR);
-		This->Clear();
+		Clear();
 	}
-	return 0;
 }
 
 bool TextHook::InsertReadCode()
 {
-	readerThread = CreateThread(nullptr, 0, Reader, this, 0, nullptr);
+	readerThread = CreateThread(nullptr, 0, [](void* This) { ((TextHook*)This)->Read(); return 0UL; }, this, 0, nullptr);
 	readerEvent = CreateEventW(nullptr, FALSE, FALSE, NULL);
 	return true;
 }

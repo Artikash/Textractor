@@ -22,7 +22,7 @@ bool CheckFile(LPCWSTR name);
 
 bool SearchResourceString(LPCWSTR str);
 
-std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect = PAGE_EXECUTE);
+std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect = PAGE_EXECUTE, uintptr_t minAddr = 0, uintptr_t maxAddr = -1ULL);
 
 } // namespace Util
 

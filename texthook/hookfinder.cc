@@ -11,22 +11,32 @@ extern WinMutex viewMutex;
 
 namespace
 {
+	SearchParam current;
+
 	constexpr int CACHE_SIZE = 500'000;
 	struct HookRecord
 	{
-		HookRecord() : address(0) {}
-		~HookRecord() { if (address) NotifyHookFound(address, offset, text); }
-		uint64_t address;
-		int offset;
-		wchar_t text[200];
+		~HookRecord()
+		{
+			if (!address) return;
+			HookParam hp = {};
+			hp.offset = offset;
+			hp.type = USING_UNICODE | USING_STRING;
+			hp.address = address;
+			hp.padding = current.padding;
+			NotifyHookFound(hp, (wchar_t*)text);
+		}
+		uint64_t address = 0;
+		int offset = 0;
+		char text[500] = {};
 	};
 	std::unique_ptr<HookRecord[]> records;
 	long recordsAvailable;
-	uint64_t addressCharCache[CACHE_SIZE] = {};
+	uint64_t signatureCache[CACHE_SIZE] = {};
 	long sumCache[CACHE_SIZE] = {};
 
 #ifndef _WIN64
-	BYTE trampoline[32] =
+	BYTE trampoline[] =
 	{
 		0x9c, // pushfd
 		0x60, // pushad
@@ -43,7 +53,7 @@ namespace
 	};
 	constexpr int addr_offset = 3, send_offset = 13, original_offset = 25, registers = 8;
 #else
-	BYTE trampoline[128] = {
+	BYTE trampoline[] = {
 		0x9c, // push rflags
 		0x50, // push rax
 		0x53, // push rbx
@@ -69,7 +79,10 @@ namespace
 		0x48, 0x8d, 0x8c, 0x24, 0xa8, 0x00, 0x00, 0x00, // lea rcx,[rsp+0xa8]
 		0x48, 0xba, 0,0,0,0,0,0,0,0, // mov rcx,@addr
 		0x48, 0xb8, 0,0,0,0,0,0,0,0, // mov rax,@Send
+		0x48, 0x89, 0xe3, // mov rbx,rsp
+		0x48, 0x83, 0xe4, 0xf0, // and rsp,0xfffffffffffffff0 ; align stack
 		0xff, 0xd0, // call rax
+		0x48, 0x89, 0xdc, // mov rsp,rbx
 		0xc5, 0xfa, 0x6f, 0x6c, 0x24, 0x10, // vmovdqu xmm5,XMMWORD PTR[rsp + 0x10]
 		0xc5, 0xfa, 0x6f, 0x24, 0x24, // vmovdqu xmm4,XMMWORD PTR[rsp]
 		0x48, 0x83, 0xc4, 0x20, // add rsp,0x20
@@ -93,11 +106,11 @@ namespace
 		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [0] ; relative to next instruction (i.e. jmp @original)
 		0,0,0,0,0,0,0,0 // @original
 	};
-	constexpr int addr_offset = 50, send_offset = 60, original_offset = 116, registers = 16;
+	constexpr int addr_offset = 50, send_offset = 60, original_offset = 126, registers = 16;
 #endif
 }
 
-void Send(wchar_t** stack, uintptr_t address)
+void Send(char** stack, uintptr_t address)
 {
 	// it is unsafe to call ANY external functions from this, as they may have been hooked (if called the hook would call this function making an infinite loop)
 	// the exceptions are compiler intrinsics like _InterlockedDecrement
@@ -105,16 +118,17 @@ void Send(wchar_t** stack, uintptr_t address)
 	for (int i = -registers; i < 6; ++i)
 	{
 		int length = 0, sum = 0;
-		__try { for (wchar_t* str = stack[i]; str[length] && length < 200; ++length) sum += str[length]; }
+		char* str = stack[i] + current.padding;
+		__try { for (; (str[length] || str[length + 1]) && length < 500; length += 2) sum += str[length] + str[length + 1]; }
 		__except (EXCEPTION_EXECUTE_HANDLER) {}
-		if (length > 7 && length < 199)
+		if (length > STRING && length < 499)
 		{
 			__try
 			{
-				// many duplicate results with same address and second character will be found: filter them out
-				uint64_t addressAndChar = (((uint64_t)stack[i][1]) << 48) | address;
-				if (addressCharCache[addressAndChar % CACHE_SIZE] == addressAndChar) continue;
-				addressCharCache[addressAndChar % CACHE_SIZE] = addressAndChar;
+				// many duplicate results with same address, offset, and third/fourth character will be found: filter them out
+				uint64_t signature = ((uint64_t)i << 56) | ((uint64_t)(str[2] + str[3]) << 48) | address;
+				if (signatureCache[signature % CACHE_SIZE] == signature) continue;
+				signatureCache[signature % CACHE_SIZE] = signature;
 				// if there are huge amount of strings that are the same, it's probably garbage: filter them out
 				// can't store all the strings, so use sum as heuristic instead
 				if (_InterlockedIncrement(sumCache + (sum % CACHE_SIZE)) > 25) continue;
@@ -127,8 +141,8 @@ void Send(wchar_t** stack, uintptr_t address)
 				if (n > 0)
 				{
 					records[n].address = address;
-					records[n].offset = i * sizeof(wchar_t*);
-					for (int j = 0; j < length; ++j) records[n].text[j] = stack[i][j];
+					records[n].offset = i * sizeof(char*);
+					for (int j = 0; j < length; ++j) records[n].text[j] = str[j];
 					records[n].text[length] = 0;
 				}
 			}
@@ -145,11 +159,10 @@ void SearchForHooks(SearchParam sp)
 		static std::mutex m;
 		std::scoped_lock lock(m);
 
-		try
-		{
-			records = std::make_unique<HookRecord[]>(recordsAvailable = CACHE_SIZE);
-		}
+		try { records = std::make_unique<HookRecord[]>(recordsAvailable = CACHE_SIZE); }
 		catch (std::bad_alloc&) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
+
+		current = sp;
 
 		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
 		uintptr_t moduleStopAddress = moduleStartAddress;
@@ -162,12 +175,9 @@ void SearchForHooks(SearchParam sp)
 		moduleStopAddress -= info.RegionSize;
 
 		ConsoleOutput(STARTING_SEARCH);
-		std::vector<uint64_t> addresses = Util::SearchMemory(sp.pattern, sp.length);
+		std::vector<uint64_t> addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress);
 		for (auto& addr : addresses) addr += sp.offset;
-		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr)
-		{
-			return (addr > moduleStartAddress && addr < moduleStopAddress) || addr > sp.maxAddress || addr < sp.minAddress;
-		}), addresses.end());
+		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr) { return addr > moduleStartAddress && addr < moduleStopAddress; }), addresses.end());
 		*(void**)(trampoline + send_offset) = Send;
 		auto trampolines = (decltype(trampoline)*)VirtualAlloc(NULL, sizeof(trampoline) * addresses.size(), MEM_COMMIT, PAGE_READWRITE);
 		VirtualProtect(trampolines, addresses.size() * sizeof(trampoline), PAGE_EXECUTE_READWRITE, DUMMY);
@@ -189,7 +199,7 @@ void SearchForHooks(SearchParam sp)
 		for (auto addr : addresses) MH_RemoveHook((void*)addr);
 		records.reset();
 		VirtualFree(trampolines, 0, MEM_RELEASE);
-		for (int i = 0; i < CACHE_SIZE; ++i) addressCharCache[i] = sumCache[i] = 0;
+		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = 0;
 		ConsoleOutput(HOOK_SEARCH_FINISHED, CACHE_SIZE - recordsAvailable);
 	}).detach();
 }

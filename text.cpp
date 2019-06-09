@@ -23,19 +23,21 @@ const char* CODE_INFODUMP = u8R"(Search for text
 S[codepage#]text
 OR
 Enter read code
-R{S|Q|V}[null_length<][codepage#][*deref_offset]@addr
+R{S|Q|V}[null_length<][codepage#]@addr
 OR
 Enter hook code
-H{A|B|W|S|Q|V}[null_length<][N][codepage#]data_offset[*deref_offset1][:split_offset[*deref_offset2]]@addr[:module[:func]]
+H{A|B|W|S|Q|V}[null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
 All numbers except codepage/null_length in hexadecimal
 Default codepage is 932 (Shift-JIS) but this can be changed in settings
 A/B: codepage char little/big endian
 W: UTF-16 char
 S/Q/V: codepage/UTF-16/UTF-8 string
+N: don't use context
 null_length: length of null terminator used for string
+padding: length of padding data before string (C struct { int64_t size; char string[500]; } needs padding = 8)
 Negatives for data_offset/split_offset refer to registers
 -4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
--4 for RAX, -C for RBX, -14 for RCX, -1C for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
+-C for RAX, -14 for RBX, -1C for RCX, -24 for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
 const char* SAVE_SETTINGS = u8"Save settings";
 const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop extension (.dll) files here from your computer to add them
@@ -53,6 +55,7 @@ const char* SEARCH_DURATION = u8"Search duration (ms)";
 const char* PATTERN_OFFSET = u8"Offset from pattern start";
 const char* MIN_ADDRESS = u8"Minimum address (hex)";
 const char* MAX_ADDRESS = u8"Maximum address (hex)";
+const char* STRING_OFFSET = u8"String offset (hex)";
 const char* HOOK_SEARCH_FILTER = u8"Results must match this regex";
 const char* START_HOOK_SEARCH = u8"Start hook search";
 const char* SAVE_SEARCH_RESULTS = u8"Save search results";

@@ -41,15 +41,6 @@ namespace
 			RCode.erase(0, match[0].length());
 		}
 
-		// [*deref_offset]
-		if (RCode[0] == L'0') RCode.erase(0, 1); // Legacy
-		if (std::regex_search(RCode, match, std::wregex(L"^\\*(-?[[:xdigit:]]+)")))
-		{
-			hp.type |= DATA_INDIRECT;
-			hp.index = std::stoi(match[1], nullptr, 16);
-			RCode.erase(0, match[0].length());
-		}
-
 		// @addr
 		if (!std::regex_match(RCode, match, std::wregex(L"@([[:xdigit:]]+)"))) return {};
 		hp.address = std::stoull(match[1], nullptr, 16);
@@ -132,6 +123,13 @@ namespace
 			HCode.erase(0, match[0].length());
 		}
 
+		// [padding+]
+		if (std::regex_search(HCode, match, std::wregex(L"^([[:xdigit:]]+)\\+")))
+		{
+			hp.padding = std::stoull(match[1], nullptr, 16);
+			HCode.erase(0, match[0].length());
+		}
+
 		// data_offset
 		if (!std::regex_search(HCode, match, std::wregex(L"^-?[[:xdigit:]]+"))) return {};
 		hp.offset = std::stoi(match[0], nullptr, 16);
@@ -206,8 +204,6 @@ namespace
 
 		RCode << std::uppercase << std::hex;
 
-		if (hp.type & DATA_INDIRECT) RCode << "*" << HexString(hp.index);
-
 		RCode << "@" << hp.address;
 
 		return RCode.str();
@@ -238,6 +234,8 @@ namespace
 		if (hp.codepage != 0 && !(hp.type & USING_UNICODE)) HCode << hp.codepage << "#";
 
 		HCode << std::uppercase << std::hex;
+
+		if (hp.padding) HCode << hp.padding << "+";
 
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
@@ -338,7 +336,7 @@ namespace Util
 		assert(StringToWideString(u8"こんにちは").value() == L"こんにちは"),
 		assert(ParseCode(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
 		assert(ParseCode(L"HB4@0")),
-		assert(ParseCode(L"/RS*10@44")),
+		assert(ParseCode(L"/RS65001#@44")),
 		assert(!ParseCode(L"HQ@4")),
 		assert(!ParseCode(L"/RW@44")),
 		assert(!ParseCode(L"/HWG@33"))

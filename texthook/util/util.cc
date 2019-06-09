@@ -301,7 +301,7 @@ bool SearchResourceString(LPCWSTR str)
   return false;
 }
 
-std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect)
+std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect, uintptr_t minAddr, uintptr_t maxAddr)
 {
 	SYSTEM_INFO systemInfo;
 	GetNativeSystemInfo(&systemInfo);
@@ -316,15 +316,16 @@ std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protec
 		}
 		else
 		{
-			if (info.Protect >= protect && !(info.Protect & PAGE_GUARD)) validMemory.push_back({ (uint64_t)info.BaseAddress, info.RegionSize });
+			if ((uint64_t)info.BaseAddress + info.RegionSize >= minAddr && info.Protect >= protect && !(info.Protect & PAGE_GUARD))
+				validMemory.push_back({ (uint64_t)info.BaseAddress, info.RegionSize });
 			probe += info.RegionSize;
 		}
 	}
 
 	std::vector<uint64_t> ret;
 	for (auto memory : validMemory)
-		for (uint64_t addr = memory.first; true;)
-			if (addr = SafeSearchMemory(addr, memory.first + memory.second, (const BYTE*)bytes, length))
+		for (uint64_t addr = max(memory.first, minAddr); true;)
+			if (addr < maxAddr && (addr = SafeSearchMemory(addr, memory.first + memory.second, (const BYTE*)bytes, length)))
 				ret.push_back(addr++);
 			else break;
 

@@ -29,7 +29,7 @@ public:
 	void Clear();
 
 private:
-	static DWORD WINAPI Reader(LPVOID hookPtr);
+	void Read();
 	bool InsertHookCode();
 	bool InsertReadCode();
 	void Send(uintptr_t dwDatabase);
@@ -40,7 +40,7 @@ private:
 
 	HANDLE readerThread, readerEvent;
 	bool err;
-	BYTE trampoline[130];
+	BYTE trampoline[x64 ? 140 : 40];
 
 };
 

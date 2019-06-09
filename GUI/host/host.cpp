@@ -108,11 +108,14 @@ namespace
 				{
 					auto info = *(HookFoundNotif*)buffer;
 					auto& OnHookFound = processRecordsByIds->at(processId).OnHookFound;
-					OnHookFound(info.hp, processId, info.text);
+					std::wstring wide = info.text;
+					if (wide.size() > STRING) OnHookFound(info.hp, processId, info.text);
 					info.hp.type = USING_STRING;
-					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage)) if (converted->size() > 12) OnHookFound(info.hp, processId, converted.value());
+					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage))
+						if (converted->size() > STRING) OnHookFound(info.hp, processId, converted.value());
 					info.hp.codepage = CP_UTF8;
-					if (auto converted = Util::StringToWideString((char*)info.text, CP_UTF8)) if (converted->size() > 12) OnHookFound(info.hp, processId, converted.value());
+					if (auto converted = Util::StringToWideString((char*)info.text, CP_UTF8))
+						if (converted->size() > STRING) OnHookFound(info.hp, processId, converted.value());
 				}
 				break;
 				case HOST_NOTIFICATION_RMVHOOK:

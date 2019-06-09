@@ -33,6 +33,7 @@ extern const char* SEARCH_DURATION;
 extern const char* PATTERN_OFFSET;
 extern const char* MIN_ADDRESS;
 extern const char* MAX_ADDRESS;
+extern const char* STRING_OFFSET;
 extern const char* HOOK_SEARCH_FILTER;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
@@ -353,6 +354,7 @@ void MainWindow::FindHooks()
 			for (auto[value, label] : Array<std::tuple<uintptr_t&, const char*>>{
 				{ sp.minAddress = 0, MIN_ADDRESS },
 				{ sp.maxAddress = -1ULL, MAX_ADDRESS },
+				{ sp.padding = 0, STRING_OFFSET }
 			})
 			{
 				auto input = new QLineEdit(QString::number(value, 16), this);

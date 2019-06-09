@@ -40,6 +40,7 @@ struct HookParam
 	DWORD type; // flags
 	UINT codepage; // text encoding
 	short length_offset; // index of the string length
+	uintptr_t padding; // padding
 	DWORD user_value; // 7/20/2014: jichi additional parameters for PSP games
 
 	void(*text_fun)(DWORD stack, HookParam* hp, BYTE obsoleteAlwaysZero, DWORD* data, DWORD* split, DWORD* len);
@@ -64,7 +65,7 @@ struct SearchParam
 	int length, // length of pattern
 		offset, // offset from start of pattern to add hook
 		searchTime; // ms
-	uintptr_t minAddress, maxAddress;
+	uintptr_t padding, minAddress, maxAddress;
 };
 
 struct InsertHookCmd // From host
