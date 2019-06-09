@@ -191,7 +191,7 @@ void PcHooks::hookD3DXFunctions(HMODULE d3dxModule)
 				void(D3DXFont::*ctor)();
 				uintptr_t addr;
 			} fuckTheTypeSystem;
-			fuckTheTypeSystem.addr = *(uintptr_t*)(createFont + i + 1) + createFont + i + 5;
+			fuckTheTypeSystem.addr = *(DWORD*)(createFont + i + 1) + createFont + i + 5;
 			(font.*(fuckTheTypeSystem.ctor))();
 
 			HookParam hp = {};
