@@ -53,6 +53,6 @@ namespace Engine
 
 		DetermineEngineType();
 		hijacked = true;
-		ConsoleOutput("Textractor: finished hijacking %S located from 0x%p to 0x%p", processName, processStartAddress, processStopAddress);
+		ConsoleOutput("Textractor: finished hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 	}
 }

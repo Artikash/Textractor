@@ -43,6 +43,7 @@ bool InsertTypeMoonPS2Hook();   // http://typemoon.com
 
 void SpecialPSPHook(DWORD esp_base, HookParam *hp, DWORD *data, DWORD *split, DWORD *len); // General PSP extern hook
 
+bool FindPPSSPP();
 bool InsertPPSSPPHooks();        // PPSSPPWindows
 
 bool InsertPPSSPPHLEHooks();

@@ -36,10 +36,13 @@ bool DeterminePCEngine()
     return true;
   }
 
-  if (Util::CheckFile(L"PPSSPP*.exe")) { // jichi 7/12/2014 PPSSPPWindows.exe, PPSSPPEX.exe PPSSPPSP.exe
-    //InsertPPSSPPHooks(); // Artikash 8/4/2018: removed for now as doesn't work for non ancient ppsspp versions
-    return true;
-  }
+  //if (Util::CheckFile(L"PPSSPP*.exe")) { // jichi 7/12/2014 PPSSPPWindows.exe, PPSSPPEX.exe PPSSPPSP.exe
+  //  //InsertPPSSPPHooks(); // Artikash 8/4/2018: removed for now as doesn't work for non ancient ppsspp versions
+	 // FindPPSSPP();
+  //  return true;
+  //}
+
+  if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
 
   if (Util::CheckFile(L"pcsx2*.exe")) { // jichi 7/19/2014 PCSX2.exe or PCSX2WX.exe
     InsertPCSX2Hooks();
