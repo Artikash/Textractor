@@ -74,7 +74,7 @@ private:
 	std::unique_ptr<void, HandleCleaner> h;
 };
 
-inline struct
+static struct
 {
 	BYTE DUMMY[100];
 	template <typename T> 

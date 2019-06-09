@@ -160,7 +160,7 @@ void SearchForHooks(SearchParam sp)
 		std::scoped_lock lock(m);
 
 		try { records = std::make_unique<HookRecord[]>(recordsAvailable = CACHE_SIZE); }
-		catch (std::bad_alloc&) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
+		catch (std::bad_alloc) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
 
 		current = sp;
 

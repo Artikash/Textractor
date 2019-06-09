@@ -375,7 +375,7 @@ void MainWindow::FindHooks()
 				QByteArray pattern = QByteArray::fromHex(patternInput->text().replace("??", "11").toUtf8());
 				if (pattern.size() < 3) return;
 				std::wregex filter(L".");
-				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error&) {};
+				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error) {};
 				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
 				auto hooks = std::make_shared<QString>();
 				Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, DWORD processId, const std::wstring& text)

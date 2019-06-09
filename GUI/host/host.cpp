@@ -134,11 +134,12 @@ namespace
 				{
 					auto tp = *(ThreadParam*)buffer;
 					auto textThreadsByParams = ::textThreadsByParams.Acquire();
-					if (textThreadsByParams->count(tp) == 0)
+					if (textThreadsByParams->count(tp) == 0) try
 					{
 						TextThread& created = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first->second;
 						OnCreate(created);
 					}
+					catch (std::out_of_range) { continue; } // probably garbage data in pipe, try again
 					textThreadsByParams->find(tp)->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
