@@ -1,4 +1,5 @@
 ﻿#include "common.h"
+#include "defs.h"
 #include "resource.h"
 
 wchar_t buffer[1000] = {};
@@ -6,6 +7,8 @@ std::array<int, 10> vars = {};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
+	LoadLibraryW(ITH_DLL);
+
 	ShowWindow(CreateDialogParamW(hInstance, MAKEINTRESOURCEW(IDD_DIALOG1), NULL, [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> INT_PTR
 	{
 		switch (uMsg)
@@ -26,7 +29,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 			{
 				GetWindowTextW((HWND)lParam, buffer, std::size(buffer));
 				try { vars.at(LOWORD(wParam) - IDC_EDIT1) = std::stoi(buffer); }
-				catch (std::invalid_argument&) {}
+				catch (...) {}
 			}
 		}
 		break;
