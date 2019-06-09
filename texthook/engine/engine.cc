@@ -16829,7 +16829,7 @@ bool FindPPSSPP()
 			if (info.RegionSize == 0x1f00000 && info.Protect == PAGE_READWRITE && info.Type == MEM_MAPPED)
 			{
 				found = true;
-				ConsoleOutput("Textractor: PPSSPP memory found: use pattern 79 0F C7 85 and pattern offset 0 and string offset %p to search for hooks", probe - 0x8000000);
+				ConsoleOutput("Textractor: PPSSPP memory found: use pattern 79 0F C7 85 and pattern offset 0 and string offset 0x%p to search for hooks", probe - 0x8000000);
 			}
 			probe += info.RegionSize;
 		}

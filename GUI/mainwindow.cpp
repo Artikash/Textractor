@@ -27,7 +27,7 @@ extern const char* ATTACH_INFO;
 extern const char* SEARCH_GAME;
 extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
-extern const char* HOOH_SEARCH_UNSTABLE_WARNING;
+extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
 extern const char* SEARCH_PATTERN;
 extern const char* SEARCH_DURATION;
 extern const char* PATTERN_OFFSET;
@@ -331,7 +331,7 @@ void MainWindow::SaveHooks()
 
 void MainWindow::FindHooks()
 {
-	QMessageBox::information(this, FIND_HOOKS, HOOH_SEARCH_UNSTABLE_WARNING);
+	QMessageBox::information(this, FIND_HOOKS, HOOK_SEARCH_UNSTABLE_WARNING);
 	struct : QDialog
 	{
 		using QDialog::QDialog;

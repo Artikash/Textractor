@@ -29,7 +29,7 @@ namespace Engine
 				if (info.RegionSize == 0x1f00000 && info.Protect == PAGE_READWRITE && info.Type == MEM_MAPPED)
 				{
 					found = true;
-					ConsoleOutput("Textractor: PPSSPP memory found: use pattern 79 10 41 C7 and pattern offset 0 and string offset %p to search for hooks", probe - 0x8000000);
+					ConsoleOutput("Textractor: PPSSPP memory found: use pattern 79 10 41 C7 and pattern offset 0 and string offset 0x%p to search for hooks", probe - 0x8000000);
 				}
 				probe += info.RegionSize;
 			}
@@ -39,12 +39,12 @@ namespace Engine
 
 	bool UnsafeDetermineEngineType()
 	{
+		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
+
 		for (std::wstring DXVersion : { L"d3dx9", L"d3dx10" })
 			if (HMODULE module = GetModuleHandleW(DXVersion.c_str())) PcHooks::hookD3DXFunctions(module);
 			else for (int i = 0; i < 50; ++i)
 				if (HMODULE module = GetModuleHandleW((DXVersion + L"_" + std::to_wstring(i)).c_str())) PcHooks::hookD3DXFunctions(module);
-
-		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
 
 		PcHooks::hookGDIFunctions();
 		PcHooks::hookGDIPlusFunctions();
