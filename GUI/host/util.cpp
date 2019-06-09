@@ -312,9 +312,9 @@ namespace Util
 	bool RemoveRepetition(std::wstring& text)
 	{
 		wchar_t* end = text.data() + text.size();
-		for (int len = text.size() / 3; len > 6; --len)
-			if (wcsncmp(end - len * 3, end - len * 2, len) == 0 && wcsncmp(end - len * 3, end - len * 1, len) == 0)
-				return RemoveRepetition(text = end - len), true;
+		for (int length = text.size() / 3; length > 6; --length)
+			if (wcsncmp(end - length * 3, end - length * 2, length) == 0 && wcsncmp(end - length * 3, end - length * 1, length) == 0)
+				return RemoveRepetition(text = std::wstring(end - length, length)), true;
 		return false;
 	}
 
