@@ -12,7 +12,7 @@ void ConsoleOutput(LPCSTR text, ...);
 void NotifyHookFound(HookParam hp, wchar_t* text);
 void NotifyHookRemove(uint64_t addr, LPCSTR name);
 void NewHook(HookParam hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
-void RemoveHook(uint64_t addr, int maxOffset = 9, bool markRemoved = false);
+void RemoveHook(uint64_t addr, int maxOffset = 9);
 
 extern "C" // minhook library
 {

@@ -26,7 +26,7 @@ public:
 	}; // Absolute address
 
 	bool Insert(HookParam hp, DWORD set_flag);
-	void Clear(bool markRemoved = false);
+	void Clear();
 
 private:
 	void Read();

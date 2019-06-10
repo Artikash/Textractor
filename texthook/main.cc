@@ -68,7 +68,7 @@ DWORD WINAPI Pipe(LPVOID)
 			case HOST_COMMAND_REMOVE_HOOK:
 			{
 				auto info = *(RemoveHookCmd*)buffer;
-				RemoveHook(info.address, 0, true);
+				RemoveHook(info.address, 0);
 			}
 			break;
 			case HOST_COMMAND_FIND_HOOK:
@@ -196,9 +196,9 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 	}
 }
 
-void RemoveHook(uint64_t addr, int maxOffset, bool markRemoved)
+void RemoveHook(uint64_t addr, int maxOffset)
 {
-	for (auto& hook : *hooks) if (abs((long long)(hook.address - addr)) <= maxOffset) return hook.Clear(markRemoved);
+	for (auto& hook : *hooks) if (abs((long long)(hook.address - addr)) <= maxOffset) return hook.Clear();
 }
 
 // EOF
