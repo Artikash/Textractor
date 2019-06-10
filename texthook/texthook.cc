@@ -283,13 +283,15 @@ void TextHook::RemoveReadCode()
 	CloseHandle(readerThread);
 }
 
-void TextHook::Clear()
+void TextHook::Clear(bool markRemoved)
 {
 	std::scoped_lock lock(viewMutex);
+	if (address == 0) return;
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
 	NotifyHookRemove(address, hp.name);
 	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
+	if (markRemoved) hp.type = HOOK_REMOVED;
 }
 
 int TextHook::GetLength(uintptr_t base, uintptr_t in)

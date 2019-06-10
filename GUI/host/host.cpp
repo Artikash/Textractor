@@ -16,7 +16,6 @@ namespace
 	{
 	public:
 		ProcessRecord(DWORD processId, HANDLE pipe) :
-			processId(processId),
 			pipe(pipe),
 			mappedFile(OpenFileMappingW(FILE_MAP_READ, FALSE, (ITH_SECTION_ + std::to_wstring(processId)).c_str())),
 			view(*(const TextHook(*)[MAX_HOOK])MapViewOfFile(mappedFile, FILE_MAP_READ, 0, 0, HOOK_SECTION_SIZE / 2)), // jichi 1/16/2015: Changed to half to hook section size
@@ -47,23 +46,19 @@ namespace
 			}).detach();
 		}
 
-		Host::HookEventHandler OnHookFound = [](HookParam hp, DWORD processId, const std::wstring& text)
+		Host::HookEventHandler OnHookFound = [](HookParam hp, const std::wstring& text)
 		{
 			Host::AddConsoleOutput(Util::GenerateCode(hp, 0) + L": " + text);
 		};
 
 	private:
-		DWORD processId;
 		HANDLE pipe;
 		AutoHandle<> mappedFile;
 		const TextHook(&view)[MAX_HOOK];
 		WinMutex viewMutex;
 	};
 
-	size_t HashThreadParam(ThreadParam tp)
-	{
-		return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2);
-	}
+	size_t HashThreadParam(ThreadParam tp) { return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2); }
 	Synchronized<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
 	Synchronized<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
 
@@ -109,13 +104,13 @@ namespace
 					auto info = *(HookFoundNotif*)buffer;
 					auto& OnHookFound = processRecordsByIds->at(processId).OnHookFound;
 					std::wstring wide = info.text;
-					if (wide.size() > STRING) OnHookFound(info.hp, processId, info.text);
+					if (wide.size() > STRING) OnHookFound(info.hp, info.text);
 					info.hp.type = USING_STRING;
 					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage))
-						if (converted->size() > STRING) OnHookFound(info.hp, processId, converted.value());
+						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
 					info.hp.codepage = CP_UTF8;
 					if (auto converted = Util::StringToWideString((char*)info.text, CP_UTF8))
-						if (converted->size() > STRING) OnHookFound(info.hp, processId, converted.value());
+						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
 				}
 				break;
 				case HOST_NOTIFICATION_RMVHOOK:
@@ -134,13 +129,14 @@ namespace
 				{
 					auto tp = *(ThreadParam*)buffer;
 					auto textThreadsByParams = ::textThreadsByParams.Acquire();
-					if (textThreadsByParams->count(tp) == 0) try
+					auto textThread = textThreadsByParams->find(tp);
+					if (textThread == textThreadsByParams->end())
 					{
-						TextThread& created = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first->second;
-						OnCreate(created);
+						try { textThread = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first; }
+						catch (std::out_of_range) { continue; } // probably garbage data in pipe, try again
+						OnCreate(textThread->second);
 					}
-					catch (std::out_of_range) { continue; } // probably garbage data in pipe, try again
-					textThreadsByParams->find(tp)->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
+					textThread->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
 				}
@@ -224,6 +220,11 @@ namespace Host
 	void InsertHook(DWORD processId, HookParam hp)
 	{
 		processRecordsByIds->at(processId).Send(InsertHookCmd(hp));
+	}
+
+	void RemoveHook(DWORD processId, uint64_t address)
+	{
+		processRecordsByIds->at(processId).Send(RemoveHookCmd(address));
 	}
 
 	void FindHooks(DWORD processId, SearchParam sp, HookEventHandler HookFound)

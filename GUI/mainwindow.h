@@ -36,6 +36,7 @@ private:
 	void LaunchProcess();
 	void DetachProcess();
 	void AddHook();
+	void RemoveHooks();
 	void SaveHooks();
 	void FindHooks();
 	void Settings();

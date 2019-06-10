@@ -27,5 +27,6 @@ enum HookParamType : unsigned
 	FIXING_SPLIT = 0x1000,
 	DIRECT_READ = 0x2000, // /R read code instead of classic /H hook code
 	HOOK_ENGINE = 0x4000,
-	HOOK_ADDITIONAL = 0x8000
+	HOOK_ADDITIONAL = 0x8000,
+	HOOK_REMOVED = 0x10000, // hook was intentionally removed by the user
 };

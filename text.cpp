@@ -10,6 +10,7 @@ const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
 const char* ADD_HOOK = u8"Add hook";
+const char* REMOVE_HOOKS = u8"Remove hook(s)";
 const char* SAVE_HOOKS = u8"Save hook(s)";
 const char* FIND_HOOKS = u8"Find hooks";
 const char* SETTINGS = u8"Settings";

@@ -75,6 +75,13 @@ struct InsertHookCmd // From host
 	HookParam hp;
 };
 
+struct RemoveHookCmd // From host
+{
+	RemoveHookCmd(uint64_t address) : address(address) {}
+	HostCommandType command = HOST_COMMAND_REMOVE_HOOK;
+	uint64_t address;
+};
+
 struct FindHookCmd // From host
 {
 	FindHookCmd(SearchParam sp) : sp(sp) {}

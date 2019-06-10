@@ -31,7 +31,7 @@ constexpr bool x64 = false;
 
 template <typename T> using Array = T[];
 
-template<typename E, typename M = std::mutex>
+template<typename T, typename M = std::mutex>
 class Synchronized
 {
 public:
@@ -40,17 +40,17 @@ public:
 
 	struct Locker
 	{
-		E* operator->() { return ptr; }
+		T* operator->() { return &contents; }
 		std::unique_lock<M> lock;
-		E* ptr;
+		T& contents;
 	};
 
-	Locker Acquire() { return { std::unique_lock(mtx), &contents }; }
+	Locker Acquire() { return { std::unique_lock(m), contents }; }
 	Locker operator->() { return Acquire(); }
 
 private:
-	E contents;
-	M mtx;
+	T contents;
+	M m;
 };
 
 template <auto F>
