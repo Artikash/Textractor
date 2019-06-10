@@ -57,7 +57,7 @@ endmacro()
 
 macro(find_qt5)
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
-    set(CMAKE_AUTOMOC ON)
+    #set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTOUIC ON)
     add_definitions(-DQT_DEPRECATED_WARNINGS -DQT_DISABLE_DEPRECATED_BEFORE=0x060000)
     find_package(Qt5 COMPONENTS ${ARGN})

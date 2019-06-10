@@ -27,6 +27,6 @@ set(texthook_src
 )
 endif()
 
-add_library(texthook SHARED ${texthook_src})
+add_library(texthook MODULE ${texthook_src})
 
 target_link_libraries(texthook minhook)
