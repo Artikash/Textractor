@@ -61,7 +61,14 @@ DWORD WINAPI Pipe(LPVOID)
 			case HOST_COMMAND_NEW_HOOK:
 			{
 				auto info = *(InsertHookCmd*)buffer;
-				NewHook(info.hp, "UserHook", 0);
+				static int userHooks = 0;
+				NewHook(info.hp, ("UserHook" + std::to_string(userHooks += 1)).c_str(), 0);
+			}
+			break;
+			case HOST_COMMAND_REMOVE_HOOK:
+			{
+				auto info = *(RemoveHookCmd*)buffer;
+				RemoveHook(info.address, 0);
 			}
 			break;
 			case HOST_COMMAND_FIND_HOOK:
@@ -180,8 +187,12 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
 		if (lpname && *lpname) strncpy_s(hp.name, lpname, HOOK_NAME_SIZE - 1);
 		ConsoleOutput(INSERTING_HOOK, hp.name);
-		if (hp.address) RemoveHook(hp.address, 0);
-		if (!(*hooks)[currentHook].Insert(hp, flag)) ConsoleOutput(HOOK_FAILED);
+		RemoveHook(hp.address, 0);
+		if (!(*hooks)[currentHook].Insert(hp, flag))
+		{
+			ConsoleOutput(HOOK_FAILED);
+			(*hooks)[currentHook].Clear();
+		}
 	}
 }
 

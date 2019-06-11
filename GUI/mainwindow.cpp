@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QListWidget>
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -18,6 +19,7 @@ extern const char* ATTACH;
 extern const char* LAUNCH;
 extern const char* DETACH;
 extern const char* ADD_HOOK;
+extern const char* REMOVE_HOOKS;
 extern const char* SAVE_HOOKS;
 extern const char* FIND_HOOKS;
 extern const char* SETTINGS;
@@ -38,6 +40,7 @@ extern const char* HOOK_SEARCH_FILTER;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
 extern const char* TEXT_FILES;
+extern const char* DOUBLE_CLICK_TO_REMOVE_HOOK;
 extern const char* SAVE_SETTINGS;
 extern const char* USE_JP_LOCALE;
 extern const char* FILTER_REPETITION;
@@ -61,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
 		{ ADD_HOOK, &MainWindow::AddHook },
+		{ REMOVE_HOOKS, &MainWindow::RemoveHooks },
 		{ SAVE_HOOKS, &MainWindow::SaveHooks },
 		{ FIND_HOOKS, &MainWindow::FindHooks },
 		{ SETTINGS, &MainWindow::Settings },
@@ -267,6 +271,7 @@ void MainWindow::LaunchProcess()
 
 	PROCESS_INFORMATION info = {};
 	if (QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
+	{
 		if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
 		{
 			// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
@@ -285,6 +290,7 @@ void MainWindow::LaunchProcess()
 			((LONG(__stdcall*)(decltype(&LEB), LPCWSTR appName, LPWSTR commandLine, LPCWSTR currentDir, void*, void*, PROCESS_INFORMATION*, void*, void*, void*, void*))
 				GetProcAddress(localeEmulator, "LeCreateProcess"))(&LEB, process.c_str(), NULL, path.c_str(), NULL, NULL, &info, NULL, NULL, NULL, NULL);
 		}
+	}
 	if (info.hProcess == NULL)
 	{
 		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
@@ -306,6 +312,33 @@ void MainWindow::AddHook()
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint); ok)
 		if (auto hp = Util::ParseCode(S(hookCode))) Host::InsertHook(GetSelectedProcessId(), hp.value());
 		else Host::AddConsoleOutput(INVALID_CODE);
+}
+
+void MainWindow::RemoveHooks()
+{
+	DWORD processId = GetSelectedProcessId();
+	std::unordered_map<uint64_t, HookParam> hooks;
+	for (int i = 0; i < ui->ttCombo->count(); ++i)
+	{
+		ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
+		if (tp.processId == GetSelectedProcessId()) hooks[tp.addr] = Host::GetHookParam(tp);
+	}
+	auto hookList = new QListWidget(this);
+	hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+	hookList->setMinimumSize({ 300, 50 });
+	hookList->setWindowTitle(DOUBLE_CLICK_TO_REMOVE_HOOK);
+	for (auto[address, hp] : hooks)
+		new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
+	connect(hookList, &QListWidget::itemDoubleClicked, [processId, hookList](QListWidgetItem* item)
+	{
+		try
+		{
+			Host::RemoveHook(processId, item->text().split("@")[1].toULongLong(nullptr, 16));
+			delete item;
+		}
+		catch (std::out_of_range) { hookList->close(); }
+	});
+	hookList->show();
 }
 
 void MainWindow::SaveHooks()
@@ -378,7 +411,8 @@ void MainWindow::FindHooks()
 				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error) {};
 				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
 				auto hooks = std::make_shared<QString>();
-				Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, DWORD processId, const std::wstring& text)
+				DWORD processId = this->processId;
+				Host::FindHooks(processId, sp, [processId, hooks, filter](HookParam hp, const std::wstring& text)
 				{
 					if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
 				});
