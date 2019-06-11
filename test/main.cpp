@@ -1,13 +1,19 @@
 ﻿#include "common.h"
 #include "defs.h"
 #include "resource.h"
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 wchar_t buffer[1000] = {};
 std::array<int, 10> vars = {};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
-	LoadLibraryW(ITH_DLL);
+	for (auto file : std::filesystem::directory_iterator(std::filesystem::current_path()))
+		if (file.path().extension() == L".dll"
+			&& (std::stringstream() << std::ifstream(file.path(), std::ios::binary).rdbuf()).str().find("OnNewSentence") != std::string::npos)
+			LoadLibraryW(file.path().c_str());
 
 	ShowWindow(CreateDialogParamW(hInstance, MAKEINTRESOURCEW(IDD_DIALOG1), NULL, [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> INT_PTR
 	{
@@ -37,7 +43,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		return FALSE;
 	}, 0), SW_SHOW);
 
-	std::thread([] { while (true) lstrlenW(L"こんにちは"); }).detach();
+	std::thread([] { while (true) Sleep(vars.at(0)), lstrlenW(L"こんにちは"); }).detach();
+
+	STARTUPINFOW info = { sizeof(info) };
+	wchar_t commandLine[] = { L"Textractor -p\"Test.exe\"" };
+	CreateProcessW(NULL, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &info, DUMMY);
 
 	MSG msg;
 	while (GetMessageW(&msg, NULL, 0, 0) > 0)
