@@ -40,6 +40,7 @@ extern const char* HOOK_SEARCH_FILTER;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
 extern const char* TEXT_FILES;
+extern const char* DOUBLE_CLICK_TO_REMOVE_HOOK;
 extern const char* SAVE_SETTINGS;
 extern const char* USE_JP_LOCALE;
 extern const char* FILTER_REPETITION;
@@ -323,8 +324,9 @@ void MainWindow::RemoveHooks()
 		if (tp.processId == GetSelectedProcessId()) hooks[tp.addr] = Host::GetHookParam(tp);
 	}
 	auto hookList = new QListWidget(this);
-	hookList->setWindowFlag(Qt::Window, true);
-	hookList->setWindowTitle(REMOVE_HOOKS);
+	hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+	hookList->setMinimumSize({ 300, 50 });
+	hookList->setWindowTitle(DOUBLE_CLICK_TO_REMOVE_HOOK);
 	for (auto[address, hp] : hooks)
 		new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
 	connect(hookList, &QListWidget::itemDoubleClicked, [processId, hookList](QListWidgetItem* item)

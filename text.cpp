@@ -61,6 +61,7 @@ const char* HOOK_SEARCH_FILTER = u8"Results must match this regex";
 const char* START_HOOK_SEARCH = u8"Start hook search";
 const char* SAVE_SEARCH_RESULTS = u8"Save search results";
 const char* TEXT_FILES = u8"Text (*.txt)";
+const char* DOUBLE_CLICK_TO_REMOVE_HOOK = u8"Double click a hook to remove it";
 const char* FILTER_REPETITION = u8"Repetition Filter";
 const char* DEFAULT_CODEPAGE = u8"Default Codepage";
 const char* FLUSH_DELAY = u8"Flush Delay";
