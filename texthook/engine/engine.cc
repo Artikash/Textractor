@@ -2137,8 +2137,9 @@ bool InsertBGI3Hook()
 // BGI1 can exist in both old and new games
 // BGI2 only exist in new games
 // Insert BGI2 first.
+// Artikash 6/12/2019: In newer games neither exists, but WideCharToMultiByte works, so insert that if BGI2 fails.
 bool InsertBGIHook()
-{ return InsertBGI2Hook() ||  InsertBGI1Hook(); }
+{ return InsertBGI2Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
 
 /********************************************************************************************
 Reallive hook:
