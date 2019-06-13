@@ -270,7 +270,7 @@ void MainWindow::LaunchProcess()
 	std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 	PROCESS_INFORMATION info = {};
-	if (QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
+	if (!x64 && QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
 	{
 		if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
 		{
@@ -405,7 +405,7 @@ void MainWindow::FindHooks()
 			connect(save, &QPushButton::clicked, this, &QDialog::accept);
 			connect(save, &QPushButton::clicked, [this, patternInput, filterInput]
 			{
-				QByteArray pattern = QByteArray::fromHex(patternInput->text().replace("??", "11").toUtf8());
+				QByteArray pattern = QByteArray::fromHex(patternInput->text().replace("??", QString::number(XX, 16)).toUtf8());
 				if (pattern.size() < 3) return;
 				std::wregex filter(L".");
 				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error) {};

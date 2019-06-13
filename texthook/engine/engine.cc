@@ -95,7 +95,6 @@ enum : DWORD {
   //, step = 0x00010000 // crash otoboku PSP on 0.9.9 since 5pb is wrongly inserted
 };
 
-enum : BYTE { XX = 0x11 }; // 0x11
 #define XX2 XX,XX       // WORD
 #define XX4 XX2,XX2     // DWORD
 #define XX8 XX4,XX4     // QWORD

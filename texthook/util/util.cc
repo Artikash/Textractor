@@ -31,7 +31,7 @@ uint64_t SafeSearchMemory(uint64_t startAddr, uint64_t endAddr, const BYTE* byte
 		for (int i = 0; i < endAddr - startAddr - length; ++i)
 			for (int j = 0; j <= length; ++j)
 				if (j == length) return startAddr + i; // not sure about this algorithm...
-				else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != 0x11) break; // 0x11 = wildcard
+				else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != XX) break;
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{

@@ -7,6 +7,7 @@
 // - Move my old create remote thread for ITH2 here
 
 #include "ithsys/ithsys.h"
+#include "const.h"
 
 // - Global variables -
 
@@ -51,7 +52,7 @@ DWORD SearchPattern(DWORD base, DWORD base_length, LPCVOID search, DWORD search_
 	for (int i = 0; i < base_length - search_length; ++i)
 		for (int j = 0; j <= search_length; ++j)
 			if (j == search_length) return i; // not sure about this algorithm...
-			else if (*((BYTE*)base + i + j) != *((BYTE*)search + j) && *((BYTE*)search + j) != 0x11) break; // 0x11 = wildcard
+			else if (*((BYTE*)base + i + j) != *((BYTE*)search + j) && *((BYTE*)search + j) != XX) break;
 		//if (memcmp((void*)(base + i), search, search_length) == 0)
 			//return i;
 
