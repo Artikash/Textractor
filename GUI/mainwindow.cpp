@@ -310,7 +310,7 @@ void MainWindow::DetachProcess()
 void MainWindow::AddHook()
 {
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint); ok)
-		if (auto hp = Util::ParseCode(S(hookCode))) Host::InsertHook(GetSelectedProcessId(), hp.value());
+		if (auto hp = Util::ParseCode(S(hookCode))) try { Host::InsertHook(GetSelectedProcessId(), hp.value()); } catch (std::out_of_range) {}
 		else Host::AddConsoleOutput(INVALID_CODE);
 }
 
@@ -412,10 +412,14 @@ void MainWindow::FindHooks()
 				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
 				auto hooks = std::make_shared<QString>();
 				DWORD processId = this->processId;
-				Host::FindHooks(processId, sp, [processId, hooks, filter](HookParam hp, const std::wstring& text)
+				try
 				{
-					if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
-				});
+					Host::FindHooks(processId, sp, [processId, hooks, filter](HookParam hp, const std::wstring& text)
+					{
+						if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
+					});
+				}
+				catch (std::out_of_range) { return; }
 				QString fileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
 				if (fileName.isEmpty()) fileName = "Hooks.txt";
 				std::thread([hooks, fileName]
