@@ -11,6 +11,7 @@ extern const char* THREAD_LINKER;
 extern const char* LINK;
 extern const char* THREAD_LINK_FROM;
 extern const char* THREAD_LINK_TO;
+extern const char* HEXADECIMAL;
 
 std::mutex m;
 std::unordered_map<int64_t, std::unordered_multiset<int64_t>> linkedTextHandles;
@@ -29,8 +30,8 @@ struct : QMainWindow
 		connect(addLink, &QPushButton::clicked, [=]
 		{
 			bool ok1, ok2, ok3, ok4;
-			int from = QInputDialog::getText(this, THREAD_LINK_FROM, "", QLineEdit::Normal, "0x", &ok1, Qt::WindowCloseButtonHint).toInt(&ok2, 16);
-			int to = QInputDialog::getText(this, THREAD_LINK_TO, "", QLineEdit::Normal, "0x", &ok3, Qt::WindowCloseButtonHint).toInt(&ok4, 16);
+			int from = QInputDialog::getText(this, THREAD_LINK_FROM, HEXADECIMAL, QLineEdit::Normal, "", &ok1, Qt::WindowCloseButtonHint).toInt(&ok2, 16);
+			int to = QInputDialog::getText(this, THREAD_LINK_TO, HEXADECIMAL, QLineEdit::Normal, "", &ok3, Qt::WindowCloseButtonHint).toInt(&ok4, 16);
 			if (ok1 && ok2 && ok3 && ok4)
 			{
 				std::lock_guard l(m);

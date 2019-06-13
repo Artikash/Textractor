@@ -113,7 +113,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		luaL_dostring(L, "ProcessSentence = nil");
 		if (luaL_dostring(L, script->c_str()) != LUA_OK)
 		{
-			sentence += L"\n" + FormatWideString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)).c_str());
+			sentence += L"\n" + FormatString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)));
 			lua_settop(L, 0);
 			return logErrors;
 		}
@@ -121,7 +121,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	if (lua_getglobal(L, "ProcessSentence") != LUA_TFUNCTION)
 	{
-		sentence += L"\n" + FormatWideString(LUA_ERROR, L"ProcessSentence is not a function");
+		sentence += L"\n" + FormatString(LUA_ERROR, L"ProcessSentence is not a function");
 		lua_settop(L, 0);
 		return logErrors;
 	}
@@ -135,7 +135,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	}
 	if (lua_pcallk(L, 2, 1, 0, NULL, NULL) != LUA_OK)
 	{
-		sentence += L"\n" + FormatWideString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)).c_str());
+		sentence += L"\n" + FormatString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)));
 		lua_settop(L, 0);
 		return logErrors;
 	}

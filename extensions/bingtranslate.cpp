@@ -1,13 +1,10 @@
 ﻿#include "extension.h"
 #include "network.h"
-#include <QInputDialog>
-#include <QTimer>
+#include <QStringList>
 
-extern const char* SELECT_LANGUAGE;
-extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 extern const wchar_t* TRANSLATION_ERROR;
-extern const char* BING_PROMPT;
 
+const char* TRANSLATION_PROVIDER = "Bing";
 QStringList languages
 {
 	"English: en",
@@ -56,85 +53,29 @@ QStringList languages
 	"Vietnamese: vi",
 	"Welsh: cy"
 };
+Synchronized<std::wstring> translateTo = L"en";
 
-std::wstring translateTo = L"en";
-
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	{
-		QTimer::singleShot(0, []
-		{
-			translateTo = QInputDialog::getItem(
-				nullptr,
-				SELECT_LANGUAGE,
-				BING_PROMPT,
-				languages,
-				0, false, nullptr,
-				Qt::WindowCloseButtonHint
-			).split(" ")[1].toStdWString();
-		});
-	}
-	break;
-	case DLL_PROCESS_DETACH:
-	{
-	}
-	break;
-	}
-	return TRUE;
+	std::wstring translateFrom;
+	if (HttpRequest httpRequest{
+		L"Mozilla/5.0 Textractor",
+		L"www.bing.com",
+		L"POST",
+		FormatString(L"/tdetect?text=%s", Escape(text)).c_str(),
+		WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE,
+	}) translateFrom = httpRequest.response;
+	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
+
+	if (HttpRequest httpRequest{
+		L"Mozilla/5.0 Textractor",
+		L"www.bing.com",
+		L"POST",
+		FormatString(L"/ttranslate?from=%s&to=%s&text=%s", translateFrom, translateTo->c_str(), Escape(text)).c_str(),
+		WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE,
+	})
+		// Response formatted as JSON: translation starts with :" and ends with "}
+		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L":\"(.+)\"\\}"))) return { true, results[1] };
+		else return { false, TRANSLATION_ERROR };
+	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
-
-// This function detects language and returns it if translateFrom is empty
-std::wstring Translate(const std::wstring& text, std::wstring translateFrom, std::wstring translateTo)
-{
-	static std::atomic<HINTERNET> internet = NULL;
-	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-
-	std::wstring escapedText;
-	for (unsigned char ch : WideStringToString(text))
-	{
-		wchar_t escapedChar[4] = {};
-		swprintf_s<4>(escapedChar, L"%%%02X", (int)ch);
-		escapedText += escapedChar;
-	}
-
-	std::wstring location = translateFrom.empty()
-		? L"/tdetect?text=" + escapedText
-		: L"/ttranslate?from=" + translateFrom + L"&to=" + translateTo + L"&text=" + escapedText;
-	std::wstring translation;
-	if (internet)
-		if (InternetHandle connection = WinHttpConnect(internet, L"www.bing.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-			if (InternetHandle request = WinHttpOpenRequest(connection, L"POST", location.c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
-				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-					if (auto response = ReceiveHttpRequest(request))
-						if (translateFrom.empty()) translation = response.value();
-						// Response formatted as JSON: translation starts with :" and ends with "}
-						else if (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L":\"(.+)\"\\}"))) translation = results[1];
-
-	Unescape(translation);
-	return translation;
-}
-
-bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
-{
-	if (sentenceInfo["text number"] == 0) return false;
-
-	static RateLimiter rateLimiter(30, 60 * 1000);
-
-	std::wstring translation;
-	if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
-	else translation = Translate(sentence, Translate(sentence, L"", translateTo), translateTo);
-	if (translation.empty()) translation = TRANSLATION_ERROR;
-	sentence += L"\n" + translation;
-	return true;
-}
-
-TEST(
-	{
-		std::wstring test = L"こんにちは";
-		ProcessSentence(test, { SentenceInfo::DUMMY });
-		assert(test.find(L"Hello") != std::wstring::npos);
-	}
-);

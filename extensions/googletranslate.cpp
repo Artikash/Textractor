@@ -1,15 +1,12 @@
 ﻿#include "extension.h"
-#include "util.h"
 #include "network.h"
+#include "util.h"
 #include <ctime>
-#include <QInputDialog>
-#include <QTimer>
+#include <QStringList>
 
-extern const char* SELECT_LANGUAGE;
-extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 extern const wchar_t* TRANSLATION_ERROR;
-extern const char* GOOGLE_PROMPT;
 
+const char* TRANSLATION_PROVIDER = "Google";
 QStringList languages
 {
 	"English: en",
@@ -73,49 +70,19 @@ QStringList languages
 	"Yiddish: yi",
 	"Zulu: zu"
 };
-
-std::wstring translateTo = L"en";
-
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	{
-		QTimer::singleShot(0, []
-		{
-			translateTo = QInputDialog::getItem(
-				nullptr, 
-				SELECT_LANGUAGE, 
-				GOOGLE_PROMPT, 
-				languages, 
-				0, false, nullptr,
-				Qt::WindowCloseButtonHint
-			).split(" ")[1].toStdWString();
-		});
-	}
-	break;
-	case DLL_PROCESS_DETACH:
-	{
-	}
-	break;
-	}
-	return TRUE;
-}
+Synchronized<std::wstring> translateTo = L"en";
 
 std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 {
 	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access
-	if (!TKK) return L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=" + translateTo + L"&q=" + text;
+	if (!TKK) return FormatString(L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=%s&q=%s", translateTo->c_str(), text);
 
 	// Artikash 8/19/2018: reverse engineered from translate.google.com
 	std::wstring escapedText;
 	unsigned a = _time64(NULL) / 3600, b = a; // <- the first part of TKK
 	for (unsigned char ch : WideStringToString(text))
 	{
-		wchar_t escapedChar[4] = {};
-		swprintf_s<4>(escapedChar, L"%%%02X", (int)ch);
-		escapedText += escapedChar;
+		escapedText += FormatString(L"%%%02X", (int)ch);
 		a += ch;
 		a += a << 10;
 		a ^= a >> 6;
@@ -127,56 +94,28 @@ std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 	a %= 1000000;
 	b ^= a;
 
-	return L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tl=" + translateTo + L"&tk=" + std::to_wstring(a) + L"." + std::to_wstring(b) + L"&q=" + escapedText;
+	return FormatString(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, b, escapedText);
 }
 
-bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
+std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
-	if (sentenceInfo["text number"] == 0) return false;
+	static unsigned TKK = 0;
+	if (!TKK)
+		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })
+			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"(\\d{7,})'")))
+				_InterlockedCompareExchange(&TKK, stoll(results[1]), 0);
 
-	static std::atomic<HINTERNET> internet = NULL;
-	if (!internet) internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-	static std::atomic<unsigned> TKK = 0;
-	static RateLimiter rateLimiter(30, 60 * 1000);
-
-	std::wstring translation;
-	if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
-	else if (internet)
+	if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", GetTranslationUri(text, TKK).c_str() })
 	{
-		if (!TKK)
-			if (InternetHandle connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-				if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", L"/", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
-					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-						if (auto response = ReceiveHttpRequest(request))
-							if (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L"(\\d{7,})'"))) TKK = stoll(results[1]);
-
-		if (InternetHandle connection = WinHttpConnect(internet, L"translate.google.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-			if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", GetTranslationUri(sentence, TKK).c_str(), NULL, NULL, NULL, WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE))
-				if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-					if (auto response = ReceiveHttpRequest(request))
-						// Response formatted as JSON: starts with [[["
-						if (response.value()[0] == L'[')
-						{
-							for (std::wsmatch results; std::regex_search(response.value(), results, std::wregex(L"\\[\"(.*?)\",[n\"]")); response = results.suffix())
-								translation += std::wstring(results[1]) + L" ";
-							Unescape(translation);
-						}
-						else
-						{
-							translation = TRANSLATION_ERROR + (L" (TKK=" + std::to_wstring(TKK) + L")");
-							TKK = 0;
-						}
+		// Response formatted as JSON: starts with "[[[" and translation is enclosed in quotes followed by a comma
+		if (httpRequest.response[0] == L'[')
+		{
+			std::wstring translation;
+			for (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); httpRequest.response = results.suffix())
+				translation += std::wstring(results[1]) + L" ";
+			if (!translation.empty()) return { true, translation };
+		}
+		return { false, FormatString(L"%s (TKK=%u)", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0)) };
 	}
-
-	if (translation.empty()) translation = TRANSLATION_ERROR;
-	sentence += L"\n" + translation;
-	return true;
+	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
-
-TEST(
-	{
-		std::wstring test = L"こんにちは";
-		ProcessSentence(test, { SentenceInfo::DUMMY });
-		assert(test.find(L"Hello") != std::wstring::npos);
-	}
-);

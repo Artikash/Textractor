@@ -4,11 +4,11 @@ find_qt5(Core Widgets)
 
 cmake_policy(SET CMP0037 OLD)
 
-add_library(Bing\ Translate MODULE bingtranslate.cpp extensionimpl.cpp)
+add_library(Bing\ Translate MODULE bingtranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 add_library(Copy\ to\ Clipboard MODULE copyclipboard.cpp extensionimpl.cpp)
 add_library(Extra\ Newlines MODULE extranewlines.cpp extensionimpl.cpp)
 add_library(Extra\ Window MODULE extrawindow.cpp extensionimpl.cpp)
-add_library(Google\ Translate MODULE googletranslate.cpp extensionimpl.cpp)
+add_library(Google\ Translate MODULE googletranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 add_library(Lua MODULE lua.cpp extensionimpl.cpp)
 add_library(Regex\ Filter MODULE regexfilter.cpp extensionimpl.cpp)
 add_library(Remove\ Repetition MODULE removerepeat.cpp extensionimpl.cpp)

@@ -103,8 +103,7 @@ const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* SELECT_LANGUAGE = u8"Select language";
-const char* BING_PROMPT = u8"What language should Bing translate to?";
-const char* GOOGLE_PROMPT = u8"What language should Google translate to?";
+const char* SELECT_LANGUAGE_MESSAGE = u8"What language should %1 translate to?";
 const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
@@ -149,8 +148,9 @@ const char* THREAD_LINKER = u8"Thread Linker";
 const char* LINK = u8"Link";
 const char* THREAD_LINK_FROM = u8"Thread number to link from";
 const char* THREAD_LINK_TO = u8"Thread number to link to";
+const char* HEXADECIMAL = u8"Hexadecimal";
 
-inline auto _ = []
+static auto _ = []
 {
 #ifdef TURKISH
 	ATTACH = u8"Oyuna bağla";
@@ -236,8 +236,7 @@ Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contrata
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: no se puede encontrar texto";
 	SELECT_LANGUAGE = u8"Seleccionar lenguaje";
-	BING_PROMPT = u8"¿A qué idioma debe traducir Bing?";
-	GOOGLE_PROMPT = u8"¿A qué idioma debe traducir Google?";
+	SELECT_LANGUAGE_MESSAGE = u8"¿A qué idioma debe traducir %1?";
 	TOO_MANY_TRANS_REQUESTS = L"Demasiadas peticiones de traducción: no se puede hacer más";
 	TRANSLATION_ERROR = L"Error al traducir";
 	EXTRA_WINDOW_INFO = u8R"(Clic derecho para configurar
@@ -303,8 +302,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	HIJACK_ERROR = u8"Textractor: Hijack 错误";
 	COULD_NOT_FIND = u8"Textractor: 无法找到文本";
 	SELECT_LANGUAGE = u8"选择语言";
-	BING_PROMPT = u8"想要使用 Bing 翻译到哪种语言?";
-	GOOGLE_PROMPT = u8"想要使用 Google 翻译到哪种语言?";
+	SELECT_LANGUAGE_MESSAGE = u8"想要使用 %1 翻译到哪种语言?";
 	TOO_MANY_TRANS_REQUESTS = L"太多翻译请求: 拒绝生成更多";
 	TRANSLATION_ERROR = L"翻译时出错";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
@@ -373,8 +371,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: невозможно найти текст";
 	SELECT_LANGUAGE = u8"Выберете язык";
-	BING_PROMPT = u8"На какой язык переводить в Bing?";
-	GOOGLE_PROMPT = u8"На какой язык переводить в Google?";
+	SELECT_LANGUAGE_MESSAGE = u8"На какой язык переводить в %1?";
 	TOO_MANY_TRANS_REQUESTS = L"Слишком много запросов для перевода: отклонено";
 	TRANSLATION_ERROR = L"Ошибка при переводе";
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
@@ -473,8 +470,7 @@ Jika kamu menyukai project ini, tolong sebarluaskan project ini :))";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: tidak dapat menemukan teks";
 	SELECT_LANGUAGE = u8"Pilih bahasa";
-	BING_PROMPT = u8"Bahasa apakah yang Bing harus terjemahkan?";
-	GOOGLE_PROMPT = u8"Bahasa apakah yang Google harus terjemahkan?";
+	SELECT_LANGUAGE_MESSAGE = u8"Bahasa apakah yang %1 harus terjemahkan?";
 	TOO_MANY_TRANS_REQUESTS = L"Terlalu banyak permintaan terjemahan: menolak untuk menerjemahkan";
 	TRANSLATION_ERROR = L"Terjadi kesalahan ketika menerjemahkan";
 	EXTRA_WINDOW_INFO = u8R"(Klik kanan untuk merubah pengaturan

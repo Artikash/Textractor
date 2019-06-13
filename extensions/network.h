@@ -1,60 +1,32 @@
 #pragma once
 
-#include "util.h"
+#include "common.h"
 #include <winhttp.h>
 
 using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
 
-inline std::optional<std::wstring> ReceiveHttpRequest(HINTERNET request)
+struct HttpRequest
 {
-	WinHttpReceiveResponse(request, NULL);
-	std::string data;
-	DWORD dwSize, dwDownloaded;
-	do
-	{
-		dwSize = 0;
-		WinHttpQueryDataAvailable(request, &dwSize);
-		if (!dwSize) break;
-		std::vector<char> buffer(dwSize);
-		WinHttpReadData(request, buffer.data(), dwSize, &dwDownloaded);
-		data.append(buffer.data(), dwDownloaded);
-	} while (dwSize > 0);
+	HttpRequest(
+		const wchar_t* agentName,
+		const wchar_t* serverName,
+		const wchar_t* action,
+		const wchar_t* objectName,
+		DWORD requestFlags = WINHTTP_FLAG_SECURE | WINHTTP_FLAG_ESCAPE_DISABLE,
+		const wchar_t* httpVersion = NULL,
+		const wchar_t* referrer = NULL,
+		const wchar_t** acceptTypes = NULL,
+		const wchar_t* headers = NULL,
+		void* body = NULL,
+		DWORD bodyLength = 0
+	);
+	operator bool() { return errorCode == ERROR_SUCCESS; }
 
-	if (data.empty()) return {};
-	return StringToWideString(data);
-}
-
-inline void Unescape(std::wstring& text)
-{
-	for (int i = 0; i < text.size(); ++i)
-	{
-		if (text[i] == L'\\')
-		{
-			text[i] = 0x200b;
-			if (text[i + 1] == L'r') text[i + 1] = 0x200b; // for some reason \r gets displayed as a newline
-			if (text[i + 1] == L'n') text[i + 1] = L'\n';
-			if (text[i + 1] == L't') text[i + 1] = L'\t';
-		}
-	}
-}
-
-
-class RateLimiter
-{
-public:
-	RateLimiter(int tokenCount, int delay) : tokenCount(tokenCount), delay(delay) {}
-
-	bool Request()
-	{
-		auto tokens = this->tokens.Acquire();
-		tokens->push_back(GetTickCount());
-		if (tokens->size() > tokenCount * 5) tokens->erase(tokens->begin(), tokens->begin() + tokenCount * 3);
-		tokens->erase(std::remove_if(tokens->begin(), tokens->end(), [this](DWORD token) { return GetTickCount() - token > delay; }), tokens->end());
-		return tokens->size() < tokenCount;
-	}
-
-	const int tokenCount, delay;
-
-private:
-	Synchronized<std::vector<DWORD>> tokens;
+	std::wstring response;
+	InternetHandle connection = NULL;
+	InternetHandle request = NULL;
+	DWORD errorCode = ERROR_SUCCESS;
 };
+
+std::wstring Escape(const std::wstring& text);
+void Unescape(std::wstring& text);
