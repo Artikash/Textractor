@@ -356,7 +356,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	INJECT_FAILED = L"Textractor: невозможно присоединиться";
 	LAUNCH_FAILED = L"Textractor: невозможно запустить";
 	INVALID_CODE = L"Textractor: неверный код";
-	INVALID_CODEPAGE = L"Textractor: невозможно конвертировать тект (неверная кодировка?)";
+	INVALID_CODEPAGE = L"Textractor: невозможно конвертировать текст (неверная кодировка?)";
 	PIPE_CONNECTED = u8"Textractor: канал присоединен";
 	INSERTING_HOOK = u8"Textractor: вставка хука: %s";
 	REMOVING_HOOK = u8"Textractor: удаление хука: %s";
@@ -375,7 +375,7 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	TOO_MANY_TRANS_REQUESTS = L"Слишком много запросов для перевода: отклонено";
 	TRANSLATION_ERROR = L"Ошибка при переводе";
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
-Нажмите и перетазите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
+Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
 	TOPMOST = u8"Поверх всех окон";
 	SIZE_LOCK = u8"Фиксированный размер";
 	BG_COLOR = u8"Цвет заднего фона";
