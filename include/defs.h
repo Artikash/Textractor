@@ -28,7 +28,7 @@ constexpr auto CONFIG_FILE = u8"Textractor.ini";
 
 // Misc
 
-constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repetition>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
+constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
 constexpr auto WINDOW = u8"Window";
 
 // EOF
