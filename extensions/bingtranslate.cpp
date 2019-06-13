@@ -58,21 +58,14 @@ Synchronized<std::wstring> translateTo = L"en";
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	std::wstring translateFrom;
-	if (HttpRequest httpRequest{
-		L"Mozilla/5.0 Textractor",
-		L"www.bing.com",
-		L"POST",
-		FormatString(L"/tdetect?text=%s", Escape(text)).c_str(),
-		WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE,
-	}) translateFrom = httpRequest.response;
+	if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"www.bing.com", L"POST", FormatString(L"/tdetect?text=%s", Escape(text)).c_str() }) translateFrom = httpRequest.response;
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www.bing.com",
 		L"POST",
-		FormatString(L"/ttranslate?from=%s&to=%s&text=%s", translateFrom, translateTo->c_str(), Escape(text)).c_str(),
-		WINHTTP_FLAG_ESCAPE_DISABLE | WINHTTP_FLAG_SECURE,
+		FormatString(L"/ttranslate?from=%s&to=%s&text=%s", translateFrom, translateTo->c_str(), Escape(text)).c_str()
 	})
 		// Response formatted as JSON: translation starts with :" and ends with "}
 		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L":\"(.+)\"\\}"))) return { true, results[1] };

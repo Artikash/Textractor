@@ -107,7 +107,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
 	for (int i = 0; i < argc; ++i)
 		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
-			if (arg[1] == L'p')
+			if (arg[1] == L'p' || arg[1] == L'P')
 				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
 				else for (int i = 0; i < processIds.size(); ++i)
 					if (processNames[i].find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processIds[i]);
