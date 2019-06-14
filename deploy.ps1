@@ -8,11 +8,11 @@ mkdir -Force -Verbose x64;
 
 foreach ($language in @{
 	ENGLISH="";
-	SPANISH="Español";
-	SIMPLIFIED_CHINESE="简体中文";
-	RUSSIAN="Русский";
-	TURKISH="Türkçe";
-	INDONESIAN="Bahasa";
+	SPANISH="Spanish";
+	SIMPLIFIED_CHINESE="Simplified-Chinese";
+	RUSSIAN="Russian";
+	TURKISH="Turkish";
+	INDONESIAN="Indonesian";
 }.GetEnumerator())
 {
 	$folder = "Textractor-$($language.Value)-$version";
