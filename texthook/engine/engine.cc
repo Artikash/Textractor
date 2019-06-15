@@ -2005,10 +2005,19 @@ bool InsertBGI2Hook()
     return false;
   }
 
+  /* Artikash 6/14/2019: Ugh, what a mess I've dug up...
+  At some point the beginning four bytes to search for were removed, but the difference below were not corrected? Or maybe they were?
+  I don't have all these games so no way to confirm which (if any) are wrong.
+  But the first difference (the important one since it's the one detecting offset=arg3, all others give new) seems to be four bytes off when hooking https://vndb.org/v8158
+  ...but maybe it's not? Maybe I discovered a new difference?
+  I think the safest option is to just add the new? difference as a case that detects offset=arg3 since either way one case will detect offset=arg3 correctly.
+  And all the other cases fall through to offset=arg2.
+  */
   HookParam hp = {};
   switch (funaddr - addr) {
   // for old BGI2 game, text is arg3
-  case 0x34c80 - 0x34d31:
+  case 0x34c80 - 0x34d31: // old offset
+  case 0x34c50 - 0x34d05: // correction as mentioned above
     hp.offset = 4 * 3;
     break;
   // for new BGI2 game since 蒼の彼方 (2014/08), text is in arg2
@@ -2025,6 +2034,7 @@ bool InsertBGI2Hook()
     break;
   // Artikash 8/1/2018: Looks like it's basically always 4*2. Remove error from default case: breaks SubaHibi HD. Will figure out how to do this properly if it becomes an issue.
   default:
+	  ConsoleOutput("Textractor: BGI2 WARN: function-code distance unknown");
 	  hp.offset = 4 * 2;
 	  break;
   }
