@@ -13,6 +13,7 @@
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
+extern const char* SHOW_ORIGINAL;
 extern const char* SIZE_LOCK;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
@@ -72,6 +73,9 @@ public:
 			setSizeGripEnabled(!lock);
 			settings->setValue(SIZE_LOCK, lock);
 		};
+        auto setShowOriginal = [=](bool showOriginal) {
+            settings->setValue(SHOW_ORIGINAL, showOriginal);
+        };
 		setGeometry(settings->value(WINDOW, geometry()).toRect());
 		setLock(settings->value(SIZE_LOCK, false).toBool());
 		setTopmost(settings->value(TOPMOST, false).toBool());
@@ -86,6 +90,9 @@ public:
 		auto lock = menu->addAction(SIZE_LOCK, setLock);
 		lock->setCheckable(true);
 		lock->setChecked(settings->value(SIZE_LOCK, false).toBool());
+        auto showOriginal = menu->addAction(SHOW_ORIGINAL, setShowOriginal);
+        showOriginal->setCheckable(true);
+        showOriginal->setChecked(settings->value(SHOW_ORIGINAL, true).toBool());
 		menu->addAction(BG_COLOR, [=] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(TEXT_COLOR, [=] { setTextColor(QColorDialog::getColor(display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(FONT_SIZE, [=] { setFontSize(QInputDialog::getInt(this, FONT_SIZE, "", display->font().pointSize(), 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint)); });
@@ -156,6 +163,14 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	std::lock_guard l(m);
 	if (window == nullptr || !sentenceInfo["current select"]) return false;
-	QMetaObject::invokeMethod(window, [=] { window->display->setText(QString::fromStdWString(sentence)); });
+
+	QString qSentence = QString::fromStdWString(sentence);
+	if (!window->settings->value(SHOW_ORIGINAL).toBool()) 
+	{
+		int middle = qSentence.count('\n') / 2;
+		qSentence = qSentence.section('\n', middle + 1);
+	};
+
+	QMetaObject::invokeMethod(window, [=] { window->display->setText(qSentence); });
 	return false;
 }
