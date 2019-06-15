@@ -14,6 +14,7 @@
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
 extern const char* SHOW_ORIGINAL;
+extern const char* SHOW_SINGLE;
 extern const char* SIZE_LOCK;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
@@ -74,8 +75,10 @@ public:
 			settings->setValue(SIZE_LOCK, lock);
 		};
         auto setShowOriginal = [=](bool showOriginal) {
-
             settings->setValue(SHOW_ORIGINAL, showOriginal);
+        };
+        auto setShowSingle = [=](bool showSingle) {
+          settings->setValue(SHOW_SINGLE, showSingle);
         };
 		setGeometry(settings->value(WINDOW, geometry()).toRect());
 		setLock(settings->value(SIZE_LOCK, false).toBool());
@@ -94,6 +97,9 @@ public:
         auto showOriginal = menu->addAction(SHOW_ORIGINAL, setShowOriginal);
         showOriginal->setCheckable(true);
         showOriginal->setChecked(settings->value(SHOW_ORIGINAL, true).toBool());
+        auto showSingle = menu->addAction(SHOW_SINGLE, setShowSingle);
+        showSingle->setCheckable(true);
+        showSingle->setChecked(settings->value(SHOW_SINGLE, true).toBool());
 		menu->addAction(BG_COLOR, [=] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(TEXT_COLOR, [=] { setTextColor(QColorDialog::getColor(display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(FONT_SIZE, [=] { setFontSize(QInputDialog::getInt(this, FONT_SIZE, "", display->font().pointSize(), 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint)); });
@@ -171,6 +177,13 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
           qSentence = qSentence.section('\n', 1);
 	};
 
+	if (!window->settings->value(SHOW_SINGLE).toBool()) 
+	{
+		QString text = window->display->text();
+		text.truncate(5000);
+		qSentence.append("\r\n");
+		qSentence.append(text);
+	}
 	QMetaObject::invokeMethod(window, [=] { window->display->setText(qSentence); });
 	return false;
 }
