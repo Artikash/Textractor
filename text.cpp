@@ -109,9 +109,9 @@ const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* TOPMOST = u8"Always on Top";
+const char* SIZE_LOCK = u8"Size Locked";
 const char* SHOW_ORIGINAL = u8"Original Text";
 const char* SHOW_SINGLE = u8"Single Line";
-const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
 const char* FONT_SIZE = u8"Font Size";
@@ -380,6 +380,8 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
 	TOPMOST = u8"Поверх всех окон";
 	SIZE_LOCK = u8"Фиксированный размер";
+	SHOW_ORIGINAL = u8"Исходный текст";
+    SHOW_SINGLE = u8"В одну строку";
 	BG_COLOR = u8"Цвет заднего фона";
 	TEXT_COLOR = u8"Цвет текста";
 	FONT_SIZE = u8"Размер шрифта";
