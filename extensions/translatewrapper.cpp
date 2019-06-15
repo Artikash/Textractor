@@ -63,7 +63,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		const int tokenCount = 30, delay = 60 * 1000;
 		Synchronized<std::vector<DWORD>> tokens;
 	} rateLimiter;
-	Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
+	static Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 
 	bool cache = false;
 	std::wstring translation;
