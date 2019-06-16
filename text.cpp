@@ -110,6 +110,8 @@ const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* TOPMOST = u8"Always on Top";
 const char* SHOW_ORIGINAL = u8"Original Text";
+const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
+Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";

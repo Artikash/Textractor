@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QInputDialog>
 #include <QColorDialog>
+#include <QMessageBox>
 #include <QMenu>
 #include <QLayout>
 #include <QLabel>
@@ -14,6 +15,7 @@
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
 extern const char* SHOW_ORIGINAL;
+extern const char* SHOW_ORIGINAL_INFO;
 extern const char* SIZE_LOCK;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
@@ -73,7 +75,9 @@ public:
 			setSizeGripEnabled(!lock);
 			settings->setValue(SIZE_LOCK, lock);
 		};
-        auto setShowOriginal = [=](bool showOriginal) {
+        auto setShowOriginal = [=](bool showOriginal)
+		{
+			if (!showOriginal) QMessageBox::information(this, SHOW_ORIGINAL, SHOW_ORIGINAL_INFO);
             settings->setValue(SHOW_ORIGINAL, showOriginal);
         };
 		setGeometry(settings->value(WINDOW, geometry()).toRect());
@@ -165,11 +169,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (window == nullptr || !sentenceInfo["current select"]) return false;
 
 	QString qSentence = QString::fromStdWString(sentence);
-	if (!window->settings->value(SHOW_ORIGINAL).toBool()) 
-	{
-		int middle = qSentence.count('\n') / 2;
-		qSentence = qSentence.section('\n', middle + 1);
-	};
+	if (!window->settings->value(SHOW_ORIGINAL).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
 
 	QMetaObject::invokeMethod(window, [=] { window->display->setText(qSentence); });
 	return false;
