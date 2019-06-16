@@ -180,8 +180,8 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (!window->settings->value(SHOW_SINGLE).toBool()) 
 	{
 		QString text = window->display->text();
-		text.truncate(5000);
-		qSentence.append("\r\n");
+		text = text.section('\n', 0, 2);
+		qSentence.append("\n");
 		qSentence.append(text);
 	}
 	QMetaObject::invokeMethod(window, [=] { window->display->setText(qSentence); });
