@@ -136,7 +136,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	case DLL_PROCESS_DETACH:
 	{
 		std::lock_guard l(m);
-		if (window != nullptr)
+		if (window)
 		{
 			window->settings->setValue(WINDOW, window->geometry());
 			window->settings->sync();
@@ -155,7 +155,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	std::lock_guard l(m);
-	if (window == nullptr || !sentenceInfo["current select"]) return false;
+	if (!window || !sentenceInfo["current select"]) return false;
 	QMetaObject::invokeMethod(window, [=] { window->display->setText(QString::fromStdWString(sentence)); });
 	return false;
 }

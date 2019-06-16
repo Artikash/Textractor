@@ -127,7 +127,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	}
 	lua_pushstring(L, WideStringToString(sentence).c_str());
 	lua_createtable(L, 0, 0);
-	for (auto info = sentenceInfo.infoArray; info->name != nullptr; ++info)
+	for (auto info = sentenceInfo.infoArray; info->name; ++info)
 	{
 		lua_pushstring(L, info->name);
 		lua_pushinteger(L, info->value);

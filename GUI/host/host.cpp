@@ -29,7 +29,7 @@ namespace
 
 		TextHook GetHook(uint64_t addr)
 		{
-			if (view == nullptr) return {};
+			if (!view) return {};
 			std::scoped_lock lock(viewMutex);
 			for (auto hook : view)
 				if (hook.address == addr) return hook;

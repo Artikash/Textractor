@@ -118,7 +118,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 
 void ExtenWindow::keyPressEvent(QKeyEvent* event)
 {
-	if (event->key() == Qt::Key_Delete && ui->extenList->currentItem() != nullptr)
+	if (event->key() == Qt::Key_Delete && ui->extenList->currentItem())
 	{
 		Unload(ui->extenList->currentIndex().row());
 		Sync();
