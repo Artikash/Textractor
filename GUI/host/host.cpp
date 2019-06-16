@@ -105,7 +105,7 @@ namespace
 					auto& OnHookFound = processRecordsByIds->at(processId).OnHookFound;
 					std::wstring wide = info.text;
 					if (wide.size() > STRING) OnHookFound(info.hp, info.text);
-					info.hp.type = USING_STRING;
+					info.hp.type &= ~USING_UNICODE;
 					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage))
 						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
 					info.hp.codepage = CP_UTF8;

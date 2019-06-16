@@ -11,6 +11,7 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QListWidget>
+#include <QDialogButtonBox>
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -21,7 +22,7 @@ extern const char* DETACH;
 extern const char* ADD_HOOK;
 extern const char* REMOVE_HOOKS;
 extern const char* SAVE_HOOKS;
-extern const char* FIND_HOOKS;
+extern const char* SEARCH_FOR_HOOKS;
 extern const char* SETTINGS;
 extern const char* EXTENSIONS;
 extern const char* SELECT_PROCESS;
@@ -30,6 +31,7 @@ extern const char* SEARCH_GAME;
 extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
 extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
+extern const char* SEARCH_CJK;
 extern const char* SEARCH_PATTERN;
 extern const char* SEARCH_DURATION;
 extern const char* PATTERN_OFFSET;
@@ -59,14 +61,14 @@ MainWindow::MainWindow(QWidget *parent) :
 	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
-	for (auto[text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
+	for (auto [text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
 		{ ATTACH, &MainWindow::AttachProcess },
 		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
 		{ ADD_HOOK, &MainWindow::AddHook },
 		{ REMOVE_HOOKS, &MainWindow::RemoveHooks },
 		{ SAVE_HOOKS, &MainWindow::SaveHooks },
-		{ FIND_HOOKS, &MainWindow::FindHooks },
+		{ SEARCH_FOR_HOOKS, &MainWindow::FindHooks },
 		{ SETTINGS, &MainWindow::Settings },
 		{ EXTENSIONS, &MainWindow::Extensions }
 	})
@@ -325,9 +327,10 @@ void MainWindow::RemoveHooks()
 	}
 	auto hookList = new QListWidget(this);
 	hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+	hookList->setAttribute(Qt::WA_DeleteOnClose);
 	hookList->setMinimumSize({ 300, 50 });
 	hookList->setWindowTitle(DOUBLE_CLICK_TO_REMOVE_HOOK);
-	for (auto[address, hp] : hooks)
+	for (auto [address, hp] : hooks)
 		new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
 	connect(hookList, &QListWidget::itemDoubleClicked, [processId, hookList](QListWidgetItem* item)
 	{
@@ -364,120 +367,123 @@ void MainWindow::SaveHooks()
 
 void MainWindow::FindHooks()
 {
-	QMessageBox::information(this, FIND_HOOKS, HOOK_SEARCH_UNSTABLE_WARNING);
-	struct : QDialog
-	{
-		using QDialog::QDialog;
-		void launch()
-		{
-			auto layout = new QFormLayout(this);
-			auto patternInput = new QLineEdit(x64 ? "CC CC 48 89" : "CC CC 55 8B EC", this);
-			layout->addRow(SEARCH_PATTERN, patternInput);
-			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
-				{ sp.searchTime = 20000, SEARCH_DURATION },
-				{ sp.offset = 2, PATTERN_OFFSET },
-			})
-			{
-				auto spinBox = new QSpinBox(this);
-				spinBox->setMaximum(INT_MAX);
-				spinBox->setValue(value);
-				layout->addRow(label, spinBox);
-				connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [=, &value] { value = spinBox->value(); });
-			}
-			for (auto[value, label] : Array<std::tuple<uintptr_t&, const char*>>{
-				{ sp.minAddress = 0, MIN_ADDRESS },
-				{ sp.maxAddress = -1ULL, MAX_ADDRESS },
-				{ sp.padding = 0, STRING_OFFSET }
-			})
-			{
-				auto input = new QLineEdit(QString::number(value, 16), this);
-				layout->addRow(label, input);
-				connect(input, &QLineEdit::textEdited, [&value](QString input)
-				{
-					bool ok;
-					if (uintptr_t newValue = input.toULongLong(&ok, 16); ok) value = newValue;
-				});
-			}
-			auto filterInput = new QLineEdit(this);
-			layout->addRow(HOOK_SEARCH_FILTER, filterInput);
-			auto save = new QPushButton(START_HOOK_SEARCH, this);
-			layout->addWidget(save);
-			connect(save, &QPushButton::clicked, this, &QDialog::accept);
-			connect(save, &QPushButton::clicked, [this, patternInput, filterInput]
-			{
-				QByteArray pattern = QByteArray::fromHex(patternInput->text().replace("??", QString::number(XX, 16)).toUtf8());
-				if (pattern.size() < 3) return;
-				std::wregex filter(L".");
-				if (!filterInput->text().isEmpty()) try { filter = std::wregex(S(filterInput->text())); } catch (std::regex_error) {};
-				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
-				auto hooks = std::make_shared<QString>();
-				DWORD processId = this->processId;
-				try
-				{
-					Host::FindHooks(processId, sp, [processId, hooks, filter](HookParam hp, const std::wstring& text)
-					{
-						if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
-					});
-				}
-				catch (std::out_of_range) { return; }
-				QString fileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
-				if (fileName.isEmpty()) fileName = "Hooks.txt";
-				std::thread([hooks, fileName]
-				{
-					for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
-					QTextFile(fileName, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
-					hooks->clear();
-				}).detach();	
-			});
-			setWindowTitle(FIND_HOOKS);
-			exec();
-		}
+	QMessageBox::information(this, SEARCH_FOR_HOOKS, HOOK_SEARCH_UNSTABLE_WARNING);
 
-		SearchParam sp = {};
-		DWORD processId;
-	} searchDialog(this, Qt::WindowCloseButtonHint);
-	searchDialog.processId = GetSelectedProcessId();
-	searchDialog.launch();
+	DWORD processId = GetSelectedProcessId();
+	SearchParam sp = {};
+	bool customSettings = false;
+	std::wregex filter(L".");
+	
+	QDialog dialog(this, Qt::WindowCloseButtonHint);
+	QFormLayout layout(&dialog);
+	QCheckBox cjkCheckbox(&dialog);
+	layout.addRow(SEARCH_CJK, &cjkCheckbox);
+	QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help, &dialog);
+	layout.addRow(&confirm);
+	confirm.button(QDialogButtonBox::Ok)->setText(START_HOOK_SEARCH);
+	confirm.button(QDialogButtonBox::Help)->setText(SETTINGS);
+	connect(&confirm, &QDialogButtonBox::helpRequested, [&customSettings] { customSettings = true; });
+	connect(&confirm, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+	connect(&confirm, &QDialogButtonBox::helpRequested, &dialog, &QDialog::accept);
+	dialog.setWindowTitle(SEARCH_FOR_HOOKS);
+	if (dialog.exec() == QDialog::Rejected) return;
+
+	if (customSettings)
+	{
+		QDialog dialog(this, Qt::WindowCloseButtonHint);
+		QFormLayout layout(&dialog);
+		QLineEdit patternInput(x64 ? "CC CC 48 89" : "CC CC 55 8B EC", &dialog);
+		layout.addRow(SEARCH_PATTERN, &patternInput);
+		for (auto [value, label] : Array<std::tuple<int&, const char*>>{
+			{ sp.searchTime = 20000, SEARCH_DURATION },
+			{ sp.offset = 2, PATTERN_OFFSET },
+		})
+		{
+			auto spinBox = new QSpinBox(&dialog);
+			spinBox->setMaximum(INT_MAX);
+			spinBox->setValue(value);
+			layout.addRow(label, spinBox);
+			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value] (int newValue) { value = newValue; });
+		}
+		for (auto [value, label] : Array<std::tuple<uintptr_t&, const char*>>{
+			{ sp.minAddress = 0, MIN_ADDRESS },
+			{ sp.maxAddress = -1ULL, MAX_ADDRESS },
+			{ sp.padding = 0, STRING_OFFSET }
+		})
+		{
+			auto input = new QLineEdit(QString::number(value, 16), &dialog);
+			layout.addRow(label, input);
+			connect(input, &QLineEdit::textEdited, [&value](QString input)
+			{
+				bool ok;
+				if (uintptr_t newValue = input.toULongLong(&ok, 16); ok) value = newValue;
+			});
+		}
+		QLineEdit filterInput(".", &dialog);
+		layout.addRow(HOOK_SEARCH_FILTER, &filterInput);
+		QPushButton startButton(START_HOOK_SEARCH, &dialog);
+		layout.addWidget(&startButton);
+		connect(&startButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+		if (dialog.exec() == QDialog::Rejected) return;
+		QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
+		memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
+		try { filter = std::wregex(S(filterInput.text())); } catch (std::regex_error) {};
+	}
+	else
+	{
+		// sp.length is 0 in this branch, so default will be used
+		filter = cjkCheckbox.isChecked() ? std::wregex(L"[\\u3000-\\ua000]{4,}") : std::wregex(L"[\\u0020-\\u1000]{4,}");
+	}
+
+	auto hooks = std::make_shared<QString>();
+	try
+	{
+		Host::FindHooks(processId, sp, [processId, hooks, filter](HookParam hp, const std::wstring& text)
+		{
+			if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
+		});
+	} catch (std::out_of_range) { return; }
+	QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
+	if (saveFile.isEmpty()) saveFile = "Hooks.txt";
+	std::thread([hooks, saveFile]
+	{
+		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
+		QTextFile(saveFile, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
+		hooks->clear();
+	}).detach();
 }
 
 void MainWindow::Settings()
 {
-	struct : QDialog
+	QDialog dialog(this, Qt::WindowCloseButtonHint);
+	QSettings settings(CONFIG_FILE, QSettings::IniFormat, &dialog);
+	QFormLayout layout(&dialog);
+	QPushButton saveButton(SAVE_SETTINGS, &dialog);
+	layout.addWidget(&saveButton);
+	for (auto [value, label] : Array<std::tuple<int&, const char*>>{
+		{ Host::defaultCodepage, DEFAULT_CODEPAGE },
+		{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
+		{ TextThread::flushDelay, FLUSH_DELAY },
+	})
 	{
-		using QDialog::QDialog;
-		void launch()
-		{
-			auto settings = new QSettings(CONFIG_FILE, QSettings::IniFormat, this);
-			auto layout = new QFormLayout(this);
-			auto save = new QPushButton(SAVE_SETTINGS, this);
-			layout->addWidget(save);
-			for (auto[value, label] : Array<std::tuple<int&, const char*>>{
-				{ Host::defaultCodepage, DEFAULT_CODEPAGE },
-				{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
-				{ TextThread::flushDelay, FLUSH_DELAY },
-			})
-			{
-				auto spinBox = new QSpinBox(this);
-				spinBox->setMaximum(INT_MAX);
-				spinBox->setValue(value);
-				layout->insertRow(0, label, spinBox);
-				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = spinBox->value()); });
-			}
-			for (auto[value, label] : Array<std::tuple<bool&, const char*>>{
-				{ TextThread::filterRepetition, FILTER_REPETITION },
-			})
-			{
-				auto checkBox = new QCheckBox(this);
-				checkBox->setChecked(value);
-				layout->insertRow(0, label, checkBox);
-				connect(save, &QPushButton::clicked, [=, &value] { settings->setValue(label, value = checkBox->isChecked()); });
-			}
-			connect(save, &QPushButton::clicked, this, &QDialog::accept);
-			setWindowTitle(SETTINGS);
-			exec();
-		}
-	} settingsDialog(this, Qt::WindowCloseButtonHint);
-	settingsDialog.launch();
+		auto spinBox = new QSpinBox(&dialog);
+		spinBox->setMaximum(INT_MAX);
+		spinBox->setValue(value);
+		layout.insertRow(0, label, spinBox);
+		connect(&saveButton, &QPushButton::clicked, [spinBox, label, &settings, &value] { settings.setValue(label, value = spinBox->value()); });
+	}
+	for (auto [value, label] : Array<std::tuple<bool&, const char*>>{
+		{ TextThread::filterRepetition, FILTER_REPETITION },
+	})
+	{
+		auto checkBox = new QCheckBox(&dialog);
+		checkBox->setChecked(value);
+		layout.insertRow(0, label, checkBox);
+		connect(&saveButton, &QPushButton::clicked, [checkBox, label, &settings, &value] { settings.setValue(label, value = checkBox->isChecked()); });
+	}
+	connect(&saveButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+	dialog.setWindowTitle(SETTINGS);
+	dialog.exec();
 }
 
 void MainWindow::Extensions()
