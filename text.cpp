@@ -110,6 +110,9 @@ const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* TOPMOST = u8"Always on Top";
+const char* SHOW_ORIGINAL = u8"Original Text";
+const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
+Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
@@ -381,6 +384,9 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
 Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
 	TOPMOST = u8"Поверх всех окон";
+    SHOW_ORIGINAL = u8"Исходный текст";
+    SHOW_ORIGINAL_INFO = u8R"(Исходный текст будет скрыт
+Работает только если это расширение используется после расширения перевода)";
 	SIZE_LOCK = u8"Фиксированный размер";
 	BG_COLOR = u8"Цвет заднего фона";
 	TEXT_COLOR = u8"Цвет текста";
