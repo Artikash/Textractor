@@ -2,6 +2,7 @@
 #include "network.h"
 #include <QTimer>
 #include <QInputDialog>
+#include <QFile>
 
 extern const char* SELECT_LANGUAGE;
 extern const char* SELECT_LANGUAGE_MESSAGE;
@@ -11,6 +12,8 @@ extern const char* TRANSLATION_PROVIDER;
 extern QStringList languages;
 extern Synchronized<std::wstring> translateTo;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
+
+Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -33,10 +36,21 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				.toStdWString()
 			);
 		});
+
+		QFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER));
+		file.open(QIODevice::ReadOnly | QIODevice::Text);
+		QStringList savedCache = QString(file.readAll()).split("|T|\n", QString::SkipEmptyParts);
+		for (int i = 0; i < savedCache.size() - 1; i += 2)
+			translationCache->insert({ savedCache[i].toStdWString(), savedCache[i + 1].toStdWString() });
 	}
 	break;
 	case DLL_PROCESS_DETACH:
 	{
+		QFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER));
+		file.open(QIODevice::WriteOnly | QIODevice::Text);
+		auto translationCache = ::translationCache.Acquire();
+		for (const auto& [original, translation] : translationCache.contents)
+			file.write(QString::fromStdWString(FormatString(L"%s|T|\n%s|T|\n", original, translation)).toUtf8());
 	}
 	break;
 	}
@@ -63,7 +77,6 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		const int tokenCount = 30, delay = 60 * 1000;
 		Synchronized<std::vector<DWORD>> tokens;
 	} rateLimiter;
-	static Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 
 	bool cache = false;
 	std::wstring translation;

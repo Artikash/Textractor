@@ -165,7 +165,7 @@ void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
 		WideCharToMultiByte(hp.codepage, 0, hp.text, MAX_MODULE_SIZE, codepageText, MAX_MODULE_SIZE * 4, nullptr, nullptr);
 		if (strlen(utf8Text) < 8 || strlen(codepageText) < 8 || wcslen(hp.text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
 		ConsoleOutput(STARTING_SEARCH);
-		for (auto[addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
+		for (auto [addrs, type] : Array<std::tuple<std::vector<uint64_t>, HookParamType>>{
 			{ Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8 },
 			{ Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), USING_STRING },
 			{ Util::SearchMemory(hp.text, wcslen(hp.text) * 2, PAGE_READWRITE), USING_UNICODE }

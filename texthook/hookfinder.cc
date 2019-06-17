@@ -11,7 +11,7 @@ extern WinMutex viewMutex;
 
 namespace
 {
-	SearchParam current;
+	SearchParam sp;
 
 	constexpr int CACHE_SIZE = 500'000;
 	struct HookRecord
@@ -23,7 +23,8 @@ namespace
 			hp.offset = offset;
 			hp.type = USING_UNICODE | USING_STRING;
 			hp.address = address;
-			hp.padding = current.padding;
+			hp.padding = sp.padding;
+			if (sp.hookPostProcesser) sp.hookPostProcesser(hp);
 			NotifyHookFound(hp, (wchar_t*)text);
 		}
 		uint64_t address = 0;
@@ -118,7 +119,7 @@ void Send(char** stack, uintptr_t address)
 	for (int i = -registers; i < 6; ++i)
 	{
 		int length = 0, sum = 0;
-		char* str = stack[i] + current.padding;
+		char* str = stack[i] + sp.padding;
 		__try { for (; (str[length] || str[length + 1]) && length < 500; length += 2) sum += str[length] + str[length + 1]; }
 		__except (EXCEPTION_EXECUTE_HANDLER) {}
 		if (length > STRING && length < 499)
@@ -152,7 +153,7 @@ void Send(char** stack, uintptr_t address)
 	}
 }
 
-void SearchForHooks(SearchParam sp)
+void SearchForHooks(SearchParam spUser)
 {
 	std::thread([=]
 	{
@@ -162,7 +163,7 @@ void SearchForHooks(SearchParam sp)
 		try { records = std::make_unique<HookRecord[]>(recordsAvailable = CACHE_SIZE); }
 		catch (std::bad_alloc) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
 
-		current = sp;
+		sp = spUser.length == 0 ? spDefault : spUser;
 
 		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
 		uintptr_t moduleStopAddress = moduleStartAddress;

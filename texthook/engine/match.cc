@@ -37,22 +37,25 @@ namespace Engine
 
 	void Hijack()
 	{
-		static bool hijacked = false;
-		if (hijacked) return;
-		GetModuleFileNameW(nullptr, processPath, MAX_PATH);
-		processName = wcsrchr(processPath, L'\\') + 1;
-
-		processStartAddress = processStopAddress = (uintptr_t)GetModuleHandleW(nullptr);
-		MEMORY_BASIC_INFORMATION info;
-		do
+		static auto _ = []
 		{
-			VirtualQuery((void*)processStopAddress, &info, sizeof(info));
-			processStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
-		} while (info.Protect > PAGE_NOACCESS);
-		processStopAddress -= info.RegionSize;
+			GetModuleFileNameW(nullptr, processPath, MAX_PATH);
+			processName = wcsrchr(processPath, L'\\') + 1;
 
-		DetermineEngineType();
-		hijacked = true;
-		ConsoleOutput("Textractor: finished hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
+			processStartAddress = processStopAddress = (uintptr_t)GetModuleHandleW(nullptr);
+			MEMORY_BASIC_INFORMATION info;
+			do
+			{
+				VirtualQuery((void*)processStopAddress, &info, sizeof(info));
+				processStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
+			} while (info.Protect > PAGE_NOACCESS);
+			processStopAddress -= info.RegionSize;
+			spDefault.minAddress = processStartAddress;
+			spDefault.maxAddress = processStopAddress;
+			ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
+
+			DetermineEngineType();
+			return NULL;
+		}();
 	}
 }

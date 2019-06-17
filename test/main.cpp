@@ -43,7 +43,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 		return FALSE;
 	}, 0), SW_SHOW);
 
-	std::thread([] { while (true) Sleep(vars.at(0)), lstrlenW(L"こんにちは"); }).detach();
+	std::thread([] { while (true) Sleep(vars.at(0)), lstrlenW(L"こんにちは\n　(Hello)"); }).detach();
 
 	STARTUPINFOW info = { sizeof(info) };
 	wchar_t commandLine[] = { L"Textractor -p\"Test.exe\"" };

@@ -12,7 +12,7 @@ const char* DETACH = u8"Detach from game";
 const char* ADD_HOOK = u8"Add hook";
 const char* REMOVE_HOOKS = u8"Remove hook(s)";
 const char* SAVE_HOOKS = u8"Save hook(s)";
-const char* FIND_HOOKS = u8"Find hooks";
+const char* SEARCH_FOR_HOOKS = u8"Search for hooks";
 const char* SETTINGS = u8"Settings";
 const char* EXTENSIONS = u8"Extensions";
 const char* SELECT_PROCESS = u8"Select process";
@@ -51,6 +51,7 @@ const char* CONFIRM_EXTENSION_OVERWRITE = u8"Another version of this extension a
 const char* EXTENSION_WRITE_ERROR = u8"Failed to save extension";
 const char* USE_JP_LOCALE = u8"Emulate japanese locale?";
 const char* HOOK_SEARCH_UNSTABLE_WARNING = u8"Searching for hooks is unstable! Be prepared for your game to crash!";
+const char* SEARCH_CJK = u8"Search for Chinese/Japanese/Korean";
 const char* SEARCH_PATTERN = u8"Search pattern (hex byte array)";
 const char* SEARCH_DURATION = u8"Search duration (ms)";
 const char* PATTERN_OFFSET = u8"Offset from pattern start";
@@ -115,7 +116,10 @@ Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
+const char* FONT = u8"Font";
+const char* FONT_FAMILY = u8"Font Family";
 const char* FONT_SIZE = u8"Font Size";
+const char* FONT_WEIGHT = u8"Font Weight";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 

@@ -12,11 +12,12 @@ namespace Host
 
 	void InjectProcess(DWORD processId);
 	void DetachProcess(DWORD processId);
+
 	void InsertHook(DWORD processId, HookParam hp);
 	void RemoveHook(DWORD processId, uint64_t address);
 	void FindHooks(DWORD processId, SearchParam sp, HookEventHandler HookFound = {});
 
-	HookParam GetHookParam(ThreadParam tp);
+	TextThread* GetThread(int64_t handle);
 	TextThread& GetThread(ThreadParam tp);
 
 	void AddConsoleOutput(std::wstring text);

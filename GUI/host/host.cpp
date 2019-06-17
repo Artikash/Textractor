@@ -29,7 +29,7 @@ namespace
 
 		TextHook GetHook(uint64_t addr)
 		{
-			if (view == nullptr) return {};
+			if (!view) return {};
 			std::scoped_lock lock(viewMutex);
 			for (auto hook : view)
 				if (hook.address == addr) return hook;
@@ -60,7 +60,7 @@ namespace
 
 	size_t HashThreadParam(ThreadParam tp) { return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2); }
 	Synchronized<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
-	Synchronized<std::unordered_map<DWORD, ProcessRecord>, std::recursive_mutex> processRecordsByIds;
+	Synchronized<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
 
 	Host::ProcessEventHandler OnConnect, OnDisconnect;
 	Host::ThreadEventHandler OnCreate, OnDestroy;
@@ -102,10 +102,10 @@ namespace
 				case HOST_NOTIFICATION_FOUND_HOOK:
 				{
 					auto info = *(HookFoundNotif*)buffer;
-					auto& OnHookFound = processRecordsByIds->at(processId).OnHookFound;
+					auto OnHookFound = processRecordsByIds->at(processId).OnHookFound;
 					std::wstring wide = info.text;
 					if (wide.size() > STRING) OnHookFound(info.hp, info.text);
-					info.hp.type = USING_STRING;
+					info.hp.type &= ~USING_UNICODE;
 					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage))
 						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
 					info.hp.codepage = CP_UTF8;
@@ -132,7 +132,7 @@ namespace
 					auto textThread = textThreadsByParams->find(tp);
 					if (textThread == textThreadsByParams->end())
 					{
-						try { textThread = textThreadsByParams->try_emplace(tp, tp, Host::GetHookParam(tp)).first; }
+						try { textThread = textThreadsByParams->try_emplace(tp, tp, processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp).first; }
 						catch (std::out_of_range) { continue; } // probably garbage data in pipe, try again
 						OnCreate(textThread->second);
 					}
@@ -158,8 +158,6 @@ namespace Host
 		OnDestroy = [Destroy](TextThread& thread) { thread.Stop(); Destroy(thread); };
 		TextThread::Output = Output;
 
-		processRecordsByIds->try_emplace(console.processId, console.processId, INVALID_HANDLE_VALUE);
-		OnConnect(console.processId);
 		textThreadsByParams->try_emplace(console, console, HookParam{}, CONSOLE);
 		OnCreate(GetThread(console));
 		textThreadsByParams->try_emplace(clipboard, clipboard, HookParam{}, CLIPBOARD);
@@ -233,14 +231,16 @@ namespace Host
 		processRecordsByIds->at(processId).Send(FindHookCmd(sp));
 	}
 
-	HookParam GetHookParam(ThreadParam tp)
-	{
-		return processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp;
-	}
-
 	TextThread& GetThread(ThreadParam tp)
 	{
 		return textThreadsByParams->at(tp);
+	}
+
+	TextThread* GetThread(int64_t handle)
+	{
+		auto textThreadsByParams = ::textThreadsByParams.Acquire();
+		auto thread = std::find_if(textThreadsByParams->begin(), textThreadsByParams->end(), [&](const auto& thread) { return thread.second.handle == handle; });
+		return thread != textThreadsByParams->end() ? &thread->second : nullptr;	
 	}
 
 	void AddConsoleOutput(std::wstring text)

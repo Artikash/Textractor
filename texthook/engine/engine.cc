@@ -16818,7 +16818,7 @@ bool InsertVanillawareGCHook()
 
 /** Artikash 6/7/2019
 *   PPSSPP JIT code has pointers, but they are all added to an offset before being used.
-    Find that offset and report it to user so they can search for hooks properly.
+    Find that offset so that hook searching works properly.
 	To find the offset, find a page of mapped memory with size 0x1f00000, read and write permissions, take its address and subtract 0x8000000.
 	The above is useful for emulating PSP hardware, so unlikely to change between versions.
 */
@@ -16839,7 +16839,13 @@ bool FindPPSSPP()
 			if (info.RegionSize == 0x1f00000 && info.Protect == PAGE_READWRITE && info.Type == MEM_MAPPED)
 			{
 				found = true;
-				ConsoleOutput("Textractor: PPSSPP memory found: use pattern 79 0F C7 85 and pattern offset 0 and string offset 0x%p to search for hooks", probe - 0x8000000);
+				ConsoleOutput("Textractor: PPSSPP memory found: searching for hooks should yield working hook codes");
+				memcpy(spDefault.pattern, Array<BYTE>{ 0x79, 0x0f, 0xc7, 0x85 }, spDefault.length = 4);
+				spDefault.offset = 0;
+				spDefault.minAddress = 0;
+				spDefault.maxAddress = -1ULL;
+				spDefault.padding = (uintptr_t)probe - 0x8000000;
+				spDefault.hookPostProcesser = [](HookParam& hp) { hp.type |= NO_CONTEXT; };
 			}
 			probe += info.RegionSize;
 		}

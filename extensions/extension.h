@@ -14,7 +14,7 @@ struct SentenceInfo
 	// nullptr marks end of info array
 	int64_t operator[](std::string propertyName)
 	{
-		for (auto info = infoArray; info->name != nullptr; ++info) if (propertyName == info->name) return info->value;
+		for (auto info = infoArray; info->name; ++info) if (propertyName == info->name) return info->value;
 		throw;
 	}
 
