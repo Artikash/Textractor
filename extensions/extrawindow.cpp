@@ -6,6 +6,10 @@
 #include <QMenu>
 #include <QLayout>
 #include <QLabel>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QPushButton>
 #include <QPainter>
 #include <QMouseEvent>
 #include <QSettings>
@@ -16,7 +20,11 @@ extern const char* TOPMOST;
 extern const char* SIZE_LOCK;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
+extern const char* FONT;
 extern const char* FONT_SIZE;
+extern const char* FONT_FAMILY;
+extern const char* FONT_WEIGHT;
+extern const char* SAVE_SETTINGS;
 
 std::mutex m;
 
@@ -54,12 +62,32 @@ public:
 			display->setPalette(newPalette);
 			settings->setValue(TEXT_COLOR, color);
 		};
-		auto setFontSize = [=](int pt)
+		auto requestFont = [=]
 		{
-			QFont newFont = display->font();
-			newFont.setPointSize(pt);
-			display->setFont(newFont);
-			settings->setValue(FONT_SIZE, pt);
+			QFont font = display->font();
+			auto fontDialog = new QDialog(this, Qt::WindowCloseButtonHint);
+			fontDialog->setAttribute(Qt::WA_DeleteOnClose);
+			fontDialog->setWindowTitle(FONT);
+			auto layout = new QFormLayout(fontDialog);
+			fontDialog->setLayout(layout);
+			auto fontFamily = new QLineEdit(font.family(), fontDialog);
+			layout->addRow(FONT_FAMILY, fontFamily);
+			auto fontSize = new QSpinBox(fontDialog);
+			fontSize->setValue(font.pointSize());
+			layout->addRow(FONT_SIZE, fontSize);
+			auto fontWeight = new QSpinBox(fontDialog);
+			fontWeight->setValue(font.weight());
+			layout->addRow(FONT_WEIGHT, fontWeight);
+			auto save = new QPushButton(SAVE_SETTINGS, fontDialog);
+			layout->addWidget(save);
+			connect(save, &QPushButton::clicked, fontDialog, &QDialog::accept);
+			fontDialog->open();
+			connect(fontDialog, &QDialog::accepted, [=]
+			{
+				QFont font(fontFamily->text(), fontSize->value(), fontWeight->value());
+				settings->setValue(FONT, font.toString());
+				display->setFont(font);
+			});
 		};
 		auto setTopmost = [=](bool topmost)
 		{
@@ -75,7 +103,10 @@ public:
 		setGeometry(settings->value(WINDOW, geometry()).toRect());
 		setLock(settings->value(SIZE_LOCK, false).toBool());
 		setTopmost(settings->value(TOPMOST, false).toBool());
-		setFontSize(settings->value(FONT_SIZE, 16).toInt());
+		QFont font = display->font();
+		font.setPointSize(16);
+		font.fromString(settings->value(FONT, font.toString()).toString());
+		display->setFont(font);
 		setBackgroundColor(settings->value(BG_COLOR, palette().window().color()).value<QColor>());
 		setTextColor(settings->value(TEXT_COLOR, display->palette().windowText().color()).value<QColor>());
 
@@ -88,7 +119,7 @@ public:
 		lock->setChecked(settings->value(SIZE_LOCK, false).toBool());
 		menu->addAction(BG_COLOR, [=] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu->addAction(TEXT_COLOR, [=] { setTextColor(QColorDialog::getColor(display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
-		menu->addAction(FONT_SIZE, [=] { setFontSize(QInputDialog::getInt(this, FONT_SIZE, "", display->font().pointSize(), 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint)); });
+		menu->addAction(FONT, requestFont);
 		display->setContextMenuPolicy(Qt::CustomContextMenu);
 		connect(display, &QLabel::customContextMenuRequested, [=](QPoint point) { menu->exec(mapToGlobal(point)); });
 		connect(this, &QDialog::destroyed, [=] { settings->setValue(WINDOW, geometry()); });

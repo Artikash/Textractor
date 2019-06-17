@@ -113,7 +113,10 @@ const char* TOPMOST = u8"Always on Top";
 const char* SIZE_LOCK = u8"Size Locked";
 const char* BG_COLOR = u8"Background Color";
 const char* TEXT_COLOR = u8"Text Color";
+const char* FONT = u8"Font";
+const char* FONT_FAMILY = u8"Font Family";
 const char* FONT_SIZE = u8"Font Size";
+const char* FONT_WEIGHT = u8"Font Weight";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 
