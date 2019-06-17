@@ -93,13 +93,11 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	std::lock_guard l(m);
-	static std::unordered_map<int64_t, std::wstring> queuedWritesByHandle;
-	int64_t textHandle = sentenceInfo["text handle"];
+	int64_t textHandle = sentenceInfo["text number"];
 
-	for (auto linkedHandle : linkedTextHandles[textHandle]) queuedWritesByHandle[linkedHandle] += L"\n" + sentence;
+	for (auto linkedHandle : linkedTextHandles[textHandle])
+		((void(*)(void*, int64_t, const wchar_t*))sentenceInfo["void (*AddSentence)(void* this, int64_t number, const wchar_t* sentence)"])
+			((void*)sentenceInfo["this"], linkedHandle, sentence.c_str());
 
-	if (queuedWritesByHandle[textHandle].empty()) return false;
-	sentence += queuedWritesByHandle[textHandle];
-	queuedWritesByHandle[textHandle].clear();
-	return true;
+	return false;
 }

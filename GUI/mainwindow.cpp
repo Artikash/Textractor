@@ -234,6 +234,13 @@ DWORD MainWindow::GetSelectedProcessId()
 
 std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 {
+	void(*AddSentence)(MainWindow*, int64_t, const wchar_t*) = [](MainWindow* This, int64_t number, const wchar_t* sentence)
+	{
+		std::wstring sentenceStr = sentence;
+		// pointer from Host::GetThread may not stay valid unless on main thread
+		QMetaObject::invokeMethod(This, [=]() mutable { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(std::move(sentenceStr)); });
+	};
+
 	return
 	{ {
 	{ "current select", &thread == current },
@@ -242,6 +249,8 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 	{ "hook address", (int64_t)thread.tp.addr },
 	{ "text handle", thread.handle },
 	{ "text name", (int64_t)thread.name.c_str() },
+	{ "this", (int64_t)this },
+	{ "void (*AddSentence)(void* this, int64_t number, const wchar_t* sentence)", (int64_t)AddSentence },
 	{ nullptr, 0 } // nullptr marks end of info array
 	} };
 }
@@ -323,7 +332,7 @@ void MainWindow::RemoveHooks()
 	for (int i = 0; i < ui->ttCombo->count(); ++i)
 	{
 		ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
-		if (tp.processId == GetSelectedProcessId()) hooks[tp.addr] = Host::GetHookParam(tp);
+		if (tp.processId == GetSelectedProcessId()) hooks[tp.addr] = Host::GetThread(tp).hp;
 	}
 	auto hookList = new QListWidget(this);
 	hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
@@ -346,23 +355,22 @@ void MainWindow::RemoveHooks()
 
 void MainWindow::SaveHooks()
 {
-	if (auto processName = Util::GetModuleFilename(GetSelectedProcessId()))
+	auto processName = Util::GetModuleFilename(GetSelectedProcessId());
+	if (!processName) return;
+	QHash<uint64_t, QString> hookCodes;
+	for (int i = 0; i < ui->ttCombo->count(); ++i)
 	{
-		QHash<uint64_t, QString> hookCodes;
-		for (int i = 0; i < ui->ttCombo->count(); ++i)
+		ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
+		if (tp.processId == GetSelectedProcessId())
 		{
-			ThreadParam tp = ParseTextThreadString(ui->ttCombo->itemText(i));
-			if (tp.processId == GetSelectedProcessId())
-			{
-				HookParam hp = Host::GetHookParam(tp);
-				if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = S(Util::GenerateCode(hp, tp.processId));
-			}
+			HookParam hp = Host::GetThread(tp).hp;
+			if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = S(Util::GenerateCode(hp, tp.processId));
 		}
-		auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
-		ThreadParam tp = current.load()->tp;
-		if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(Host::GetHookParam(tp), tp.processId)));
-		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 	}
+	auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
+	ThreadParam tp = current.load()->tp;
+	if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(Host::GetThread(tp).hp, tp.processId)));
+	QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 }
 
 void MainWindow::FindHooks()
