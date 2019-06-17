@@ -191,9 +191,6 @@ Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut
 	FUNC_MISSING = u8"Textractor: Fonksiyon mevcut değil";
 	MODULE_MISSING = u8"Textractor: Modül mevcut değil";
 	GARBAGE_MEMORY = u8"Textractor: Hafıza sürekli değişiyor, okumak boşa";
-    SHOW_ORIGINAL = u8"Orjinal metin";
-    SHOW_ORIGINAL_INFO = u8R"(Orijinal metin gösterilmeyecek
-Yalnızca bu uzantı bir çeviri uzantısından sonra doğrudan kullanılırsa çalışır)";
 #endif // TURKISH
 
 #ifdef SPANISH
@@ -255,9 +252,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	TEXT_COLOR = u8"Color de texto";
 	FONT_SIZE = u8"Tamaño de letra";
 	TOPMOST = u8"Siempre visible";
-    SHOW_ORIGINAL = u8"Texto original";
-    SHOW_ORIGINAL_INFO = u8R"(El texto original no será mostrado
-Solo funciona si esta extensión se usa directamente después de una extensión de traducción)";
 	REGEX_FILTER = u8"Filtro Regex";
 	INVALID_REGEX = u8"Regex inválido";
 	CURRENT_FILTER = u8"Actualmente filtrando: %1";
@@ -324,9 +318,6 @@ Solo funciona si esta extensión se usa directamente después de una extensión 
 	TEXT_COLOR = u8"文本颜色";
 	FONT_SIZE = u8"字体大小";
 	TOPMOST = u8"总是位于最上层";
-    SHOW_ORIGINAL = u8"原文";
-    SHOW_ORIGINAL_INFO = u8R"(原始文字不会显示
-仅在翻译扩展名后直接使用此扩展名时才有效)";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
 	CURRENT_FILTER = u8"当前过滤中: %1";
@@ -498,9 +489,6 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	TEXT_COLOR = u8"Warna teks";
 	FONT_SIZE = u8"Ukuran teks";
 	TOPMOST = u8"Selalu berada di atas";
-	SHOW_ORIGINAL = u8"Teks asli";
-	SHOW_ORIGINAL_INFO = u8R"(Teks asli tidak akan ditampilkan
-Hanya berfungsi jika ekstensi ini digunakan langsung setelah ekstensi terjemahan)";
 	REGEX_FILTER = u8"Filter regex";
 	INVALID_REGEX = u8"Regex tidak sesuai";
 	CURRENT_FILTER = u8"Regex yang digunakan sekarang: %1";
