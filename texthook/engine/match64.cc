@@ -63,7 +63,7 @@ namespace Engine
 		How to hook Mono/Unity3D:
 		Find all standard function prologs in memory with write/execute permission: these represent possible JIT compiled functions
 		Then use Mono APIs to reflect what these functions are, and hook them if they are string member functions
-		Mono calling convention uses 'this' as first argument on stack
+		Mono calling convention uses 'this' as first argument
 		Must be dynamic hook bootstrapped from other mono api or mono_domain_get won't work
 		*/
 		trigger_fun = [](LPVOID addr, DWORD, DWORD)
@@ -74,8 +74,10 @@ namespace Engine
 			if (!getDomain || !getName || !getJitInfo) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
-			const BYTE prolog[] = { 0x55, 0x48, 0x8b, 0xec };
-			for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
+			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
+			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
+			for (auto [prolog, size] : Array<std::tuple<const BYTE*, size_t>>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
+			for (auto addr : Util::SearchMemory(prolog, size, PAGE_EXECUTE_READWRITE))
 			{
 				[](uint64_t addr)
 				{
@@ -83,13 +85,21 @@ namespace Engine
 					{
 						if (getJitInfo(domain, addr))
 							if (char* name = getName(addr))
-								if (strstr(name, "string:") && !strstr(name, "string:mem"))
+								if (strstr(name, "string:") && strstr(name, "+ 0x0") && !strstr(name, "string:mem"))
 								{
 									HookParam hp = {};
 									hp.address = addr;
 									hp.type = USING_STRING | USING_UNICODE;
 									hp.offset = -0x20;
 									hp.padding = 20;
+									hp.length_fun = [](uintptr_t, uintptr_t data)
+									{
+										/* Artikash 6/18/2019:
+										even though this should get the true length mono uses internally
+										there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
+										int len = *(int*)(data - 4);
+										return len > 0 && len < 1000 ? len * 2 : 0;
+									};
 									NewHook(hp, name);
 								}
 					}

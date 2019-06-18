@@ -40,12 +40,13 @@ struct HookParam
 	DWORD type; // flags
 	UINT codepage; // text encoding
 	short length_offset; // index of the string length
-	uintptr_t padding; // padding
+	uintptr_t padding; // padding before string
 	DWORD user_value; // 7/20/2014: jichi additional parameters for PSP games
 
 	void(*text_fun)(DWORD stack, HookParam* hp, BYTE obsoleteAlwaysZero, DWORD* data, DWORD* split, DWORD* len);
 	bool(*filter_fun)(void* data, DWORD* len, HookParam* hp, BYTE obsoleteAlwaysZero); // jichi 10/24/2014: Add filter function. Return true if skip the text
 	bool(*hook_fun)(DWORD stack, HookParam* hp); // jichi 10/24/2014: Add generic hook function, return false if stop execution.
+	int(*length_fun)(uintptr_t stack, uintptr_t data); // data after padding added
 
 	char name[HOOK_NAME_SIZE];
 };

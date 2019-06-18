@@ -298,6 +298,7 @@ void TextHook::Clear()
 int TextHook::GetLength(uintptr_t base, uintptr_t in)
 {
 	int len;
+	if (hp.length_fun) return hp.length_fun(base, in);
 	switch (hp.length_offset) {
 	default: // jichi 12/26/2013: I should not put this default branch to the end
 		len = *((uintptr_t*)base + hp.length_offset);
