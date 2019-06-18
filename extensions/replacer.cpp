@@ -81,7 +81,7 @@ bool Replace(std::wstring& sentence)
 	std::shared_lock l(m);
 	for (int i = 0; i < sentence.size(); ++i)
 	{
-		auto[length, replacement] = replacementTrie.Lookup(sentence.substr(i));
+		auto [length, replacement] = replacementTrie.Lookup(sentence.substr(i));
 		if (replacement)
 		{
 			sentence.replace(i, length, replacement.value());

@@ -450,7 +450,8 @@ void MainWindow::FindHooks()
 		{
 			if (std::regex_search(text, filter)) hooks->append(S(Util::GenerateCode(hp, processId)) + ": " + S(text) + "\n");
 		});
-	} catch (std::out_of_range) { return; }
+	}
+	catch (std::out_of_range) { return; }
 	QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
 	if (saveFile.isEmpty()) saveFile = "Hooks.txt";
 	std::thread([hooks, saveFile]
