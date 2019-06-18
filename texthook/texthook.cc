@@ -122,13 +122,14 @@ void TextHook::Send(uintptr_t dwDataBase)
 {
 	__try
 	{
+		if (trigger) trigger = Engine::InsertDynamicHook(location, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
+
 #ifndef _WIN64
 		DWORD dwCount = 0,
 			dwSplit = 0,
 			dwDataIn = *(DWORD*)(dwDataBase + hp.offset), // default values
 			dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
 
-		if (trigger) trigger = Engine::InsertDynamicHook(location, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
 
 		// jichi 10/24/2014: generic hook function
 		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp)) hp.hook_fun = nullptr;
@@ -166,6 +167,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, pbData, dwCount);
 #else // _WIN32
+		if (hp.type & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
 		int count = 0;
 		ThreadParam tp = { GetCurrentProcessId(), address, *(uintptr_t*)dwDataBase, 0 }; // first value on stack (if hooked start of function, this is return address)
 		uintptr_t data = *(uintptr_t*)(dwDataBase + hp.offset); // default value

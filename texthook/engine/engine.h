@@ -16,6 +16,7 @@ namespace Engine {
 extern wchar_t *processName, // cached
                processPath[MAX_PATH]; // cached
 
+// Artikash 6/17/2019 TODO: These have the wrong values on x64
 /** jichi 12/24/2014
 	  *  @param  addr  function address
 	  *  @param  frame  real address of the function, supposed to be the same as addr

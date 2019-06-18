@@ -1,6 +1,9 @@
 #include "match.h"
 #include "main.h"
+#include "texthook.h"
 #include "native/pchooks.h"
+#include "mono/monoobject.h"
+#include "mono/funcinfo.h"
 #include "engine.h"
 #include "util.h"
 
@@ -43,9 +46,70 @@ namespace Engine
 		return found;
 	}
 
+	bool InsertMonoHooks(HMODULE module)
+	{
+		auto SpecialHookMonoString = nullptr;
+		static HMODULE mono = module;
+		bool ret = false;
+		for (auto func : Array<MonoFunction>{ MONO_FUNCTIONS_INITIALIZER })
+		{
+			HookParam hp = {};
+			if (!(hp.address = (uintptr_t)GetProcAddress(mono, func.functionName))) continue;
+			hp.type = HOOK_EMPTY;
+			NewHook(hp, "Mono Searcher");
+			ret = true;
+		}
+		/* Artikash 2/13/2019:
+		How to hook Mono/Unity3D:
+		Find all standard function prologs in memory with write/execute permission: these represent possible JIT compiled functions
+		Then use Mono APIs to reflect what these functions are, and hook them if they are string member functions
+		Mono calling convention uses 'this' as first argument on stack
+		Must be dynamic hook bootstrapped from other mono api or mono_domain_get won't work
+		*/
+		trigger_fun = [](LPVOID addr, DWORD, DWORD)
+		{
+			static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
+			static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
+			static auto getName = (char*(*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
+			if (!getDomain || !getName || !getJitInfo) goto failed;
+			static auto domain = getDomain();
+			if (!domain) goto failed;
+			const BYTE prolog[] = { 0x55, 0x48, 0x8b, 0xec };
+			for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
+			{
+				[](uint64_t addr)
+				{
+					__try
+					{
+						if (getJitInfo(domain, addr))
+							if (char* name = getName(addr))
+								if (strstr(name, "string:") && !strstr(name, "string:mem"))
+								{
+									HookParam hp = {};
+									hp.address = addr;
+									hp.type = USING_STRING | USING_UNICODE;
+									hp.offset = -0x20;
+									hp.padding = 20;
+									NewHook(hp, name);
+								}
+					}
+					__except (EXCEPTION_EXECUTE_HANDLER) {}
+				}(addr);
+			}
+			return true;
+		failed:
+			ConsoleOutput("Textractor: Mono Dynamic failed");
+			return true;
+		};
+		SetTrigger();
+		return ret;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
+
+		for (const wchar_t* monoName : { L"mono", L"mono-2.0-bdwgc" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 
 		for (std::wstring DXVersion : { L"d3dx9", L"d3dx10" })
 			if (HMODULE module = GetModuleHandleW(DXVersion.c_str())) PcHooks::hookD3DXFunctions(module);
