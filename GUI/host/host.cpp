@@ -178,7 +178,11 @@ namespace Host
 				for (int retry = 0; retry < 3; ++retry) // retry loop in case something else is using the clipboard
 				{
 					Sleep(10);
-					if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(text.value()));
+					if (auto text = Util::GetClipboardText())
+					{
+						GetThread(clipboard).AddSentence(std::move(text.value()));
+						break;
+					}
 				}
 			}
 			throw;
