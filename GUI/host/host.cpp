@@ -174,7 +174,13 @@ namespace Host
 		std::thread([]
 		{
 			while (WaitForSingleObject(clipboardUpdate, INFINITE) == WAIT_OBJECT_0)
-				if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(text.value()));
+			{
+				for (int retry = 0; retry < 3; ++retry) // retry loop in case something else is using the clipboard
+				{
+					Sleep(10);
+					if (auto text = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(text.value()));
+				}
+			}
 			throw;
 		}).detach();
 	}
