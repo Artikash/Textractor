@@ -18,9 +18,9 @@ Tente rodar vc_redist se você encontrar algum erro ao iniciar o Textractor.
 ## Recursos e Funções
 
 - Altamente extensível e personalizável.
-- Auto hook many game engines Automaticamente extraí vários games engines (inclusive alguns não suportados pelo VNR!)
-- Extráia texto usando códigos "hook" /H (a maioria dos códigos utilizados pelo AGTH são suportados.)
-- Extráia texto diretamente utilizando códigos "read" /R
+- Auto hook many game engines Automaticamente extrai vários games engines (inclusive alguns não suportados pelo VNR!)
+- Extrai texto usando códigos "hook" /H (a maioria dos códigos utilizados pelo AGTH são suportados.)
+- Extrai texto diretamente utilizando códigos "read" /R
 
 ## Suporte
 
