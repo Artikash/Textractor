@@ -2,7 +2,7 @@
 
 ![Como se Parece](screenshot.png)
 
-[Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [English](README.md)
 
 **Textractor** (também conhecido como NextHooker) é um extrator de textos de video-games x86/x64  para Windows/Wine baseado no [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Assista ao [vídeo tutorial](https://tinyurl.com/textractor-tutorial) para uma rápida apresentação de como utilizá-lo.
