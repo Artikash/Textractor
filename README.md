@@ -55,13 +55,17 @@ Finally, the GUI dispatches the text to extensions before displaying it.
 ## Developers
 
 If you're on this list and want your link changed let me know.
-- Textractor made by [Me](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
+- Textractor mainly made by [Me](https://github.com/Artikash) with the help of
+  - [DoumanAsh](https://github.com/DoumanAsh)
+  - [Niakr1s](https://github.com/Niakr1s)
+  - [tinyAdapter](https://github.com/tinyAdapter)
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by niisokusu
 - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
 - Russian translation by [TokcDK](https://github.com/TokcDK)
 - Indonesian translation by [Hawxone](https://github.com/Hawxone)
-- ITHVNR updated by [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
+- Portuguese translation by [TsumiHokiro](https://github.com/TsumiHokiro)
+- ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
 - ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine made by [jichi](https://archive.is/prJwr)
 - ITH updated by [Andys](https://github.com/AndyScull)

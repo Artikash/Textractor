@@ -494,7 +494,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	CURRENT_FILTER = u8"Regex yang digunakan sekarang: %1";
 #endif // INDONESIAN
 
-#ifdef PORTUGUESE_BR
+#ifdef PORTUGUESE
 	ATTACH = u8"Anexar ao Jogo";
 	LAUNCH = u8"Iniciar Jogo";
 	DETACH = u8"Desconectar do Jogo";
@@ -581,7 +581,7 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
   	LINK = u8"Ligar";
   	THREAD_LINK_FROM = u8"Número do thread para ligar de";
   	THREAD_LINK_TO = u8"Número do thread para ligar para";
-#endif // PORTUGUESE_BR
+#endif // PORTUGUESE
 
 	return 0;
 }();
