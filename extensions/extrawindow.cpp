@@ -1,12 +1,10 @@
 #include "extension.h"
+#include "ui_extrawindow.h"
 #include "defs.h"
-#include <QDialog>
 #include <QInputDialog>
 #include <QColorDialog>
 #include <QMessageBox>
 #include <QMenu>
-#include <QLayout>
-#include <QLabel>
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QSpinBox>
@@ -14,7 +12,6 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QSettings>
-#include <QTimer>
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
@@ -29,117 +26,117 @@ extern const char* FONT_FAMILY;
 extern const char* FONT_WEIGHT;
 extern const char* SAVE_SETTINGS;
 
-std::mutex m;
-
-struct : QDialog
+struct Window : QDialog
 {
 public:
-	void launch()
+	Window()
 	{
-		settings->beginGroup("Extra Window");
-		(new QHBoxLayout(this))->addWidget(display = new QLabel(EXTRA_WINDOW_INFO, this));
-		display->setTextFormat(Qt::PlainText);
-		display->setTextInteractionFlags(Qt::TextSelectableByMouse);
-		display->setAlignment(Qt::AlignTop);
-		display->setWordWrap(true);
-		display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+		ui.setupUi(this);
+
+		settings.beginGroup("Extra Window");
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
-		setSizeGripEnabled(true);
-		resize(400, 300);
-		show();
+		QMetaObject::invokeMethod(this, [this]
+		{
+			show();
 
-		auto setBackgroundColor = [=](QColor color)
-		{
-			if (!color.isValid()) return;
-			if (color.alpha() == 0) color.setAlpha(1);
-			bgColor = color;
-			repaint();
-			settings->setValue(BG_COLOR, color);
-		};
-		auto setTextColor = [=](QColor color)
-		{
-			if (!color.isValid()) return;
-			auto newPalette = display->palette();
-			newPalette.setColor(QPalette::WindowText, color);
-			display->setPalette(newPalette);
-			settings->setValue(TEXT_COLOR, color);
-		};
-		auto requestFont = [=]
-		{
-			QFont font = display->font();
-			auto fontDialog = new QDialog(this, Qt::WindowCloseButtonHint);
-			fontDialog->setAttribute(Qt::WA_DeleteOnClose);
-			fontDialog->setWindowTitle(FONT);
-			auto layout = new QFormLayout(fontDialog);
-			fontDialog->setLayout(layout);
-			auto fontFamily = new QLineEdit(font.family(), fontDialog);
-			layout->addRow(FONT_FAMILY, fontFamily);
-			auto fontSize = new QSpinBox(fontDialog);
-			fontSize->setValue(font.pointSize());
-			layout->addRow(FONT_SIZE, fontSize);
-			auto fontWeight = new QSpinBox(fontDialog);
-			fontWeight->setValue(font.weight());
-			layout->addRow(FONT_WEIGHT, fontWeight);
-			auto save = new QPushButton(SAVE_SETTINGS, fontDialog);
-			layout->addWidget(save);
-			connect(save, &QPushButton::clicked, fontDialog, &QDialog::accept);
-			fontDialog->open();
-			connect(fontDialog, &QDialog::accepted, [=]
+			QFont font = ui.display->font();
+			if (font.fromString(settings.value(FONT, font.toString()).toString())) ui.display->setFont(font);
+			setBackgroundColor(settings.value(BG_COLOR, palette().window().color()).value<QColor>());
+			setTextColor(settings.value(TEXT_COLOR, ui.display->palette().windowText().color()).value<QColor>());
+			setLock(settings.value(SIZE_LOCK, false).toBool());
+			setTopmost(settings.value(TOPMOST, false).toBool());
+			setGeometry(settings.value(WINDOW, geometry()).toRect());
+
+			menu.addAction(FONT, this, &Window::RequestFont);
+			menu.addAction(BG_COLOR, [this] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
+			menu.addAction(TEXT_COLOR, [this] { setTextColor(QColorDialog::getColor(ui.display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
+			for (auto [name, default, slot] : Array<std::tuple<const char*, bool, void(Window::*)(bool)>>{
+				{ TOPMOST, false, &Window::setTopmost },
+				{ SIZE_LOCK, false, &Window::setLock },
+				{ SHOW_ORIGINAL, true, &Window::setShowOriginal }
+			})
 			{
-				QFont font(fontFamily->text(), fontSize->value(), fontWeight->value());
-				settings->setValue(FONT, font.toString());
-				display->setFont(font);
-			});
-		};
-		auto setTopmost = [=](bool topmost)
-		{
-			SetWindowPos((HWND)winId(), topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-			settings->setValue(TOPMOST, topmost);
-		};
-		auto setLock = [=](bool lock)
-		{
-			locked = lock;
-			setSizeGripEnabled(!lock);
-			settings->setValue(SIZE_LOCK, lock);
-		};
-        auto setShowOriginal = [=](bool showOriginal)
-		{
-			if (!showOriginal) QMessageBox::information(this, SHOW_ORIGINAL, SHOW_ORIGINAL_INFO);
-            settings->setValue(SHOW_ORIGINAL, showOriginal);
-        };
-		setGeometry(settings->value(WINDOW, geometry()).toRect());
-		setLock(settings->value(SIZE_LOCK, false).toBool());
-		setTopmost(settings->value(TOPMOST, false).toBool());
-		QFont font = display->font();
-		font.setPointSize(16);
-		font.fromString(settings->value(FONT, font.toString()).toString());
-		display->setFont(font);
-		setBackgroundColor(settings->value(BG_COLOR, palette().window().color()).value<QColor>());
-		setTextColor(settings->value(TEXT_COLOR, display->palette().windowText().color()).value<QColor>());
+				auto action = menu.addAction(name, this, slot);
+				action->setCheckable(true);
+				action->setChecked(settings.value(name, default).toBool());
+			}
+			connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
 
-		auto menu = new QMenu(display);
-		auto topmost = menu->addAction(TOPMOST, setTopmost);
-		topmost->setCheckable(true);
-		topmost->setChecked(settings->value(TOPMOST, false).toBool());
-		auto lock = menu->addAction(SIZE_LOCK, setLock);
-		lock->setCheckable(true);
-		lock->setChecked(settings->value(SIZE_LOCK, false).toBool());
-        auto showOriginal = menu->addAction(SHOW_ORIGINAL, setShowOriginal);
-        showOriginal->setCheckable(true);
-        showOriginal->setChecked(settings->value(SHOW_ORIGINAL, true).toBool());
-		menu->addAction(BG_COLOR, [=] { setBackgroundColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
-		menu->addAction(TEXT_COLOR, [=] { setTextColor(QColorDialog::getColor(display->palette().windowText().color(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
-		menu->addAction(FONT, requestFont);
-		display->setContextMenuPolicy(Qt::CustomContextMenu);
-		connect(display, &QLabel::customContextMenuRequested, [=](QPoint point) { menu->exec(mapToGlobal(point)); });
-		connect(this, &QDialog::destroyed, [=] { settings->setValue(WINDOW, geometry()); });
+			QMetaObject::invokeMethod(this, [this] { ui.display->setText(EXTRA_WINDOW_INFO); }, Qt::QueuedConnection);
+		}, Qt::QueuedConnection);
 	}
 
-	QSettings* settings = new QSettings(CONFIG_FILE, QSettings::IniFormat, this);
-	QLabel* display;
+	~Window()
+	{
+		settings.setValue(WINDOW, geometry());
+		settings.sync();
+	}
+
+	Ui::ExtraWindow ui;
+	QSettings settings{ CONFIG_FILE, QSettings::IniFormat, this };
 
 private:
+	void RequestFont()
+	{
+		QFont font = ui.display->font();
+		QDialog fontDialog(this, Qt::WindowCloseButtonHint);
+		fontDialog.setWindowTitle(FONT);
+		QFormLayout layout(&fontDialog);
+		QLineEdit fontFamily(font.family(), &fontDialog);
+		layout.addRow(FONT_FAMILY, &fontFamily);
+		QSpinBox fontSize(&fontDialog);
+		fontSize.setValue(font.pointSize());
+		layout.addRow(FONT_SIZE, &fontSize);
+		QSpinBox fontWeight(&fontDialog);
+		fontWeight.setValue(font.weight());
+		layout.addRow(FONT_WEIGHT, &fontWeight);
+		QPushButton save(SAVE_SETTINGS, &fontDialog);
+		layout.addWidget(&save);
+		connect(&save, &QPushButton::clicked, &fontDialog, &QDialog::accept);
+		if (!fontDialog.exec()) return;
+		font = QFont(fontFamily.text(), fontSize.value(), fontWeight.value());
+		settings.setValue(FONT, font.toString());
+		ui.display->setFont(font);
+	};
+
+	void setBackgroundColor(QColor color)
+	{
+		if (!color.isValid()) return;
+		if (color.alpha() == 0) color.setAlpha(1);
+		bgColor = color;
+		repaint();
+		settings.setValue(BG_COLOR, color);
+	};
+
+	void setTextColor(QColor color)
+	{
+		if (!color.isValid()) return;
+		auto newPalette = ui.display->palette();
+		newPalette.setColor(QPalette::WindowText, color);
+		ui.display->setPalette(newPalette);
+		settings.setValue(TEXT_COLOR, color);
+	};
+
+	void setTopmost(bool topmost)
+	{
+		SetWindowPos((HWND)winId(), topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		settings.setValue(TOPMOST, topmost);
+	};
+
+	void setLock(bool lock)
+	{
+		locked = lock;
+		setSizeGripEnabled(!lock);
+		settings.setValue(SIZE_LOCK, lock);
+	};
+
+	void setShowOriginal(bool showOriginal)
+	{
+		if (!showOriginal) QMessageBox::information(this, SHOW_ORIGINAL, SHOW_ORIGINAL_INFO);
+		settings.setValue(SHOW_ORIGINAL, showOriginal);
+	};
+
 	void paintEvent(QPaintEvent*) override
 	{
 		QPainter(this).fillRect(rect(), bgColor);
@@ -157,51 +154,19 @@ private:
 		oldPos = event->globalPos();
 	}
 
-	bool locked;
+	QMenu menu{ ui.display };
+	bool locked = true;
 	QColor bgColor;
 	QPoint oldPos;
-}*window = nullptr;
-
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	{
-		QTimer::singleShot(0, []
-		{
-			std::lock_guard l(m);
-			(window = new std::remove_pointer_t<decltype(window)>)->launch();
-		});
-	}
-	break;
-	case DLL_PROCESS_DETACH:
-	{
-		std::lock_guard l(m);
-		if (window)
-		{
-			window->settings->setValue(WINDOW, window->geometry());
-			window->settings->sync();
-		}
-		if (lpReserved == NULL) // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
-		{
-			delete window;
-			window = nullptr;
-		}
-	}
-	break;
-	}
-	return TRUE;
-}
+} window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	std::lock_guard l(m);
-	if (window == nullptr || !sentenceInfo["current select"]) return false;
+	if (!sentenceInfo["current select"]) return false;
 
 	QString qSentence = QString::fromStdWString(sentence);
-	if (!window->settings->value(SHOW_ORIGINAL).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
+	if (!window.settings.value(SHOW_ORIGINAL).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
 
-	QMetaObject::invokeMethod(window, [=] { window->display->setText(qSentence); });
+	QMetaObject::invokeMethod(&window, [=] { window.ui.display->setText(qSentence); });
 	return false;
 }

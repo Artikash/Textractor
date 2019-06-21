@@ -93,12 +93,12 @@ bool Replace(std::wstring& sentence)
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-	static HANDLE replacementFile; // not actually used to read/write, just to ensure it exists
+	// not actually used to read/write, just to ensure it exists
+	static AutoHandle<> replacementFile = CreateFileA(REPLACE_SAVE_FILE, FILE_GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		replacementFile = CreateFileA(REPLACE_SAVE_FILE, FILE_GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
 		if (Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))) == 0)
 		{
@@ -110,7 +110,6 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	break;
 	case DLL_PROCESS_DETACH:
 	{
-		CloseHandle(replacementFile);
 	}
 	break;
 	}

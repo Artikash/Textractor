@@ -5,7 +5,6 @@
 #include <QLayout>
 #include <QPlainTextEdit>
 #include <QPushButton>
-#include <QTimer>
 
 extern const char* LUA_INTRO;
 extern const char* LOAD_LUA_SCRIPT;
@@ -45,61 +44,47 @@ bool logErrors = true;
 Synchronized<std::string> script;
 std::atomic<int> revCount = 0;
 
-struct : QMainWindow
+class Window : public QMainWindow
 {
-	void launch()
+public:
+	Window()
 	{
-		auto centralWidget = new QWidget(this);
-		auto layout = new QHBoxLayout(centralWidget);
-		auto scriptEditor = new QPlainTextEdit(std::string(std::istreambuf_iterator<char>(std::ifstream(LUA_SAVE_FILE, std::ios::in)), {}).c_str(), centralWidget);
-		auto loadButton = new QPushButton(LOAD_LUA_SCRIPT, centralWidget);
-		if (scriptEditor->toPlainText().isEmpty()) scriptEditor->setPlainText(LUA_INTRO);
-		layout->addWidget(scriptEditor);
-		layout->addWidget(loadButton);
-		save = [=]
-		{
-			auto script = scriptEditor->toPlainText().toUtf8();
-			std::ofstream(LUA_SAVE_FILE, std::ios::out | std::ios::trunc).write(script, strlen(script));
-		};
-		connect(loadButton, &QPushButton::clicked, [=](bool)
-		{
-			revCount += 1;
-			script->assign(scriptEditor->toPlainText().toUtf8());
-			save();
-		});
+		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
+
+		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText(LUA_INTRO);
+		layout.addWidget(&scriptEditor);
+		layout.addWidget(&loadButton);
+
 		resize(800, 600);
-		setCentralWidget(centralWidget);
+		setCentralWidget(&centralWidget);
 		setWindowTitle("Lua");
-		show();
+		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
 	}
 
-	std::function<void()> save;
-}*window = nullptr;
+	~Window()
+	{
+		Save();
+	}
 
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
+private:
+	void LoadScript()
 	{
-	case DLL_PROCESS_ATTACH:
+		revCount += 1;
+		script->assign(scriptEditor.toPlainText().toUtf8());
+		Save();
+	}
+
+	void Save()
 	{
-		QTimer::singleShot(0, []
-		{
-			(window = new std::remove_pointer_t<decltype(window)>)->launch();
-		});
+		auto script = scriptEditor.toPlainText().toUtf8();
+		std::ofstream(LUA_SAVE_FILE, std::ios::out | std::ios::trunc).write(script, script.size());
 	}
-	break;
-	case DLL_PROCESS_DETACH:
-	{
-		if (window) window->save();
-		if (lpReserved == NULL) // https://blogs.msdn.microsoft.com/oldnewthing/20120105-00/?p=8683
-		{
-			delete window;
-		}
-	}
-	break;
-	}
-	return TRUE;
-}
+
+	QWidget centralWidget{ this };
+	QHBoxLayout layout{ &centralWidget };
+	QPlainTextEdit scriptEditor{ std::string(std::istreambuf_iterator<char>(std::ifstream(LUA_SAVE_FILE, std::ios::in)), {}).c_str(), &centralWidget };
+	QPushButton loadButton{ LOAD_LUA_SCRIPT, &centralWidget };
+} window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {

@@ -70,6 +70,14 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 	return !sentence.empty();
 }
 
+void CleanupExtensions()
+{
+	std::scoped_lock writeLock(extenMutex);
+	for (auto extension : extensions)
+		FreeLibrary(GetModuleHandleW(extension.name.c_str()));
+	extensions.clear();
+}
+
 ExtenWindow::ExtenWindow(QWidget* parent) :
 	QMainWindow(parent, Qt::WindowCloseButtonHint),
 	ui(new Ui::ExtenWindow)

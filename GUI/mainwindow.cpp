@@ -134,6 +134,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
 	QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(WINDOW, geometry());
+	CleanupExtensions();
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);
 }
@@ -177,7 +178,7 @@ void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
 	QString ttString = TextThreadString(thread) + S(thread.name) + " (" + S(threadCode) + ")";
-	bool savedMatch = savedThreadCtx.first == thread.tp.ctx && savedThreadCtx.second == thread.tp.ctx2 && savedThreadCode == threadCode;
+	bool savedMatch = savedThreadCtx == std::pair(thread.tp.ctx, thread.tp.ctx2) && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx.first = savedThreadCtx.second = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
 	{
@@ -236,9 +237,9 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 {
 	void(*AddSentence)(MainWindow*, int64_t, const wchar_t*) = [](MainWindow* This, int64_t number, const wchar_t* sentence)
 	{
-		std::wstring sentenceStr = sentence;
+		std::wstring copy = sentence;
 		// pointer from Host::GetThread may not stay valid unless on main thread
-		QMetaObject::invokeMethod(This, [=]() mutable { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(std::move(sentenceStr)); });
+		QMetaObject::invokeMethod(This, [=]() mutable { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(std::move(copy)); });
 	};
 
 	return
@@ -394,7 +395,7 @@ void MainWindow::FindHooks()
 	connect(&confirm, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
 	connect(&confirm, &QDialogButtonBox::helpRequested, &dialog, &QDialog::accept);
 	dialog.setWindowTitle(SEARCH_FOR_HOOKS);
-	if (dialog.exec() == QDialog::Rejected) return;
+	if (!dialog.exec()) return;
 
 	if (customSettings)
 	{
@@ -432,7 +433,7 @@ void MainWindow::FindHooks()
 		QPushButton startButton(START_HOOK_SEARCH, &dialog);
 		layout.addWidget(&startButton);
 		connect(&startButton, &QPushButton::clicked, &dialog, &QDialog::accept);
-		if (dialog.exec() == QDialog::Rejected) return;
+		if (!dialog.exec()) return;
 		QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
 		memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
 		try { filter = std::wregex(S(filterInput.text())); } catch (std::regex_error) {};
