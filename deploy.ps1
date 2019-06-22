@@ -32,11 +32,6 @@ foreach ($language in @{
 			"Textractor.exe",
 			"TextractorCLI.exe",
 			"texthook.dll",
-			"Qt5Core.dll",
-			"Qt5Gui.dll",
-			"Qt5Widgets.dll",
-			"LoaderDll.dll",
-			"LocaleEmulator.dll",
 			"Bing Translate.dll",
 			"Copy to Clipboard.dll",
 			"Extra Newlines.dll",
@@ -48,12 +43,32 @@ foreach ($language in @{
 			"Remove Repeated Phrases.dll",
 			"Remove 30 Repeated Sentences.dll",
 			"Replacer.dll",
-			"Thread Linker.dll",
-			"platforms",
-			"styles"
+			"Thread Linker.dll"
 		))
 		{
 			copy -Force -Recurse -Verbose -Destination "$folder/$arch" -Path "Release_$arch/$file";
 		}
 	}
 }
+
+mkdir -Force -Verbose "Runtime";
+rm -Force -Recurse -Verbose "Runtime/*";
+foreach ($file in @(
+	"Qt5Core.dll",
+	"Qt5Gui.dll",
+	"Qt5Widgets.dll",
+	"LoaderDll.dll",
+	"LocaleEmulator.dll",
+	"platforms",
+	"styles"
+))
+{
+	foreach ($arch in @("x86", "x64"))
+	{
+		mkdir -Force -Verbose "Runtime/$arch";
+		copy -Force -Recurse -Verbose -Destination "Runtime/$arch/$file" -Path "Release_$arch/$file";
+	}
+}
+
+cd ..
+&"C:\Program Files (x86)\Inno Setup 6\iscc.exe" -DVERSION="$version" installer.iss
