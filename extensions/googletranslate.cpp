@@ -97,6 +97,11 @@ std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 	return FormatString(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, b, escapedText);
 }
 
+bool IsHash(const std::wstring& result)
+{
+	return std::all_of(result.begin(), result.end(), [](auto ch) { return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'z'); });
+}
+
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	static unsigned TKK = 0;
@@ -112,7 +117,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		{
 			std::wstring translation;
 			for (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); httpRequest.response = results.suffix())
-				translation += std::wstring(results[1]) + L" ";
+				if (!IsHash(results[1])) translation += std::wstring(results[1]) + L" ";
 			if (!translation.empty()) return { true, translation };
 		}
 		return { false, FormatString(L"%s (TKK=%u)", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0)) };
