@@ -316,7 +316,7 @@ void MainWindow::LaunchProcess()
 
 void MainWindow::DetachProcess()
 {
-	Host::DetachProcess(GetSelectedProcessId());
+	try { Host::DetachProcess(GetSelectedProcessId()); } catch (std::out_of_range) {}
 }
 
 void MainWindow::AddHook()
