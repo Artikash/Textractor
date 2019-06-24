@@ -229,7 +229,7 @@ namespace
 		if (hp.null_length != 0) HCode << hp.null_length << "<";
 
 		if (hp.type & NO_CONTEXT) HCode << "N";
-		if (hp.text_fun || hp.filter_fun || hp.hook_fun) HCode << "X"; // no AGTH equivalent
+		if (hp.text_fun || hp.filter_fun || hp.hook_fun || hp.length_fun) HCode << "X"; // no AGTH equivalent
 
 		if (hp.codepage != 0 && !(hp.type & USING_UNICODE)) HCode << hp.codepage << "#";
 
