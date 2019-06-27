@@ -35,6 +35,7 @@ private:
 	void AttachProcess();
 	void LaunchProcess();
 	void DetachProcess();
+	void ForgetProcess();
 	void AddHook();
 	void RemoveHooks();
 	void SaveHooks();
@@ -44,8 +45,10 @@ private:
 	void ViewThread(int index);
 
 	Ui::MainWindow* ui;
-	QWidget* extenWindow;
-	std::pair<uint64_t, uint64_t> savedThreadCtx;
-	wchar_t savedThreadCode[1000];
-	std::atomic<TextThread*> current;
+	ExtenWindow* extenWindow;
+	std::unordered_set<DWORD> alreadyAttached;
+	bool autoAttach = false, autoAttachSavedOnly = true;
+	uint64_t savedThreadCtx = 0, savedThreadCtx2 = 0;
+	wchar_t savedThreadCode[1000] = {};
+	TextThread* current = nullptr;
 };

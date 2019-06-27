@@ -7,7 +7,7 @@ namespace Util
 {
 	std::optional<std::wstring> GetModuleFilename(DWORD processId, HMODULE module = NULL);
 	std::optional<std::wstring> GetModuleFilename(HMODULE module = NULL);
-	std::vector<DWORD> GetAllProcessIds();
+	std::vector<std::pair<DWORD, std::optional<std::wstring>>> GetAllProcesses();
 	std::optional<std::wstring> GetClipboardText();
 	std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding = CP_UTF8);
 	// return true if repetition found (see https://github.com/Artikash/Textractor/issues/40)

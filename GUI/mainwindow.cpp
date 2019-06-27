@@ -1,10 +1,8 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
-#include "extenwindow.h"
 #include "host/util.h"
 #include <shellapi.h>
-#include <winhttp.h>
 #include <QFormLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -19,6 +17,7 @@
 extern const char* ATTACH;
 extern const char* LAUNCH;
 extern const char* DETACH;
+extern const char* FORGET;
 extern const char* ADD_HOOK;
 extern const char* REMOVE_HOOKS;
 extern const char* SAVE_HOOKS;
@@ -46,12 +45,13 @@ extern const char* DOUBLE_CLICK_TO_REMOVE_HOOK;
 extern const char* SAVE_SETTINGS;
 extern const char* USE_JP_LOCALE;
 extern const char* FILTER_REPETITION;
+extern const char* AUTO_ATTACH;
+extern const char* ATTACH_SAVED_ONLY;
 extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;
 extern const wchar_t* ABOUT;
 extern const wchar_t* CL_OPTIONS;
-extern const wchar_t* UPDATE_AVAILABLE;
 extern const wchar_t* LAUNCH_FAILED;
 extern const wchar_t* INVALID_CODE;
 
@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ ATTACH, &MainWindow::AttachProcess },
 		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
+		{ FORGET, &MainWindow::ForgetProcess },
 		{ ADD_HOOK, &MainWindow::AddHook },
 		{ REMOVE_HOOKS, &MainWindow::RemoveHooks },
 		{ SAVE_HOOKS, &MainWindow::SaveHooks },
@@ -86,6 +87,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
+	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();
+	autoAttachSavedOnly = settings.value(ATTACH_SAVED_ONLY, autoAttachSavedOnly).toBool();
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
@@ -102,32 +105,32 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	AttachConsole(ATTACH_PARENT_PROCESS);
 	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), CL_OPTIONS, wcslen(CL_OPTIONS), DUMMY, NULL);
-	std::vector<DWORD> processIds = Util::GetAllProcessIds();
-	std::vector<std::wstring> processNames;
-	for (auto processId : processIds) processNames.emplace_back(Util::GetModuleFilename(processId).value_or(L""));
+	auto processes = Util::GetAllProcesses();
 	int argc;
 	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
 	for (int i = 0; i < argc; ++i)
 		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
 			if (arg[1] == L'p' || arg[1] == L'P')
 				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
-				else for (int i = 0; i < processIds.size(); ++i)
-					if (processNames[i].find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processIds[i]);
+				else for (auto [processId, processName] : processes)
+					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processId);
 
-	std::thread([]
+	std::thread([this]
 	{
-		using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
-		// Queries GitHub releases API https://developer.github.com/v3/repos/releases/ and checks the last release tag to check if it's the same
-		if (InternetHandle internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
-			if (InternetHandle connection = WinHttpConnect(internet, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0))
-				if (InternetHandle request = WinHttpOpenRequest(connection, L"GET", L"/repos/Artikash/Textractor/releases", NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
-					if (WinHttpSendRequest(request, NULL, 0, NULL, 0, 0, NULL))
-					{
-						char buffer[1000] = {};
-						WinHttpReceiveResponse(request, NULL);
-						WinHttpReadData(request, buffer, 1000, DUMMY);
-						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) MESSAGE(UPDATE_AVAILABLE);
-					}
+		for (; ; Sleep(10000))
+		{
+			std::unordered_set<std::wstring> attachTargets;
+			if (autoAttach)
+				for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+					attachTargets.insert(S(process));
+			if (autoAttachSavedOnly)
+				for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+					attachTargets.insert(S(process.split(" , ")[0]));
+
+			if (!attachTargets.empty())
+				for (auto [processId, processName] : Util::GetAllProcesses())
+					if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
+		}
 	}).detach();
 }
 
@@ -146,7 +149,8 @@ void MainWindow::closeEvent(QCloseEvent*)
 
 void MainWindow::ProcessConnected(DWORD processId)
 {
-	if (processId == 0) return;
+	alreadyAttached.insert(processId);
+
 	QString process = S(Util::GetModuleFilename(processId).value_or(L"???"));
 	QMetaObject::invokeMethod(this, [this, process, processId]
 	{
@@ -163,7 +167,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
 			if (auto hp = Util::ParseCode(S(hookInfo))) Host::InsertHook(processId, hp.value());
-			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx.first, &savedThreadCtx.second, savedThreadCode, (unsigned)std::size(savedThreadCode));
+			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx, &savedThreadCtx2, savedThreadCode, (unsigned)std::size(savedThreadCode));
 }
 
 void MainWindow::ProcessDisconnected(DWORD processId)
@@ -178,8 +182,8 @@ void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
 	QString ttString = TextThreadString(thread) + S(thread.name) + " (" + S(threadCode) + ")";
-	bool savedMatch = savedThreadCtx == std::pair(thread.tp.ctx, thread.tp.ctx2) && savedThreadCode == threadCode;
-	if (savedMatch) savedThreadCtx.first = savedThreadCtx.second = savedThreadCode[0] = 0;
+	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
+	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
 	{
 		ui->ttCombo->addItem(ttString);
@@ -259,8 +263,8 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 void MainWindow::AttachProcess()
 {
 	QMultiHash<QString, DWORD> allProcesses;
-	for (auto processId : Util::GetAllProcessIds())
-		if (auto processName = Util::GetModuleFilename(processId)) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
+	for (auto [processId, processName] : Util::GetAllProcesses())
+		if (processName) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
@@ -319,6 +323,20 @@ void MainWindow::DetachProcess()
 	try { Host::DetachProcess(GetSelectedProcessId()); } catch (std::out_of_range) {}
 }
 
+void MainWindow::ForgetProcess()
+{
+	if (auto processName = Util::GetModuleFilename(GetSelectedProcessId()))
+	{
+		for (auto file : { GAME_SAVE_FILE, HOOK_SAVE_FILE })
+		{
+			QStringList lines = QString::fromUtf8(QTextFile(file, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
+			lines.erase(std::remove_if(lines.begin(), lines.end(), [&](auto line) { return line.contains(S(processName.value())); }), lines.end());
+			QTextFile(file, QIODevice::WriteOnly | QIODevice::Truncate).write(lines.join("\n").toUtf8());
+		}
+	}
+	DetachProcess();
+}
+
 void MainWindow::AddHook()
 {
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, "", &ok, Qt::WindowCloseButtonHint); ok)
@@ -369,8 +387,8 @@ void MainWindow::SaveHooks()
 		}
 	}
 	auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
-	ThreadParam tp = current.load()->tp;
-	if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(Host::GetThread(tp).hp, tp.processId)));
+	ThreadParam tp = current->tp;
+	if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(current->hp, tp.processId)));
 	QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 }
 
@@ -436,7 +454,7 @@ void MainWindow::FindHooks()
 		if (!dialog.exec()) return;
 		QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
 		memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
-		try { filter = std::wregex(S(filterInput.text())); } catch (std::regex_error) {};
+		try { filter = std::wregex(S(filterInput.text())); } catch (std::regex_error) {}
 	}
 	else
 	{
@@ -469,28 +487,30 @@ void MainWindow::Settings()
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat, &dialog);
 	QFormLayout layout(&dialog);
 	QPushButton saveButton(SAVE_SETTINGS, &dialog);
-	layout.addWidget(&saveButton);
+	for (auto [value, label] : Array<std::tuple<bool&, const char*>>{
+		{ TextThread::filterRepetition, FILTER_REPETITION },
+		{ autoAttach, AUTO_ATTACH },
+		{ autoAttachSavedOnly, ATTACH_SAVED_ONLY },
+	})
+	{
+		auto checkBox = new QCheckBox(&dialog);
+		checkBox->setChecked(value);
+		layout.addRow(label, checkBox);
+		connect(&saveButton, &QPushButton::clicked, [checkBox, label, &settings, &value] { settings.setValue(label, value = checkBox->isChecked()); });
+	}
 	for (auto [value, label] : Array<std::tuple<int&, const char*>>{
-		{ Host::defaultCodepage, DEFAULT_CODEPAGE },
 		{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 		{ TextThread::flushDelay, FLUSH_DELAY },
+		{ Host::defaultCodepage, DEFAULT_CODEPAGE },
 	})
 	{
 		auto spinBox = new QSpinBox(&dialog);
 		spinBox->setMaximum(INT_MAX);
 		spinBox->setValue(value);
-		layout.insertRow(0, label, spinBox);
+		layout.addRow(label, spinBox);
 		connect(&saveButton, &QPushButton::clicked, [spinBox, label, &settings, &value] { settings.setValue(label, value = spinBox->value()); });
 	}
-	for (auto [value, label] : Array<std::tuple<bool&, const char*>>{
-		{ TextThread::filterRepetition, FILTER_REPETITION },
-	})
-	{
-		auto checkBox = new QCheckBox(&dialog);
-		checkBox->setChecked(value);
-		layout.insertRow(0, label, checkBox);
-		connect(&saveButton, &QPushButton::clicked, [checkBox, label, &settings, &value] { settings.setValue(label, value = checkBox->isChecked()); });
-	}
+	layout.addWidget(&saveButton);
 	connect(&saveButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 	dialog.setWindowTitle(SETTINGS);
 	dialog.exec();

@@ -281,13 +281,14 @@ namespace Util
 		return {};
 	}
 
-	std::vector<DWORD> GetAllProcessIds()
+	std::vector<std::pair<DWORD, std::optional<std::wstring>>> GetAllProcesses()
 	{
 		std::vector<DWORD> processIds(10000);
 		DWORD spaceUsed = 0;
 		EnumProcesses(processIds.data(), 10000 * sizeof(DWORD), &spaceUsed);
-		processIds.resize(spaceUsed / sizeof(DWORD));
-		return processIds;
+		std::vector<std::pair<DWORD, std::optional<std::wstring>>> processes;
+		for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i) processes.push_back({ processIds[i], Util::GetModuleFilename(processIds[i]) });
+		return processes;
 	}
 
 	std::optional<std::wstring> GetClipboardText()
