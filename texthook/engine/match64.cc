@@ -90,7 +90,7 @@ namespace Engine
 									HookParam hp = {};
 									hp.address = addr;
 									hp.type = USING_STRING | USING_UNICODE;
-									hp.offset = -0x20;
+									hp.offset = -0x20; // rcx
 									hp.padding = 20;
 									hp.length_fun = [](uintptr_t, uintptr_t data)
 									{
@@ -115,9 +115,34 @@ namespace Engine
 		return ret;
 	}
 
+	// Artikash 6/23/2019: V8 (JavaScript runtime) has rcx = string** at v8::String::Write
+	// sample game https://www.freem.ne.jp/dl/win/18963
+	bool InsertV8Hook(HMODULE module)
+	{
+		if (uint64_t addr = (uint64_t)GetProcAddress(module, "?Write@String@v8@@QEBAHPEAGHHH@Z"))
+		{
+			HookParam hp = {};
+			hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
+			hp.address = addr;
+			hp.offset = -0x20; // rcx
+			hp.index = 0;
+			hp.padding = 23;
+			hp.length_fun = [](uintptr_t, uintptr_t data)
+			{
+				int len = *(int*)(data - 4);
+				return len > 0 && len < 1000 ? len * 2 : 0;
+			};
+			NewHook(hp, "JavaScript");
+			return true;
+		}
+		return false;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
+
+		for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
 
 		for (const wchar_t* monoName : { L"mono", L"mono-2.0-bdwgc" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 

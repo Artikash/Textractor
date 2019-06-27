@@ -65,12 +65,22 @@ bool DeterminePCEngine()
 	  else for (int i = 0; i < 50; ++i)
 		  if (HMODULE module = GetModuleHandleW((DXVersion + L"_" + std::to_wstring(i)).c_str())) PcHooks::hookD3DXFunctions(module);
 
-  if (GetProcAddress((HMODULE)processStartAddress, "?Write@String@v8@@QBEHPAGHHH@Z")) 
+  if (GetProcAddress((HMODULE)processStartAddress, "?Write@String@v8@@QBEHPAGHHH@Z"))
+  {
 	  InsertV8Hook((HMODULE)processStartAddress);
+	  return true;
+  }
   if (HMODULE module = GetModuleHandleW(L"node.dll"))
+  {
 	  InsertV8Hook(module);
+	  return true;
+  }
+	 
   if (HMODULE module = GetModuleHandleW(L"nw.dll"))
+  {
 	  InsertV8Hook(module);
+	  return true;
+  }
 
   if (InsertMonoHooks()) {
     return true;
