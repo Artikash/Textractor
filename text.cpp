@@ -504,7 +504,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	EXTENSIONS = u8"Extensões";
 	SELECT_PROCESS = u8"Selecionar Processo";
 	ATTACH_INFO = u8R"(Se você não encontrar o processo o qual deseja anexar a, tente iniciar com permissão de Administrador. Você também pode digitar a ID do processo)";
-	SEARCH_GAME = u8"Selecione no Computador";
+	SEARCH_GAME = u8"Busque no Computador";
 	PROCESSES = u8"Executaveis (*.exe)";
 	SAVE_SETTINGS = u8"Salvar opções";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arraste e solte a extensão (.dll) aqui para adicioná-la.
@@ -529,14 +529,14 @@ Você pode fazê-lo por meio da Homepage do Projeto (na aba "Issues") ou via E-m
 O código-fonte se encontra disponível na Homepage do projeto sob a licença GPLv3.
 Estou a procura de um novo trabalho: por favor enviê-me uma mensagem de e-mail para mim se souber de alguém que esteja contratando um Engenheiro de Software dos USA.
 Se você gostou desse projeto, divulgue a todos :))";
-	UPDATE_AVAILABLE = L"Atualização disponível em: baixe em https://github.com/Artikash/Textractor/releases";
+	UPDATE_AVAILABLE = L"Atualização disponível: baixe em https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: já está injetado";
-  	NEED_32_BIT = L"Textractor: arquitetura errada: apenas o Textractor x86 pode injetar nesse processo";
- 	NEED_64_BIT = L"Textractor: arquitetura errada: apenas o Textractor x64 pode injetar nesse processo";
+  	NEED_32_BIT = L"Textractor: arquitetura errada: apenas o Textractor x86 pode injetar neste processo";
+ 	NEED_64_BIT = L"Textractor: arquitetura errada: apenas o Textractor x64 pode injetar neste processo";
 	INJECT_FAILED = L"Textractor: não pode injetar";
 	LAUNCH_FAILED = L"Textractor: não pode iniciar";
 	INVALID_CODE = L"Textractor: código inválido";
-	INVALID_CODEPAGE = L"Textractor: não pode converter o texto (página de código inválido?)";
+	INVALID_CODEPAGE = L"Textractor: não pode converter o texto (página de código inválida?)";
 	PIPE_CONNECTED = u8"Textractor: pipe conectado";
 	INSERTING_HOOK = u8"Textractor: inserindo hook: %s";
 	REMOVING_HOOK = u8"Textractor: removendo hook: %s";
@@ -551,8 +551,8 @@ Se você gostou desse projeto, divulgue a todos :))";
 	SEND_ERROR = u8"Textractor: ERRO no envio (provavelmente um H-code incorreto)";
 	READ_ERROR = u8"Textractor:  ERRO na leitura (provavelmente um R-code incorreto)";
 	COULD_NOT_FIND = u8"Textractor: não foi possível encontrar texto";
-	SELECT_LANGUAGE = u8"Selecione a língua";
-	SELECT_LANGUAGE_MESSAGE = u8"Qual língua deve o/a %1 traduzir para?";
+	SELECT_LANGUAGE = u8"Selecione a lingua";
+	SELECT_LANGUAGE_MESSAGE = u8"Qual lingua deve o/a %1 traduzir para?";
 	TOO_MANY_TRANS_REQUESTS = L"Foram feitos pedidos de tradução demais: recusa na feitura de mais pedidos";
 	TRANSLATION_ERROR = L"Erro enquanto traduzindo";
  	EXTRA_WINDOW_INFO = u8R"(Clique com o botão direito para mudar as opções
@@ -575,7 +575,7 @@ Apenas funciona se essa extensão for usada diretamente após uma extensão de t
 Comandos de substituição devem ser formatos da seguinte maneira:
 |ORIG|texto_original|BECOMES|texto_substituido|END|
 Todo texto fora de um comando de substituição é ignorado.
-Espaços contidos no texto original é ignorado, mas o texto substituído pode conter espaços, novas línhas, etc.
+Espaços contidos no texto original serão ignorados, mas o texto substituído pode conter espaços, novas línhas, etc.
 Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
   	THREAD_LINKER = u8"Ligador de Threads";
   	LINK = u8"Ligar";
