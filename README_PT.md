@@ -12,25 +12,25 @@ Assista ao [vídeo tutorial](https://tinyurl.com/textractor-tutorial) para uma r
 ## Download
 
 As versões lançadas podem ser encontradas [aqui](https://github.com/Artikash/Textractor/releases).<br>
-A última versão lançada do ITHVNR pode ser encontrado [aqui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Tente rodar vc_redist se você encontrar algum erro ao iniciar o Textractor.
+A última versão lançada do ITHVNR pode ser encontrada [aqui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
+Tente rodar o vc_redist se você encontrar algum erro ao iniciar o Textractor.
 
 ## Recursos e Funções
 
 - Altamente extensível e personalizável.
-- Auto hook many game engines Automaticamente extrai vários games engines (inclusive alguns não suportados pelo VNR!)
-- Extrai texto usando códigos "hook" /H (a maioria dos códigos utilizados pelo AGTH são suportados.)
+- Automaticamente extrai vários games engines (inclusive algumas não compatíveis com VNR!)
+- Extrai texto usando códigos "hook" /H (a maioria dos códigos utilizados pelo AGTH são compatíveis.)
 - Extrai texto diretamente utilizando códigos "read" /R
 
-## Suporte
+## Suporte Técnico
 
 Por favor, deixe-me saber de quaisquer bugs, jogos que o Textractor tenha problema extraindo texto, pedido por recursos ou funções, ou quaisquer outras sugestões.<br>
-Se você tiver algum problema extraindo um jogo, favor me mandar um e-mail do lugar de onde eu possa livremente dar download do jogo, ou me presenteie-me o jogo no [Steam](https://steamcommunity.com/profiles/76561198097566313/).
+Se você tiver algum problema extraindo um jogo, favor me mandar um e-mail do lugar de onde eu possa livremente dar download do jogo, ou presenteie-me o jogo no [Steam](https://steamcommunity.com/profiles/76561198097566313/).
 
 ## Extensões
 
-Veja o meu [Projeto de Extensão-Exemplo](https://github.com/Artikash/ExampleExtension) para ver como construir uma extensão.<br>
-Veja a pasta de extensões para mais exemplos do que extensões são capazes de fazerem. 
+Veja o meu [Projeto de Extensão-Exemplo](https://github.com/Artikash/ExampleExtension) para como construir uma extensão.<br>
+Veja a pasta de extensões para mais exemplos do que as extensões são capazes de fazerem. 
 
 ## Contribuindo
 
@@ -40,16 +40,16 @@ Contribuir com uma tradução é fácil: basta traduzir as linhas do text.cpp as
 
 ## Compilando
 
-Antes de compilar o  *Textractor*, você deve ter o Visual Studo com suporte ao CMake, assim como ao Qt versão 5.11.<br>
+Antes de compilar o  *Textractor* você deve ter o Visual Studio com suporte ao CMake, assim como o Qt versão 5.11.<br>
 Você deverá então ser capaz de simplesmente abrir uma pasta no Visual Studio e build. Inicie Textractor.exe.
 
 ## Arquitetura do Projeto
 
-O host (veja a pasta GUI/host) injeta o texthook.dll (criado apartir da pasta texthook) dentro do processo-alvo e conecta a ele por meio de 2 arquivos pipe.<br>
+O host (veja a pasta GUI/host) injeta o texthook.dll (criado a partir da pasta texthook) dentro do processo-alvo e se conecta a ele por meio de 2 arquivos pipe.<br>
 O Host escreve para hostPipe, o texthook escreve para hookPipe.<br>
-O texthook espera pelo pipe estar conectado e então injeta algumas intruções dentro de quaisquer funções que produzam texto (por exemplo: TextOut, GetGlyphOutline) o que causa o seu produto a ser mandato por meio do pipe.<br>
-Informações adicionais sobre o hook é trocada por meio de memória compartilhada.<br>
-O texto que o hosto recebe por meio do pipe é processado um pouco antes de ser dispachado devolta para a Interface Gráfica de Usuário/GUI.<br>
+O texthook espera pelo pipe estar conectado e então injeta algumas intruções dentro de quaisquer funções que produzam texto (por exemplo: TextOut, GetGlyphOutline) o que faz com que seu produto seja mandado por meio do pipe.<br>
+Informação adicional sobre os hooks é trocada por meio da memória compartilhada.<br>
+O texto que o host recebe por meio do pipe é então processado um pouco antes de ser despachado devolta para a IGU/GUI.<br>
 Finalmente, a IGU/GUI despacha o texto para as extensões antes de mostrá-lo.
 
 ## Desenvolvedores
@@ -75,4 +75,4 @@ Se você está nesta lista e gostaria do link mudado, deixe-me saber.
 
 ## Agradecimentos Especiais
 
-- Todos que levantaram Problemas!
+- Todos que proporam Tarefas!
