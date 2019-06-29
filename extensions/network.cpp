@@ -61,6 +61,7 @@ void Unescape(std::wstring& text)
 			if (text[i + 1] == L'r') text[i + 1] = 0x200b; // for some reason \r gets displayed as a newline
 			if (text[i + 1] == L'n') text[i + 1] = L'\n';
 			if (text[i + 1] == L't') text[i + 1] = L'\t';
+			if (text[i + 1] == L'\\') ++i;
 		}
 	}
 }

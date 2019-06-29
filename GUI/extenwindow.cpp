@@ -6,8 +6,6 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QUrl>
-#include <QLabel>
-#include <QMessageBox>
 
 extern const char* EXTENSIONS;
 extern const char* INVALID_EXTENSION;

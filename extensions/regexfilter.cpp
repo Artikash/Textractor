@@ -1,3 +1,4 @@
+#include "qtcommon.h"
 #include "extension.h"
 #include "ui_regexfilter.h"
 
@@ -22,12 +23,12 @@ public:
 	}
 
 private:
-	void setRegex(QString newRegex)
+	void setRegex(QString regex)
 	{
 		std::lock_guard l(m);
-		try { regex = newRegex.toStdWString(); }
+		try { ::regex = S(regex); }
 		catch (std::regex_error) { return ui.output->setText(INVALID_REGEX); }
-		ui.output->setText(QString(CURRENT_FILTER).arg(newRegex));
+		ui.output->setText(QString(CURRENT_FILTER).arg(regex));
 	}
 
 	Ui::FilterWindow ui;

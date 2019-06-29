@@ -1,10 +1,8 @@
-﻿#include "extension.h"
+﻿#include "qtcommon.h"
+#include "extension.h"
 #include "util.h"
 #include <fstream>
-#include <QMainWindow>
-#include <QLayout>
 #include <QPlainTextEdit>
-#include <QPushButton>
 
 extern const char* LUA_INTRO;
 extern const char* LOAD_LUA_SCRIPT;

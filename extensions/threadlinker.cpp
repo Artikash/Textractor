@@ -1,9 +1,5 @@
+#include "qtcommon.h"
 #include "extension.h"
-#include <QMainWindow>
-#include <QLayout>
-#include <QPushButton>
-#include <QListWidget>
-#include <QInputDialog>
 #include <QKeyEvent>
 
 extern const char* THREAD_LINKER;

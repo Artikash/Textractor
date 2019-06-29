@@ -1,17 +1,11 @@
+#include "qtcommon.h"
 #include "extension.h"
 #include "ui_extrawindow.h"
 #include "defs.h"
-#include <QInputDialog>
 #include <QColorDialog>
-#include <QMessageBox>
 #include <QMenu>
-#include <QFormLayout>
-#include <QLineEdit>
-#include <QSpinBox>
-#include <QPushButton>
 #include <QPainter>
 #include <QMouseEvent>
-#include <QSettings>
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
@@ -164,7 +158,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (!sentenceInfo["current select"]) return false;
 
-	QString qSentence = QString::fromStdWString(sentence);
+	QString qSentence = S(sentence);
 	if (!window.settings.value(SHOW_ORIGINAL).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
 
 	QMetaObject::invokeMethod(&window, [=] { window.ui.display->setText(qSentence); });

@@ -3,15 +3,7 @@
 #include "defs.h"
 #include "host/util.h"
 #include <shellapi.h>
-#include <QFormLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QListWidget>
 #include <QDialogButtonBox>
-#include <QMessageBox>
-#include <QInputDialog>
 #include <QFileDialog>
 
 extern const char* ATTACH;
@@ -454,12 +446,12 @@ void MainWindow::FindHooks()
 		if (!dialog.exec()) return;
 		QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
 		memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
-		try { filter = std::wregex(S(filterInput.text())); } catch (std::regex_error) {}
+		try { filter = S(filterInput.text()); } catch (std::regex_error) {}
 	}
 	else
 	{
 		// sp.length is 0 in this branch, so default will be used
-		filter = cjkCheckbox.isChecked() ? std::wregex(L"[\\u3000-\\ua000]{4,}") : std::wregex(L"[\\u0020-\\u1000]{4,}");
+		filter = std::wregex(cjkCheckbox.isChecked() ? L"[\\u3000-\\ua000]{4,}" : L"[\\u0020-\\u1000]{4,}");
 	}
 
 	auto hooks = std::make_shared<QString>();
