@@ -1,8 +1,7 @@
-﻿#include "extension.h"
+﻿#include "qtcommon.h"
+#include "extension.h"
 #include "network.h"
 #include <QTimer>
-#include <QInputDialog>
-#include <QFile>
 
 extern const char* SELECT_LANGUAGE;
 extern const char* SELECT_LANGUAGE_MESSAGE;
@@ -13,7 +12,17 @@ extern QStringList languages;
 extern Synchronized<std::wstring> translateTo;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
+int savedSize;
 Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
+
+void SaveCache()
+{
+	QTextFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER), QIODevice::WriteOnly | QIODevice::Truncate);
+	auto translationCache = ::translationCache.Acquire();
+	for (const auto& [original, translation] : translationCache.contents)
+		file.write(S(FormatString(L"%s|T|\n%s|T|\n", original, translation)).toUtf8());
+	savedSize = translationCache->size();
+}
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -23,7 +32,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 		QTimer::singleShot(0, []
 		{
-			translateTo->assign(QInputDialog::getItem(
+			QString language = QInputDialog::getItem(
 				nullptr,
 				SELECT_LANGUAGE,
 				QString(SELECT_LANGUAGE_MESSAGE).arg(TRANSLATION_PROVIDER),
@@ -31,26 +40,20 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				0,
 				false,
 				nullptr,
-				Qt::WindowCloseButtonHint)
-				.split(": ")[1]
-				.toStdWString()
+				Qt::WindowCloseButtonHint
 			);
+			translateTo->assign(S(language.split(": ")[1]));
 		});
 
-		QFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER));
-		file.open(QIODevice::ReadOnly | QIODevice::Text);
-		QStringList savedCache = QString(file.readAll()).split("|T|\n", QString::SkipEmptyParts);
+		QStringList savedCache = QString(QTextFile(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER), QIODevice::ReadOnly).readAll()).split("|T|\n", QString::SkipEmptyParts);
 		for (int i = 0; i < savedCache.size() - 1; i += 2)
-			translationCache->insert({ savedCache[i].toStdWString(), savedCache[i + 1].toStdWString() });
+			translationCache->insert({ S(savedCache[i]), S(savedCache[i + 1]) });
+		savedSize = translationCache->size();
 	}
 	break;
 	case DLL_PROCESS_DETACH:
 	{
-		QFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER));
-		file.open(QIODevice::WriteOnly | QIODevice::Text);
-		auto translationCache = ::translationCache.Acquire();
-		for (const auto& [original, translation] : translationCache.contents)
-			file.write(QString::fromStdWString(FormatString(L"%s|T|\n%s|T|\n", original, translation)).toUtf8());
+		SaveCache();
 	}
 	break;
 	}
@@ -83,9 +86,13 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translationCache->count(sentence) != 0) translation = translationCache->at(sentence);
 	else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
 	else std::tie(cache, translation) = Translate(sentence);
-	if (cache) translationCache->insert({ sentence, translation });
-	Unescape(translation);
+	if (cache)
+	{
+		translationCache->insert({ sentence, translation });
+		if (translationCache->size() > savedSize + 50) SaveCache();
+	}
 
+	Unescape(translation);
 	sentence += L"\n" + translation;
 	return true;
 }
