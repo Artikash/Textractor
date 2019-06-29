@@ -112,17 +112,17 @@ const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
-const char* TOPMOST = u8"Always on Top";
-const char* SHOW_ORIGINAL = u8"Original Text";
+const char* TOPMOST = u8"Always on top";
+const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
-const char* SIZE_LOCK = u8"Size Locked";
-const char* BG_COLOR = u8"Background Color";
-const char* TEXT_COLOR = u8"Text Color";
+const char* SIZE_LOCK = u8"Size lock";
+const char* BG_COLOR = u8"Background color";
+const char* TEXT_COLOR = u8"Text color";
 const char* FONT = u8"Font";
-const char* FONT_FAMILY = u8"Font Family";
-const char* FONT_SIZE = u8"Font Size";
-const char* FONT_WEIGHT = u8"Font Weight";
+const char* FONT_FAMILY = u8"Font family";
+const char* FONT_SIZE = u8"Font size";
+const char* FONT_WEIGHT = u8"Font weight";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 
@@ -143,7 +143,7 @@ Properties in sentenceInfo:
 function ProcessSentence(sentence, sentenceInfo)
   --Your code here...
 end)";
-const char* LOAD_LUA_SCRIPT = u8"Load Script";
+const char* LOAD_LUA_SCRIPT = u8"Load script";
 const wchar_t* LUA_ERROR = L"Lua error: %s";
 const char* REGEX_FILTER = u8"Regex Filter";
 const char* INVALID_REGEX = u8"Invalid regex";
