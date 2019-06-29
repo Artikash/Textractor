@@ -310,15 +310,6 @@ namespace Util
 		return {};
 	}
 
-	bool RemoveRepetition(std::wstring& text)
-	{
-		wchar_t* end = text.data() + text.size();
-		for (int length = text.size() / 3; length > 6; --length)
-			if (memcmp(end - length * 3, end - length * 2, length * sizeof(wchar_t)) == 0 && memcmp(end - length * 3, end - length * 1, length * sizeof(wchar_t)) == 0)
-				return RemoveRepetition(text = std::wstring(end - length, length)), true;
-		return false;
-	}
-
 	std::optional<HookParam> ParseCode(std::wstring code)
 	{
 		if (code[0] == L'/') code.erase(0, 1); // legacy/AGTH compatibility

@@ -90,7 +90,7 @@ inline auto FormatArg(const std::basic_string<C>& arg) { return arg.c_str(); }
 #pragma warning(push)
 #pragma warning(disable: 4996)
 template <typename... Args>
-inline std::string FormatString(const char* format, Args... args)
+inline std::string FormatString(const char* format, const Args&... args)
 {
 	std::string buffer(snprintf(nullptr, 0, format, FormatArg(args)...), '\0');
 	sprintf(buffer.data(), format, FormatArg(args)...);
@@ -98,7 +98,7 @@ inline std::string FormatString(const char* format, Args... args)
 }
 
 template <typename... Args>
-inline std::wstring FormatString(const wchar_t* format, Args... args)
+inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 {
 	std::wstring buffer(_snwprintf(nullptr, 0, format, FormatArg(args)...), L'\0');
 	_swprintf(buffer.data(), format, FormatArg(args)...);

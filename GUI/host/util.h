@@ -10,8 +10,6 @@ namespace Util
 	std::vector<std::pair<DWORD, std::optional<std::wstring>>> GetAllProcesses();
 	std::optional<std::wstring> GetClipboardText();
 	std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding = CP_UTF8);
-	// return true if repetition found (see https://github.com/Artikash/Textractor/issues/40)
-	bool RemoveRepetition(std::wstring& text);
 	std::optional<HookParam> ParseCode(std::wstring code);
 	std::wstring GenerateCode(HookParam hp, DWORD processId);
 }

@@ -4,6 +4,16 @@
 
 extern const wchar_t* INVALID_CODEPAGE;
 
+// return true if repetition found (see https://github.com/Artikash/Textractor/issues/40)
+static bool RemoveRepetition(std::wstring& text)
+{
+	wchar_t* end = text.data() + text.size();
+	for (int length = text.size() / 3; length > 6; --length)
+		if (memcmp(end - length * 3, end - length * 2, length * sizeof(wchar_t)) == 0 && memcmp(end - length * 3, end - length * 1, length * sizeof(wchar_t)) == 0)
+			return RemoveRepetition(text = std::wstring(end - length, length)), true;
+	return false;
+}
+
 TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) :
 	handle(threadCounter++),
 	name(name.value_or(Util::StringToWideString(hp.name).value())),
@@ -44,7 +54,7 @@ void TextThread::Push(BYTE* data, int length)
 	if (filterRepetition)
 	{
 		if (std::all_of(buffer.begin(), buffer.end(), [&](auto ch) { return repeatingChars.find(ch) != repeatingChars.end(); })) buffer.clear();
-		if (Util::RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
+		if (RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 		{
 			repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
 			AddSentence(std::move(buffer));
