@@ -80,7 +80,7 @@ private:
 
 	QWidget centralWidget{ this };
 	QHBoxLayout layout{ &centralWidget };
-	QPlainTextEdit scriptEditor{ std::string(std::istreambuf_iterator<char>(std::ifstream(LUA_SAVE_FILE, std::ios::in)), {}).c_str(), &centralWidget };
+	QPlainTextEdit scriptEditor{ S(std::string(std::istreambuf_iterator<char>(std::ifstream(LUA_SAVE_FILE, std::ios::in)), {})), &centralWidget };
 	QPushButton loadButton{ LOAD_LUA_SCRIPT, &centralWidget };
 } window;
 

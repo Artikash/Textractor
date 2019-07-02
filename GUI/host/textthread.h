@@ -17,7 +17,7 @@ public:
 
 	void Start();
 	void Stop();
-	void AddSentence(std::wstring&& sentence);
+	void AddSentence(std::wstring sentence);
 	void Push(BYTE* data, int length);
 
 	Synchronized<std::wstring> storage;

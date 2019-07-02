@@ -13,6 +13,8 @@ extern const char* CONFIRM_EXTENSION_OVERWRITE;
 extern const char* EXTENSION_WRITE_ERROR;
 extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 
+constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
+
 namespace
 {
 	struct Extension

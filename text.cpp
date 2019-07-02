@@ -19,7 +19,8 @@ const char* EXTENSIONS = u8"Extensions";
 const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
 You can also type in the process id)";
-const char* SEARCH_GAME = u8"Select from computer";
+const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, please use the absolute path";
+const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
 const char* CODE_INFODUMP = u8R"(Search for text
 S[codepage#]text
@@ -207,7 +208,7 @@ Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut
 	SELECT_PROCESS = u8"Seleccionar procreso";
 	ATTACH_INFO = u8R"(Si no ves el proceso que quieras adjuntar, ejecuta este programa como administrador
 También puedes escribir la ID del proceso)";
-	SEARCH_GAME = u8"Seleccionar desde computadora";
+	FROM_COMPUTER = u8"Seleccionar desde computadora";
 	PROCESSES = u8"Procesos (*.exe)";
 	SAVE_SETTINGS = u8"Guardar opciones";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arrrastra y suelta la extension (.dll) aquí desde tu computadora para añadirlos
@@ -271,7 +272,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	SELECT_PROCESS = u8"选择进程";
 	ATTACH_INFO = u8R"(如果没看见想要附加的进程，尝试使用管理员权限运行
 也可以手动输入进程ID)";
-	SEARCH_GAME = u8"从计算机中选择";
+	FROM_COMPUTER = u8"从计算机中选择";
 	PROCESSES = u8"进程 (*.exe)";
 	SAVE_SETTINGS = u8"保存设置";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(从计算机拖拽扩展 (.dll) 文件到这里来添加
@@ -337,7 +338,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	SELECT_PROCESS = u8"Выберете процесс";
 	ATTACH_INFO = u8R"(Если вы не видите процесс, к которому хотите присоединить, попробуйте запуск с правами администратора
 Вы также можете ввести id процесса)";
-	SEARCH_GAME = u8"Найти в проводнике";
+	FROM_COMPUTER = u8"Найти в проводнике";
 	PROCESSES = u8"Процессы (*.exe)";
 	SAVE_SETTINGS = u8"Сохранить настройки";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Перетащите сюда (.dll) файлы расширений из проводника для их добавления
@@ -442,7 +443,7 @@ end)";
 	SELECT_PROCESS = u8"Pilih Proses";
 	ATTACH_INFO = u8R"(Jika kamu tidak dapat melihat proses yang akan ditempelkan, coba menjalankan dengan mode administrator
 Kamu juga dapat mengetik process id game yang akan ditempel)";
-	SEARCH_GAME = u8"Pilih dari komputer";
+	FROM_COMPUTER = u8"Pilih dari komputer";
 	PROCESSES = u8"Proses (*.exe)";
 	SAVE_SETTINGS = u8"Simpan pengaturan";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Drag and drop file ekstensi (.dll) kedalam sini dari komputer kamu untuk menambah ekstensi
@@ -507,7 +508,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	EXTENSIONS = u8"Extensões";
 	SELECT_PROCESS = u8"Selecionar Processo";
 	ATTACH_INFO = u8R"(Se você não encontrar o processo o qual deseja anexar a, tente iniciar com permissão de Administrador. Você também pode digitar a ID do processo)";
-	SEARCH_GAME = u8"Busque no Computador";
+	FROM_COMPUTER = u8"Busque no Computador";
 	PROCESSES = u8"Executaveis (*.exe)";
 	SAVE_SETTINGS = u8"Salvar opções";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Arraste e solte a extensão (.dll) aqui para adicioná-la.

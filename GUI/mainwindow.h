@@ -31,6 +31,7 @@ private:
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
 	std::array<InfoForExtension, 10> GetMiscInfo(TextThread& thread);
+	std::optional<std::wstring> UserSelectedProcess();
 	void AttachProcess();
 	void LaunchProcess();
 	void DetachProcess();

@@ -18,7 +18,8 @@ extern const char* SETTINGS;
 extern const char* EXTENSIONS;
 extern const char* SELECT_PROCESS;
 extern const char* ATTACH_INFO;
-extern const char* SEARCH_GAME;
+extern const char* SELECT_PROCESS_INFO;
+extern const char* FROM_COMPUTER;
 extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
 extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
@@ -53,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
-	for (auto [text, slot] : Array<std::tuple<QString, void(MainWindow::*)()>>{
+	for (auto [text, slot] : Array<std::tuple<const char*, void(MainWindow::*)()>>{
 		{ ATTACH, &MainWindow::AttachProcess },
 		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
@@ -66,9 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
 		{ EXTENSIONS, &MainWindow::Extensions }
 	})
 	{
-		auto button = new QPushButton(ui->processFrame);
+		auto button = new QPushButton(text, ui->processFrame);
 		connect(button, &QPushButton::clicked, this, slot);
-		button->setText(text);
 		ui->processLayout->addWidget(button);
 	}
 	ui->processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -154,7 +154,6 @@ void MainWindow::ProcessConnected(DWORD processId)
 	QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
 
 	QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
-	// Can't use QFileInfo::absoluteFilePath since hook save file has '\\' as path separator
 	auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
@@ -173,7 +172,7 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
-	QString ttString = TextThreadString(thread) + S(thread.name) + " (" + S(threadCode) + ")";
+	QString ttString = TextThreadString(thread) + S(FormatString(L"(%s)", threadCode));
 	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
@@ -209,13 +208,13 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 
 QString MainWindow::TextThreadString(TextThread& thread)
 {
-	return QString("%1:%2:%3:%4:%5: ").arg(
+	return QString("%1:%2:%3:%4:%5: %6 ").arg(
 		QString::number(thread.handle, 16),
 		QString::number(thread.tp.processId, 16),
 		QString::number(thread.tp.addr, 16),
 		QString::number(thread.tp.ctx, 16),
 		QString::number(thread.tp.ctx2, 16)
-	).toUpper();
+	).toUpper().arg(S(thread.name));
 }
 
 ThreadParam MainWindow::ParseTextThreadString(QString ttString)
@@ -233,9 +232,8 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 {
 	void(*AddSentence)(MainWindow*, int64_t, const wchar_t*) = [](MainWindow* This, int64_t number, const wchar_t* sentence)
 	{
-		std::wstring copy = sentence;
 		// pointer from Host::GetThread may not stay valid unless on main thread
-		QMetaObject::invokeMethod(This, [=]() mutable { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(std::move(copy)); });
+		QMetaObject::invokeMethod(This, [number, sentence = std::wstring(sentence)] { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(sentence); });
 	};
 
 	return
@@ -250,6 +248,18 @@ std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
 	{ "void (*AddSentence)(void* this, int64_t number, const wchar_t* sentence)", (int64_t)AddSentence },
 	{ nullptr, 0 } // nullptr marks end of info array
 	} };
+}
+
+std::optional<std::wstring> MainWindow::UserSelectedProcess()
+{
+	QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
+	std::reverse(savedProcesses.begin(), savedProcesses.end());
+	savedProcesses.removeDuplicates();
+	savedProcesses.insert(1, FROM_COMPUTER);
+	QString process = QInputDialog::getItem(this, SELECT_PROCESS, SELECT_PROCESS_INFO, savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint);
+	if (process == FROM_COMPUTER) process = QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, SELECT_PROCESS, "C:\\", PROCESSES));
+	if (ok && process.contains('\\')) return S(process);
+	return {};
 }
 
 void MainWindow::AttachProcess()
@@ -267,14 +277,9 @@ void MainWindow::AttachProcess()
 
 void MainWindow::LaunchProcess()
 {
-	QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
-	std::reverse(savedProcesses.begin(), savedProcesses.end());
-	savedProcesses.removeDuplicates();
-	savedProcesses.push_back(SEARCH_GAME);
-	std::wstring process = S(QInputDialog::getItem(this, SELECT_PROCESS, "", savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint));
-	if (!ok) return;
-	if (S(process) == SEARCH_GAME) process = S(QDir::toNativeSeparators(QFileDialog::getOpenFileName(this, SELECT_PROCESS, "C:\\", PROCESSES)));
-	if (process.find(L'\\') == std::wstring::npos) return;
+	std::wstring process;
+	if (auto selected = UserSelectedProcess()) process = selected.value();
+	else return;
 	std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 	PROCESS_INFORMATION info = {};
@@ -317,16 +322,16 @@ void MainWindow::DetachProcess()
 
 void MainWindow::ForgetProcess()
 {
-	if (auto processName = Util::GetModuleFilename(GetSelectedProcessId()))
-	{
-		for (auto file : { GAME_SAVE_FILE, HOOK_SAVE_FILE })
-		{
-			QStringList lines = QString::fromUtf8(QTextFile(file, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
-			lines.erase(std::remove_if(lines.begin(), lines.end(), [&](auto line) { return line.contains(S(processName.value())); }), lines.end());
-			QTextFile(file, QIODevice::WriteOnly | QIODevice::Truncate).write(lines.join("\n").toUtf8());
-		}
-	}
+	std::optional<std::wstring> processName = Util::GetModuleFilename(GetSelectedProcessId());
+	if (!processName) processName = UserSelectedProcess();
 	DetachProcess();
+	if (!processName) return;
+	for (auto file : { GAME_SAVE_FILE, HOOK_SAVE_FILE })
+	{
+		QStringList lines = QString::fromUtf8(QTextFile(file, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
+		lines.erase(std::remove_if(lines.begin(), lines.end(), [&](auto line) { return line.contains(S(processName.value())); }), lines.end());
+		QTextFile(file, QIODevice::WriteOnly | QIODevice::Truncate).write(lines.join("\n").append("\n").toUtf8());
+	}
 }
 
 void MainWindow::AddHook()
@@ -432,11 +437,7 @@ void MainWindow::FindHooks()
 		{
 			auto input = new QLineEdit(QString::number(value, 16), &dialog);
 			layout.addRow(label, input);
-			connect(input, &QLineEdit::textEdited, [&value](QString input)
-			{
-				bool ok;
-				if (uintptr_t newValue = input.toULongLong(&ok, 16); ok) value = newValue;
-			});
+			connect(input, &QLineEdit::textEdited, [&value](QString text) { if (uintptr_t newValue = text.toULongLong(&ok, 16); ok) value = newValue; });
 		}
 		QLineEdit filterInput(".", &dialog);
 		layout.addRow(HOOK_SEARCH_FILTER, &filterInput);

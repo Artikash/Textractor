@@ -31,7 +31,7 @@ void TextThread::Stop()
 	timer = NULL;
 }
 
-void TextThread::AddSentence(std::wstring&& sentence)
+void TextThread::AddSentence(std::wstring sentence)
 {
 	queuedSentences->emplace_back(std::move(sentence));
 }
