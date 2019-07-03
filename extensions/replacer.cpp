@@ -5,44 +5,52 @@
 #include <process.h>
 
 extern const wchar_t* REPLACER_INSTRUCTIONS;
+
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
-std::atomic<std::filesystem::file_time_type> replaceFileLastWrite;
+std::atomic<std::filesystem::file_time_type> replaceFileLastWrite = {};
 std::shared_mutex m;
 
-struct
+class Trie
 {
 public:
-	void Put(std::wstring original, std::wstring replacement)
+	Trie(const std::unordered_map<std::wstring, std::wstring>& replacements)
 	{
-		Node* current = &root;
-		for (auto ch : original)
-			if (Ignore(ch));
-			else if (auto& next = current->next[ch]) current = next.get();
-			else current = (next = std::make_unique<Node>()).get();
-		if (current != &root) current->value = replacement;
+		for (const auto& [original, replacement] : replacements)
+		{
+			Node* current = &root;
+			for (auto ch : original)
+				if (Ignore(ch));
+				else if (auto& next = current->next[ch]) current = next.get();
+				else current = (next = std::make_unique<Node>()).get();
+			if (current != &root) current->value = replacement;
+		}
 	}
 
-	std::pair<int, std::optional<std::wstring>> Lookup(const std::wstring& text) const
+	std::wstring Replace(const std::wstring& sentence) const
 	{
-		std::pair<int, std::optional<std::wstring>> result = {};
-		int length = 0;
-		const Node* current = &root;
-		for (auto ch : text)
+		std::wstring result;
+		for (int i = 0; i < sentence.size();)
 		{
-			if (Ignore(ch))
+			std::wstring replacement(1, sentence[i]);
+			int originalLength = 1;
+
+			const Node* current = &root;
+			for (int j = i; j < sentence.size() + 1; ++j)
 			{
-				length += 1;
+				if (current->value)
+				{
+					replacement = current->value.value();
+					originalLength = j - i;
+				}
+				if (current->next.count(sentence[j]) > 0) current = current->next.at(sentence[j]).get();
+				else if (Ignore(sentence[j]));
+				else break;
 			}
-			else if (current->next.count(ch) != 0)
-			{
-				auto& next = current->next.at(ch);
-				length += 1;
-				current = next.get();
-				if (current->value) result = { length, current->value };
-			}
-			else break;
-		}	
+
+			result += replacement;
+			i += originalLength;
+		}
 		return result;
 	}
 
@@ -57,55 +65,34 @@ private:
 		std::unordered_map<wchar_t, std::unique_ptr<Node>> next;
 		std::optional<std::wstring> value;
 	} root;
-} replacementTrie;
+} trie = { {} };
 
-int Parse(const std::wstring& file)
+std::unordered_map<std::wstring, std::wstring> Parse(const std::wstring& replacementScript)
 {
-	std::lock_guard l(m);
-	replacementTrie = {};
-	int count = 0;
+	std::unordered_map<std::wstring, std::wstring> replacements;
 	size_t end = 0;
 	while (true)
 	{
-		size_t original = file.find(L"|ORIG|", end);
-		size_t becomes = file.find(L"|BECOMES|", original);
-		if ((end = file.find(L"|END|", becomes)) == std::wstring::npos) break;
-		replacementTrie.Put(file.substr(original + 6, becomes - original - 6), file.substr(becomes + 9, end - becomes - 9));
-		count += 1;
+		size_t original = replacementScript.find(L"|ORIG|", end);
+		size_t becomes = replacementScript.find(L"|BECOMES|", original);
+		if ((end = replacementScript.find(L"|END|", becomes)) == std::wstring::npos) break;
+		replacements[replacementScript.substr(original + 6, becomes - original - 6)] = replacementScript.substr(becomes + 9, end - becomes - 9);
 	}
-	return count;
-}
-
-bool Replace(std::wstring& sentence)
-{
-	std::shared_lock l(m);
-	for (int i = 0; i < sentence.size(); ++i)
-	{
-		auto [length, replacement] = replacementTrie.Lookup(sentence.substr(i));
-		if (replacement)
-		{
-			sentence.replace(i, length, replacement.value());
-			i += replacement.value().size() - 1; // iterate to end of replacement
-		}
-	}
-	return true;
+	return replacements;
 }
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-	// not actually used to read/write, just to ensure it exists
-	static AutoHandle<> replacementFile = CreateFileA(REPLACE_SAVE_FILE, FILE_GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
 	{
 		std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
-		if (Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))) == 0)
+		if (Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))).empty())
 		{
 			std::ofstream(REPLACE_SAVE_FILE, std::ios::out | std::ios::binary | std::ios::trunc).write((char*)REPLACER_INSTRUCTIONS, wcslen(REPLACER_INSTRUCTIONS) * sizeof(wchar_t));
 			_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
 		}
-		replaceFileLastWrite = std::filesystem::last_write_time(REPLACE_SAVE_FILE);
 	}
 	break;
 	case DLL_PROCESS_DETACH:
@@ -118,30 +105,34 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 {
-	static_assert(std::has_unique_object_representations_v<decltype(replaceFileLastWrite)::value_type>);
-	if (!replaceFileLastWrite.compare_exchange_strong(std::filesystem::last_write_time(REPLACE_SAVE_FILE), std::filesystem::last_write_time(REPLACE_SAVE_FILE)))
+	try
 	{
-		std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
-		Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t)));
+		static_assert(std::has_unique_object_representations_v<decltype(replaceFileLastWrite)::value_type>);
+		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) != std::filesystem::last_write_time(REPLACE_SAVE_FILE))
+		{
+			std::scoped_lock l(m);
+			std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
+			trie = Trie(Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))));
+		}
 	}
+	catch (std::filesystem::filesystem_error) {}
 
-	return Replace(sentence);
+	std::shared_lock l(m);
+	sentence = trie.Replace(sentence);
+	return true;
 }
 
-TEST_SYNC(
+TEST(
 	{
-		assert(Parse(LR"(|ORIG| さよなら|BECOMES|goodbye|END|
+		auto replacements = Parse(LR"(
+|ORIG|さよなら|BECOMES|goodbye |END|Ignore this text
+And this text ツ　　
 |ORIG|バカ|BECOMES|idiot|END|
-|ORIG|こんにちは |BECOMES|hello|END|)") == 3);
-		std::wstring replaced = LR"(blahblah　
- さよなら バカ こんにちは)";
-		Replace(replaced);
-		assert(replaced.find(L"さよなら") == std::wstring::npos &&
-			replaced.find(L"バカ") == std::wstring::npos &&
-			replaced.find(L"こんにちは") == std::wstring::npos &&
-			replaced.find(L"goodbye") != std::wstring::npos &&
-			replaced.find(L"idiot") != std::wstring::npos &&
-			replaced.find(L"hello") != std::wstring::npos
-		);
+|ORIG|こんにちは |BECOMES| hello|END||ORIG|delete this|BECOMES||END|)");
+		assert(replacements.size() == 4);
+		std::wstring original = LR"(Don't replace this　
+ さよなら バカ こんにちは delete this)";
+		std::wstring replaced = Trie(replacements).Replace(original);
+		assert(replaced == L"Don't replace thisgoodbye idiot hello");
 	}
 );
