@@ -9,9 +9,9 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
 extern QStringList languages;
-extern Synchronized<std::wstring> translateTo;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
+Synchronized<std::wstring> translateTo = L"en";
 int savedSize;
 Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 
@@ -86,7 +86,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translationCache->count(sentence) != 0) translation = translationCache->at(sentence);
 	else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
 	else std::tie(cache, translation) = Translate(sentence);
-	if (cache)
+	if (cache && sentenceInfo["current select"])
 	{
 		translationCache->insert({ sentence, translation });
 		if (translationCache->size() > savedSize + 50) SaveCache();
@@ -98,9 +98,5 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 }
 
 TEST(
-	{
-		std::wstring test = L"こんにちは";
-		ProcessSentence(test, { SentenceInfo::DUMMY });
-		assert(test.find(L"Hello") != std::wstring::npos);
-	}
+	assert(Translate(L"こんにちは").second.find(L"ello") != std::wstring::npos)
 );

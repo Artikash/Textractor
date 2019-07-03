@@ -6,6 +6,8 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
+extern Synchronized<std::wstring> translateTo;
+
 const char* TRANSLATION_PROVIDER = "Google";
 QStringList languages
 {
@@ -70,7 +72,6 @@ QStringList languages
 	"Yiddish: yi",
 	"Zulu: zu"
 };
-Synchronized<std::wstring> translateTo = L"en";
 
 std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 {

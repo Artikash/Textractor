@@ -4,6 +4,8 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
+extern Synchronized<std::wstring> translateTo;
+
 const char* TRANSLATION_PROVIDER = "Bing";
 QStringList languages
 {
@@ -53,7 +55,6 @@ QStringList languages
 	"Vietnamese: vi",
 	"Welsh: cy"
 };
-Synchronized<std::wstring> translateTo = L"en";
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
