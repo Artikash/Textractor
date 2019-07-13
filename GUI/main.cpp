@@ -26,5 +26,6 @@ int main(int argc, char *argv[])
 	QDir::setCurrent(QFileInfo(S(Util::GetModuleFilename().value())).absolutePath());
 
 	QApplication app(argc, argv);
+	app.setFont(QFont("MS Shell Dlg 2", 10));
 	return MainWindow().show(), app.exec();
 }

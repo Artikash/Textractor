@@ -13,16 +13,8 @@
   <property name="windowTitle">
    <string>Textractor</string>
   </property>
-   <property name="styleSheet">
-     <string notr="true">
-       QObject
-       {
-       font: 10pt &quot;MS Shell Dlg 2&quot;;
-       }
-       #textOutput
-       {
-       font: 13pt &quot;MS Shell Dlg 2&quot;;
-       }
+  <property name="styleSheet">
+   <string notr="true">
        QPushButton, QComboBox
        {
        padding-top: 3px;
@@ -32,7 +24,7 @@
        text-align: left;
        }
      </string>
-   </property>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout">
     <item>
@@ -83,6 +75,15 @@
       </item>
       <item>
        <widget class="QPlainTextEdit" name="textOutput">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+		<property name="font">
+         <font>
+          <family>Meiryo</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>

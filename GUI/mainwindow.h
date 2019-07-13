@@ -27,6 +27,7 @@ private:
 	void ThreadAdded(TextThread& thread);
 	void ThreadRemoved(TextThread& thread);
 	bool SentenceReceived(TextThread& thread, std::wstring& sentence);
+	void OutputContextMenu(QPoint point);
 	QString TextThreadString(TextThread& thread);
 	ThreadParam ParseTextThreadString(QString ttString);
 	DWORD GetSelectedProcessId();
@@ -43,6 +44,7 @@ private:
 	void Settings();
 	void Extensions();
 	void ViewThread(int index);
+	void SetOutputFont(QString font);
 
 	Ui::MainWindow* ui;
 	ExtenWindow* extenWindow;

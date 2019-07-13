@@ -3,6 +3,7 @@
 #include "ui_extrawindow.h"
 #include "defs.h"
 #include <QColorDialog>
+#include <QFontDialog>
 #include <QMenu>
 #include <QPainter>
 #include <QMouseEvent>
@@ -15,9 +16,6 @@ extern const char* SIZE_LOCK;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
 extern const char* FONT;
-extern const char* FONT_SIZE;
-extern const char* FONT_FAMILY;
-extern const char* FONT_WEIGHT;
 extern const char* SAVE_SETTINGS;
 
 struct Window : QDialog
@@ -73,25 +71,12 @@ public:
 private:
 	void RequestFont()
 	{
-		QFont font = ui.display->font();
-		QDialog fontDialog(this, Qt::WindowCloseButtonHint);
-		fontDialog.setWindowTitle(FONT);
-		QFormLayout layout(&fontDialog);
-		QLineEdit fontFamily(font.family(), &fontDialog);
-		layout.addRow(FONT_FAMILY, &fontFamily);
-		QSpinBox fontSize(&fontDialog);
-		fontSize.setValue(font.pointSize());
-		layout.addRow(FONT_SIZE, &fontSize);
-		QSpinBox fontWeight(&fontDialog);
-		fontWeight.setValue(font.weight());
-		layout.addRow(FONT_WEIGHT, &fontWeight);
-		QPushButton save(SAVE_SETTINGS, &fontDialog);
-		layout.addWidget(&save);
-		connect(&save, &QPushButton::clicked, &fontDialog, &QDialog::accept);
-		if (!fontDialog.exec()) return;
-		font = QFont(fontFamily.text(), fontSize.value(), fontWeight.value());
-		settings.setValue(FONT, font.toString());
-		ui.display->setFont(font);
+		bool ok;
+		if (QFont font = QFontDialog::getFont(&ok, ui.display->font(), this, FONT); ok)
+		{
+			settings.setValue(FONT, font.toString());
+			ui.display->setFont(font);
+		}
 	};
 
 	void setBackgroundColor(QColor color)
@@ -159,7 +144,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (!sentenceInfo["current select"]) return false;
 
 	QString qSentence = S(sentence);
-	if (!window.settings.value(SHOW_ORIGINAL).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
+	if (!window.settings.value(SHOW_ORIGINAL, true).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
 
 	QMetaObject::invokeMethod(&window, [=] { window.ui.display->setText(qSentence); });
 	return false;

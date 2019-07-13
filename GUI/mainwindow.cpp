@@ -3,8 +3,10 @@
 #include "defs.h"
 #include "host/util.h"
 #include <shellapi.h>
+#include <QMenu>
 #include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QFontDialog>
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
@@ -16,6 +18,7 @@ extern const char* SAVE_HOOKS;
 extern const char* SEARCH_FOR_HOOKS;
 extern const char* SETTINGS;
 extern const char* EXTENSIONS;
+extern const char* FONT;
 extern const char* SELECT_PROCESS;
 extern const char* ATTACH_INFO;
 extern const char* SELECT_PROCESS_INFO;
@@ -75,9 +78,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(ui->ttCombo, qOverload<int>(&QComboBox::activated), this, &MainWindow::ViewThread);
 	connect(ui->textOutput, &QPlainTextEdit::selectionChanged, [this] { if (!(QApplication::mouseButtons() & Qt::LeftButton)) ui->textOutput->copy(); });
+	connect(ui->textOutput, &QPlainTextEdit::customContextMenuRequested, this, &MainWindow::OutputContextMenu);
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
+	if (settings.contains(FONT)) SetOutputFont(settings.value(FONT).toString());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
 	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();
 	autoAttachSavedOnly = settings.value(ATTACH_SAVED_ONLY, autoAttachSavedOnly).toBool();
@@ -172,7 +177,7 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
-	QString ttString = TextThreadString(thread) + S(FormatString(L"(%s)", threadCode));
+	QString ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode));
 	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
@@ -206,9 +211,16 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 	return true;
 }
 
+void MainWindow::OutputContextMenu(QPoint point)
+{
+	std::unique_ptr<QMenu> menu(ui->textOutput->createStandardContextMenu());
+	menu->addAction(FONT, [this] { if (QString font = QFontDialog::getFont(&ok, ui->textOutput->font(), this, FONT).toString(); ok) SetOutputFont(font); });
+	menu->exec(ui->textOutput->mapToGlobal(point));
+}
+
 QString MainWindow::TextThreadString(TextThread& thread)
 {
-	return QString("%1:%2:%3:%4:%5: %6 ").arg(
+	return QString("%1:%2:%3:%4:%5: %6").arg(
 		QString::number(thread.handle, 16),
 		QString::number(thread.tp.processId, 16),
 		QString::number(thread.tp.addr, 16),
@@ -520,4 +532,13 @@ void MainWindow::ViewThread(int index)
 	ui->ttCombo->setCurrentIndex(index);
 	ui->textOutput->setPlainText(S((current = &Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))))->storage->c_str()));
 	ui->textOutput->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::SetOutputFont(QString fontString)
+{
+	QFont font = ui->textOutput->font();
+	font.fromString(fontString);
+	font.setStyleStrategy(QFont::NoFontMerging);
+	ui->textOutput->setFont(font);
+	QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(FONT, font.toString());
 }
