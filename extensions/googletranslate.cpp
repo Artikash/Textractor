@@ -95,7 +95,7 @@ std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 	a %= 1000000;
 	b ^= a;
 
-	return FormatString(L"/translate_a/single?client=t&dt=ld&dt=rm&dt=t&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, b, escapedText);
+	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, b, escapedText);
 }
 
 bool IsHash(const std::wstring& result)
