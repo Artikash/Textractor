@@ -33,6 +33,7 @@ extern const char* PATTERN_OFFSET;
 extern const char* MIN_ADDRESS;
 extern const char* MAX_ADDRESS;
 extern const char* STRING_OFFSET;
+extern const char* MAX_HOOK_SEARCH_RECORDS;
 extern const char* HOOK_SEARCH_FILTER;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
@@ -429,22 +430,24 @@ void MainWindow::FindHooks()
 		QDialog dialog(this, Qt::WindowCloseButtonHint);
 		QFormLayout layout(&dialog);
 		QLineEdit patternInput(x64 ? "CC CC 48 89" : "CC CC 55 8B EC", &dialog);
+		assert(QByteArray::fromHex(patternInput.text().toUtf8()) == QByteArray((const char*)sp.pattern, sp.length));
 		layout.addRow(SEARCH_PATTERN, &patternInput);
 		for (auto [value, label] : Array<std::tuple<int&, const char*>>{
-			{ sp.searchTime = 20000, SEARCH_DURATION },
-			{ sp.offset = 2, PATTERN_OFFSET },
+			{ sp.searchTime, SEARCH_DURATION },
+			{ sp.offset, PATTERN_OFFSET },
+			{ sp.maxRecords, MAX_HOOK_SEARCH_RECORDS },
 		})
 		{
 			auto spinBox = new QSpinBox(&dialog);
 			spinBox->setMaximum(INT_MAX);
 			spinBox->setValue(value);
 			layout.addRow(label, spinBox);
-			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value] (int newValue) { value = newValue; });
+			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value](int newValue) { value = newValue; });
 		}
 		for (auto [value, label] : Array<std::tuple<uintptr_t&, const char*>>{
-			{ sp.minAddress = 0, MIN_ADDRESS },
-			{ sp.maxAddress = -1ULL, MAX_ADDRESS },
-			{ sp.padding = 0, STRING_OFFSET }
+			{ sp.minAddress, MIN_ADDRESS },
+			{ sp.maxAddress, MAX_ADDRESS },
+			{ sp.padding, STRING_OFFSET },
 		})
 		{
 			auto input = new QLineEdit(QString::number(value, 16), &dialog);
@@ -463,7 +466,7 @@ void MainWindow::FindHooks()
 	}
 	else
 	{
-		// sp.length is 0 in this branch, so default will be used
+		sp.length = 0; // use default
 		filter = std::wregex(cjkCheckbox.isChecked() ? L"[\\u3000-\\ua000]{4,}" : L"[\\u0020-\\u1000]{4,}");
 	}
 
@@ -476,13 +479,25 @@ void MainWindow::FindHooks()
 		});
 	}
 	catch (std::out_of_range) { return; }
-	QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES);
+	QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES, nullptr, QFileDialog::DontConfirmOverwrite);
 	if (saveFile.isEmpty()) saveFile = "Hooks.txt";
-	std::thread([hooks, saveFile]
+	std::thread([this, hooks, saveFile]
 	{
-		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
+		DWORD64 cleanupTime = GetTickCount64() + 500'000;
+		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
+			if (GetTickCount64() > cleanupTime) return;
+			else lastSize = hooks->size();
+		QMetaObject::invokeMethod(this, [this, hooks, saveFile]
+		{
+			auto hookList = new QPlainTextEdit(*hooks, this);
+			hooks->clear();
+			hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+			hookList->setAttribute(Qt::WA_DeleteOnClose);
+			hookList->resize({ 750, 300 });
+			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
+			hookList->show();
+		});
 		QTextFile(saveFile, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
-		hooks->clear();
 	}).detach();
 }
 

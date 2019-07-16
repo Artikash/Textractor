@@ -16845,7 +16845,7 @@ bool FindPPSSPP()
 				spDefault.minAddress = 0;
 				spDefault.maxAddress = -1ULL;
 				spDefault.padding = (uintptr_t)probe - 0x8000000;
-				spDefault.hookPostProcesser = [](HookParam& hp) { hp.type |= NO_CONTEXT; };
+				spDefault.hookPostProcessor = [](HookParam& hp) { hp.type |= NO_CONTEXT; };
 			}
 			probe += info.RegionSize;
 		}

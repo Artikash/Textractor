@@ -57,6 +57,7 @@ const char* SEARCH_CJK = u8"Search for Chinese/Japanese/Korean";
 const char* SEARCH_PATTERN = u8"Search pattern (hex byte array)";
 const char* SEARCH_DURATION = u8"Search duration (ms)";
 const char* PATTERN_OFFSET = u8"Offset from pattern start";
+const char* MAX_HOOK_SEARCH_RECORDS = u8"Search result cap";
 const char* MIN_ADDRESS = u8"Minimum address (hex)";
 const char* MAX_ADDRESS = u8"Maximum address (hex)";
 const char* STRING_OFFSET = u8"String offset (hex)";

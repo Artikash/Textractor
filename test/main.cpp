@@ -4,16 +4,19 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <QApplication>
 
 wchar_t buffer[1000] = {};
 std::array<int, 10> vars = {};
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int _)
 {
+	QApplication a(_ = 0, DUMMY);
+	static std::vector<AutoHandle<Functor<(void(__stdcall *)(void*))FreeLibrary>>> extensions;
 	for (auto file : std::filesystem::directory_iterator(std::filesystem::current_path()))
 		if (file.path().extension() == L".dll"
 			&& (std::stringstream() << std::ifstream(file.path(), std::ios::binary).rdbuf()).str().find("OnNewSentence") != std::string::npos)
-			LoadLibraryW(file.path().c_str());
+			extensions.emplace_back(LoadLibraryW(file.path().c_str()));
 
 	ShowWindow(CreateDialogParamW(hInstance, MAKEINTRESOURCEW(IDD_DIALOG1), NULL, [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> INT_PTR
 	{
@@ -36,6 +39,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 				GetWindowTextW((HWND)lParam, buffer, std::size(buffer));
 				try { vars.at(LOWORD(wParam) - IDC_EDIT1) = std::stoi(buffer); }
 				catch (...) {}
+				if (vars.at(1)) extensions.clear();
 			}
 		}
 		break;

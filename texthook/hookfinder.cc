@@ -24,7 +24,7 @@ namespace
 			hp.type = USING_UNICODE | USING_STRING;
 			hp.address = address;
 			hp.padding = sp.padding;
-			if (sp.hookPostProcesser) sp.hookPostProcesser(hp);
+			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
 			NotifyHookFound(hp, (wchar_t*)text);
 		}
 		uint64_t address = 0;
@@ -160,10 +160,10 @@ void SearchForHooks(SearchParam spUser)
 		static std::mutex m;
 		std::scoped_lock lock(m);
 
-		try { records = std::make_unique<HookRecord[]>(recordsAvailable = CACHE_SIZE); }
-		catch (std::bad_alloc) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
-
 		sp = spUser.length == 0 ? spDefault : spUser;
+
+		try { records = std::make_unique<HookRecord[]>(recordsAvailable = sp.maxRecords); }
+		catch (std::bad_alloc) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
 
 		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
 		uintptr_t moduleStopAddress = moduleStartAddress;
@@ -201,6 +201,6 @@ void SearchForHooks(SearchParam spUser)
 		records.reset();
 		VirtualFree(trampolines, 0, MEM_RELEASE);
 		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = 0;
-		ConsoleOutput(HOOK_SEARCH_FINISHED, CACHE_SIZE - recordsAvailable);
+		ConsoleOutput(HOOK_SEARCH_FINISHED, sp.maxRecords - recordsAvailable);
 	}).detach();
 }

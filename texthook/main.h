@@ -14,14 +14,7 @@ void NotifyHookRemove(uint64_t addr, LPCSTR name);
 void NewHook(HookParam hp, LPCSTR name, DWORD flag = HOOK_ENGINE);
 void RemoveHook(uint64_t addr, int maxOffset = 9);
 
-inline SearchParam spDefault = []
-{
-	SearchParam sp = {};
-	memcpy(sp.pattern, x64 ? Array<BYTE>{ 0xcc, 0xcc, 0x48, 0x89 } : Array<BYTE>{ 0xcc, 0xcc, 0x55, 0x8b, 0xec }, sp.length = x64 ? 4 : 5);
-	sp.offset = 2;
-	sp.searchTime = 20000;
-	return sp;
-}();
+inline SearchParam spDefault;
 
 extern "C" // minhook library
 {

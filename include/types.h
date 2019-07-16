@@ -62,12 +62,13 @@ struct ThreadParam
 
 struct SearchParam
 {
-	BYTE pattern[25]; // pattern in memory to search for
-	int length, // length of pattern (zero means this SearchParam is invalid and the default should be used)
-		offset, // offset from start of pattern to add hook
-		searchTime; // ms
-	uintptr_t padding, minAddress, maxAddress;
-	void(*hookPostProcesser)(HookParam&);
+	BYTE pattern[25] = { 0xcc, 0xcc, x64 ? 0x48 : 0x55, x64 ? 0x89 : 0x8b, 0xec }; // pattern in memory to search for
+	int length = x64 ? 4 : 5, // length of pattern (zero means this SearchParam is invalid and the default should be used)
+		offset = 2, // offset from start of pattern to add hook
+		searchTime = 20000, // ms
+		maxRecords = 100000;
+	uintptr_t padding = 0, minAddress = 0, maxAddress = (uintptr_t)-1;
+	void(*hookPostProcessor)(HookParam&) = nullptr;
 };
 
 struct InsertHookCmd // From host

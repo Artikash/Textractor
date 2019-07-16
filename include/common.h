@@ -111,9 +111,3 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 #else
 #define TEST(...)
 #endif
-
-#ifdef _DEBUG
-#define TEST_SYNC(...) static auto _ = [] { __VA_ARGS__; return 0UL; }(); 
-#else
-#define TEST_SYNC(...)
-#endif
