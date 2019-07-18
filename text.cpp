@@ -29,12 +29,13 @@ Enter read code
 R{S|Q|V}[null_length<][codepage#]@addr
 OR
 Enter hook code
-H{A|B|W|S|Q|V}[null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
+H{A|B|W|S|Q|V}[F][null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
 All numbers except codepage/null_length in hexadecimal
 Default codepage is 932 (Shift-JIS) but this can be changed in settings
 A/B: codepage char little/big endian
 W: UTF-16 char
 S/Q/V: codepage/UTF-16/UTF-8 string
+F: treat strings as full lines of text
 N: don't use context
 null_length: length of null terminator used for string
 padding: length of padding data before string (C struct { int64_t size; char string[500]; } needs padding = 8)

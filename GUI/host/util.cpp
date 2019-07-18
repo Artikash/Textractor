@@ -102,11 +102,20 @@ namespace
 		}
 		HCode.erase(0, 1);
 
-		// [null_length<]
-		if ((hp.type & USING_STRING) && std::regex_search(HCode, match, std::wregex(L"^([0-9]+)<")))
+		if ((hp.type & USING_STRING))
 		{
-			hp.null_length = std::stoi(match[1]);
-			HCode.erase(0, match[0].length());
+			if (HCode[0] == L'F')
+			{
+				hp.type |= FULL_STRING;
+				HCode.erase(0, 1);
+			}
+
+			// [null_length<]
+			if (std::regex_search(HCode, match, std::wregex(L"^([0-9]+)<")))
+			{
+				hp.null_length = std::stoi(match[1]);
+				HCode.erase(0, match[0].length());
+			}
 		}
 
 		// [N]
@@ -225,6 +234,8 @@ namespace
 			else if (hp.type & BIG_ENDIAN) HCode << "A";
 			else HCode << "B";
 		}
+
+		if (hp.type & FULL_STRING) HCode << "F";
 
 		if (hp.null_length != 0) HCode << hp.null_length << "<";
 

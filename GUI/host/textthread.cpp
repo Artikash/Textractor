@@ -49,6 +49,7 @@ void TextThread::Push(BYTE* data, int length)
 	if (hp.type & USING_UNICODE) buffer.append((wchar_t*)data, length / sizeof(wchar_t));
 	else if (auto converted = Util::StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
+	if (hp.type & FULL_STRING) buffer.push_back(L'\n');
 	lastPushTime = GetTickCount();
 	
 	if (filterRepetition)
@@ -62,7 +63,7 @@ void TextThread::Push(BYTE* data, int length)
 		}
 	}
 
-	if (flushDelay == 0 && hp.type & USING_STRING)
+	if (flushDelay == 0 && hp.type & FULL_STRING)
 	{
 		AddSentence(std::move(buffer));
 		buffer.clear();
