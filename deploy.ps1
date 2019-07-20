@@ -17,8 +17,8 @@ foreach ($language in @{
 }.GetEnumerator())
 {
 	$folder = "Textractor-$($language.Value)-$version";
+	rm -Force -Recurse -Verbose $folder;
 	mkdir -Force -Verbose $folder;
-	rm -Force -Recurse -Verbose "$folder/*";
 
 	foreach ($arch in @("x86", "x64"))
 	{
@@ -51,24 +51,28 @@ foreach ($language in @{
 	}
 }
 
+rm -Force -Recurse -Verbose "Runtime";
 mkdir -Force -Verbose "Runtime";
-rm -Force -Recurse -Verbose "Runtime/*";
-foreach ($file in @(
-	"Qt5Core.dll",
-	"Qt5Gui.dll",
-	"Qt5Widgets.dll",
-	"LoaderDll.dll",
-	"LocaleEmulator.dll",
-	"platforms",
-	"styles"
-))
+foreach ($arch in @("x86", "x64"))
 {
-	foreach ($arch in @("x86", "x64"))
+	mkdir -Force -Verbose "Runtime/$arch";
+	foreach ($file in @(
+		"LoaderDll.dll",
+		"LocaleEmulator.dll",
+		"Qt5Core.dll",
+		"Qt5Gui.dll",
+		"Qt5Widgets.dll",
+		"platforms",
+		"styles"
+	))
 	{
-		mkdir -Force -Verbose "Runtime/$arch";
 		copy -Force -Recurse -Verbose -Destination "Runtime/$arch/$file" -Path "Release_$arch/$file";
 	}
 }
+
+rm -Force -Recurse -Verbose "Textractor";
+mkdir -Force -Verbose "Textractor";
+copy -Force -Recurse -Verbose -Destination "Textractor" -Path @("Runtime/*", "Textractor--$version/*");
 
 cd ..
 &"C:\Program Files (x86)\Inno Setup 6\iscc.exe" -DVERSION="$version" installer.iss
