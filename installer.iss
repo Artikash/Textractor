@@ -28,7 +28,7 @@ Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Source: "Builds\Runtime\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor--{#VERSION}\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Spanish-{#VERSION}\*"; DestDir: "{app}"; Languages: es; Flags: recursesubdirs ignoreversion
-Source: "Builds\Textractor-Russian-{#VERSION}\*"; DestDir: "{app}"; Languages: es; Flags: recursesubdirs ignoreversion
+Source: "Builds\Textractor-Russian-{#VERSION}\*"; DestDir: "{app}"; Languages: ru; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Turkish-{#VERSION}\*"; DestDir: "{app}"; Languages: tu; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Simplified-Chinese-{#VERSION}\*"; DestDir: "{app}"; Languages: sc; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Indonesian-{#VERSION}\*"; DestDir: "{app}"; Languages: id; Flags: recursesubdirs ignoreversion
