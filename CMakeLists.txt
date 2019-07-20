@@ -33,7 +33,9 @@ target_compile_definitions(text PRIVATE ${TEXT_LANGUAGE})
 link_libraries(text)
 
 add_subdirectory(GUI)
-#add_subdirectory(GUI/host) # uncomment to build CLI
 add_subdirectory(texthook)
 add_subdirectory(extensions)
 add_subdirectory(test)
+if (DEFINED VERSION)
+  add_subdirectory(GUI/host) # uncomment to build CLI
+endif()
