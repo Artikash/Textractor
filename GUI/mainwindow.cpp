@@ -479,25 +479,25 @@ void MainWindow::FindHooks()
 		});
 	}
 	catch (std::out_of_range) { return; }
-	QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES, nullptr, QFileDialog::DontConfirmOverwrite);
-	if (saveFile.isEmpty()) saveFile = "Hooks.txt";
-	std::thread([this, hooks, saveFile]
+	std::thread([this, hooks]
 	{
 		DWORD64 cleanupTime = GetTickCount64() + 500'000;
 		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
 			if (GetTickCount64() > cleanupTime) return;
 			else lastSize = hooks->size();
-		QMetaObject::invokeMethod(this, [this, hooks, saveFile]
+		QMetaObject::invokeMethod(this, [this, hooks]
 		{
 			auto hookList = new QPlainTextEdit(*hooks, this);
-			hooks->clear();
 			hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
 			hookList->setAttribute(Qt::WA_DeleteOnClose);
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
 			hookList->show();
+
+			QString saveFile = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES, nullptr);
+			if (!saveFile.isEmpty()) QTextFile(saveFile, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
+			hooks->clear();
 		});
-		QTextFile(saveFile, QIODevice::WriteOnly | QIODevice::Truncate).write(hooks->toUtf8());
 	}).detach();
 }
 
