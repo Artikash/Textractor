@@ -333,8 +333,11 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	ATTACH = u8"Присоединить к игре";
 	LAUNCH = u8"Запустить игру";
 	DETACH = u8"Отсоединить от игры";
+	FORGET = u8"Забыть игру";
 	ADD_HOOK = u8"Добавить хук";
+	REMOVE_HOOKS = u8"Удалить хук(и)";
 	SAVE_HOOKS = u8"Сохранить хук(и)";
+	SEARCH_FOR_HOOKS = u8"Найти хуки";
 	SETTINGS = u8"Настройки";
 	EXTENSIONS = u8"Расширения";
 	SELECT_PROCESS = u8"Выберете процесс";
@@ -347,8 +350,27 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 (Не работает при запуске от администратора)
 Перетаскивайте по списку для изменения порядка
 Нажмите клавишу удаления, чтобы удалить выбранное расширение)";
-	USE_JP_LOCALE = u8"Симулировать японскую локаль";
+	INVALID_EXTENSION = u8"%1 - неверное расширение";
+	CONFIRM_EXTENSION_OVERWRITE = u8"Уже существует другая версия этого расширения, перезаписать его?";
+	EXTENSION_WRITE_ERROR = u8"Не удалось сохранить расширение";
+	USE_JP_LOCALE = u8"Симулировать японскую локаль?";
+	HOOK_SEARCH_UNSTABLE_WARNING = u8"Поиск хуков нестабилен! Игра может закрыться с ошибкой!";
+	SEARCH_CJK = u8"Поиск для Китайского/Японского/Корейского";
+	SEARCH_PATTERN = u8"Шаблон поиска (hex byte array)";
+	SEARCH_DURATION = u8"Продолжительность поиска (ms)";
+	PATTERN_OFFSET = u8"Смещение от начала шаблона";
+	MAX_HOOK_SEARCH_RECORDS = u8"Порог поиска";
+	MIN_ADDRESS = u8"Начальный адрес (hex)";
+	MAX_ADDRESS = u8"Конечный адрес (hex)";
+	STRING_OFFSET = u8"Смещение строки (hex)";
+	HOOK_SEARCH_FILTER = u8"Результат должен совпадать с этим regex";
+	START_HOOK_SEARCH = u8"Начать поиск хуков";
+	SAVE_SEARCH_RESULTS = u8"Сохранить результат поиска";
+	TEXT_FILES = u8"Текст (*.txt)";
+	DOUBLE_CLICK_TO_REMOVE_HOOK = u8"Двойной клик по хуку для его удаления";
 	FILTER_REPETITION = u8"Фильтр повторений";
+	AUTO_ATTACH = u8"Авто-присоединение";
+	ATTACH_SAVED_ONLY = u8"Авто-присоединение (только сохраненные)";
 	DEFAULT_CODEPAGE = u8"Кодировка по умолчанию";
 	FLUSH_DELAY = u8"Задержка сброса";
 	MAX_BUFFER_SIZE = u8"Максимальный размер буфера";
@@ -362,10 +384,12 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
 I'm currently looking for a new job: email me if you know anyone hiring US software engineers
 Если эта программа вам понравилась, расскажите всем о ней :))";
-	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...)";
+	CL_OPTIONS = LR"(использование: Textractor [-p{process id|"process name"}]...
+пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с id 4466 или с именем My Game.exe)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
 	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте Textractor x86 вместо этого";
+	NEED_64_BIT = L"Textractor: несоответствие архитектуры: только Textractor x64 может присоединиться к этому процессу";
 	INJECT_FAILED = L"Textractor: невозможно присоединиться";
 	LAUNCH_FAILED = L"Textractor: невозможно запустить";
 	INVALID_CODE = L"Textractor: неверный код";
@@ -375,7 +399,10 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	REMOVING_HOOK = u8"Textractor: удаление хука: %s";
 	HOOK_FAILED = u8"Textractor: не удалось вставить хук";
 	TOO_MANY_HOOKS = u8"Textractor: слишком много хуков: невозможно вставить";
+	STARTING_SEARCH = u8"Textractor: начало поиска";
 	NOT_ENOUGH_TEXT = u8"Textractor: не достаточно текста для точного поиска";
+	HOOK_SEARCH_INITIALIZED = u8"Textractor: поиск инициализирован с %zd хуками";
+	HOOK_SEARCH_FINISHED = u8"Textractor: поиск хуков завершен, %d результатов найдено";
 	FUNC_MISSING = u8"Textractor: функция отсутствует";
 	MODULE_MISSING = u8"Textractor: модуль отсутствует";
 	GARBAGE_MEMORY = u8"Textractor: память постоянно изменяется, бесполезно читать";
@@ -396,7 +423,10 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	SIZE_LOCK = u8"Фиксированный размер";
 	BG_COLOR = u8"Цвет заднего фона";
 	TEXT_COLOR = u8"Цвет текста";
+	FONT = u8"Шрифт";
+	FONT_FAMILY = u8"Семейство шрифтов";
 	FONT_SIZE = u8"Размер шрифта";
+	FONT_WEIGHT = u8"Вес шрифта";
 	LUA_INTRO = u8R"(--[[
 ProcessSentence вызывается каждый раз, когда Textractor получает предложение с текстом.
 
