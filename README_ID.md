@@ -16,7 +16,7 @@ Lihat [video tutorial](https://tinyurl.com/textractor-tutorial) untuk mengetahui
 
 Rilisan Textractor dapat diunduh [disini](https://github.com/Artikash/Textractor/releases).<br>
 Rilisan Terakhir ITHVNR dapat diunduh [disini](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Coba jalankan vc_redist.x86.exe jika kamu memiliki masalah ketika menjalankan Textractor.
+Coba jalankan vcredist.x86.exe jika kamu memiliki masalah ketika menjalankan Textractor.
 
 ## Fitur
 

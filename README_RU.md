@@ -16,7 +16,7 @@
 
 Выпуски Textractor могут быть найдены [здесь](https://github.com/Artikash/Textractor/releases).<br>
 Последний выпуск ITHVNR может быть найден [здесь](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Установите библиотеки Visual C redist(vc_redist.x86.exe), если получаете ошибку при запуске Textractor.
+Установите библиотеки Visual C redist(vcredist.x86.exe), если получаете ошибку при запуске Textractor.
 
 ## Возможности
 

@@ -13,7 +13,7 @@ Watch the [tutorial video](https://tinyurl.com/textractor-tutorial) for a quick 
 
 Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Try running vc_redist if you get an error when starting Textractor.
+Try running vcredist if you get an error when starting Textractor.
 
 ## Features
 
