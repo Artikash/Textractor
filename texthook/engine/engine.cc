@@ -60,11 +60,12 @@ enum { VNR_TEXT_CAPACITY = 1500 }; // estimated max number of bytes allowed in V
 
 namespace { // unnamed helpers
 
-	template <void* funcA, void* funcW> bool StackSearchingTrigger(LPVOID funcAddr, DWORD, DWORD stack)
+	template <void* funcA, void* funcW, int depth = 100>
+	bool StackSearchingTrigger(LPVOID funcAddr, DWORD, DWORD stack)
 	{
 		bool ret = false;
 		if (funcAddr != funcA && funcAddr != funcW) return false;
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < depth; ++i)
 		{
 			// Address of text is somewhere on stack in call to func. Search for it.
 			DWORD addr = *((DWORD*)stack + i);
@@ -79,7 +80,7 @@ namespace { // unnamed helpers
 					hp.address = addr;
 					ConsoleOutput("Textractor: triggered: adding dynamic reader");
 					NewHook(hp, "READ");
-					ret = true;
+					//ret = true;
 				}
 			};
 		}
@@ -5788,6 +5789,12 @@ int GetShinaRioVersion()
   return ret;
 }
 
+bool IsSJIS(char* text)
+{
+	for (int i = 0; i < 3; ++i) if (!IsDBCSLeadByte(text[i * 2])) return false;
+	return true;
+}
+
 } // unnamed namespace
 
 // jichi 8/24/2013: Rewrite ShinaRio logic.
@@ -5797,7 +5804,31 @@ bool InsertShinaHook()
   int ver = GetShinaRioVersion();
   if (ver >= 50) {
 	  SetTrigger();
-	  trigger_fun = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
+	  //trigger_fun = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
+	  trigger_fun = [](LPVOID funcAddr, DWORD, DWORD stack)
+	  {
+		  bool ret = false;
+		  if (funcAddr != GetGlyphOutlineA) return false;
+		  for (int i = 0; i < 100; ++i)
+		  {
+			  // Address of text is somewhere on stack in call to func. Search for it.
+			  DWORD addr = *((DWORD*)stack + i);
+			  //ConsoleOutput(std::to_string((DWORD)*addr).c_str());
+			  if (IthGetMemoryRange((void*)addr, nullptr, nullptr) && strlen((char*)addr) > 9)
+			  {
+				  if (IsSJIS((char*)addr) || strstr((char*)addr, "_r"))
+				  {
+					  HookParam hp = {};
+					  hp.type = DIRECT_READ;
+					  hp.address = addr;
+					  ConsoleOutput("Textractor: triggered: adding dynamic reader");
+					  NewHook(hp, "READ");
+					  ret = true;
+				  }
+			  };
+		  }
+		  return ret;
+	  };
 	  ConsoleOutput("Textractor: ShinaRio 2.50+: adding trigger");
 	  return true;
   }
