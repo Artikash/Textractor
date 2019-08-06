@@ -144,9 +144,9 @@ void ExtenWindow::dropEvent(QDropEvent* event)
 	{
 		QFileInfo extenFile = file.toLocalFile();
 		if (extenFile.suffix() != "dll") continue;
-		if (QFile::exists(extenFile.fileName()) && extenFile.absolutePath() != QDir::currentPath())
+		if (extenFile.absolutePath() != QDir::currentPath())
 		{
-			if (QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
+			if (QFile::exists(extenFile.fileName()) && QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
 			if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(this, EXTENSIONS, EXTENSION_WRITE_ERROR);
 		}
 		if (Load(extenFile.completeBaseName())) Sync();
