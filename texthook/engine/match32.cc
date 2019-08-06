@@ -75,8 +75,6 @@ bool DeterminePCEngine()
   // PC games
   PcHooks::hookGDIFunctions();
   PcHooks::hookGDIPlusFunctions();
-  const char check[] = "sdffffffkjldfjlhjweiumxnvq1204tergdmnxcq1111111111111111111111408t03kxjb40";
-  Util::SearchMemory((const BYTE*)check, sizeof(check)); // Not too sure about the stability of this guy, so test it here
   return false;
 }
 

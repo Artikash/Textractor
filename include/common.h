@@ -54,11 +54,7 @@ private:
 };
 
 template <auto F>
-struct Functor
-{
-	template <typename... Args>
-	auto operator()(Args&&... args) const { return std::invoke(F, std::forward<Args>(args)...); }
-};
+using Functor = std::integral_constant<std::decay_t<decltype(F)>, F>;
 
 template <typename HandleCloser = Functor<CloseHandle>>
 class AutoHandle
