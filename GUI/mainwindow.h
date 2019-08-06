@@ -38,6 +38,7 @@ private:
 	void DetachProcess();
 	void ForgetProcess();
 	void AddHook();
+	void AddHook(QString hook);
 	void RemoveHooks();
 	void SaveHooks();
 	void FindHooks();
