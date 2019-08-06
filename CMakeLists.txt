@@ -14,19 +14,18 @@ add_compile_options(
 
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
   set(CMAKE_FINAL_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/${CMAKE_BUILD_TYPE}_x64)
-  set(LIBDIR x64libs)
+  link_directories(x64libs)
 else()
   set(CMAKE_FINAL_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/${CMAKE_BUILD_TYPE}_x86)
-  set(LIBDIR x86libs)
+  link_directories(x86libs)
 endif()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 
 include_directories(include)
-link_directories(${LIBDIR})
-file(GLOB LIBS ${LIBDIR}/*)
-file(COPY ${LIBS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
+file(GLOB ASSETS assets/*)
+file(COPY ${ASSETS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 
 add_library(text text.cpp)
 target_compile_definitions(text PRIVATE ${TEXT_LANGUAGE})

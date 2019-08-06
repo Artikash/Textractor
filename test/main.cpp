@@ -8,11 +8,12 @@
 
 wchar_t buffer[1000] = {};
 std::array<int, 10> vars = {};
+int& mode = vars.at(0);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int _)
 {
 	QApplication a(_ = 0, DUMMY);
-	static std::vector<AutoHandle<Functor<(void(__stdcall *)(void*))FreeLibrary>>> extensions;
+	static std::vector<std::unique_ptr<std::remove_pointer_t<HMODULE>, Functor<FreeLibrary>>> extensions;
 	for (auto file : std::filesystem::directory_iterator(std::filesystem::current_path()))
 		if (file.path().extension() == L".dll"
 			&& (std::stringstream() << std::ifstream(file.path(), std::ios::binary).rdbuf()).str().find("OnNewSentence") != std::string::npos)
@@ -39,7 +40,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int _)
 				GetWindowTextW((HWND)lParam, buffer, std::size(buffer));
 				try { vars.at(LOWORD(wParam) - IDC_EDIT1) = std::stoi(buffer); }
 				catch (...) {}
-				if (vars.at(1)) extensions.clear();
+				//if (vars.at(1)) extensions.clear();
+				if (LOWORD(wParam) - IDC_EDIT1 == 1 && mode == 1)
+				{
+					std::wstring buffer(vars.at(1), 0);
+					std::wifstream("StressTest.txt", std::ios::in | std::ios::binary).read(buffer.data(), vars.at(1));
+					std::ignore = std::remove(buffer.begin(), buffer.end(), 0);
+					for (int i = 0; i < buffer.size(); i += 700) lstrlenW(buffer.c_str() + i);
+				}
 			}
 		}
 		break;
@@ -47,7 +55,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int _)
 		return FALSE;
 	}, 0), SW_SHOW);
 
-	std::thread([] { while (true) Sleep(vars.at(0)), lstrlenW(L"こんにちは\n　(Hello)"); }).detach();
+	std::thread([] { while (true) Sleep(vars.at(2)), mode == 2 && lstrlenW(L"こんにちは\n　(Hello)"); }).detach();
 
 	STARTUPINFOW info = { sizeof(info) };
 	wchar_t commandLine[] = { L"Textractor -p\"Test.exe\"" };
