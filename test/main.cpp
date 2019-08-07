@@ -13,7 +13,7 @@ int& mode = vars.at(0);
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int _)
 {
 	QApplication a(_ = 0, DUMMY);
-	static std::vector<std::unique_ptr<std::remove_pointer_t<HMODULE>, Functor<FreeLibrary>>> extensions;
+	static std::vector<AutoHandle<Functor<FreeLibrary>>> extensions;
 	for (auto file : std::filesystem::directory_iterator(std::filesystem::current_path()))
 		if (file.path().extension() == L".dll"
 			&& (std::stringstream() << std::ifstream(file.path(), std::ios::binary).rdbuf()).str().find("OnNewSentence") != std::string::npos)
