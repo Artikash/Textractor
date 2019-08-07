@@ -41,6 +41,7 @@ foreach ($language in @{
 			"Regex Filter.dll",
 			"Remove Repeated Characters.dll",
 			"Remove Repeated Phrases.dll",
+			"Remove Repeated Phrases 2.dll",
 			"Remove 30 Repeated Sentences.dll",
 			"Replacer.dll",
 			"Thread Linker.dll"

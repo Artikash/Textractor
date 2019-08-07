@@ -62,7 +62,7 @@ private:
 
 	struct Node
 	{
-		std::unordered_map<wchar_t, std::unique_ptr<Node>> next;
+		std::unordered_map<wchar_t, std::unique_ptr<Node>, Identity<wchar_t>> next;
 		std::optional<std::wstring> value;
 	} root;
 } trie = { {} };
