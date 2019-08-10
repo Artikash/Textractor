@@ -4,8 +4,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (sentenceInfo["text number"] == 0) return false;
 
-	// This algorithm looks at all substrings which start at the beginning of the sentence
-	// If that substring is found later in the sentence, it is removed from the beginning of the sentence and the process is repeated
+	// This algorithm looks at all the prefixes of the sentence: if a prefix is found later in the sentence, it is removed from the beginning and the process is repeated
 	// Complexity O(N^3) so executing for N > 10,000 dangerous
 	if (sentence.size() > 10000) return false;
 	auto data = std::make_unique<wchar_t[]>(sentence.size() + 1);
