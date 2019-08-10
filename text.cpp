@@ -70,6 +70,7 @@ const char* DOUBLE_CLICK_TO_REMOVE_HOOK = u8"Double click a hook to remove it";
 const char* FILTER_REPETITION = u8"Filter repetition";
 const char* AUTO_ATTACH = u8"Auto attach";
 const char* ATTACH_SAVED_ONLY = u8"Auto attach (saved only)";
+const char* SHOW_SYSTEM_PROCESSES = u8"Show system processes";
 const char* DEFAULT_CODEPAGE = u8"Default codepage";
 const char* FLUSH_DELAY = u8"Flush delay";
 const char* MAX_BUFFER_SIZE = u8"Max buffer size";

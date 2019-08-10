@@ -51,6 +51,7 @@ private:
 	ExtenWindow* extenWindow;
 	std::unordered_set<DWORD> alreadyAttached;
 	bool autoAttach = false, autoAttachSavedOnly = true;
+	bool showSystemProcesses = false;
 	uint64_t savedThreadCtx = 0, savedThreadCtx2 = 0;
 	wchar_t savedThreadCode[1000] = {};
 	TextThread* current = nullptr;

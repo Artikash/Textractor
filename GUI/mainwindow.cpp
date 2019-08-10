@@ -44,6 +44,7 @@ extern const char* USE_JP_LOCALE;
 extern const char* FILTER_REPETITION;
 extern const char* AUTO_ATTACH;
 extern const char* ATTACH_SAVED_ONLY;
+extern const char* SHOW_SYSTEM_PROCESSES;
 extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;
@@ -87,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
 	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();
 	autoAttachSavedOnly = settings.value(ATTACH_SAVED_ONLY, autoAttachSavedOnly).toBool();
+	showSystemProcesses = settings.value(SHOW_SYSTEM_PROCESSES, showSystemProcesses).toBool();
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
@@ -279,7 +281,8 @@ void MainWindow::AttachProcess()
 {
 	QMultiHash<QString, DWORD> allProcesses;
 	for (auto [processId, processName] : Util::GetAllProcesses())
-		if (processName) allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
+		if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::wstring::npos))
+			allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
 	QStringList processList(allProcesses.uniqueKeys());
 	processList.sort(Qt::CaseInsensitive);
@@ -495,16 +498,16 @@ void MainWindow::FindHooks()
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
 			for (auto [hp, text] : *hooks)
-				new QListWidgetItem(S(Util::GenerateCode(hp, processId) + L" -> " + text), hookList);
-			connect(hookList, &QListWidget::itemClicked, [this](QListWidgetItem* item) { AddHook(item->text().split(" -> ")[0]); });
+				new QListWidgetItem(S(Util::GenerateCode(hp, processId) + L" => " + text), hookList);
+			connect(hookList, &QListWidget::itemClicked, [this](QListWidgetItem* item) { AddHook(item->text().split(" => ")[0]); });
 			hookList->show();
 
-			QString saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./Hooks.txt", TEXT_FILES, nullptr);
+			QString saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES, nullptr);
 			if (!saveFileName.isEmpty())
 			{
 				QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
 				for (auto [hp, text] : *hooks)
-					saveFile.write(S(Util::GenerateCode(hp, processId) + L" -> " + text + L"\n").toUtf8());
+					saveFile.write(S(Util::GenerateCode(hp, processId) + L" => " + text + L"\n").toUtf8());
 			}
 			hooks->clear();
 		});
@@ -521,6 +524,7 @@ void MainWindow::Settings()
 		{ TextThread::filterRepetition, FILTER_REPETITION },
 		{ autoAttach, AUTO_ATTACH },
 		{ autoAttachSavedOnly, ATTACH_SAVED_ONLY },
+		{ showSystemProcesses, SHOW_SYSTEM_PROCESSES },
 	})
 	{
 		auto checkBox = new QCheckBox(&dialog);
