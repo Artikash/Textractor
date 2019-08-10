@@ -16576,7 +16576,7 @@ void InsertMonoHook(HMODULE h)
 							{
 								HookParam hp = {};
 								hp.address = addr;
-								hp.type = USING_UNICODE;
+								hp.type = USING_UNICODE | FULL_STRING;
 								hp.offset = 4;
 								hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
 								{
