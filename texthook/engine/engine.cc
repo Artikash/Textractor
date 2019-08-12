@@ -15047,6 +15047,78 @@ bool InsertFocasLensHook()
   return true;
 }
 
+/* Artikash 8/11/2019: Light.vn
+*  This VN engine checks if a debugger is present via IsDebuggerPresent and if one is, outputs many debug strings
+*  Some of those debug strings include the text of the game, most are garbage
+*  The lines that include the text seem to start with "curline" and end with "\w" but not sure if that's reliable
+*  Use a custom text_fun to filter garbage
+*/
+
+template <typename C, int N>
+const C* FindInView(std::basic_string_view<C> view, const char (&string)[N])
+{
+	C convertedString[N];
+	for (int i = 0; i < N; ++i)
+		convertedString[i] = string[i];
+	auto found = view.find(convertedString);
+	return found == std::basic_string_view<C>::npos ? nullptr : view.data() + found;
+}
+
+template <typename C>
+void SpecialHookLightvn(DWORD, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
+{
+	std::basic_string_view<C> view((C*)* data);
+	const C* start = FindInView(view, "curline:");
+	const C* end = FindInView(view, "\\w");
+	if (!end) end = FindInView(view, "(scenario");
+	if (end) *split = *end << 16;
+	if (start && end && end > start)
+	{
+		*data = (DWORD)(start + 8);
+		*len = (DWORD)(end - start - 8);
+		*split |= 0;
+	}
+	else if (end && (start = FindInView(view, "[PARSETOKENS] line:")) == view.data())
+	{
+		*data = (DWORD)(start + 19);
+		*len = (DWORD)(end - start - 19);
+		*split |= 1;
+	}
+	else
+	{
+		*len = view.size();
+		*split = *(DWORD*)* data;
+	}
+	*len *= sizeof(C);
+}
+
+bool InsertLightvnHook()
+{
+	// This hooking method also has decent results, but hooking OutputDebugString seems better
+	const BYTE bytes[] = { 0x8d, 0x55, 0xfe, 0x52 };
+	for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READ, (uintptr_t)GetModuleHandleW(L"Engine.dll")))
+	{
+		HookParam hp = {};
+		hp.address = MemDbg::findEnclosingAlignedFunction(addr);
+		hp.type = USING_UNICODE | USING_STRING;
+		hp.offset = 4;
+		NewHook(hp, "Light.vn");
+	}
+	VirtualProtect(IsDebuggerPresent, 2, PAGE_EXECUTE_READWRITE, DUMMY);
+	*(uint16_t*)IsDebuggerPresent = 0xc340; // asm for inc eax ret
+	HookParam hp = {};
+	hp.address = (uintptr_t)OutputDebugStringA;
+	hp.type = USING_UTF8 | USING_STRING;
+	hp.offset = 4;
+	hp.text_fun = SpecialHookLightvn<char>;
+	NewHook(hp, "OutputDebugStringA");
+	hp.address = (uintptr_t)OutputDebugStringW;
+	hp.type = USING_UNICODE | USING_STRING;
+	hp.text_fun = SpecialHookLightvn<wchar_t>;
+	NewHook(hp, "OutputDebugStringW");
+	return true;
+}
+
 /** jichi 2/6/2015 Syuntada
  *  Sample game: [140816] [平安亭] カノジョのお母さん�好きですか-- /HA-18@6944C:kanojo.exe
  *

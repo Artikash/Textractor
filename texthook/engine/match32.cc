@@ -95,6 +95,12 @@ bool DetermineEngineByFile1()
 	  return true;
   }
 
+  if (GetModuleHandleW(L"Engine.dll") && GetModuleHandleW(L"BugTrapU.dll"))
+  {
+	  InsertLightvnHook();
+	  return true;
+  }
+
   if (Util::CheckFile(L"*.xp3") || Util::SearchResourceString(L"TVP(KIRIKIRI)")) {
     if (Util::SearchResourceString(L"TVP(KIRIKIRI) Z ")) { // TVP(KIRIKIRI) Z CORE
       // jichi 11/24/2014: Disabled that might crash VBH
