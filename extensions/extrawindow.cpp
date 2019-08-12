@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QWheelEvent>
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
@@ -55,7 +56,7 @@ public:
 			}
 			connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
 
-			QMetaObject::invokeMethod(this, [this] { ui.display->setText(EXTRA_WINDOW_INFO); }, Qt::QueuedConnection);
+			QMetaObject::invokeMethod(this, [this] { AddSentence(EXTRA_WINDOW_INFO); }, Qt::QueuedConnection);
 		}, Qt::QueuedConnection);
 	}
 
@@ -63,6 +64,13 @@ public:
 	{
 		settings.setValue(WINDOW, geometry());
 		settings.sync();
+	}
+
+	void AddSentence(const QString& sentence)
+	{
+		sentenceHistory.push_back(sentence);
+		i = sentenceHistory.size() - 1;
+		ui.display->setText(sentence);
 	}
 
 	Ui::ExtraWindow ui;
@@ -133,10 +141,19 @@ private:
 		oldPos = event->globalPos();
 	}
 
+	void wheelEvent(QWheelEvent* event) override
+	{
+		QPoint scroll = event->angleDelta();
+		if (scroll.y() > 0 && i > 0) ui.display->setText(sentenceHistory[--i]);
+		if (scroll.y() < 0 && i + 1 < sentenceHistory.size()) ui.display->setText(sentenceHistory[++i]);
+	}
+
 	QMenu menu{ ui.display };
 	bool locked = true;
 	QColor bgColor;
 	QPoint oldPos;
+	std::vector<QString> sentenceHistory;
+	int i = 0;
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
@@ -146,6 +163,6 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	QString qSentence = S(sentence);
 	if (!window.settings.value(SHOW_ORIGINAL, true).toBool()) qSentence = qSentence.section('\n', qSentence.count('\n') / 2 + 1);
 
-	QMetaObject::invokeMethod(&window, [=] { window.ui.display->setText(qSentence); });
+	QMetaObject::invokeMethod(&window, [=] { window.AddSentence(qSentence); });
 	return false;
 }
