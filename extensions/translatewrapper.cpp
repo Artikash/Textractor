@@ -1,6 +1,8 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
+#include "defs.h"
 #include "network.h"
+#include <map>
 #include <QTimer>
 
 extern const char* SELECT_LANGUAGE;
@@ -11,13 +13,17 @@ extern const char* TRANSLATION_PROVIDER;
 extern QStringList languages;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
+const char* LANGUAGE = u8"Language";
+const QString CACHE_FILE = QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER);
+
 Synchronized<std::wstring> translateTo = L"en";
+QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 int savedSize;
-Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
+Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 
 void SaveCache()
 {
-	QTextFile file(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER), QIODevice::WriteOnly | QIODevice::Truncate);
+	QTextFile file(CACHE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
 	auto translationCache = ::translationCache.Acquire();
 	for (const auto& [original, translation] : translationCache.contents)
 		file.write(S(FormatString(L"%s|T|\n%s|T|\n", original, translation)).toUtf8());
@@ -30,7 +36,9 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		QTimer::singleShot(0, []
+		settings.beginGroup(TRANSLATION_PROVIDER);
+		if (settings.contains(LANGUAGE)) translateTo->assign(S(settings.value(LANGUAGE).toString()));
+		else QTimer::singleShot(0, []
 		{
 			QString language = QInputDialog::getItem(
 				nullptr,
@@ -43,9 +51,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				Qt::WindowCloseButtonHint
 			);
 			translateTo->assign(S(language.split(": ")[1]));
+			settings.setValue(LANGUAGE, S(translateTo->c_str()));
 		});
 
-		QStringList savedCache = QString(QTextFile(QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER), QIODevice::ReadOnly).readAll()).split("|T|\n", QString::SkipEmptyParts);
+		QStringList savedCache = QString(QTextFile(CACHE_FILE, QIODevice::ReadOnly).readAll()).split("|T|\n", QString::SkipEmptyParts);
 		for (int i = 0; i < savedCache.size() - 1; i += 2)
 			translationCache->insert({ S(savedCache[i]), S(savedCache[i + 1]) });
 		savedSize = translationCache->size();
