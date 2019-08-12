@@ -12,6 +12,7 @@ public:
 	inline static bool filterRepetition = true;
 	inline static int flushDelay = 400; // flush every 400ms by default
 	inline static int maxBufferSize = 1000;
+	inline static int maxHistorySize = 10'000'000;
 
 	TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name = {});
 

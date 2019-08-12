@@ -48,6 +48,7 @@ extern const char* SHOW_SYSTEM_PROCESSES;
 extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;
+extern const char* MAX_HISTORY_SIZE;
 extern const wchar_t* ABOUT;
 extern const wchar_t* CL_OPTIONS;
 extern const wchar_t* LAUNCH_FAILED;
@@ -91,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	showSystemProcesses = settings.value(SHOW_SYSTEM_PROCESSES, showSystemProcesses).toBool();
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
+	TextThread::maxHistorySize = settings.value(MAX_HISTORY_SIZE, TextThread::maxHistorySize).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
 
 	Host::Start(
@@ -535,6 +537,7 @@ void MainWindow::Settings()
 	for (auto [value, label] : Array<std::tuple<int&, const char*>>{
 		{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 		{ TextThread::flushDelay, FLUSH_DELAY },
+		{ TextThread::maxHistorySize, MAX_HISTORY_SIZE },
 		{ Host::defaultCodepage, DEFAULT_CODEPAGE },
 	})
 	{

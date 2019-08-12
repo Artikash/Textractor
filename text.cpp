@@ -74,6 +74,7 @@ const char* SHOW_SYSTEM_PROCESSES = u8"Show system processes";
 const char* DEFAULT_CODEPAGE = u8"Default codepage";
 const char* FLUSH_DELAY = u8"Flush delay";
 const char* MAX_BUFFER_SIZE = u8"Max buffer size";
+const char* MAX_HISTORY_SIZE = u8"Max history size";
 const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
 const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
