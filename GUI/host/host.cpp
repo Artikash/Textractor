@@ -175,14 +175,11 @@ namespace Host
 		{
 			while (WaitForSingleObject(clipboardUpdate, INFINITE) == WAIT_OBJECT_0)
 			{
-				for (int retry = 0; retry < 3; ++retry) // retry loop in case something else is using the clipboard
+				std::optional<std::wstring> clipboardText;
+				for (int retry = 0; !clipboardText && retry < 3; ++retry) // retry loop in case something else is using the clipboard
 				{
 					Sleep(10);
-					if (auto text = Util::GetClipboardText())
-					{
-						GetThread(clipboard).AddSentence(std::move(text.value()));
-						break;
-					}
+					if (clipboardText = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(clipboardText.value()));
 				}
 			}
 			throw;
