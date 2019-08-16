@@ -554,9 +554,11 @@ Pressione delete com uma extensão selecionada para removê-la.)";
 	CONFIRM_EXTENSION_OVERWRITE = u8"Outra versão dessa extensão já existe, você gostaria de deletar e reescrevê-la?";
 	EXTENSION_WRITE_ERROR = u8"Falha na gravação da extensão";
 	USE_JP_LOCALE = u8"Emular o idioma Japonês?";
+	SHOW_SYSTEM_PROCESSES = u8"Mostrar Processos do sistema";
 	DEFAULT_CODEPAGE = u8"página de código padrão";
 	FLUSH_DELAY = u8"Delay do Flush";
 	MAX_BUFFER_SIZE = u8"Tamanho Máximo do Buffer";
+	MAX_HISTORY_SIZE = u8"Tamanho Máximo do Histórico";
 	CONSOLE = L"Terminal";
 	CLIPBOARD = L"Área de Transferência";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( Feito por mim: Artikash (e-mail: akashmozumdar@gmail.com)
