@@ -72,7 +72,10 @@ void TextThread::Push(BYTE* data, int length)
 
 void TextThread::Flush()
 {
-	if (storage->size() > maxHistorySize) storage->erase(0, maxHistorySize / 2); // https://github.com/Artikash/Textractor/issues/127#issuecomment-486882983
+	{
+		auto storage = this->storage.Acquire();
+		if (storage->size() > maxHistorySize) storage->erase(0, storage->size() - maxHistorySize); // https://github.com/Artikash/Textractor/issues/127#issuecomment-486882983
+	}
 
 	std::deque<std::wstring> sentences;
 	queuedSentences->swap(sentences);
