@@ -35,6 +35,9 @@ extern const char* MAX_ADDRESS;
 extern const char* STRING_OFFSET;
 extern const char* MAX_HOOK_SEARCH_RECORDS;
 extern const char* HOOK_SEARCH_FILTER;
+extern const char* SEARCH_FOR_TEXT;
+extern const char* TEXT;
+extern const char* CODEPAGE;
 extern const char* START_HOOK_SEARCH;
 extern const char* SAVE_SEARCH_RESULTS;
 extern const char* TEXT_FILES;
@@ -360,7 +363,8 @@ void MainWindow::AddHook()
 void MainWindow::AddHook(QString hook)
 {
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, hook, &ok, Qt::WindowCloseButtonHint); ok)
-		if (auto hp = Util::ParseCode(S(hookCode))) try { Host::InsertHook(GetSelectedProcessId(), hp.value()); } catch (std::out_of_range) {}
+		if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks();
+		else if (auto hp = Util::ParseCode(S(hookCode))) try { Host::InsertHook(GetSelectedProcessId(), hp.value()); } catch (std::out_of_range) {}
 		else Host::AddConsoleOutput(INVALID_CODE);
 }
 
@@ -418,22 +422,47 @@ void MainWindow::FindHooks()
 
 	DWORD processId = GetSelectedProcessId();
 	SearchParam sp = {};
-	bool customSettings = false;
+	sp.codepage = Host::defaultCodepage;
+	bool searchForText = false, customSettings = false;
 	std::wregex filter(L".");
 	
 	QDialog dialog(this, Qt::WindowCloseButtonHint);
 	QFormLayout layout(&dialog);
 	QCheckBox cjkCheckbox(&dialog);
 	layout.addRow(SEARCH_CJK, &cjkCheckbox);
-	QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help, &dialog);
+	QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help | QDialogButtonBox::Retry, &dialog);
 	layout.addRow(&confirm);
 	confirm.button(QDialogButtonBox::Ok)->setText(START_HOOK_SEARCH);
+	confirm.button(QDialogButtonBox::Retry)->setText(SEARCH_FOR_TEXT);
 	confirm.button(QDialogButtonBox::Help)->setText(SETTINGS);
-	connect(&confirm, &QDialogButtonBox::helpRequested, [&customSettings] { customSettings = true; });
-	connect(&confirm, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
-	connect(&confirm, &QDialogButtonBox::helpRequested, &dialog, &QDialog::accept);
+	connect(&confirm, &QDialogButtonBox::clicked, [&](QAbstractButton* button)
+	{
+		if (button == confirm.button(QDialogButtonBox::Retry)) searchForText = true;
+		if (button == confirm.button(QDialogButtonBox::Help)) customSettings = true;
+		dialog.accept();
+	});
 	dialog.setWindowTitle(SEARCH_FOR_HOOKS);
 	if (!dialog.exec()) return;
+
+	if (searchForText)
+	{
+		QDialog dialog(this, Qt::WindowCloseButtonHint);
+		QFormLayout layout(&dialog);
+		QLineEdit textInput(&dialog);
+		layout.addRow(TEXT, &textInput);
+		QSpinBox codepageInput(&dialog);
+		codepageInput.setMaximum(INT_MAX);
+		codepageInput.setValue(sp.codepage);
+		layout.addRow(CODEPAGE, &codepageInput);
+		QDialogButtonBox confirm(QDialogButtonBox::Ok);
+		connect(&confirm, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+		layout.addRow(&confirm);
+		if (!dialog.exec()) return;
+		wcsncpy_s(sp.text, S(textInput.text()).c_str(), PATTERN_SIZE - 1);
+		try { Host::FindHooks(GetSelectedProcessId(), sp); }
+		catch (std::out_of_range) {}
+		return;
+	}
 
 	if (customSettings)
 	{
@@ -446,6 +475,7 @@ void MainWindow::FindHooks()
 			{ sp.searchTime, SEARCH_DURATION },
 			{ sp.offset, PATTERN_OFFSET },
 			{ sp.maxRecords, MAX_HOOK_SEARCH_RECORDS },
+			{ sp.codepage, CODEPAGE },
 		})
 		{
 			auto spinBox = new QSpinBox(&dialog);

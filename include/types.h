@@ -31,11 +31,9 @@ struct HookParam
 		split, // offset of the split character
 		split_index, // deref_offset2
 		null_length;
-	union
-	{
-		wchar_t module[MAX_MODULE_SIZE];
-		wchar_t text[MAX_MODULE_SIZE];
-	};
+
+	wchar_t module[MAX_MODULE_SIZE];
+
 	char function[MAX_MODULE_SIZE];
 	DWORD type; // flags
 	UINT codepage; // text encoding
@@ -62,12 +60,14 @@ struct ThreadParam
 
 struct SearchParam
 {
-	BYTE pattern[25] = { 0xcc, 0xcc, x64 ? 0x48 : 0x55, x64 ? 0x89 : 0x8b, 0xec }; // pattern in memory to search for
+	BYTE pattern[PATTERN_SIZE] = { 0xcc, 0xcc, x64 ? 0x48 : 0x55, x64 ? 0x89 : 0x8b, 0xec }; // pattern in memory to search for
 	int length = x64 ? 4 : 5, // length of pattern (zero means this SearchParam is invalid and the default should be used)
 		offset = 2, // offset from start of pattern to add hook
 		searchTime = 20000, // ms
-		maxRecords = 100000;
+		maxRecords = 100000,
+		codepage = SHIFT_JIS;
 	uintptr_t padding = 0, minAddress = 0, maxAddress = (uintptr_t)-1;
+	wchar_t text[PATTERN_SIZE] = {}; // text to search for
 	void(*hookPostProcessor)(HookParam&) = nullptr;
 };
 

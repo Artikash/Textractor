@@ -4,7 +4,7 @@
 // 8/23/2013 jichi
 // Branch: ITH/common.h, rev 128
 
-enum { STRING = 12, MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 2000, SHIFT_JIS = 932, MAX_MODULE_SIZE = 120, HOOK_NAME_SIZE = 30, FIXED_SPLIT_VALUE = 0x10001 };
+enum { STRING = 12, MESSAGE_SIZE = 500, PIPE_BUFFER_SIZE = 2000, SHIFT_JIS = 932, MAX_MODULE_SIZE = 120, PATTERN_SIZE = 30, HOOK_NAME_SIZE = 30, FIXED_SPLIT_VALUE = 0x10001 };
 enum WildcardByte { XX = 0x11 };
 
 enum HostCommandType { HOST_COMMAND_NEW_HOOK, HOST_COMMAND_REMOVE_HOOK, HOST_COMMAND_FIND_HOOK, HOST_COMMAND_MODIFY_HOOK, HOST_COMMAND_HIJACK_PROCESS, HOST_COMMAND_DETACH };
@@ -22,12 +22,11 @@ enum HookParamType : unsigned
 	MODULE_OFFSET = 0x40, // address is relative to module
 	FUNCTION_OFFSET = 0x80, // address is relative to function
 	USING_UTF8 = 0x100,
-	READ_SEARCH = 0x200, // unspecified address: search for text instead
-	NO_CONTEXT = 0x400,
-	HOOK_EMPTY = 0x800,
-	FIXING_SPLIT = 0x1000,
-	DIRECT_READ = 0x2000, // /R read code instead of classic /H hook code
-	FULL_STRING = 0x4000,
-	HOOK_ENGINE = 0x8000,
-	HOOK_ADDITIONAL = 0x10000,
+	NO_CONTEXT = 0x200,
+	HOOK_EMPTY = 0x400,
+	FIXING_SPLIT = 0x800,
+	DIRECT_READ = 0x1000, // /R read code instead of classic /H hook code
+	FULL_STRING = 0x2000,
+	HOOK_ENGINE = 0x4000,
+	HOOK_ADDITIONAL = 0x8000,
 };

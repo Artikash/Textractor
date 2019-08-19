@@ -1,5 +1,4 @@
 ﻿#include "util.h"
-#include "host.h"
 #include <sstream>
 #include <Psapi.h>
 
@@ -44,28 +43,6 @@ namespace
 		// @addr
 		if (!std::regex_match(RCode, match, std::wregex(L"@([[:xdigit:]]+)"))) return {};
 		hp.address = std::stoull(match[1], nullptr, 16);
-		return hp;
-	}
-
-	std::optional<HookParam> ParseSCode(std::wstring SCode)
-	{
-		std::wsmatch match;
-		HookParam hp = {};
-		hp.type |= READ_SEARCH;
-
-		// [codepage#]
-		if (std::regex_search(SCode, match, std::wregex(L"^([0-9]+)#")))
-		{
-			hp.codepage = std::stoi(match[1]);
-			SCode.erase(0, match[0].length());
-		}
-		else
-		{
-			hp.codepage = Host::defaultCodepage;
-		}
-
-		wcsncpy_s(hp.text, SCode.c_str(), MAX_MODULE_SIZE - 1);
-
 		return hp;
 	}
 
@@ -325,7 +302,6 @@ namespace Util
 	{
 		if (code[0] == L'/') code.erase(0, 1); // legacy/AGTH compatibility
 		if (code[0] == L'R') return ParseRCode(code.erase(0, 1));
-		else if (code[0] == L'S') return ParseSCode(code.erase(0, 1));
 		else if (code[0] == L'H') return ParseHCode(code.erase(0, 1));
 		return {};
 	}

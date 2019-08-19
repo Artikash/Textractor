@@ -59,7 +59,7 @@ namespace
 	};
 
 	size_t HashThreadParam(ThreadParam tp) { return std::hash<int64_t>()(tp.processId + tp.addr) + std::hash<int64_t>()(tp.ctx + tp.ctx2); }
-	Synchronized<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>, std::recursive_mutex> textThreadsByParams;
+	Synchronized<std::unordered_map<ThreadParam, TextThread, Functor<HashThreadParam>>> textThreadsByParams;
 	Synchronized<std::unordered_map<DWORD, ProcessRecord>> processRecordsByIds;
 
 	Host::ProcessEventHandler OnConnect, OnDisconnect;
@@ -68,7 +68,10 @@ namespace
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
 		std::vector<TextThread*> threadsToRemove;
-		std::for_each(textThreadsByParams->begin(), textThreadsByParams->end(), [&](auto& it) { if (removeIf(it.first)) threadsToRemove.push_back(&it.second); });
+		{
+			auto textThreadsByParams = ::textThreadsByParams.Acquire();
+			std::for_each(textThreadsByParams->begin(), textThreadsByParams->end(), [&](auto& it) { if (removeIf(it.first)) threadsToRemove.push_back(&it.second); });
+		}
 		for (auto thread : threadsToRemove)
 		{
 			OnDestroy(*thread);
@@ -106,10 +109,9 @@ namespace
 					std::wstring wide = info.text;
 					if (wide.size() > STRING) OnHookFound(info.hp, info.text);
 					info.hp.type &= ~USING_UNICODE;
-					if (auto converted = Util::StringToWideString((char*)info.text, Host::defaultCodepage))
+					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage))
 						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
-					info.hp.codepage = CP_UTF8;
-					if (auto converted = Util::StringToWideString((char*)info.text, CP_UTF8))
+					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage = CP_UTF8))
 						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
 				}
 				break;

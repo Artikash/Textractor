@@ -6,6 +6,8 @@
 extern const char* STARTING_SEARCH;
 extern const char* HOOK_SEARCH_INITIALIZED;
 extern const char* HOOK_SEARCH_FINISHED;
+extern const char* NOT_ENOUGH_TEXT;
+extern const char* COULD_NOT_FIND;
 
 extern WinMutex viewMutex;
 
@@ -24,6 +26,7 @@ namespace
 			hp.type = USING_UNICODE | USING_STRING;
 			hp.address = address;
 			hp.padding = sp.padding;
+			hp.codepage = sp.codepage;
 			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
 			NotifyHookFound(hp, (wchar_t*)text);
 		}
@@ -203,4 +206,32 @@ void SearchForHooks(SearchParam spUser)
 		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = 0;
 		ConsoleOutput(HOOK_SEARCH_FINISHED, sp.maxRecords - recordsAvailable);
 	}).detach();
+}
+
+void SearchForText(wchar_t* text, UINT codepage)
+{
+	bool found = false;
+	char utf8Text[PATTERN_SIZE * 4] = {};
+	WideCharToMultiByte(CP_UTF8, 0, text, PATTERN_SIZE, utf8Text, PATTERN_SIZE * 4, nullptr, nullptr);
+	char codepageText[PATTERN_SIZE * 4] = {};
+	WideCharToMultiByte(codepage, 0, text, PATTERN_SIZE, codepageText, PATTERN_SIZE * 4, nullptr, nullptr);
+	if (strlen(utf8Text) < 4 || strlen(codepageText) < 4 || wcslen(text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
+	ConsoleOutput(STARTING_SEARCH);
+	auto GenerateHooks = [&](std::vector<uint64_t> addresses, HookParamType type)
+	{
+		for (auto addr : addresses)
+		{
+			if (abs((long long)(utf8Text - addr)) < 20000) continue; // don't add read code if text is on this thread's stack
+			found = true;
+			HookParam hp = {};
+			hp.type = DIRECT_READ | type;
+			hp.address = addr;
+			hp.codepage = codepage;
+			NewHook(hp, "Search", 0);
+		}
+	};
+	GenerateHooks(Util::SearchMemory(utf8Text, strlen(utf8Text), PAGE_READWRITE), USING_UTF8);
+	GenerateHooks(Util::SearchMemory(codepageText, strlen(codepageText), PAGE_READWRITE), USING_STRING);
+	GenerateHooks(Util::SearchMemory(text, wcslen(text) * sizeof(wchar_t), PAGE_READWRITE), USING_UNICODE);
+	if (!found) ConsoleOutput(COULD_NOT_FIND);
 }
