@@ -22,10 +22,7 @@ You can also type in the process id)";
 const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, please use the absolute path";
 const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
-const char* CODE_INFODUMP = u8R"(Search for text
-S[codepage#]text
-OR
-Enter read code
+const char* CODE_INFODUMP = u8R"(Enter read code
 R{S|Q|V}[null_length<][codepage#]@addr
 OR
 Enter hook code
