@@ -17,6 +17,9 @@
    <layout class="QVBoxLayout">
     <item>
      <widget class="QListWidget" name="extenList">
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
       <property name="dragDropMode">
        <enum>QAbstractItemView::InternalMove</enum>
       </property>

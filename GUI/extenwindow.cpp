@@ -2,12 +2,15 @@
 #include "ui_extenwindow.h"
 #include "defs.h"
 #include <concrt.h>
+#include <QMenu>
+#include <QFileDialog>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMimeData>
 #include <QUrl>
 
 extern const char* EXTENSIONS;
+extern const char* ADD_EXTENSION;
 extern const char* INVALID_EXTENSION;
 extern const char* CONFIRM_EXTENSION_OVERWRITE;
 extern const char* EXTENSION_WRITE_ERROR;
@@ -20,7 +23,7 @@ namespace
 	struct Extension
 	{
 		std::wstring name;
-		wchar_t*(*callback)(wchar_t*, const InfoForExtension*);
+		wchar_t* (*callback)(wchar_t*, const InfoForExtension*);
 	};
 
 	concurrency::reader_writer_lock extenMutex;
@@ -31,11 +34,15 @@ namespace
 		// Extension is dll and exports "OnNewSentence"
 		if (QTextFile(extenName + ".dll", QIODevice::ReadOnly).readAll().contains("OnNewSentence"))
 		{
-			if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+			if (HMODULE module = LoadLibraryW(S(extenName).c_str()))
 			{
-				std::scoped_lock writeLock(extenMutex);
-				extensions.push_back({ S(extenName), callback });
-				return true;
+				if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+				{
+					std::scoped_lock writeLock(extenMutex);
+					extensions.push_back({ S(extenName), callback });
+					return true;
+				}
+				FreeLibrary(module);
 			}
 		}
 		return false;
@@ -73,8 +80,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 void CleanupExtensions()
 {
 	std::scoped_lock writeLock(extenMutex);
-	for (auto extension : extensions)
-		FreeLibrary(GetModuleHandleW(extension.name.c_str()));
+	for (auto extension : extensions) FreeLibrary(GetModuleHandleW(extension.name.c_str()));
 	extensions.clear();
 }
 
@@ -83,6 +89,12 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 	ui(new Ui::ExtenWindow)
 {
 	ui->setupUi(this);
+
+	connect(ui->extenList, &QListWidget::customContextMenuRequested, [this](QPoint point)
+	{
+		if (QMenu(this).exec({ std::make_unique<QAction>(ADD_EXTENSION).get() }, ui->extenList->mapToGlobal(point)))
+			if (QString extenFile = QFileDialog::getOpenFileName(this, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+	});
 
 	ui->vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
 	setWindowTitle(EXTENSIONS);
@@ -97,6 +109,20 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 ExtenWindow::~ExtenWindow()
 {
 	delete ui;
+}
+
+void ExtenWindow::Add(QFileInfo extenFile)
+{
+	if (extenFile.suffix() == "dll")
+	{
+		if (extenFile.absolutePath() != QDir::currentPath())
+		{
+			if (QFile::exists(extenFile.fileName()) && QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
+			if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(this, EXTENSIONS, EXTENSION_WRITE_ERROR);
+		}
+		if (Load(extenFile.completeBaseName())) return Sync();
+	}
+	QMessageBox::information(this, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
 }
 
 void ExtenWindow::Sync()
@@ -140,16 +166,5 @@ void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)
 
 void ExtenWindow::dropEvent(QDropEvent* event)
 {
-	for (auto file : event->mimeData()->urls())
-	{
-		QFileInfo extenFile = file.toLocalFile();
-		if (extenFile.suffix() != "dll") continue;
-		if (extenFile.absolutePath() != QDir::currentPath())
-		{
-			if (QFile::exists(extenFile.fileName()) && QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
-			if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(this, EXTENSIONS, EXTENSION_WRITE_ERROR);
-		}
-		if (Load(extenFile.completeBaseName())) Sync();
-		else QMessageBox::information(this, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
-	}
+	for (auto file : event->mimeData()->urls()) Add(file.toLocalFile());
 }
