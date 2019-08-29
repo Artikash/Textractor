@@ -80,7 +80,7 @@ namespace { // unnamed helpers
 					hp.address = addr;
 					ConsoleOutput("Textractor: triggered: adding dynamic reader");
 					NewHook(hp, "READ");
-					//ret = true;
+					ret = true;
 				}
 			};
 		}
@@ -15071,7 +15071,7 @@ void SpecialHookLightvn(DWORD, HookParam*, BYTE, DWORD* data, DWORD* split, DWOR
 	const C* start = FindInView(view, "curline:");
 	const C* end = FindInView(view, "\\w");
 	if (!end) end = FindInView(view, "(scenario");
-	if (end) *split = *end << 16;
+	//if (end) *split = *end << 16;
 	if (start && end && end > start)
 	{
 		*data = (DWORD)(start + 8);
