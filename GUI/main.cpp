@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 {
 	std::thread([]
 	{
+		if (!*VERSION) return;
 		using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
 		// Queries GitHub releases API https://developer.github.com/v3/repos/releases/ and checks the last release tag to check if it's the same
 		if (InternetHandle internet = WinHttpOpen(L"Mozilla/5.0 Textractor", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0))
