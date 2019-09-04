@@ -67,6 +67,7 @@ struct SearchParam
 		maxRecords = 100000,
 		codepage = SHIFT_JIS;
 	uintptr_t padding = 0, minAddress = 0, maxAddress = (uintptr_t)-1;
+	wchar_t module[MAX_MODULE_SIZE] = {};
 	wchar_t text[PATTERN_SIZE] = {}; // text to search for
 	void(*hookPostProcessor)(HookParam&) = nullptr;
 };

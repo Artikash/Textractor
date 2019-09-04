@@ -15,7 +15,7 @@ namespace
 {
 	SearchParam sp;
 
-	constexpr int CACHE_SIZE = 500'000;
+	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 300'000;
 	struct HookRecord
 	{
 		~HookRecord()
@@ -32,7 +32,7 @@ namespace
 		}
 		uint64_t address = 0;
 		int offset = 0;
-		char text[500] = {};
+		char text[MAX_STRING_SIZE] = {};
 	};
 	std::unique_ptr<HookRecord[]> records;
 	long recordsAvailable;
@@ -114,18 +114,31 @@ namespace
 #endif
 }
 
+bool IsBadStrPtr(void* str)
+{
+	if (str < (void*)0x1000) return true;
+
+	MEMORY_BASIC_INFORMATION info;
+	if (VirtualQuery(str, &info, sizeof(info)) == 0 || info.Protect < PAGE_READONLY || info.Protect & (PAGE_GUARD | PAGE_NOACCESS)) return true;
+
+	void* regionEnd = (BYTE*)info.BaseAddress + info.RegionSize;
+	if ((BYTE*)str + MAX_STRING_SIZE <= regionEnd) return false;
+	return IsBadStrPtr(regionEnd);
+}
+
 void Send(char** stack, uintptr_t address)
 {
 	// it is unsafe to call ANY external functions from this, as they may have been hooked (if called the hook would call this function making an infinite loop)
 	// the exceptions are compiler intrinsics like _InterlockedDecrement
 	if (recordsAvailable <= 0) return;
-	for (int i = -registers; i < 6; ++i)
+	for (int i = -registers; i < 10; ++i)
 	{
 		int length = 0, sum = 0;
 		char* str = stack[i] + sp.padding;
-		__try { for (; (str[length] || str[length + 1]) && length < 500; length += 2) sum += str[length] + str[length + 1]; }
+		if (IsBadStrPtr(str)) return; // seems to improve performance; TODO: more tests and benchmarks to confirm
+		__try { for (; (str[length] || str[length + 1]) && length < MAX_STRING_SIZE; length += 2) sum += str[length] + str[length + 1]; }
 		__except (EXCEPTION_EXECUTE_HANDLER) {}
-		if (length > STRING && length < 499)
+		if (length > STRING && length < MAX_STRING_SIZE - 1)
 		{
 			__try
 			{
@@ -156,6 +169,24 @@ void Send(char** stack, uintptr_t address)
 	}
 }
 
+std::vector<uint64_t> GetFunctions(uintptr_t module)
+{
+	if (!module) return {};
+	IMAGE_DOS_HEADER* dosHeader = (IMAGE_DOS_HEADER*)module;
+	if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) return {};
+	IMAGE_NT_HEADERS* ntHeader = (IMAGE_NT_HEADERS*)(module + dosHeader->e_lfanew);
+	if (ntHeader->Signature != IMAGE_NT_SIGNATURE) return {};
+	DWORD exportAddress = ntHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	if (!exportAddress) return {};
+	IMAGE_EXPORT_DIRECTORY* exportDirectory = (IMAGE_EXPORT_DIRECTORY*)(module + exportAddress);
+	std::vector<uint64_t> functions;
+	for (int i = 0; i < exportDirectory->NumberOfNames; ++i)
+		//char* funcName = (char*)(module + *(DWORD*)(module + exportDirectory->AddressOfNames + i * sizeof(DWORD)));
+		functions.push_back(module + *(DWORD*)(module + exportDirectory->AddressOfFunctions +
+			sizeof(DWORD) * *(WORD*)(module + exportDirectory->AddressOfNameOrdinals + i * sizeof(WORD))));
+	return functions;
+}
+
 void SearchForHooks(SearchParam spUser)
 {
 	std::thread([=]
@@ -175,12 +206,13 @@ void SearchForHooks(SearchParam spUser)
 		{
 			VirtualQuery((void*)moduleStopAddress, &info, sizeof(info));
 			moduleStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
-		} while (info.Protect > PAGE_NOACCESS);
+		} while (info.Protect > PAGE_EXECUTE);
 		moduleStopAddress -= info.RegionSize;
 
 		ConsoleOutput(STARTING_SEARCH);
-		std::vector<uint64_t> addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress);
-		for (auto& addr : addresses) addr += sp.offset;
+		std::vector<uint64_t> addresses;
+		if (*sp.module) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.module));
+		else for (auto& addr : addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress)) addr += sp.offset;
 		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr) { return addr > moduleStartAddress && addr < moduleStopAddress; }), addresses.end());
 		*(void**)(trampoline + send_offset) = Send;
 		auto trampolines = (decltype(trampoline)*)VirtualAlloc(NULL, sizeof(trampoline) * addresses.size(), MEM_COMMIT, PAGE_READWRITE);

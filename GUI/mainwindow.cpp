@@ -500,8 +500,16 @@ void MainWindow::FindHooks()
 		layout.addWidget(&startButton);
 		connect(&startButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 		if (!dialog.exec()) return;
-		QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
-		memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), 25));
+		if (patternInput.text().contains('.'))
+		{
+			wcsncpy_s(sp.module, S(patternInput.text()).c_str(), MAX_MODULE_SIZE - 1);
+			sp.length = 1;
+		}
+		else
+		{
+			QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
+			memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), PATTERN_SIZE));
+		}
 		try { filter = S(filterInput.text()); } catch (std::regex_error) {}
 	}
 	else
@@ -510,10 +518,13 @@ void MainWindow::FindHooks()
 		filter = std::wregex(cjkCheckbox.isChecked() ? L"[\\u3000-\\ua000]{4,}" : L"[\\u0020-\\u1000]{4,}");
 	}
 
-	auto hooks = std::make_shared<std::vector<std::pair<HookParam, std::wstring>>>();
+	auto hooks = std::make_shared<std::vector<QString>>();
 	try
 	{
-		Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, const std::wstring& text) { if (std::regex_search(text, filter)) hooks->push_back({ hp, text }); });
+		Host::FindHooks(processId, sp, [hooks, processId, filter](HookParam hp, const std::wstring& text)
+		{
+			if (std::regex_search(text, filter)) hooks->push_back(S(Util::GenerateCode(hp, processId) + L" => " + text));
+		});
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks, processId]
@@ -529,8 +540,7 @@ void MainWindow::FindHooks()
 			hookList->setAttribute(Qt::WA_DeleteOnClose);
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
-			for (auto [hp, text] : *hooks)
-				new QListWidgetItem(S(Util::GenerateCode(hp, processId) + L" => " + text), hookList);
+			for (const auto& hook : *hooks) new QListWidgetItem(hook, hookList);
 			connect(hookList, &QListWidget::itemClicked, [this](QListWidgetItem* item) { AddHook(item->text().split(" => ")[0]); });
 			hookList->show();
 
@@ -538,8 +548,11 @@ void MainWindow::FindHooks()
 			if (!saveFileName.isEmpty())
 			{
 				QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
-				for (auto [hp, text] : *hooks)
-					saveFile.write(S(Util::GenerateCode(hp, processId) + L" => " + text + L"\n").toUtf8());
+				for (const auto& hook : *hooks)
+				{
+					saveFile.write(hook.toUtf8());
+					saveFile.write("\n");
+				}
 			}
 			hooks->clear();
 		});
