@@ -8,18 +8,18 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo);
 	This can be modified. Textractor uses the modified sentence for future processing and display. If empty (starts with null terminator), Textractor will destroy it.
 	Textractor will display the sentence after all extensions have had a chance to process and/or modify it.
 	The buffer is allocated using HeapAlloc(). If you want to make it larger, please use HeapReAlloc().
-	Param miscInfo: pointer to array containing misc info about the sentence. End of array is marked with name being nullptr.
+	Param sentenceInfo: pointer to array containing misc info about the sentence. End of array is marked with name being nullptr.
 	Return value: the buffer used for the sentence. Remember to return a new pointer if HeapReAlloc() gave you one.
 	This function may be run concurrently with itself: please make sure it's thread safe.
 	It will not be run concurrently with DllMain.
 */
-extern "C" __declspec(dllexport) wchar_t* OnNewSentence(wchar_t* sentence, const InfoForExtension* miscInfo)
+extern "C" __declspec(dllexport) wchar_t* OnNewSentence(wchar_t* sentence, const InfoForExtension* sentenceInfo)
 {
 	try
 	{
 		std::wstring sentenceStr(sentence);
 		int origLength = sentenceStr.size();
-		if (ProcessSentence(sentenceStr, SentenceInfo{ miscInfo }))
+		if (ProcessSentence(sentenceStr, SentenceInfo{ sentenceInfo }))
 		{
 			if (sentenceStr.size() > origLength) sentence = (wchar_t*)HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sentence, (sentenceStr.size() + 1) * sizeof(wchar_t));
 			wcscpy_s(sentence, sentenceStr.size() + 1, sentenceStr.c_str());

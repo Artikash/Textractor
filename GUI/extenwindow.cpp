@@ -65,13 +65,13 @@ namespace
 	}
 }
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* miscInfo)
+bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* sentenceInfo)
 {
 	wchar_t* sentenceBuffer = (wchar_t*)HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, (sentence.size() + 1) * sizeof(wchar_t));
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 	for (const auto& extension : extensions)
-		if (*(sentenceBuffer = extension.callback(sentenceBuffer, miscInfo)) == L'\0') break;
+		if (*(sentenceBuffer = extension.callback(sentenceBuffer, sentenceInfo)) == L'\0') break;
 	sentence = sentenceBuffer;
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	return !sentence.empty();

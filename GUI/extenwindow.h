@@ -13,7 +13,7 @@ struct InfoForExtension
 	int64_t value;
 };
 
-bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* miscInfo);
+bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* sentenceInfo);
 void CleanupExtensions(); // must call this before exiting the program, only way to uphold guarantee that DllMain and OnNewSentence won't be called concurrently
 
 class ExtenWindow : public QMainWindow

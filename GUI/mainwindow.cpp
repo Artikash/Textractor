@@ -208,7 +208,7 @@ void MainWindow::ThreadRemoved(TextThread& thread)
 
 bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
-	if (!DispatchSentenceToExtensions(sentence, GetMiscInfo(thread).data())) return false;
+	if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 	sentence += L'\n';
 	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence]
 	{
@@ -248,7 +248,7 @@ DWORD MainWindow::GetSelectedProcessId()
 	return ui->processCombo->currentText().split(":")[0].toULong(nullptr, 16);
 }
 
-std::array<InfoForExtension, 10> MainWindow::GetMiscInfo(TextThread& thread)
+std::array<InfoForExtension, 10> MainWindow::GetSentenceInfo(TextThread& thread)
 {
 	void(*AddSentence)(MainWindow*, int64_t, const wchar_t*) = [](MainWindow* This, int64_t number, const wchar_t* sentence)
 	{
