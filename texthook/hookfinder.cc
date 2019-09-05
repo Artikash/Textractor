@@ -206,7 +206,7 @@ void SearchForHooks(SearchParam spUser)
 		{
 			VirtualQuery((void*)moduleStopAddress, &info, sizeof(info));
 			moduleStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
-		} while (info.Protect > PAGE_EXECUTE);
+		} while (info.Protect >= PAGE_EXECUTE);
 		moduleStopAddress -= info.RegionSize;
 
 		ConsoleOutput(STARTING_SEARCH);

@@ -10,9 +10,6 @@
     <height>300</height>
    </rect>
   </property>
-  <property name="sizeGripEnabled">
-   <bool>true</bool>
-  </property>
   <layout class="QHBoxLayout">
    <item>
     <widget class="QLabel" name="display">

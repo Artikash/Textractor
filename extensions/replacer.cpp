@@ -14,16 +14,14 @@ std::shared_mutex m;
 class Trie
 {
 public:
-	Trie(const std::unordered_map<std::wstring, std::wstring>& replacements)
+	Trie(std::unordered_map<std::wstring, std::wstring> replacements)
 	{
 		for (const auto& [original, replacement] : replacements)
 		{
 			Node* current = &root;
-			for (auto ch : original)
-				if (Ignore(ch));
-				else if (auto& next = current->next[ch]) current = next.get();
-				else current = (next = std::make_unique<Node>()).get();
-			if (current != &root) current->value = replacement;
+			for (auto ch : original) if (!Ignore(ch)) current = Next(current, ch);
+			if (current != &root)
+				current->value = owningStorage.insert(owningStorage.end(), replacement.c_str(), replacement.c_str() + replacement.size() + 1) - owningStorage.begin();
 		}
 	}
 
@@ -32,20 +30,18 @@ public:
 		std::wstring result;
 		for (int i = 0; i < sentence.size();)
 		{
-			std::wstring replacement(1, sentence[i]);
+			std::wstring_view replacement(sentence.c_str() + i, 1);
 			int originalLength = 1;
 
 			const Node* current = &root;
-			for (int j = i; j < sentence.size() + 1; ++j)
+			for (int j = i; current && j <= sentence.size(); ++j)
 			{
-				if (current->value)
+				if (current->value >= 0)
 				{
-					replacement = current->value.value();
+					replacement = owningStorage.data() + current->value;
 					originalLength = j - i;
 				}
-				if (current->next.count(sentence[j]) > 0) current = current->next.at(sentence[j]).get();
-				else if (Ignore(sentence[j]));
-				else break;
+				if (!Ignore(sentence[j])) current = Next(current, sentence[j]);
 			}
 
 			result += replacement;
@@ -54,31 +50,58 @@ public:
 		return result;
 	}
 
+	bool Empty()
+	{
+		return root.charMap.empty();
+	}
+
 private:
 	static bool Ignore(wchar_t ch)
 	{
 		return ch <= 0x20 || std::iswspace(ch);
 	}
 
+	template <typename Node>
+	static Node* Next(Node* node, wchar_t ch)
+	{
+		auto it = std::lower_bound(node->charMap.begin(), node->charMap.end(), ch, [](const auto& one, auto two) { return one.first < two; });
+		if (it != node->charMap.end() && it->first == ch) return it->second.get();
+		if constexpr (!std::is_const_v<Node>) return node->charMap.insert(it, { ch, std::make_unique<Node>() })->second.get();
+		return nullptr;
+	}
+
 	struct Node
 	{
-		std::unordered_map<wchar_t, std::unique_ptr<Node>, Identity<wchar_t>> next;
-		std::optional<std::wstring> value;
+		std::vector<std::pair<wchar_t, std::unique_ptr<Node>>> charMap;
+		ptrdiff_t value = -1;
 	} root;
+
+	std::vector<wchar_t> owningStorage;
 } trie = { {} };
 
-std::unordered_map<std::wstring, std::wstring> Parse(const std::wstring& replacementScript)
+std::unordered_map<std::wstring, std::wstring> Parse(std::wstring_view replacementScript)
 {
 	std::unordered_map<std::wstring, std::wstring> replacements;
-	size_t end = 0;
-	while (true)
+	for (size_t end = 0; ;)
 	{
 		size_t original = replacementScript.find(L"|ORIG|", end);
 		size_t becomes = replacementScript.find(L"|BECOMES|", original);
 		if ((end = replacementScript.find(L"|END|", becomes)) == std::wstring::npos) break;
-		replacements[replacementScript.substr(original + 6, becomes - original - 6)] = replacementScript.substr(becomes + 9, end - becomes - 9);
+		replacements[std::wstring(replacementScript.substr(original + 6, becomes - original - 6))] = replacementScript.substr(becomes + 9, end - becomes - 9);
 	}
 	return replacements;
+}
+
+void UpdateReplacements()
+{
+	try
+	{
+		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) == std::filesystem::last_write_time(REPLACE_SAVE_FILE)) return;
+		std::vector<BYTE> file(std::istreambuf_iterator(std::ifstream(REPLACE_SAVE_FILE, std::ios::binary)), {});
+		std::scoped_lock l(m);
+		trie = Trie(Parse({ (wchar_t*)file.data(), file.size() / sizeof(wchar_t) }));
+	}
+	catch (std::filesystem::filesystem_error) { replaceFileLastWrite.store({}); }
 }
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -87,10 +110,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
-		if (Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))).empty())
+		UpdateReplacements();
+		if (trie.Empty())
 		{
-			std::ofstream(REPLACE_SAVE_FILE, std::ios::out | std::ios::binary | std::ios::trunc).write((char*)REPLACER_INSTRUCTIONS, wcslen(REPLACER_INSTRUCTIONS) * sizeof(wchar_t));
+			std::ofstream(REPLACE_SAVE_FILE, std::ios::binary).write((char*)REPLACER_INSTRUCTIONS, wcslen(REPLACER_INSTRUCTIONS) * sizeof(wchar_t));
 			_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
 		}
 	}
@@ -105,17 +128,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 {
-	try
-	{
-		static_assert(std::has_unique_object_representations_v<decltype(replaceFileLastWrite)::value_type>);
-		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) != std::filesystem::last_write_time(REPLACE_SAVE_FILE))
-		{
-			std::scoped_lock l(m);
-			std::vector<BYTE> file(std::istreambuf_iterator<char>(std::ifstream(REPLACE_SAVE_FILE, std::ios::in | std::ios::binary)), {});
-			trie = Trie(Parse(std::wstring((wchar_t*)file.data(), file.size() / sizeof(wchar_t))));
-		}
-	}
-	catch (std::filesystem::filesystem_error) {}
+	UpdateReplacements();
 
 	std::shared_lock l(m);
 	sentence = trie.Replace(sentence);
@@ -132,7 +145,7 @@ And this text ツ　　
 		assert(replacements.size() == 4);
 		std::wstring original = LR"(Don't replace this　
  さよなら バカ こんにちは delete this)";
-		std::wstring replaced = Trie(replacements).Replace(original);
+		std::wstring replaced = Trie(std::move(replacements)).Replace(original);
 		assert(replaced == L"Don't replace thisgoodbye idiot hello");
 	}
 );
