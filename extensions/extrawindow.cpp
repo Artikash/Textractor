@@ -165,7 +165,7 @@ private:
 			dictionaryWindow.UpdateDictionary();
 			if (dictionaryWindow.dictionary.empty())
 			{
-				std::ofstream(DICTIONARY_SAVE_FILE) << DICTIONARY_INSTRUCTIONS;
+				std::ofstream(DICTIONARY_SAVE_FILE) << u8"\ufeff" << DICTIONARY_INSTRUCTIONS;
 				_spawnlp(_P_DETACH, "notepad", "notepad", DICTIONARY_SAVE_FILE, NULL); // show file to user
 			}
 		}
