@@ -73,14 +73,16 @@ QStringList languages
 	"Zulu: zu"
 };
 
-std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
+unsigned TKK = 0;
+
+std::wstring GetTranslationUri(const std::wstring& text)
 {
 	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access
 	if (!TKK) return FormatString(L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=%s&q=%s", translateTo->c_str(), text);
 
 	// Artikash 8/19/2018: reverse engineered from translate.google.com
 	std::wstring escapedText;
-	unsigned a = _time64(NULL) / 3600, b = a; // <- the first part of TKK
+	unsigned a = time(NULL) / 3600, b = a; // the first part of TKK
 	for (unsigned char ch : WideStringToString(text))
 	{
 		escapedText += FormatString(L"%%%02X", (int)ch);
@@ -93,9 +95,8 @@ std::wstring GetTranslationUri(const std::wstring& text, unsigned TKK)
 	a += a << 15;
 	a ^= TKK;
 	a %= 1000000;
-	b ^= a;
 
-	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, b, escapedText);
+	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, a ^ b, escapedText);
 }
 
 bool IsHash(const std::wstring& result)
@@ -105,13 +106,12 @@ bool IsHash(const std::wstring& result)
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
-	static unsigned TKK = 0;
 	if (!TKK)
 		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })
 			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"(\\d{7,})'")))
 				_InterlockedCompareExchange(&TKK, stoll(results[1]), 0);
 
-	if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", GetTranslationUri(text, TKK).c_str() })
+	if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.googleapis.com", L"GET", GetTranslationUri(text).c_str() })
 	{
 		// Response formatted as JSON: starts with "[[[" and translation is enclosed in quotes followed by a comma
 		if (httpRequest.response[0] == L'[')

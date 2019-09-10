@@ -26,9 +26,6 @@ constexpr bool x64 = true;
 constexpr bool x64 = false;
 #endif
 
-#define MESSAGE(text) MessageBoxW(NULL, text, L"Textractor", MB_OK)
-#define CRITIAL_SECTION static std::mutex m; std::scoped_lock l(m)
-
 template <typename T> using Array = T[];
 
 template <auto F> using Functor = std::integral_constant<std::decay_t<decltype(F)>, F>;
@@ -110,6 +107,8 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 	return buffer;
 }
 #pragma warning(pop)
+
+#define MESSAGE(text) MessageBoxW(NULL, FormatArg(text), L"Textractor", MB_OK)
 
 #ifdef _DEBUG
 #define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
