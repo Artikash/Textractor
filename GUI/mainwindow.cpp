@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "host/util.h"
 #include <shellapi.h>
+#include <QStringListModel>
 #include <QMenu>
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -518,44 +519,42 @@ void MainWindow::FindHooks()
 		filter = std::wregex(cjkCheckbox.isChecked() ? L"[\\u3000-\\ua000]{4,}" : L"[\\u0020-\\u1000]{4,}");
 	}
 
-	auto hooks = std::make_shared<std::vector<QString>>();
+	auto hooks = std::make_shared<QStringList>();
 	try
 	{
-		Host::FindHooks(processId, sp, [hooks, processId, filter](HookParam hp, const std::wstring& text)
+		Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, const std::wstring& text)
 		{
-			if (std::regex_search(text, filter)) hooks->push_back(S(Util::GenerateCode(hp, processId) + L" => " + text));
+			if (std::regex_search(text, filter)) hooks->push_back(S(Util::GenerateCode(hp) + L" => " + text));
 		});
 	}
 	catch (std::out_of_range) { return; }
-	std::thread([this, hooks, processId]
+	std::thread([this, hooks]
 	{
 		DWORD64 cleanupTime = GetTickCount64() + 500'000;
 		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
 			if (GetTickCount64() > cleanupTime) return;
 			else lastSize = hooks->size();
-		QMetaObject::invokeMethod(this, [this, hooks, processId]
+
+		QMetaObject::invokeMethod(this, [this, hooks]
 		{
-			auto hookList = new QListWidget(this);
+			auto hookList = new QListView(this);
 			hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
 			hookList->setAttribute(Qt::WA_DeleteOnClose);
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
-			for (const auto& hook : *hooks) new QListWidgetItem(hook, hookList);
-			connect(hookList, &QListWidget::itemClicked, [this](QListWidgetItem* item) { AddHook(item->text().split(" => ")[0]); });
+			hookList->setUniformItemSizes(true);
+			hookList->setModel(new QStringListModel(*hooks, hookList));
+			connect(hookList, &QListView::clicked, [this, hookList](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
 			hookList->show();
 
-			QString saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES, nullptr);
+			QString saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES);
 			if (!saveFileName.isEmpty())
 			{
 				QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
-				for (const auto& hook : *hooks)
-				{
-					saveFile.write(hook.toUtf8());
-					saveFile.write("\n");
-				}
+				for (const auto& hook : *hooks)	saveFile.write(hook.toUtf8().append('\n')); // might OOM with .join('\n')
 			}
 			hooks->clear();
-		});
+		});		
 	}).detach();
 }
 

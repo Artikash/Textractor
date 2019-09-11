@@ -166,75 +166,70 @@ namespace
 		return hp;
 	}
 
-	std::wstring HexString(int64_t num) // only needed for signed nums
+	std::wstring HexString(int64_t num)
 	{
-		return (std::wstringstream() << std::uppercase << std::hex << (num < 0 ? "-" : "") << abs(num)).str();
+		if (num < 0) return FormatString(L"-%I64X", -num);
+		return FormatString(L"%I64X", num);
 	}
 
 	std::wstring GenerateRCode(HookParam hp)
 	{
-		std::wstringstream RCode;
-		RCode << "R";
+		std::wstring RCode = L"R";
 
 		if (hp.type & USING_UNICODE)
 		{
-			RCode << "Q";
-			if (hp.null_length != 0) RCode << hp.null_length << "<";
+			RCode += L'Q';
+			if (hp.null_length != 0) RCode += std::to_wstring(hp.null_length) + L'<';
 		}
 		else
 		{
-			RCode << "S";
-			if (hp.null_length != 0) RCode << hp.null_length << "<";
-			if (hp.codepage != 0) RCode << hp.codepage << "#";
+			RCode += L'S';
+			if (hp.null_length != 0) RCode += std::to_wstring(hp.null_length) + L'<';
+			if (hp.codepage != 0) RCode += std::to_wstring(hp.codepage) + L'#';
 		}
 
-		RCode << std::uppercase << std::hex;
+		RCode += L'@' + HexString(hp.address);
 
-		RCode << "@" << hp.address;
-
-		return RCode.str();
+		return RCode;
 	}
 
 	std::wstring GenerateHCode(HookParam hp, DWORD processId)
 	{
-		std::wstringstream HCode;
-		HCode << "H";
+		std::wstring HCode = L"H";
 
 		if (hp.type & USING_UNICODE)
 		{
-			if (hp.type & USING_STRING) HCode << "Q";
-			else HCode << "W";
+			if (hp.type & USING_STRING) HCode += L'Q';
+			else HCode += L'W';
 		}
 		else
 		{
-			if (hp.type & USING_STRING) HCode << "S";
-			else if (hp.type & BIG_ENDIAN) HCode << "A";
-			else HCode << "B";
+			if (hp.type & USING_STRING) HCode += L'S';
+			else if (hp.type & BIG_ENDIAN) HCode += L'A';
+			else HCode += L'B';
 		}
 
-		if (hp.type & FULL_STRING) HCode << "F";
+		if (hp.type & FULL_STRING) HCode += L'F';
 
-		if (hp.null_length != 0) HCode << hp.null_length << "<";
+		if (hp.null_length != 0) HCode += std::to_wstring(hp.null_length) + L'<';
 
-		if (hp.type & NO_CONTEXT) HCode << "N";
-		if (hp.text_fun || hp.filter_fun || hp.hook_fun || hp.length_fun) HCode << "X"; // no AGTH equivalent
+		if (hp.type & NO_CONTEXT) HCode += L'N';
+		if (hp.text_fun || hp.filter_fun || hp.hook_fun || hp.length_fun) HCode += L'X'; // no AGTH equivalent
 
-		if (hp.codepage != 0 && !(hp.type & USING_UNICODE)) HCode << hp.codepage << "#";
+		if (hp.codepage != 0 && !(hp.type & USING_UNICODE)) HCode += std::to_wstring(hp.codepage) + L'#';
 
-		HCode << std::uppercase << std::hex;
-
-		if (hp.padding) HCode << hp.padding << "+";
+		if (hp.padding) HCode += HexString(hp.padding) + L'+';
 
 		if (hp.offset < 0) hp.offset += 4;
 		if (hp.split < 0) hp.split += 4;
 
-		HCode << HexString(hp.offset);
-		if (hp.type & DATA_INDIRECT) HCode << "*" << HexString(hp.index);
-		if (hp.type & USING_SPLIT) HCode << ":" << HexString(hp.split);
-		if (hp.type & SPLIT_INDIRECT) HCode << "*" << HexString(hp.split_index);
+		HCode += HexString(hp.offset);
+		if (hp.type & DATA_INDIRECT) HCode += L'*' + HexString(hp.index);
+		if (hp.type & USING_SPLIT) HCode += L':' + HexString(hp.split);
+		if (hp.type & SPLIT_INDIRECT) HCode += L'*' + HexString(hp.split_index);
 
 		// Attempt to make the address relative
-		if (!(hp.type & MODULE_OFFSET))
+		if (processId && !(hp.type & MODULE_OFFSET))
 			if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
 				if (MEMORY_BASIC_INFORMATION info = {}; VirtualQueryEx(process, (LPCVOID)hp.address, &info, sizeof(info)))
 					if (auto moduleName = Util::GetModuleFilename(processId, (HMODULE)info.AllocationBase))
@@ -244,11 +239,11 @@ namespace
 						wcsncpy_s(hp.module, moduleName->c_str() + moduleName->rfind(L'\\') + 1, MAX_MODULE_SIZE - 1);
 					}
 
-		HCode << "@" << hp.address;
-		if (hp.type & MODULE_OFFSET) HCode << ":" << hp.module;
-		if (hp.type & FUNCTION_OFFSET) HCode << ":" << hp.function;
+		HCode += L'@' + HexString(hp.address);
+		if (hp.type & MODULE_OFFSET) HCode += L':' + std::wstring(hp.module);
+		if (hp.type & FUNCTION_OFFSET) HCode += L':' + std::wstring(hp.function, hp.function + MAX_MODULE_SIZE);
 
-		return HCode.str();
+		return HCode;
 	}
 }
 
@@ -313,6 +308,8 @@ namespace Util
 
 	TEST(
 		assert(StringToWideString(u8"こんにちは").value() == L"こんにちは"),
+		assert(HexString(-12) == L"-C"),
+		assert(HexString(12) == L"C"),
 		assert(ParseCode(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
 		assert(ParseCode(L"HB4@0")),
 		assert(ParseCode(L"/RS65001#@44")),

@@ -6,6 +6,7 @@
 extern const char* STARTING_SEARCH;
 extern const char* HOOK_SEARCH_INITIALIZED;
 extern const char* HOOK_SEARCH_FINISHED;
+extern const char* OUT_OF_RECORDS_RETRY;
 extern const char* NOT_ENOUGH_TEXT;
 extern const char* COULD_NOT_FIND;
 
@@ -15,7 +16,7 @@ namespace
 {
 	SearchParam sp;
 
-	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 300'000;
+	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 0x40000, GOOD_PAGE = -1;
 	struct HookRecord
 	{
 		~HookRecord()
@@ -38,6 +39,7 @@ namespace
 	long recordsAvailable;
 	uint64_t signatureCache[CACHE_SIZE] = {};
 	long sumCache[CACHE_SIZE] = {};
+	uintptr_t pageCache[CACHE_SIZE] = {};
 
 #ifndef _WIN64
 	BYTE trampoline[] =
@@ -114,16 +116,30 @@ namespace
 #endif
 }
 
-bool IsBadStrPtr(void* str)
+bool IsBadReadPtr(void* data)
 {
-	if (str < (void*)0x1000) return true;
+	if (data > records.get() && data < records.get() + sp.maxRecords) return true;
+	uintptr_t BAD_PAGE = (uintptr_t)data >> 12;
+	auto& cacheEntry = pageCache[BAD_PAGE % CACHE_SIZE];
+	if (cacheEntry == BAD_PAGE) return true;
+	if (cacheEntry == GOOD_PAGE) return false;
 
-	MEMORY_BASIC_INFORMATION info;
-	if (VirtualQuery(str, &info, sizeof(info)) == 0 || info.Protect < PAGE_READONLY || info.Protect & (PAGE_GUARD | PAGE_NOACCESS)) return true;
-
-	void* regionEnd = (BYTE*)info.BaseAddress + info.RegionSize;
-	if ((BYTE*)str + MAX_STRING_SIZE <= regionEnd) return false;
-	return IsBadStrPtr(regionEnd);
+	__try
+	{
+		volatile char _ = *(char*)data;
+		cacheEntry = GOOD_PAGE;
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		if (GetExceptionCode() == EXCEPTION_GUARD_PAGE)
+		{
+			MEMORY_BASIC_INFORMATION info;
+			VirtualQuery(data, &info, sizeof(info));
+			VirtualProtect(data, 1, info.Protect | PAGE_GUARD, DUMMY);
+		}
+		cacheEntry = BAD_PAGE;
+	}
+	return cacheEntry == BAD_PAGE;
 }
 
 void Send(char** stack, uintptr_t address)
@@ -133,14 +149,13 @@ void Send(char** stack, uintptr_t address)
 	if (recordsAvailable <= 0) return;
 	for (int i = -registers; i < 10; ++i)
 	{
-		int length = 0, sum = 0;
 		char* str = stack[i] + sp.padding;
-		if (IsBadStrPtr(str)) return; // seems to improve performance; TODO: more tests and benchmarks to confirm
-		__try { for (; (str[length] || str[length + 1]) && length < MAX_STRING_SIZE; length += 2) sum += str[length] + str[length + 1]; }
-		__except (EXCEPTION_EXECUTE_HANDLER) {}
-		if (length > STRING && length < MAX_STRING_SIZE - 1)
+		if (IsBadReadPtr(str) || IsBadReadPtr(str + MAX_STRING_SIZE)) continue;
+		__try
 		{
-			__try
+			int length = 0, sum = 0;
+			for (; (str[length] || str[length + 1]) && length < MAX_STRING_SIZE; length += 2) sum += *(uint16_t*)(str + length);
+			if (length > STRING && length < MAX_STRING_SIZE - 1)
 			{
 				// many duplicate results with same address, offset, and third/fourth character will be found: filter them out
 				uint64_t signature = ((uint64_t)i << 56) | ((uint64_t)(str[2] + str[3]) << 48) | address;
@@ -149,12 +164,7 @@ void Send(char** stack, uintptr_t address)
 				// if there are huge amount of strings that are the same, it's probably garbage: filter them out
 				// can't store all the strings, so use sum as heuristic instead
 				if (_InterlockedIncrement(sumCache + (sum % CACHE_SIZE)) > 25) continue;
-			}
-			__except (EXCEPTION_EXECUTE_HANDLER) {}
-
-			long n = _InterlockedDecrement(&recordsAvailable);
-			__try
-			{
+				long n = _InterlockedDecrement(&recordsAvailable);
 				if (n > 0)
 				{
 					records[n].address = address;
@@ -162,10 +172,14 @@ void Send(char** stack, uintptr_t address)
 					for (int j = 0; j < length; ++j) records[n].text[j] = str[j];
 					records[n].text[length] = 0;
 				}
+				if (n == 0)
+				{
+					spDefault.maxRecords = sp.maxRecords * 2;
+					ConsoleOutput(OUT_OF_RECORDS_RETRY);
+				}
 			}
-			__except (EXCEPTION_EXECUTE_HANDLER) { records[n].address = 0; }
-			
 		}
+		__except (EXCEPTION_EXECUTE_HANDLER) {}
 	}
 }
 

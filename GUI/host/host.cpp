@@ -46,9 +46,9 @@ namespace
 			}).detach();
 		}
 
-		Host::HookEventHandler OnHookFound = [](HookParam hp, const std::wstring& text)
+		Host::HookEventHandler OnHookFound = [](HookParam hp, std::wstring text)
 		{
-			Host::AddConsoleOutput(Util::GenerateCode(hp, 0) + L": " + text);
+			Host::AddConsoleOutput(Util::GenerateCode(hp) + L": " + text);
 		};
 
 	private:
@@ -107,12 +107,12 @@ namespace
 					auto info = *(HookFoundNotif*)buffer;
 					auto OnHookFound = processRecordsByIds->at(processId).OnHookFound;
 					std::wstring wide = info.text;
-					if (wide.size() > STRING) OnHookFound(info.hp, info.text);
+					if (wide.size() > STRING) OnHookFound(info.hp, std::move(info.text));
 					info.hp.type &= ~USING_UNICODE;
 					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage))
-						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
+						if (converted->size() > STRING) OnHookFound(info.hp, std::move(converted.value()));
 					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage = CP_UTF8))
-						if (converted->size() > STRING) OnHookFound(info.hp, converted.value());
+						if (converted->size() > STRING) OnHookFound(info.hp, std::move(converted.value()));
 				}
 				break;
 				case HOST_NOTIFICATION_RMVHOOK:

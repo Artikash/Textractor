@@ -16945,12 +16945,19 @@ bool FindPPSSPP()
 			{
 				found = true;
 				ConsoleOutput("Textractor: PPSSPP memory found: searching for hooks should yield working hook codes");
-				memcpy(spDefault.pattern, Array<BYTE>{ 0x79, 0x0f, 0xc7, 0x85 }, spDefault.length = 4);
+				// PPSSPP 1.8.0 compiles jal to sub dword ptr [ebp+0x360],??
+				memcpy(spDefault.pattern, Array<BYTE>{ 0x83, 0xAD, 0x60, 0x03, 0x00, 0x00 }, spDefault.length = 6);
 				spDefault.offset = 0;
 				spDefault.minAddress = 0;
 				spDefault.maxAddress = -1ULL;
 				spDefault.padding = (uintptr_t)probe - 0x8000000;
-				spDefault.hookPostProcessor = [](HookParam& hp) { hp.type |= NO_CONTEXT; };
+				spDefault.maxRecords = 500'000;
+				spDefault.hookPostProcessor = [](HookParam& hp)
+				{
+					hp.type |= NO_CONTEXT | USING_SPLIT | SPLIT_INDIRECT;
+					hp.split = pusha_ebp_off - 4;
+					hp.split_index = -8; // this is where PPSSPP 1.8.0 stores its return address stack
+				};
 			}
 			probe += info.RegionSize;
 		}
