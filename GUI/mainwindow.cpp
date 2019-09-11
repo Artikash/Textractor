@@ -4,6 +4,7 @@
 #include "host/util.h"
 #include <shellapi.h>
 #include <QStringListModel>
+#include <QScrollBar>
 #include <QMenu>
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -89,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
-	if (settings.contains(FONT)) SetOutputFont(settings.value(FONT).toString());
+	SetOutputFont(settings.value(FONT, ui->textOutput->font().toString()).toString());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
 	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();
 	autoAttachSavedOnly = settings.value(ATTACH_SAVED_ONLY, autoAttachSavedOnly).toBool();
@@ -186,10 +187,9 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
-	QString ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode));
 	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
-	QMetaObject::invokeMethod(this, [this, ttString, savedMatch]
+	QMetaObject::invokeMethod(this, [this, savedMatch, ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode))]
 	{
 		ui->ttCombo->addItem(ttString);
 		if (savedMatch) ViewThread(ui->ttCombo->count() - 1);
@@ -198,8 +198,7 @@ void MainWindow::ThreadAdded(TextThread& thread)
 
 void MainWindow::ThreadRemoved(TextThread& thread)
 {
-	QString ttString = TextThreadString(thread);
-	QMetaObject::invokeMethod(this, [this, ttString]
+	QMetaObject::invokeMethod(this, [this, ttString = TextThreadString(thread)]
 	{
 		int threadIndex = ui->ttCombo->findText(ttString, Qt::MatchStartsWith);
 		if (threadIndex == ui->ttCombo->currentIndex())	ViewThread(0);
@@ -211,11 +210,14 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
 	if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 	sentence += L'\n';
-	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence]
+	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]
 	{
-		ui->textOutput->moveCursor(QTextCursor::End);
-		ui->textOutput->insertPlainText(S(sentence));
-		ui->textOutput->moveCursor(QTextCursor::End);
+		auto scrollbar = ui->textOutput->verticalScrollBar();
+		bool atBottom = scrollbar->value() == scrollbar->maximum();
+		QTextCursor cursor(ui->textOutput->document());
+		cursor.movePosition(QTextCursor::End);
+		cursor.insertText(sentence);
+		if (atBottom) scrollbar->setValue(scrollbar->maximum());
 	});
 	return true;
 }
