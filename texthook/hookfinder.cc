@@ -19,18 +19,6 @@ namespace
 	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 0x40000, GOOD_PAGE = -1;
 	struct HookRecord
 	{
-		~HookRecord()
-		{
-			if (!address) return;
-			HookParam hp = {};
-			hp.offset = offset;
-			hp.type = USING_UNICODE | USING_STRING;
-			hp.address = address;
-			hp.padding = sp.padding;
-			hp.codepage = sp.codepage;
-			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
-			NotifyHookFound(hp, (wchar_t*)text);
-		}
 		uint64_t address = 0;
 		int offset = 0;
 		char text[MAX_STRING_SIZE] = {};
@@ -247,10 +235,23 @@ void SearchForHooks(SearchParam spUser)
 		MH_ApplyQueued();
 		Sleep(1000);
 		for (auto addr : addresses) MH_RemoveHook((void*)addr);
+		ConsoleOutput(HOOK_SEARCH_FINISHED, sp.maxRecords - recordsAvailable);
+		for (int i = 0, j = 0; i < sp.maxRecords; ++i)
+		{
+			if (!records[i].address) continue;
+			if (++j % 100'000 == 0) ConsoleOutput("Textractor: %d results processed", j);
+			HookParam hp = {};
+			hp.offset = records[i].offset;
+			hp.type = USING_UNICODE | USING_STRING;
+			hp.address = records[i].address;
+			hp.padding = sp.padding;
+			hp.codepage = sp.codepage;
+			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
+			NotifyHookFound(hp, (wchar_t*)records[i].text);
+		}
 		records.reset();
 		VirtualFree(trampolines, 0, MEM_RELEASE);
-		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = 0;
-		ConsoleOutput(HOOK_SEARCH_FINISHED, sp.maxRecords - recordsAvailable);
+		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = pageCache[i] = 0;
 	}).detach();
 }
 

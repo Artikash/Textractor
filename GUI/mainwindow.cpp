@@ -524,10 +524,7 @@ void MainWindow::FindHooks()
 	auto hooks = std::make_shared<QStringList>();
 	try
 	{
-		Host::FindHooks(processId, sp, [hooks, filter](HookParam hp, const std::wstring& text)
-		{
-			if (std::regex_search(text, filter)) hooks->push_back(S(Util::GenerateCode(hp) + L" => " + text));
-		});
+		Host::FindHooks(processId, sp, [=](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << S(Util::GenerateCode(hp) + L" => " + text); });
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks]
@@ -537,26 +534,28 @@ void MainWindow::FindHooks()
 			if (GetTickCount64() > cleanupTime) return;
 			else lastSize = hooks->size();
 
-		QMetaObject::invokeMethod(this, [this, hooks]
+		QString saveFileName;
+		QMetaObject::invokeMethod(this, [&]
 		{
 			auto hookList = new QListView(this);
 			hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
 			hookList->setAttribute(Qt::WA_DeleteOnClose);
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
-			hookList->setUniformItemSizes(true);
+			hookList->setUniformItemSizes(true); // they aren't actually uniform, but this improves performance
+			hooks->push_back(QString(2000, '-')); // dumb hack: with uniform item sizes, the last item is assumed to be the largest
 			hookList->setModel(new QStringListModel(*hooks, hookList));
-			connect(hookList, &QListView::clicked, [this, hookList](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
+			connect(hookList, &QListView::clicked, [this](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
 			hookList->show();
 
-			QString saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES);
-			if (!saveFileName.isEmpty())
-			{
-				QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
-				for (const auto& hook : *hooks)	saveFile.write(hook.toUtf8().append('\n')); // might OOM with .join('\n')
-			}
-			hooks->clear();
-		});		
+			saveFileName = QFileDialog::getSaveFileName(this, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES);
+		}, Qt::BlockingQueuedConnection);
+		if (!saveFileName.isEmpty())
+		{
+			QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
+			for (auto hook = hooks->cbegin(); hook != hooks->cend(); ++hook) saveFile.write(hook->toUtf8().append('\n')); // QStringList::begin() makes a copy
+		}
+		hooks->clear();
 	}).detach();
 }
 
