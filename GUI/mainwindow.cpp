@@ -542,8 +542,11 @@ void MainWindow::FindHooks()
 			hookList->setAttribute(Qt::WA_DeleteOnClose);
 			hookList->resize({ 750, 300 });
 			hookList->setWindowTitle(SEARCH_FOR_HOOKS);
-			hookList->setUniformItemSizes(true); // they aren't actually uniform, but this improves performance
-			hooks->push_back(QString(2000, '-')); // dumb hack: with uniform item sizes, the last item is assumed to be the largest
+			if (hooks->size() > 5'000)
+			{
+				hookList->setUniformItemSizes(true); // they aren't actually uniform, but this improves performance
+				hooks->push_back(QString(2000, '-')); // dumb hack: with uniform item sizes, the last item is assumed to be the largest
+			}
 			hookList->setModel(new QStringListModel(*hooks, hookList));
 			connect(hookList, &QListView::clicked, [this](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
 			hookList->show();

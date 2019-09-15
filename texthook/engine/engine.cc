@@ -16951,7 +16951,6 @@ bool FindPPSSPP()
 				spDefault.minAddress = 0;
 				spDefault.maxAddress = -1ULL;
 				spDefault.padding = (uintptr_t)probe - 0x8000000;
-				spDefault.maxRecords = 500'000;
 				spDefault.hookPostProcessor = [](HookParam& hp)
 				{
 					hp.type |= NO_CONTEXT | USING_SPLIT | SPLIT_INDIRECT;

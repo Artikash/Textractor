@@ -16,7 +16,7 @@ namespace
 {
 	SearchParam sp;
 
-	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 0x40000, GOOD_PAGE = -1;
+	constexpr int MAX_STRING_SIZE = 500, CACHE_SIZE = 749993, GOOD_PAGE = -1;
 	struct HookRecord
 	{
 		uint64_t address = 0;
@@ -198,8 +198,10 @@ void SearchForHooks(SearchParam spUser)
 
 		sp = spUser.length == 0 ? spDefault : spUser;
 
-		try { records = std::make_unique<HookRecord[]>(recordsAvailable = sp.maxRecords); }
-		catch (std::bad_alloc) { return ConsoleOutput("Textractor: SearchForHooks ERROR (out of memory)"); }
+		do
+			try { records = std::make_unique<HookRecord[]>(recordsAvailable = sp.maxRecords); }
+			catch (std::bad_alloc) { ConsoleOutput("Textractor: SearchForHooks ERROR: out of memory, retrying to allocate %d", sp.maxRecords /= 2); }
+		while (!records && sp.maxRecords);
 
 		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
 		uintptr_t moduleStopAddress = moduleStartAddress;
