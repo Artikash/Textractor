@@ -10,8 +10,6 @@ extern const char* OUT_OF_RECORDS_RETRY;
 extern const char* NOT_ENOUGH_TEXT;
 extern const char* COULD_NOT_FIND;
 
-extern WinMutex viewMutex;
-
 namespace
 {
 	SearchParam sp;
@@ -26,7 +24,6 @@ namespace
 	std::unique_ptr<HookRecord[]> records;
 	long recordsAvailable;
 	uint64_t signatureCache[CACHE_SIZE] = {};
-	long sumCache[CACHE_SIZE] = {};
 	uintptr_t pageCache[CACHE_SIZE] = {};
 
 #ifndef _WIN64
@@ -149,18 +146,15 @@ void Send(char** stack, uintptr_t address)
 				uint64_t signature = ((uint64_t)i << 56) | ((uint64_t)(str[2] + str[3]) << 48) | address;
 				if (signatureCache[signature % CACHE_SIZE] == signature) continue;
 				signatureCache[signature % CACHE_SIZE] = signature;
-				// if there are huge amount of strings that are the same, it's probably garbage: filter them out
-				// can't store all the strings, so use sum as heuristic instead
-				if (_InterlockedIncrement(sumCache + (sum % CACHE_SIZE)) > 25) continue;
-				long n = _InterlockedDecrement(&recordsAvailable);
-				if (n > 0)
+				long n = sp.maxRecords - _InterlockedDecrement(&recordsAvailable);
+				if (n < sp.maxRecords)
 				{
 					records[n].address = address;
 					records[n].offset = i * sizeof(char*);
 					for (int j = 0; j < length; ++j) records[n].text[j] = str[j];
 					records[n].text[length] = 0;
 				}
-				if (n == 0)
+				if (n == sp.maxRecords)
 				{
 					spDefault.maxRecords = sp.maxRecords * 2;
 					ConsoleOutput(OUT_OF_RECORDS_RETRY);
@@ -195,6 +189,7 @@ void SearchForHooks(SearchParam spUser)
 	{
 		static std::mutex m;
 		std::scoped_lock lock(m);
+		*(void**)(trampoline + send_offset) = Send;
 
 		sp = spUser.length == 0 ? spDefault : spUser;
 
@@ -202,6 +197,11 @@ void SearchForHooks(SearchParam spUser)
 			try { records = std::make_unique<HookRecord[]>(recordsAvailable = sp.maxRecords); }
 			catch (std::bad_alloc) { ConsoleOutput("Textractor: SearchForHooks ERROR: out of memory, retrying to allocate %d", sp.maxRecords /= 2); }
 		while (!records && sp.maxRecords);
+
+		ConsoleOutput(STARTING_SEARCH);
+		std::vector<uint64_t> addresses;
+		if (*sp.module) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.module));
+		else for (auto& addr : addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress)) addr += sp.offset;
 
 		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
 		uintptr_t moduleStopAddress = moduleStartAddress;
@@ -212,13 +212,8 @@ void SearchForHooks(SearchParam spUser)
 			moduleStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
 		} while (info.Protect >= PAGE_EXECUTE);
 		moduleStopAddress -= info.RegionSize;
-
-		ConsoleOutput(STARTING_SEARCH);
-		std::vector<uint64_t> addresses;
-		if (*sp.module) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.module));
-		else for (auto& addr : addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress)) addr += sp.offset;
 		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr) { return addr > moduleStartAddress && addr < moduleStopAddress; }), addresses.end());
-		*(void**)(trampoline + send_offset) = Send;
+
 		auto trampolines = (decltype(trampoline)*)VirtualAlloc(NULL, sizeof(trampoline) * addresses.size(), MEM_COMMIT, PAGE_READWRITE);
 		VirtualProtect(trampolines, addresses.size() * sizeof(trampoline), PAGE_EXECUTE_READWRITE, DUMMY);
 		for (int i = 0; i < addresses.size(); ++i)
@@ -227,7 +222,7 @@ void SearchForHooks(SearchParam spUser)
 			MH_CreateHook((void*)addresses[i], trampolines[i], &original);
 			MH_QueueEnableHook((void*)addresses[i]);
 			memcpy(trampolines[i], trampoline, sizeof(trampoline));
-			*(uintptr_t*)(trampolines[i] + addr_offset) = addresses[i];
+			*(uintptr_t*)(trampolines[i] + addr_offset) = addresses[i]; 
 			*(void**)(trampolines[i] + original_offset) = original;
 		}
 		ConsoleOutput(HOOK_SEARCH_INITIALIZED, addresses.size());
@@ -253,7 +248,7 @@ void SearchForHooks(SearchParam spUser)
 		}
 		records.reset();
 		VirtualFree(trampolines, 0, MEM_RELEASE);
-		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = pageCache[i] = 0;
+		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = 0;
 	}).detach();
 }
 
