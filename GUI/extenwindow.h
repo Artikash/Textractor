@@ -34,5 +34,3 @@ private:
 
 	Ui::ExtenWindow* ui;
 };
-
-inline HMODULE LoadLibraryOnce(std::wstring fileName) { if (HMODULE module = GetModuleHandleW(fileName.c_str())) return module; return LoadLibraryW(fileName.c_str()); }

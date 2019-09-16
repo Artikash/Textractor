@@ -309,7 +309,7 @@ void MainWindow::LaunchProcess()
 	PROCESS_INFORMATION info = {};
 	if (!x64 && QMessageBox::question(this, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
 	{
-		if (HMODULE localeEmulator = LoadLibraryOnce(L"LoaderDll"))
+		if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
 		{
 			// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
 			struct

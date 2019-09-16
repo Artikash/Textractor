@@ -19,8 +19,6 @@ private:
 	inline static constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 	inline static constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
 
-	inline static thread_local bool ok = false;
-
 	void closeEvent(QCloseEvent*) override;
 	void ProcessConnected(DWORD processId);
 	void ProcessDisconnected(DWORD processId);

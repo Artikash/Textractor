@@ -36,7 +36,7 @@ namespace
 		{
 			if (HMODULE module = LoadLibraryW(S(extenName).c_str()))
 			{
-				if (auto callback = (decltype(Extension::callback))GetProcAddress(LoadLibraryOnce(S(extenName)), "OnNewSentence"))
+				if (auto callback = (decltype(Extension::callback))GetProcAddress(module, "OnNewSentence"))
 				{
 					std::scoped_lock writeLock(extenMutex);
 					extensions.push_back({ S(extenName), callback });

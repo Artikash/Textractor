@@ -59,7 +59,6 @@ protected:
 private:
 	void RequestFont()
 	{
-		bool ok;
 		if (QFont font = QFontDialog::getFont(&ok, ui.display->font(), this, FONT); ok)
 		{
 			settings.setValue(FONT, font.toString());
