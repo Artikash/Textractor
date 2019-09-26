@@ -101,6 +101,7 @@ public:
 	ExtraWindow() :
 		PrettyWindow("Extra Window")
 	{
+		ui.display->setTextFormat(Qt::PlainText);
 		setGeometry(settings.value(WINDOW, geometry()).toRect());
 
 		for (auto [name, default, slot] : Array<std::tuple<const char*, bool, void(ExtraWindow::*)(bool)>>{
@@ -261,9 +262,11 @@ private:
 			UpdateDictionary();
 			definitions.clear();
 			definitionIndex = 0;
+			std::unordered_set<std::string_view> definitionSet;
 			for (QByteArray utf8term = term.left(200).toUtf8(); !utf8term.isEmpty(); utf8term.chop(1))
 				for (auto [it, end] = std::equal_range(dictionary.begin(), dictionary.end(), DictionaryEntry{ utf8term }); it != end; ++it)
-					definitions.push_back(QStringLiteral("<h3>%1 (%3/%4)</h3>%2").arg(utf8term, it->definition));
+					if (definitionSet.emplace(it->definition).second)
+						definitions.push_back(QStringLiteral("<h3>%1 (%3/%4)</h3>%2").arg(utf8term, it->definition));
 			for (int i = 0; i < definitions.size(); ++i) definitions[i] = definitions[i].arg(i + 1).arg(definitions.size());
 			ShowDefinition();
 		}
