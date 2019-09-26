@@ -12587,6 +12587,12 @@ static bool InsertNewPal2Hook()
 bool InsertPalHook() // use Old Pal first, which does not have ruby
 { 
 	PcHooks::hookOtherPcFunctions();
+	HookParam hp = {};
+	hp.type = USING_STRING | MODULE_OFFSET | FUNCTION_OFFSET;
+	wcscpy_s(hp.module, L"Pal.dll");
+	strcpy_s(hp.function, "PalFontDrawText");
+	hp.offset = 8;
+	NewHook(hp, "PalFontDrawText");
 	return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); 
 }
 
@@ -16951,6 +16957,7 @@ bool FindPPSSPP()
 				spDefault.minAddress = 0;
 				spDefault.maxAddress = -1ULL;
 				spDefault.padding = (uintptr_t)probe - 0x8000000;
+				spDefault.maxRecords = 500'000;
 				spDefault.hookPostProcessor = [](HookParam& hp)
 				{
 					hp.type |= NO_CONTEXT | USING_SPLIT | SPLIT_INDIRECT;
