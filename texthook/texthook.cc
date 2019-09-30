@@ -252,9 +252,13 @@ void TextHook::Read()
 				break;
 			}
 
-			dataLen = min(HookStrlen((BYTE*)location), TEXT_BUFFER_SIZE);
-			memcpy(buffer, location, dataLen);
-			TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
+			if (int currentLen = HookStrlen((BYTE*)location))
+			{
+				dataLen = min(currentLen, TEXT_BUFFER_SIZE);
+				memcpy(buffer, location, dataLen);
+				TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
+			}
+			else changeCount = 0;
 		}
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
@@ -274,7 +278,7 @@ bool TextHook::InsertReadCode()
 void TextHook::RemoveHookCode()
 {
 	MH_DisableHook(location);
-	MH_RemoveHook(location);
+	//MH_RemoveHook(location);
 }
 
 void TextHook::RemoveReadCode()
@@ -287,12 +291,13 @@ void TextHook::RemoveReadCode()
 
 void TextHook::Clear()
 {
-	std::scoped_lock lock(viewMutex);
 	if (address == 0) return;
+	NotifyHookRemove(address, hp.name);
+	std::scoped_lock lock(viewMutex);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
-	NotifyHookRemove(address, hp.name);
-	memset(this, 0, sizeof(TextHook)); // jichi 11/30/2013: This is the original code of ITH
+	memset(&hp, 0, sizeof(HookParam));
+	address = 0;
 }
 
 int TextHook::GetLength(uintptr_t base, uintptr_t in)
