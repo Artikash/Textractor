@@ -292,10 +292,10 @@ void TextHook::RemoveReadCode()
 void TextHook::Clear()
 {
 	if (address == 0) return;
-	NotifyHookRemove(address, hp.name);
-	std::scoped_lock lock(viewMutex);
 	if (hp.type & DIRECT_READ) RemoveReadCode();
 	else RemoveHookCode();
+	NotifyHookRemove(address, hp.name);
+	std::scoped_lock lock(viewMutex);
 	memset(&hp, 0, sizeof(HookParam));
 	address = 0;
 }
