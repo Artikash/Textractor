@@ -12596,6 +12596,33 @@ bool InsertPalHook() // use Old Pal first, which does not have ruby
 	return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); 
 }
 
+bool InsertPONScripterHook()
+{
+	if (DWORD str = MemDbg::findBytes("CBString::Failure in (CBString", 30, processStartAddress, processStopAddress))
+	{
+		if (DWORD calledAt = MemDbg::findBytes(&str, sizeof(str), processStartAddress, processStopAddress))
+		{
+			DWORD funcs[] = { 0xec8b55, 0xe58955 };
+			DWORD addr = MemDbg::findBytes(funcs, 3, calledAt - 0x100, calledAt);
+			if (!addr) addr = MemDbg::findBytes(funcs + 1, 3, calledAt - 0x100, calledAt);
+			if (addr)
+			{
+				HookParam hp = {};
+				hp.address = addr;
+				hp.type = USING_STRING | USING_UTF8 | DATA_INDIRECT;
+				hp.offset = 4;
+				hp.index = 0xc;
+				NewHook(hp, "PONScripter");
+				return true;
+			}
+			else ConsoleOutput("Textractor: failed to find function start");
+		}
+		else ConsoleOutput("Textractor: failed to find string reference");
+	}
+	else ConsoleOutput("Textractor: failed to find string");
+	return false;
+}
+
 /** jichi 7/6/2014 NeXAS
  *  Sample game: BALDRSKYZERO EXTREME
  *
