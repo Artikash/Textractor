@@ -95,7 +95,7 @@ namespace Engine
 								{
 									HookParam hp = {};
 									hp.address = addr;
-									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
+									hp.type = USING_STRING | USING_UNICODE | BLOCK_FLOOD | FULL_STRING;
 									hp.offset = -0x20; // rcx
 									hp.padding = 20;
 									hp.length_fun = [](uintptr_t, uintptr_t data)
