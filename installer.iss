@@ -22,6 +22,7 @@ Name: "tu"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "sc"; MessagesFile: "compiler:Languages\Unofficial\ChineseSimplified.isl"
 Name: "id"; MessagesFile: "compiler:Languages\Unofficial\Indonesian.isl"
 Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+Name: "th"; MessagesFile: "compiler:Languages\Unofficial\Thai.isl"
 
 
 [Files]
@@ -33,3 +34,4 @@ Source: "Builds\Textractor-Turkish-{#VERSION}\*"; DestDir: "{app}"; Languages: t
 Source: "Builds\Textractor-Simplified-Chinese-{#VERSION}\*"; DestDir: "{app}"; Languages: sc; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Indonesian-{#VERSION}\*"; DestDir: "{app}"; Languages: id; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Portuguese-{#VERSION}\*"; DestDir: "{app}"; Languages: pt; Flags: recursesubdirs ignoreversion
+Source: "Builds\Textractor-Thai-{#VERSION}\*"; DestDir: "{app}"; Languages: th; Flags: recursesubdirs ignoreversion
