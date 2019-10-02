@@ -136,9 +136,6 @@ const char* SIZE_LOCK = u8"Size lock";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
 const char* FONT = u8"Font";
-const char* FONT_FAMILY = u8"Font family";
-const char* FONT_SIZE = u8"Font size";
-const char* FONT_WEIGHT = u8"Font weight";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 
@@ -269,7 +266,6 @@ Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contrata
 Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior derecha para cambiar el tamaño)";
 	BG_COLOR = u8"Color de fondo";
 	TEXT_COLOR = u8"Color de texto";
-	FONT_SIZE = u8"Tamaño de letra";
 	TOPMOST = u8"Siempre visible";
 	REGEX_FILTER = u8"Filtro Regex";
 	INVALID_REGEX = u8"Regex inválido";
@@ -335,7 +331,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
 	BG_COLOR = u8"背景颜色";
 	TEXT_COLOR = u8"文本颜色";
-	FONT_SIZE = u8"字体大小";
 	TOPMOST = u8"总是位于最上层";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
@@ -437,9 +432,6 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	BG_COLOR = u8"Цвет заднего фона";
 	TEXT_COLOR = u8"Цвет текста";
 	FONT = u8"Шрифт";
-	FONT_FAMILY = u8"Семейство шрифтов";
-	FONT_SIZE = u8"Размер шрифта";
-	FONT_WEIGHT = u8"Вес шрифта";
 	LUA_INTRO = u8R"(--[[
 ProcessSentence вызывается каждый раз, когда Textractor получает предложение с текстом.
 
@@ -536,7 +528,6 @@ Jika kamu menyukai project ini, tolong sebarluaskan project ini :))";
 Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk mengatur ukuran jendela)";
 	BG_COLOR = u8"Warna latar";
 	TEXT_COLOR = u8"Warna teks";
-	FONT_SIZE = u8"Ukuran teks";
 	TOPMOST = u8"Selalu berada di atas";
 	REGEX_FILTER = u8"Filter regex";
 	INVALID_REGEX = u8"Regex tidak sesuai";
@@ -616,9 +607,6 @@ Apenas funciona se essa extensão for usada diretamente após uma extensão de t
  	BG_COLOR = u8"Cor de fundo";
  	TEXT_COLOR = u8"Cor do Texto";
  	FONT = u8"Fonte";
- 	FONT_FAMILY = u8"Família da Fonte";
- 	FONT_SIZE = u8"Tamanho da Fonte";
- 	FONT_WEIGHT = u8"Peso da Fonte";
  	REGEX_FILTER = u8"Fíltro regex";
   	INVALID_REGEX = u8"Regex inválido";
   	CURRENT_FILTER = u8"Atualmente filtrando: %1";
