@@ -3,7 +3,6 @@
 #else
 #define ARCH "x86"
 #endif
-
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
@@ -622,10 +621,6 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
   	THREAD_LINK_TO = u8"Número do thread para ligar para";
 #endif // PORTUGUESE
 
-
-
-
-
 #ifdef THAI
 	ATTACH = u8"เชื่อมเกม";
 	LAUNCH = u8"เริ่มเกม";
@@ -646,12 +641,12 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
 	MAX_BUFFER_SIZE = u8"ขนาดที่พักข้อมูลสูงสุด";
 	CONSOLE = L"แผงควบคุม";
 	CLIPBOARD = L"ข้อมูลชั่วคราว";
-	const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( ได้ถูกพัฒนาโดย: Artikash (email: akashmozumdar@gmail.com)
-	หน้าเว็บไซต์หลัก: https://github.com/Artikash/Textractor
-	วีดีโอสอนวิถีใช้: https://tinyurl.com/textractor-tutorial
-	ถ้าหากพบเจอปัญหาสามารถติดต่อมาได้ รวมไปถึงการแนะนำฟังก์ชั้นที่อยากให้มี หรือ คำถามเกี่ยวกับโปรแกรม Textractor สามารถติดต่อ
-	ผ่านหน้าเว็บไซต์หลักผ่านทางหน้า Issue หรือทางอีเมลล์
-	Source code สามารถหาได้จากส่วนของ GPLv3 ที่หน้าหลักของเว็บไซต์:))";
+	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( ได้ถูกพัฒนาโดย: Artikash (email: akashmozumdar@gmail.com)
+หน้าเว็บไซต์หลัก: https://github.com/Artikash/Textractor
+วีดีโอสอนวิถีใช้: https://tinyurl.com/textractor-tutorial
+ถ้าหากพบเจอปัญหาสามารถติดต่อมาได้ รวมไปถึงการแนะนำฟังก์ชั้นที่อยากให้มี หรือ คำถามเกี่ยวกับโปรแกรม Textractor สามารถติดต่อ
+ผ่านหน้าเว็บไซต์หลักผ่านทางหน้า Issue หรือทางอีเมลล์
+Source code สามารถหาได้จากส่วนของ GPLv3 ที่หน้าหลักของเว็บไซต์)";
     UPDATE_AVAILABLE = L"มีอัพเดทใหม่ : สามารถดาวน์โหลดได้จาก https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: ได้ถูกเชื่อมแล้ว";
     NEED_32_BIT = L"ระบบปฏิบัติการ Textractor ไม่ถูกต้อง : เฉพาะ Textractor x86 เท่านั่นสามารถเชื่อม Process นี้ได้";
@@ -678,19 +673,13 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
 	TOO_MANY_TRANS_REQUESTS = L"มีการเรียกขอมากเกินกำหนด : ปฏิเสธที่จะทำการขอคำแปลต่อ";
 	TRANSLATION_ERROR = L"เกิดข้อผิดพลาดระหว่างการแปลภาษา";
 	EXTRA_WINDOW_INFO = u8R"(คลิกขวาเพื่อที่จะตั่งค่า 
-	คลิกและลากทางขวาบนของหน้าต่างเพื่อควบคุมหน้าต่าง หรือ ขวาล่างเพื่อที่จะปรับขนาด)";
+คลิกและลากทางขวาบนของหน้าต่างเพื่อควบคุมหน้าต่าง หรือ ขวาล่างเพื่อที่จะปรับขนาด)";
 	BG_COLOR = u8"สีพื่นหลัง";
 	TEXT_COLOR = u8"สีตัวอักษร";
-	FONT_SIZE = u8"ขนาดตัวอักษร";
 	TOPMOST = u8"หน้าต่างอยู่บนโปรแกรมอื่น";
-	const char* SHOW_ORIGINAL = u8"ข้อความดังเดิมก่อนแปลภาษา";
-	const char* SIZE_LOCK = u8"ปรับให้ไม่สามารถเปลี่ยนขนาดได้";
-	const char* BG_COLOR = u8"สีพื่นหลัง";
-	const char* TEXT_COLOR = u8"สีตัวอักษร";
-	const char* FONT = u8"ฟ้อนต์";
-	const char* FONT_FAMILY = u8"Font family";
-	const char* FONT_SIZE = u8"ขนาดของฟ้อนต์";
-	const char* FONT_WEIGHT = u8"น้ำหนักของฟ้อนต์";
+	SHOW_ORIGINAL = u8"ข้อความดังเดิมก่อนแปลภาษา";
+	SIZE_LOCK = u8"ปรับให้ไม่สามารถเปลี่ยนขนาดได้";
+	FONT = u8"ฟ้อนต์";
 #endif // THAI
 
 	return 0;
