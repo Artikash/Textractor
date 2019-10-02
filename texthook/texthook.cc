@@ -278,7 +278,7 @@ bool TextHook::InsertReadCode()
 void TextHook::RemoveHookCode()
 {
 	MH_DisableHook(location);
-	//MH_RemoveHook(location);
+	MH_RemoveHook(location);
 }
 
 void TextHook::RemoveReadCode()
