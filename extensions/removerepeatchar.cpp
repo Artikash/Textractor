@@ -41,14 +41,16 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 TEST(
 	{
+		InfoForExtension nonConsole[] = { { "text number", 1 }, {} };
+
 		std::wstring repeatedChars = L"aaaaaaaaaaaabbbbbbcccdddaabbbcccddd";
-		ProcessSentence(repeatedChars, { SentenceInfo::DUMMY });
+		ProcessSentence(repeatedChars, { nonConsole });
 		assert(repeatedChars.find(L"aaaabbcd") == 0);
 
 		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. はい";
-		ProcessSentence(empty, { SentenceInfo::DUMMY });
-		ProcessSentence(one, { SentenceInfo::DUMMY });
-		ProcessSentence(normal, { SentenceInfo::DUMMY });
+		ProcessSentence(empty, { nonConsole });
+		ProcessSentence(one, { nonConsole });
+		ProcessSentence(normal, { nonConsole });
 		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. はい");
 	}
 );

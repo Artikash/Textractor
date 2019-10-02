@@ -77,20 +77,22 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 TEST(
 	{
+		InfoForExtension nonConsole[] = { { "text number", 1 }, {} };
+
 		std::wstring cyclicRepeats = L"Name: '_abcdefg_abcdefg_abcdefg_abcdefg_abcdefg'";
 		std::wstring buildupRepeats = L"Name: '__a_ab_abc_abcd_abcde_abcdef_abcdefg'";
 		std::wstring breakdownRepeats = L"Name: '_abcdefg_abcdef_abcde_abcd_abc_ab_a_'";
-		ProcessSentence(cyclicRepeats, { SentenceInfo::DUMMY });
-		ProcessSentence(buildupRepeats, { SentenceInfo::DUMMY });
-		ProcessSentence(breakdownRepeats, { SentenceInfo::DUMMY });
+		ProcessSentence(cyclicRepeats, { nonConsole });
+		ProcessSentence(buildupRepeats, { nonConsole });
+		ProcessSentence(breakdownRepeats, { nonConsole });
 		assert(cyclicRepeats == L"Name: '_abcdefg'");
 		assert(buildupRepeats == L"Name: '_abcdefg'");
 		assert(breakdownRepeats == L"Name: '_abcdefg'");
 
 		std::wstring empty = L"", one = L" ", normal = L"This is a normal sentence. はい";
-		ProcessSentence(empty, { SentenceInfo::DUMMY });
-		ProcessSentence(one, { SentenceInfo::DUMMY });
-		ProcessSentence(normal, { SentenceInfo::DUMMY });
+		ProcessSentence(empty, { nonConsole });
+		ProcessSentence(one, { nonConsole });
+		ProcessSentence(normal, { nonConsole });
 		assert(empty == L"" && one == L" " && normal == L"This is a normal sentence. はい");
 	}
 );

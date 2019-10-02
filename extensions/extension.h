@@ -15,10 +15,8 @@ struct SentenceInfo
 	{
 		for (auto info = infoArray; info->name; ++info) // nullptr name marks end of info array
 			if (propertyName == info->name) return info->value;
-		return *(int*)0xcccc = 0; // gives better error message than alternatives
+		return *(int*)0xDEAD = 0; // gives better error message than alternatives
 	}
-
-	inline static InfoForExtension DUMMY[2] = { { "text number", 1 } };
 };
 
 struct SKIP {};
