@@ -3,6 +3,7 @@
 #else
 #define ARCH "x86"
 #endif
+
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
@@ -424,8 +425,8 @@ I'm currently looking for a new job: email me if you know anyone hiring US softw
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
 Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
 	TOPMOST = u8"Поверх всех окон";
-    SHOW_ORIGINAL = u8"Исходный текст";
-    SHOW_ORIGINAL_INFO = u8R"(Исходный текст будет скрыт
+	SHOW_ORIGINAL = u8"Исходный текст";
+	SHOW_ORIGINAL_INFO = u8R"(Исходный текст будет скрыт
 Работает только если это расширение используется после расширения перевода)";
 	SIZE_LOCK = u8"Фиксированный размер";
 	BG_COLOR = u8"Цвет заднего фона";
@@ -572,8 +573,8 @@ Estou a procura de um novo trabalho: por favor enviê-me uma mensagem de e-mail 
 Se você gostou desse projeto, divulgue a todos :))";
 	UPDATE_AVAILABLE = L"Atualização disponível: baixe em https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: já está injetado";
-  	NEED_32_BIT = L"Textractor: arquitetura errada: apenas o Textractor x86 pode injetar neste processo";
- 	NEED_64_BIT = L"Textractor: arquitetura errada: apenas o Textractor x64 pode injetar neste processo";
+	NEED_32_BIT = L"Textractor: arquitetura errada: apenas o Textractor x86 pode injetar neste processo";
+	NEED_64_BIT = L"Textractor: arquitetura errada: apenas o Textractor x64 pode injetar neste processo";
 	INJECT_FAILED = L"Textractor: não pode injetar";
 	LAUNCH_FAILED = L"Textractor: não pode iniciar";
 	INVALID_CODE = L"Textractor: código inválido";
@@ -596,29 +597,29 @@ Se você gostou desse projeto, divulgue a todos :))";
 	SELECT_LANGUAGE_MESSAGE = u8"Qual lingua deve o/a %1 traduzir para?";
 	TOO_MANY_TRANS_REQUESTS = L"Foram feitos pedidos de tradução demais: recusa na feitura de mais pedidos";
 	TRANSLATION_ERROR = L"Erro enquanto traduzindo";
- 	EXTRA_WINDOW_INFO = u8R"(Clique com o botão direito para mudar as opções
+	EXTRA_WINDOW_INFO = u8R"(Clique com o botão direito para mudar as opções
 Clique e arraste nas beiradas da janela para mover, ou no canto inferior direito para redimessionar)";
 	TOPMOST = u8"Sempre em cima";
- 	SHOW_ORIGINAL = u8"Texto original";
- 	SHOW_ORIGINAL_INFO = u8R"(Texto original não será mostrado
+	SHOW_ORIGINAL = u8"Texto original";
+	SHOW_ORIGINAL_INFO = u8R"(Texto original não será mostrado
 Apenas funciona se essa extensão for usada diretamente após uma extensão de tradução)";
- 	SIZE_LOCK = u8"Travar o Tamanho";
- 	BG_COLOR = u8"Cor de fundo";
- 	TEXT_COLOR = u8"Cor do Texto";
- 	FONT = u8"Fonte";
- 	REGEX_FILTER = u8"Fíltro regex";
-  	INVALID_REGEX = u8"Regex inválido";
-  	CURRENT_FILTER = u8"Atualmente filtrando: %1";
-  	REPLACER_INSTRUCTIONS = LR"(Este arquivo apenas faz algo quando a extensão "Replacer" está sendo utilizada.
+	SIZE_LOCK = u8"Travar o Tamanho";
+	BG_COLOR = u8"Cor de fundo";
+	TEXT_COLOR = u8"Cor do Texto";
+	FONT = u8"Fonte";
+	REGEX_FILTER = u8"Fíltro regex";
+	INVALID_REGEX = u8"Regex inválido";
+	CURRENT_FILTER = u8"Atualmente filtrando: %1";
+	REPLACER_INSTRUCTIONS = LR"(Este arquivo apenas faz algo quando a extensão "Replacer" está sendo utilizada.
 Comandos de substituição devem ser formatos da seguinte maneira:
 |ORIG|texto_original|BECOMES|texto_substituido|END|
 Todo texto fora de um comando de substituição é ignorado.
 Espaços contidos no texto original serão ignorados, mas o texto substituído pode conter espaços, novas línhas, etc.
 Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
-  	THREAD_LINKER = u8"Ligador de Threads";
-  	LINK = u8"Ligar";
-  	THREAD_LINK_FROM = u8"Número do thread para ligar de";
-  	THREAD_LINK_TO = u8"Número do thread para ligar para";
+	THREAD_LINKER = u8"Ligador de Threads";
+	LINK = u8"Ligar";
+	THREAD_LINK_FROM = u8"Número do thread para ligar de";
+	THREAD_LINK_TO = u8"Número do thread para ligar para";
 #endif // PORTUGUESE
 
 #ifdef THAI
@@ -647,10 +648,10 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
 ถ้าหากพบเจอปัญหาสามารถติดต่อมาได้ รวมไปถึงการแนะนำฟังก์ชั้นที่อยากให้มี หรือ คำถามเกี่ยวกับโปรแกรม Textractor สามารถติดต่อ
 ผ่านหน้าเว็บไซต์หลักผ่านทางหน้า Issue หรือทางอีเมลล์
 Source code สามารถหาได้จากส่วนของ GPLv3 ที่หน้าหลักของเว็บไซต์)";
-    UPDATE_AVAILABLE = L"มีอัพเดทใหม่ : สามารถดาวน์โหลดได้จาก https://github.com/Artikash/Textractor/releases";
+	UPDATE_AVAILABLE = L"มีอัพเดทใหม่ : สามารถดาวน์โหลดได้จาก https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: ได้ถูกเชื่อมแล้ว";
-    NEED_32_BIT = L"ระบบปฏิบัติการ Textractor ไม่ถูกต้อง : เฉพาะ Textractor x86 เท่านั่นสามารถเชื่อม Process นี้ได้";
-    NEED_64_BIT = L"ระบบปฏิบัติการ Textractor ไม่ถูกต้อง : เฉพาะ Textractor x64 เท่านั่นสามารถเชื่อม Process นี้ได้";
+	NEED_32_BIT = L"ระบบปฏิบัติการ Textractor ไม่ถูกต้อง : เฉพาะ Textractor x86 เท่านั่นสามารถเชื่อม Process นี้ได้";
+	NEED_64_BIT = L"ระบบปฏิบัติการ Textractor ไม่ถูกต้อง : เฉพาะ Textractor x64 เท่านั่นสามารถเชื่อม Process นี้ได้";
 	INJECT_FAILED = L"Textractor: ไม่สามารถเชื่อมได้";
 	LAUNCH_FAILED = L"Textractor: ไม่สามารถเริ่มได้";
 	INVALID_CODE = L"Textractor: รหัสไม่ถูกต้อง";
@@ -681,6 +682,83 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	SIZE_LOCK = u8"ปรับให้ไม่สามารถเปลี่ยนขนาดได้";
 	FONT = u8"ฟ้อนต์";
 #endif // THAI
+
+#ifdef KOREAN
+	ATTACH = u8"게임에 부착";
+	LAUNCH = u8"게임 실행";
+	DETACH = u8"게임에서 탈착";
+	FORGET = u8"게임 저장정보 삭제";
+	ADD_HOOK = u8"후킹주소 추가";
+	REMOVE_HOOKS = u8"후킹주소 삭제";
+	SAVE_HOOKS = u8"후킹주소 저장";
+	SEARCH_FOR_HOOKS = u8"후킹주소 찾기";
+	SETTINGS = u8"설정";
+	EXTENSIONS = u8"확장기능";
+	SELECT_PROCESS = u8"프로세스 선택";
+	ATTACH_INFO = u8R"(부착하려는 게임이 보이지 않는다면, 관리자 권한으로 실행해보세요. 프로세스 id를 입력 할 수도 있습니다.)";
+	SELECT_PROCESS_INFO = u8"직접 프로세스파일 이름을 타이핑한다면, 정확한 경로를 입력하세요";
+	FROM_COMPUTER = u8"컴퓨터로부터 선택";
+	PROCESSES = u8"프로세스 (*.exe)";
+	SAVE_SETTINGS = u8"설정 저장";
+	EXTEN_WINDOW_INSTRUCTIONS = u8R"(확장기능을 추가하려면 리스트에서 오른쪽 클릭하거나 
+		폴더에서 드래그하세요.
+확장기능 순서를 변경하려면 리스트에서 드래그합니다.
+(확장기능은 위부터 순서대로 작동합니다.)
+확장기능을 삭제하려면 delete 를 누르세요.)";
+	ADD_EXTENSION = u8"확장기능 추가";
+	INVALID_EXTENSION = u8"%1 은 유효하지 않은 확장기능입니다.";
+	CONFIRM_EXTENSION_OVERWRITE = u8"다른버전의 동일한 확장기능이 존재합니다. 덮어씌우시겠습니까?";
+	EXTENSION_WRITE_ERROR = u8"확장기능을 저장하는데 실패하였습니다.";
+	USE_JP_LOCALE = u8"일본어 로케일로 에뮬레이트합니까?";
+	HOOK_SEARCH_UNSTABLE_WARNING = u8"후킹주소 찾기는 불안정합니다! 게임의 강제종료에 대비하세요!";
+	SEARCH_CJK = u8"한국어/일본어/중국어 찾기";
+	CODEPAGE = u8"코드페이지";
+	SEARCH_FOR_TEXT = u8"특정 텍스트 찾기";
+	START_HOOK_SEARCH = u8"주소찾기 시작";
+	SAVE_SEARCH_RESULTS = u8"찾기결과 저장";
+	DOUBLE_CLICK_TO_REMOVE_HOOK = u8"더블클릭으로 주소 제거";
+	FILTER_REPETITION = u8"반복문 필터";
+	AUTO_ATTACH = u8"자동 부착";
+	ATTACH_SAVED_ONLY = u8"자동 부착 (저장된 게임만)";
+	SHOW_SYSTEM_PROCESSES = u8"시스템 프로세스 보기";
+	DEFAULT_CODEPAGE = u8"기본 코드페이지";
+	FLUSH_DELAY = u8"플러시 딜레이";
+	MAX_BUFFER_SIZE = u8"최대 버퍼 크기";
+	MAX_HISTORY_SIZE = u8"최대 히스토리 크기";
+	CONSOLE = L"콘솔";
+	CLIPBOARD = L"클립보드";
+	UPDATE_AVAILABLE = L"업데이트가 있습니다:https://github.com/Artikash/Textractor/releases";
+	ALREADY_INJECTED = L"Textractor: 이미 부착되어 있습니다";
+	NEED_32_BIT = L"Textractor: 아키텍쳐 불일치: Textractor x86을 사용해야 합니다";
+	NEED_64_BIT = L"Textractor: 아키텍쳐 불일치: Textractor x64을 사용해야 합니다";
+	INJECT_FAILED = L"Textractor: 부착할 수 없습니다";
+	LAUNCH_FAILED = L"Textractor: 실행할 수 없습니다";
+	INVALID_CODE = L"Textractor: 유효하지 않은 코드";
+	INVALID_CODEPAGE = L"Textractor: 텍스트를 변환할 수 없습니다 (유효하지 않은 코드페이지?)";
+	SELECT_LANGUAGE = u8"언어 선택";
+	SELECT_LANGUAGE_MESSAGE = u8"어떤 언어로 %1 번역하시겠습니까?";
+	TOO_MANY_TRANS_REQUESTS = L"너무 많은 번역요청: 요청 거부됨";
+	TRANSLATION_ERROR = L"번역 에러";
+	EXTRA_WINDOW_INFO = u8R"(오른쪽 클릭으로 설정변경
+드래그로 창 이동이 가능하고, 오른쪽 모서리에서 크기조절이 가능)";
+	TOPMOST = u8"항상 위";
+	SHOW_ORIGINAL = u8"원문";
+	SHOW_ORIGINAL_INFO = u8R"(원문이 출력되지 않음
+이 확장기능이 번역확장기능 이후에 사용될때만 동작함)";
+	SIZE_LOCK = u8"사이즈 고정";
+	BG_COLOR = u8"배경색";
+	TEXT_COLOR = u8"글씨색";
+	FONT = u8"폰트";
+	REGEX_FILTER = u8"정규식 필터";
+	INVALID_REGEX = u8"유효하지 않은 정규식";
+	CURRENT_FILTER = u8"현재 필터중: %1";
+	REPLACER_INSTRUCTIONS = LR"(이 파일은 "Replacer" 확장기능이 작동중일때만 사용됨.
+Replacement commands는 아래 형식을 따라야 함:
+|ORIG|original_text|BECOMES|replacement_text|END|
+이 파일에서 replacement command 바깥의 텍스트는 무시됨.
+original_text의 빈공간은 무시되지만, replacement_text는 공백과 엔터등을 포함 가능.
+이 파일은 유니코드로 저장되어야만 함 (UTF-16 little endian).)";
+#endif // KOREAN
 
 	return 0;
 }();
