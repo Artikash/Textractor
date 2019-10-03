@@ -105,13 +105,13 @@ void SetTrigger()
 
 // - TextHook methods -
 
-bool TextHook::Insert(HookParam h, DWORD set_flag)
+bool TextHook::Insert(HookParam hp, DWORD set_flag)
 {
 	std::scoped_lock lock(viewMutex);
-	hp = h;
-	address = hp.address;
 	hp.type |= set_flag;
 	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
+	this->hp = hp;
+	address = hp.address;
 	if (hp.type & DIRECT_READ) return InsertReadCode();
 	else return InsertHookCode();
 }
@@ -120,6 +120,7 @@ bool TextHook::Insert(HookParam h, DWORD set_flag)
 // - dwDataBase: the stack address
 void TextHook::Send(uintptr_t dwDataBase)
 {
+	_InterlockedIncrement(&useCount);
 	__try
 	{
 		if (trigger) trigger = Engine::InsertDynamicHook(location, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
@@ -134,7 +135,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 		// jichi 10/24/2014: generic hook function
 		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp)) hp.hook_fun = nullptr;
 
-		if (hp.type & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
+		if (hp.type & HOOK_EMPTY) goto done; // jichi 10/24/2014: dummy hook only for dynamic hook
 
 		if (hp.text_fun) {
 			hp.text_fun(dwDataBase, &hp, 0, &dwDataIn, &dwSplit, &dwCount);
@@ -150,7 +151,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
-		if (dwCount == 0) return;
+		if (dwCount == 0) goto done;
 		if (dwCount > TEXT_BUFFER_SIZE) dwCount = TEXT_BUFFER_SIZE;
 		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1) {
@@ -161,13 +162,13 @@ void TextHook::Send(uintptr_t dwDataBase)
 		}
 		else ::memcpy(pbData, (void*)dwDataIn, dwCount);
 
-		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) return;
+		if (hp.filter_fun && !hp.filter_fun(pbData, &dwCount, &hp, 0) || dwCount <= 0) goto done;
 
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
 
 		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, pbData, dwCount);
 #else // _WIN32
-		if (hp.type & HOOK_EMPTY) return; // jichi 10/24/2014: dummy hook only for dynamic hook
+		if (hp.type & HOOK_EMPTY) goto done; // jichi 10/24/2014: dummy hook only for dynamic hook
 		int count = 0;
 		ThreadParam tp = { GetCurrentProcessId(), address, *(uintptr_t*)dwDataBase, 0 }; // first value on stack (if hooked start of function, this is return address)
 		uintptr_t data = *(uintptr_t*)(dwDataBase + hp.offset); // default value
@@ -181,7 +182,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		data += hp.padding;
 		count = GetLength(dwDataBase, data);
-		if (count == 0) return;
+		if (count == 0) goto done;
 		if (count > TEXT_BUFFER_SIZE) count = TEXT_BUFFER_SIZE;
 		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1)
@@ -202,10 +203,13 @@ void TextHook::Send(uintptr_t dwDataBase)
 	{
 		if (!err)
 		{
-			ConsoleOutput(SEND_ERROR);
 			err = true;
+			ConsoleOutput(SEND_ERROR);
+			ConsoleOutput("Textractor: in %s", hp.name);
 		}
 	}
+done:
+	_InterlockedDecrement(&useCount);
 }
 
 bool TextHook::InsertHookCode()
@@ -278,6 +282,7 @@ bool TextHook::InsertReadCode()
 void TextHook::RemoveHookCode()
 {
 	MH_DisableHook(location);
+	while (useCount != 0);
 	MH_RemoveHook(location);
 }
 

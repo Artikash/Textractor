@@ -22,18 +22,16 @@ namespace
 {
 	AutoHandle<> hookPipe = INVALID_HANDLE_VALUE, mappedFile = INVALID_HANDLE_VALUE;
 	TextHook (*hooks)[MAX_HOOK];
-	bool running;
 	int currentHook = 0;
 }
 
 DWORD WINAPI Pipe(LPVOID)
 {
-	while (running)
+	for (bool running = true; running; hookPipe = INVALID_HANDLE_VALUE)
 	{
 		DWORD count = 0;
 		BYTE buffer[PIPE_BUFFER_SIZE] = {};
 		AutoHandle<> hostPipe = INVALID_HANDLE_VALUE;
-		hookPipe = INVALID_HANDLE_VALUE;
 
 		while (!hostPipe || !hookPipe)
 		{
@@ -82,10 +80,10 @@ DWORD WINAPI Pipe(LPVOID)
 			break;
 			}
 	}
-	hookPipe = INVALID_HANDLE_VALUE;
-	for (auto& hook : *hooks) if (hook.address) hook.Clear();
+
+	MH_Uninitialize();
+	for (auto& hook : *hooks) hook.Clear();
 	FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
-	return 0;
 }
 
 void TextOutput(ThreadParam tp, BYTE* text, int len)
@@ -136,16 +134,14 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 		memset(hooks, 0, HOOK_BUFFER_SIZE);
 
 		MH_Initialize();
-		running = true;
 
 		CloseHandle(CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr)); // Using std::thread here = deadlock
 	} 
 	break;
 	case DLL_PROCESS_DETACH:
 	{
-		running = false;
-		UnmapViewOfFile(hooks);
 		MH_Uninitialize();
+		UnmapViewOfFile(hooks);
 	}
 	break;
 	}

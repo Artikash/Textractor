@@ -38,6 +38,7 @@ private:
 	void RemoveHookCode();
 	void RemoveReadCode();
 
+	volatile DWORD useCount;
 	HANDLE readerThread, readerEvent;
 	bool err;
 	BYTE trampoline[x64 ? 140 : 40];
