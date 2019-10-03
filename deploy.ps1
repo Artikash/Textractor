@@ -15,6 +15,7 @@ foreach ($language in @{
 	INDONESIAN="Indonesian";
 	PORTUGUESE="Portuguese";
 	THAI="Thai";
+	KOREAN="Korean";
 }.GetEnumerator())
 {
 	$folder = "Textractor-$($language.Value)-$version";

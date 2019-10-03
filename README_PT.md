@@ -2,7 +2,7 @@
 
 ![Como se Parece](screenshot.png)
 
-[Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [English](README.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
 
 **Textractor** (também conhecido como NextHooker) é um extrator de textos de video-games x86/x64  para Windows/Wine baseado no [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Assista ao [vídeo tutorial](https://tinyurl.com/textractor-tutorial) para uma rápida apresentação de como utilizá-lo.
@@ -52,27 +52,4 @@ Informação adicional sobre os hooks é trocada por meio da memória compartilh
 O texto que o host recebe por meio do pipe é então processado um pouco antes de ser despachado devolta para a IGU/GUI.<br>
 Finalmente, a IGU/GUI despacha o texto para as extensões antes de mostrá-lo.
 
-## Desenvolvedores
-
-Se você está nesta lista e gostaria do link mudado, deixe-me saber.
-- Textractor feito principalmente por [Mim](https://github.com/Artikash) com a ajuda de
-  - [DoumanAsh](https://github.com/DoumanAsh)
-  - [Niakr1s](https://github.com/Niakr1s)
-  - [tinyAdapter](https://github.com/tinyAdapter)
-- Tradução para o Espanhol por [scese250](https://github.com/scese250)
-- Tradução para o Turco por niisokusu
-- Tradução para o Chinês Simplificado (Mandarin) por [tinyAdapter](https://github.com/tinyAdapter)
-- Tradução para o Russo por [TokcDK](https://github.com/TokcDK)
-- Tradução para o Indonésio por [Hawxone](https://github.com/Hawxone)
-- Tradução para o Português por [TsumiHokiro](https://github.com/TsumiHokiro)
-- ITHVNR atualizado por [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), e [IJEMIN](https://github.com/IJEMIN)
-- ITHVNR originalmente criado por [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- VNR engine criado por [jichi](https://archive.is/prJwr)
-- ITH atualizado por [Andys](https://github.com/AndyScull)
-- ITH originalmente criado por [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
-- Locale Emulator library criado por [xupefei](https://github.com/xupefei)
-- MinHook library criado por [TsudaKageyu](https://github.com/TsudaKageyu)
-
-## Agradecimentos Especiais
-
-- Todos que proporam Tarefas!
+## [Desenvolvedores](CREDITS.md)

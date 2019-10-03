@@ -2,10 +2,7 @@
 
 ![How it looks](screenshot.png)
 
-[Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md) ● [Русский](https://github.com/Artikash/Textractor/blob/master/README_RU.md) ●
-[Bahasa](https://github.com/Artikash/Textractor/blob/master/README_ID.md)
-
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
 
 **Textractor** (a.k.a NextHooker) adalah text hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Lihat [video tutorial](https://tinyurl.com/textractor-tutorial) untuk mengetahui bagaimana cara menggunakannya.
@@ -59,22 +56,4 @@ Informasi tambahan tentang hook dipindahkan melewati shared memory.<br>
 Text yang diterima host melewati pipe lalu diproses lagi sebelum dikembalikan ke GUI.<br>
 Dan pada akhirnya, GUI melepas text ke ekstensi sebelum menampilkan teks.
 
-## Pengembang
-
-Jika kamu berada di list ini dan ingin link kamu diganti, beritahu saya.
-- Textractor dibuat oleh saya [Saya](https://github.com/Artikash) and [DoumanAsh](https://github.com/DoumanAsh)
-- Terjemahan bahasa Spanyol oleh [scese250](https://github.com/scese250)
-- Terjemahan bahasa Turki oleh niisokusu
-- Terjemahan bahasa Mandarin oleh [tinyAdapter](https://github.com/tinyAdapter)
-- Terjemahan bahasa Rusia oleh [TokcDK](https://github.com/TokcDK)
-- ITHVNR diperbaharui oleh [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
-- ITHVNR dibuat oleh [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- VNR engine dibuat oleh [jichi](https://archive.is/prJwr)
-- ITH diperbaharui oleh [Andys](https://github.com/AndyScull)
-- ITH dibuat oleh [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
-- Locale Emulator library dibuat oleh [xupefei](https://github.com/xupefei)
-- MinHook library dibuat oleh [TsudaKageyu](https://github.com/TsudaKageyu)
-
-## Special Thanks
-
-- Semua yang berkontribusi pada bagian Issues!
+## [Pengembang](CREDITS.md)

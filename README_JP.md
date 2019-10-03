@@ -1,5 +1,7 @@
 # Textractor
 
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
+
 **Textractor** はビジュアルノベル文字抽出プログラム。
 
 ![How it looks](screenshot.png)

@@ -1,5 +1,7 @@
 # Textractor
 
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
+
 ## 概述
 
 **Textractor** (曾用名: NextHooker) 是一个基于 [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine), 为 Windows/Wine 开发的开源 x86/x64 文本提取器.<br>
@@ -44,22 +46,4 @@ texthook 等待管道连接, 之后向一些文本输出函数 (如 TextOut, Get
 之后, 宿主通过管道接收到的文本在传回 GUI 前被简单处理.<br>
 最后, GUI 在显示文本前将其分发给扩展.
 
-## 开发者
-
-如果你在这个列表上，并且想要改变你的链接，请告诉我.
-
-- 由 [我](https://github.com/Artikash) 和 [DoumanAsh](https://github.com/DoumanAsh) 开发 Textractor
-- 由 [scese250](https://github.com/scese250) 提供西班牙语翻译
-- 由 niisokusu 提供土耳其语翻译
-- 由 [tinyAdapter](https://github.com/tinyAdapter) 提供简体中文翻译
-- 由 [mireado](https://github.com/mireado) 和 [Eguni](https://github.com/Eguni) 提供 ITHVNR 更新
-- 由 [Stomp](http://www.hongfire.com/forum/member/325894-stomp) 开发初版 ITHVNR
-- 由 [jichi](https://archive.is/prJwr) 开发 VNR 引擎
-- 由 [Andys](https://github.com/AndyScull) 提供 ITH 更新
-- 由 [kaosu](http://www.hongfire.com/forum/member/562651-kaosu) 开发初版 ITH
-- 由 [xupefei](https://github.com/xupefei) 开发 Locale Emulator 库
-- 由 [TsudaKageyu](https://github.com/TsudaKageyu) 开发 MinHook 库
-
-## 特别感谢
-
-- 所有添加 issue 的人!
+## [开发者](CREDITS.md)

@@ -2,7 +2,8 @@
 
 ![How it looks](screenshot.png)
 
-[Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ●
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
+
 
 **Textractor** 
 (หรือ NextHooker) คือโปรแกรมโอเพนซอร์ซสำหรับปฏิบัติการที่มีหน้าที่เพื่อเชื่อมกับตัวอักษรกับเกมจากที่มาจากระบบปฏิบัติการ Window/Wine โดยมีแบบดังเดิมมาจาก [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
@@ -48,28 +49,4 @@ ITHVNR รุ่นสุดท้ายสามารถดาวน์โห�
 ตัวอักษรที่ฐานโปรแกรมรับผ่านท่อจะถูกแปลงเล็กน้อยก่อนที่จะแสดงผ่าน GUI <br>
 สุดท้ายแล้ว GUI จะส่งข้อมูลตัวอักษรไปยังส่วนขยายต่างๆก่อนที่จะแสดงให้เห็นในหน้าจอ
 
-## นักพัฒนา
-
-ถ้าหากคุณมีรายชื่ออยู่ด้านล่างและต้องการให้เปลี่ยนสามารถติดต่อเจ้าของได้
-- Textractor ถูกเขียนขึ้นมาโดย [Me](https://github.com/Artikash) และได้รับความช่วยเหลือของ
-  - [DoumanAsh](https://github.com/DoumanAsh)
-  - [Niakr1s](https://github.com/Niakr1s)
-  - [tinyAdapter](https://github.com/tinyAdapter)
-- Spanish แปลโดย [scese250](https://github.com/scese250)
-- Turkish แปลโดย niisokusu
-- Simplified Chinese แปลโดย [tinyAdapter](https://github.com/tinyAdapter)
-- Russian แปลโดย [TokcDK](https://github.com/TokcDK)
-- Indonesian แปลโดย [Hawxone](https://github.com/Hawxone)
-- Portuguese แปลโดย [TsumiHokiro](https://github.com/TsumiHokiro)
-- Thai แปลโดย [AzmaDoppler](https://github.com/azmadoppler)
-- ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
-- ITHVNR originally สร้างโดย [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- VNR engine สร้างโดย [jichi](https://archive.is/prJwr)
-- ITH ถูกอัพเดทโดย [Andys](https://github.com/AndyScull)
-- ITH ถูกสร้างขึ้นโดย [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
-- Locale Emulator library สร้างโดย [xupefei](https://github.com/xupefei)
-- MinHook library สร้างโดย [TsudaKageyu](https://github.com/TsudaKageyu)
-
-## สุดท้ายนี้ขอขอบคุณ
-
-- ทุกคนที่ส่งคำแนะนำ หรือ รายงานปัญหาในหน้า issues!
+## [นักพัฒนา](CREDITS.md)

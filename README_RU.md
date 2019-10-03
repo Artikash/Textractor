@@ -2,10 +2,7 @@
 
 ![Как это выглядит](screenshot.png)
 
-[English/Original](https://github.com/Artikash/Textractor/blob/master/README.md) ● [Español](https://github.com/Artikash/Textractor/blob/master/README_ES.md) ● [简体中文](https://github.com/Artikash/Textractor/blob/master/README_SC.md) ● 
-[日本語](https://github.com/Artikash/Textractor/blob/master/README_JP.md)
-● 
-[Bahasa](https://github.com/Artikash/Textractor/blob/master/README_ID.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [日本語](README_JP.md) ● [Русский](README_RU.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md) ● [ภาษาไทย](README_TH.md) ● [한국어](README_KR.md)
 
 **Textractor** (a.k.a. NextHooker) это проект x86/x64 Windows/Wine программы для захвата текста из видеоигр, основанный на [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Смотреть [обучающее видео](https://tinyurl.com/textractor-tutorial) для быстрого ознакомления.
@@ -55,22 +52,4 @@ texthook ждет присоединения канала, тогда внедр
 Текст, который получает хост через канал, Текст, который хост получает через канал, затем немного обрабатывается перед отправкой обратно в графический интерфейс (GUI).<br>
 Наконец, GUI откправляет текст расширениям, перед его отображением.
 
-## Разработчики
-
-Если вы в этом списке и хотите, чтобы ваша ссылка была изменена, сообщите об этом.
-- Авторы Textractor: [Artikash](https://github.com/Artikash) и [DoumanAsh](https://github.com/DoumanAsh)
-- Испанская локализация: [scese250](https://github.com/scese250)
-- Турецкая локализация: niisokusu
-- Китайская локализация: [tinyAdapter](https://github.com/tinyAdapter)
-- Русская локализация: [TokcDK](https://github.com/TokcDK)
-- Обновление ITHVNR: [mireado](https://github.com/mireado) and [Eguni](https://github.com/Eguni)
-- Автор ITHVNR: [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
-- Автор движка VNR: [jichi](https://archive.is/prJwr)
-- Обновление ITH: [Andys](https://github.com/AndyScull)
-- Автор ITH: [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
-- Автор библиотеки Locale Emulator: [xupefei](https://github.com/xupefei)
-- Автор библиотеки MinHook: [TsudaKageyu](https://github.com/TsudaKageyu)
-
-## Особая благодарность
-
-- Всем, кто пишет о проблемах и предложения в секции Issues!
+## [Разработчики](CREDITS.md)
