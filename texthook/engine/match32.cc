@@ -80,7 +80,7 @@ bool DeterminePCEngine()
 
 bool DetermineEngineByFile1()
 {
-	if (Util::SearchResourceString(L"Proportional ONScripter"))
+	if (Util::SearchResourceString(L"Proportional ONScripter") || Util::SearchResourceString(L"ponscr.exe"))
 	{
 		InsertPONScripterHook();
 		return true;
