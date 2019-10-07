@@ -46,8 +46,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	// This algorithm looks for repeating substrings (in other words, common prefixes among the set of suffixes) of the sentence with length > 6
 	// It then looks for any regions of characters at least twice as long as the substring made up only of characters in the substring, and erases them
 	// If this results in the substring being completely erased from the string, the substring is copied to the last location where it was located in the original string
+	auto timeout = GetTickCount64() + 30'000; // give up if taking over 30 seconds
 	std::vector<int> suffixArray = GenerateSuffixArray(sentence);
-	for (int i = 0; i + 1 < sentence.size(); ++i)
+	for (int i = 0; i + 1 < sentence.size() && GetTickCount64() < timeout; ++i)
 	{
 		int commonPrefixLength = 0;
 		for (int j = suffixArray[i], k = suffixArray[i + 1]; j < sentence.size() && k < sentence.size(); ++j, ++k)
