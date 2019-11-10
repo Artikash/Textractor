@@ -301,6 +301,20 @@ bool SearchResourceString(LPCWSTR str)
   return false;
 }
 
+std::pair<uint64_t, uint64_t> QueryModuleLimits(HMODULE module)
+{
+	uintptr_t moduleStartAddress = (uintptr_t)module + 0x1000;
+	uintptr_t moduleStopAddress = moduleStartAddress;
+	MEMORY_BASIC_INFORMATION info;
+	do
+	{
+		VirtualQuery((void*)moduleStopAddress, &info, sizeof(info));
+		moduleStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
+	} while (info.Protect >= PAGE_EXECUTE);
+	moduleStopAddress -= info.RegionSize;
+	return { moduleStartAddress, moduleStopAddress };
+}
+
 std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protect, uintptr_t minAddr, uintptr_t maxAddr)
 {
 	SYSTEM_INFO systemInfo;

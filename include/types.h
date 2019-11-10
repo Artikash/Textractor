@@ -60,14 +60,16 @@ struct ThreadParam
 
 struct SearchParam
 {
-	BYTE pattern[PATTERN_SIZE] = { 0xcc, 0xcc, x64 ? 0x48 : 0x55, x64 ? 0x89 : 0x8b, 0xec }; // pattern in memory to search for
-	int length = x64 ? 4 : 5, // length of pattern (zero means this SearchParam is invalid and the default should be used)
-		offset = 2, // offset from start of pattern to add hook
+	BYTE pattern[PATTERN_SIZE] = { x64 ? 0xcc : 0x55, x64 ? 0xcc : 0x8b, x64 ? 0x48 : 0xec, 0x89 }; // pattern in memory to search for
+	int length = x64 ? 4 : 3, // length of pattern (zero means this SearchParam is invalid and the default should be used)
+		offset = x64 ? 2 : 0, // offset from start of pattern to add hook
 		searchTime = 20000, // ms
 		maxRecords = 100000,
 		codepage = SHIFT_JIS;
-	uintptr_t padding = 0, minAddress = 0, maxAddress = (uintptr_t)-1;
-	wchar_t module[MAX_MODULE_SIZE] = {};
+	uintptr_t padding = 0, // same as hook param padding
+		minAddress = 0, maxAddress = (uintptr_t)-1; // hook all functions between these addresses (used only if both modules empty)
+	wchar_t boundaryModule[MAX_MODULE_SIZE] = {}; // hook all functions within this module (middle priority)
+	wchar_t exportModule[MAX_MODULE_SIZE] = {}; // hook the exports of this module (highest priority)
 	wchar_t text[PATTERN_SIZE] = {}; // text to search for
 	void(*hookPostProcessor)(HookParam&) = nullptr;
 };

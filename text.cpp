@@ -53,6 +53,7 @@ const char* HOOK_SEARCH_UNSTABLE_WARNING = u8"Searching for hooks is unstable! B
 const char* SEARCH_CJK = u8"Search for Chinese/Japanese/Korean";
 const char* SEARCH_PATTERN = u8"Search pattern (hex byte array)";
 const char* SEARCH_DURATION = u8"Search duration (ms)";
+const char* SEARCH_MODULE = u8"Search within module";
 const char* PATTERN_OFFSET = u8"Offset from pattern start";
 const char* MAX_HOOK_SEARCH_RECORDS = u8"Search result cap";
 const char* MIN_ADDRESS = u8"Minimum address (hex)";

@@ -31,6 +31,7 @@ extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
 extern const char* SEARCH_CJK;
 extern const char* SEARCH_PATTERN;
 extern const char* SEARCH_DURATION;
+extern const char* SEARCH_MODULE;
 extern const char* PATTERN_OFFSET;
 extern const char* MIN_ADDRESS;
 extern const char* MAX_ADDRESS;
@@ -471,7 +472,7 @@ void MainWindow::FindHooks()
 	{
 		QDialog dialog(this, Qt::WindowCloseButtonHint);
 		QFormLayout layout(&dialog);
-		QLineEdit patternInput(x64 ? "CC CC 48 89" : "CC CC 55 8B EC", &dialog);
+		QLineEdit patternInput(x64 ? "CC CC 48 89" : "55 8B EC", &dialog);
 		assert(QByteArray::fromHex(patternInput.text().toUtf8()) == QByteArray((const char*)sp.pattern, sp.length));
 		layout.addRow(SEARCH_PATTERN, &patternInput);
 		for (auto [value, label] : Array<std::tuple<int&, const char*>>{
@@ -487,6 +488,8 @@ void MainWindow::FindHooks()
 			layout.addRow(label, spinBox);
 			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value](int newValue) { value = newValue; });
 		}
+		QLineEdit boundInput(QFileInfo(S(Util::GetModuleFilename(GetSelectedProcessId()).value_or(L""))).fileName(), &dialog);
+		layout.addRow(SEARCH_MODULE, &boundInput);
 		for (auto [value, label] : Array<std::tuple<uintptr_t&, const char*>>{
 			{ sp.minAddress, MIN_ADDRESS },
 			{ sp.maxAddress, MAX_ADDRESS },
@@ -505,7 +508,7 @@ void MainWindow::FindHooks()
 		if (!dialog.exec()) return;
 		if (patternInput.text().contains('.'))
 		{
-			wcsncpy_s(sp.module, S(patternInput.text()).c_str(), MAX_MODULE_SIZE - 1);
+			wcsncpy_s(sp.exportModule, S(patternInput.text()).c_str(), MAX_MODULE_SIZE - 1);
 			sp.length = 1;
 		}
 		else
@@ -513,6 +516,7 @@ void MainWindow::FindHooks()
 			QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
 			memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), PATTERN_SIZE));
 		}
+		wcsncpy_s(sp.boundaryModule, S(boundInput.text()).c_str(), MAX_MODULE_SIZE - 1);
 		try { filter = S(filterInput.text()); } catch (std::regex_error) {}
 	}
 	else

@@ -200,19 +200,12 @@ void SearchForHooks(SearchParam spUser)
 
 		ConsoleOutput(STARTING_SEARCH);
 		std::vector<uint64_t> addresses;
-		if (*sp.module) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.module));
+		if (*sp.boundaryModule) std::tie(sp.minAddress, sp.maxAddress) = Util::QueryModuleLimits(GetModuleHandleW(sp.boundaryModule));
+		if (*sp.exportModule) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.exportModule));
 		else for (auto& addr : addresses = Util::SearchMemory(sp.pattern, sp.length, PAGE_EXECUTE, sp.minAddress, sp.maxAddress)) addr += sp.offset;
 
-		uintptr_t moduleStartAddress = (uintptr_t)GetModuleHandleW(ITH_DLL);
-		uintptr_t moduleStopAddress = moduleStartAddress;
-		MEMORY_BASIC_INFORMATION info;
-		do
-		{
-			VirtualQuery((void*)moduleStopAddress, &info, sizeof(info));
-			moduleStopAddress = (uintptr_t)info.BaseAddress + info.RegionSize;
-		} while (info.Protect >= PAGE_EXECUTE);
-		moduleStopAddress -= info.RegionSize;
-		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr) { return addr > moduleStartAddress && addr < moduleStopAddress; }), addresses.end());
+		auto limits = Util::QueryModuleLimits(GetModuleHandleW(ITH_DLL));
+		addresses.erase(std::remove_if(addresses.begin(), addresses.end(), [&](uint64_t addr) { return addr > limits.first && addr < limits.second; }), addresses.end());
 
 		auto trampolines = (decltype(trampoline)*)VirtualAlloc(NULL, sizeof(trampoline) * addresses.size(), MEM_COMMIT, PAGE_READWRITE);
 		VirtualProtect(trampolines, addresses.size() * sizeof(trampoline), PAGE_EXECUTE_READWRITE, DUMMY);
