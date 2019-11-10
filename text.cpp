@@ -135,6 +135,10 @@ Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size lock";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
+const char* TEXT_OUTLINE = u8"Text outline";
+const char* OUTLINE_COLOR = u8"Outline color";
+const char* OUTLINE_SIZE = u8"Outline size";
+const char* OUTLINE_SIZE_INFO = u8"Size in pixels (recommended to stay below 20% of the font size)";
 const char* FONT = u8"Font";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.

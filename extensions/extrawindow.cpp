@@ -9,6 +9,7 @@
 #include <QFontDialog>
 #include <QMenu>
 #include <QPainter>
+#include <QGraphicsEffect>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -21,6 +22,10 @@ extern const char* DICTIONARY;
 extern const char* DICTIONARY_INSTRUCTIONS;
 extern const char* BG_COLOR;
 extern const char* TEXT_COLOR;
+extern const char* TEXT_OUTLINE;
+extern const char* OUTLINE_COLOR;
+extern const char* OUTLINE_SIZE;
+extern const char* OUTLINE_SIZE_INFO;
 extern const char* FONT;
 extern const char* SAVE_SETTINGS;
 
@@ -31,6 +36,7 @@ struct PrettyWindow : QDialog
 	PrettyWindow(const char* name)
 	{
 		ui.setupUi(this);
+		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
 
@@ -39,9 +45,14 @@ struct PrettyWindow : QDialog
 		if (font.fromString(settings.value(FONT, font.toString()).toString())) ui.display->setFont(font);
 		setBgColor(settings.value(BG_COLOR, bgColor).value<QColor>());
 		setTextColor(settings.value(TEXT_COLOR, textColor()).value<QColor>());
+		outliner.color = settings.value(OUTLINE_COLOR, outliner.color).value<QColor>();
+		outliner.size = settings.value(OUTLINE_SIZE, outliner.size).toDouble();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
 		menu.addAction(BG_COLOR, [this] { setBgColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
 		menu.addAction(TEXT_COLOR, [this] { setTextColor(QColorDialog::getColor(textColor(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
+		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::setOutline);
+		outlineAction->setCheckable(true);
+		outlineAction->setChecked(outliner.size >= 0);
 		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
 	}
 
@@ -72,7 +83,7 @@ private:
 		if (color.alpha() == 0) color.setAlpha(1);
 		bgColor = color;
 		repaint();
-		settings.setValue(BG_COLOR, "#" + QString::number(color.rgba(), 16));
+		settings.setValue(BG_COLOR, color.name(QColor::HexArgb));
 	};
 
 	QColor textColor()
@@ -84,8 +95,21 @@ private:
 	{
 		if (!color.isValid()) return;
 		ui.display->setPalette(QPalette(color, {}, {}, {}, {}, {}, {}));
-		settings.setValue(TEXT_COLOR, "#" + QString::number(color.rgba(), 16));
+		settings.setValue(TEXT_COLOR, color.name(QColor::HexArgb));
 	};
+
+	void setOutline(bool enable)
+	{
+		if (enable)
+		{
+			QColor color = QColorDialog::getColor(outliner.color, this, OUTLINE_COLOR, QColorDialog::ShowAlphaChannel);
+			if (color.isValid()) outliner.color = color;
+			outliner.size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, 0.5, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
+		}
+		else outliner.size = -1;
+		settings.setValue(OUTLINE_COLOR, outliner.color.name(QColor::HexArgb));
+		settings.setValue(OUTLINE_SIZE, outliner.size);
+	}
 
 	void paintEvent(QPaintEvent*) override
 	{
@@ -93,6 +117,27 @@ private:
 	}
 
 	QColor bgColor{ palette().window().color() };
+	struct : QGraphicsEffect
+	{
+		void draw(QPainter* painter) override
+		{
+			if (size < 0) return drawSource(painter);
+			QPoint offset;
+			QPixmap pixmap = sourcePixmap(Qt::LogicalCoordinates, &offset);
+			offset.setX(offset.x() + size);
+			for (auto offset2 : Array<QPointF>{ { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } })
+			{
+				QImage outline = pixmap.toImage();
+				QPainter outlinePainter(&outline);
+				outlinePainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+				outlinePainter.fillRect(outline.rect(), color);
+				painter->drawImage(offset + offset2 * size, outline);
+			}
+			painter->drawPixmap(offset, pixmap);
+		}
+		QColor color{ Qt::black };
+		double size = -1;
+	} outliner;
 };
 
 class ExtraWindow : public PrettyWindow
