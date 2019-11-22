@@ -5558,6 +5558,7 @@ AtelierKaguya hook:
 ********************************************************************************************/
 bool InsertAtelierHook()
 {
+	PcHooks::hookOtherPcFunctions(); // lstrlenA gives good hook too
   //SafeFillRange(processName, &base, &size);
   //size=size-base;
   //DWORD sig = 0x40c683; // add esi,0x40
