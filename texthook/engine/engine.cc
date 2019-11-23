@@ -6332,7 +6332,7 @@ static bool InsertYuris2Hook()
 bool InsertYurisHook()
 { return InsertYuris1Hook() || InsertYuris2Hook(); }
 
-bool InsertCotophaHook()
+bool InsertCotophaHook1()
 {
   enum : DWORD { ins = 0xec8b55 }; // mov ebp,esp, sub esp,*  ; jichi 7/12/2014
   ULONG addr = MemDbg::findCallerAddress((ULONG)::GetTextMetricsA, ins, processStartAddress, processStopAddress);
@@ -6349,6 +6349,30 @@ bool InsertCotophaHook()
   NewHook(hp, "Cotopha");
   //RegisterEngineType(ENGINE_COTOPHA);
   return true;
+}
+
+bool InsertCotophaHook2()
+{
+	if (void* addr = GetProcAddress(GetModuleHandleW(NULL), "eslHeapFree"))
+	{
+		HookParam hp = {};
+		hp.address = (uintptr_t)addr;
+		hp.offset = 8;
+		hp.type = USING_UNICODE | USING_STRING;
+		hp.filter_fun = [](void* data, DWORD* len, HookParam*, BYTE)
+		{
+			return std::wstring_view((wchar_t*)data, *len / sizeof(wchar_t)).find(L'\\') != std::wstring_view::npos;
+		};
+		ConsoleOutput("Textractor: INSERT Cotopha 2");
+		NewHook(hp, "Cotopha2");
+		return true;
+	}
+	return false;
+}
+
+bool InsertCotophaHook()
+{
+	return InsertCotophaHook1() | InsertCotophaHook2();
 }
 
 // jichi 5/10/2014
