@@ -214,7 +214,7 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]
 	{
 		auto scrollbar = ui->textOutput->verticalScrollBar();
-		bool atBottom = scrollbar->value() == scrollbar->maximum();
+		bool atBottom = scrollbar->value() + 3 > scrollbar->maximum() || (double)scrollbar->value() / scrollbar->maximum() > 0.975; // arbitrary
 		QTextCursor cursor(ui->textOutput->document());
 		cursor.movePosition(QTextCursor::End);
 		cursor.insertText(sentence);
