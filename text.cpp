@@ -83,7 +83,6 @@ Tutorial video: https://tinyurl.com/textractor-tutorial
 Please contact me with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
-I'm currently looking for a new job: email me if you know anyone hiring US software engineers
 If you like this project, please tell everyone about it :))";
 const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
 example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
@@ -196,8 +195,7 @@ static auto _ = []
 Benim tarafımdan yapıldı: Artikash (e-posta: akashmozumdar@gmail.com)
 Textractor ile ilgili tüm sorunlarınız, istekleriniz ve sorularınız için lütfen benimle iletişime geçin
 Benimle, proje ana sayfasından (“issues” kısmından) ya da e-posta aracılığıyla iletişime geçebilirsiniz
-Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut
-Şu anda iş aramaktayım: Eğer ABD’li yazılım mühendislerini işe alıyorsanız lütfen bana e-posta atın)";
+Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut)";
 	UPDATE_AVAILABLE = L"Güncelleme mevcut: https://github.com/Artikash/Textractor/releases adresinden indirin";
 	ALREADY_INJECTED = L"Textractor: Zaten enjekte edili";
 	NEED_32_BIT = L"Textractor: Mimari uyumsuzluğu: Lütfen Textractor’ın 32 bitlik sürümünü deneyin";
@@ -242,8 +240,7 @@ Página del proyecto: https://github.com/Artikash/Textractor
 Video tutorial: https://tinyurl.com/textractor-tutorial
 No dudes en conectarme si tienes algún problema, petición de característica o preguntas relacionadas con Textractor
 Puedes hacerlo en la página del proyecto (en el apartado de "Issues") o por correo. Usa el inglés para comunicarte.
-Código fuente disponible bajo GPLv3 en la página del proyecto
-Estoy buscando un nuevo trabajo: por favor envíame un correo si estás contratando ingenieros de software de EE.UU.)";
+Código fuente disponible bajo GPLv3 en la página del proyecto)";
 	UPDATE_AVAILABLE = L"Actualización disponible: descárguela en https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: ya inyectado";
 	INJECT_FAILED = L"Textractor: no se puede inyectar";
@@ -306,8 +303,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 教程视频: https://tinyurl.com/textractor-tutorial
 如果有任何关于 Textractor 的困难，功能请求或问题，请联系我
 可以通过项目主页 (问题区) 或通过邮件来联系
-项目主页提供基于 GPLv3 协议的源代码
-我目前正在寻找新的工作: 如果你知道在美国招聘软件工程师岗位的人，请给我发邮件)";
+项目主页提供基于 GPLv3 协议的源代码)";
 	UPDATE_AVAILABLE = L"有可用的更新: 请从 https://github.com/Artikash/Textractor/releases 下载";
 	ALREADY_INJECTED = L"Textractor: 已经注入";
 	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用 Textractor x86";
@@ -395,7 +391,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 Сообщайте о любых проблемах, желаемых для добавления функциях, или задавайте вопросы, касающиеся Textractor
 Сделать это вы можете на домашней странице (секция issues) или через электронную почту
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
-I'm currently looking for a new job: email me if you know anyone hiring US software engineers
 Если эта программа вам понравилась, расскажите всем о ней :))";
 	CL_OPTIONS = LR"(использование: Textractor [-p{process id|"process name"}]...
 пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с id 4466 или с именем My Game.exe)";
@@ -504,7 +499,6 @@ Video tutorial : https://tinyurl.com/textractor-tutorial
 Tolong hubungi saya jika kamu memiliki masalah terkait masalah, permintaan fitur, atau pertanyaan terkait Textractor
 Kamu dapat melakukannya lewat halaman utama project (bagian issues) atau lewat email
 Source code tersedia dibawah lisensi GPLv3 di halaman utama project
-Saya sedang mencari pekerjaan baru : email saya jika kamu mengenal orang yang dapat memperkerjakan software engineer Amerika
 Jika kamu menyukai project ini, tolong sebarluaskan project ini :))";
 	UPDATE_AVAILABLE = L"Pembaharuan tersedia: pembaharuan dapat di unduh di https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: sudah ditempelkan";
@@ -574,7 +568,6 @@ Vídeo Tutorial: https://tinyurl.com/textractor-tutorial
 Por favor, em caso de problemas, requisição de recurso e/ou funções e de dúvidas, entrar em contato comigo. Use o Inglês para se comunicar.
 Você pode fazê-lo por meio da Homepage do Projeto (na aba "Issues") ou via E-mail.
 O código-fonte se encontra disponível na Homepage do projeto sob a licença GPLv3.
-Estou a procura de um novo trabalho: por favor enviê-me uma mensagem de e-mail para mim se souber de alguém que esteja contratando um Engenheiro de Software dos USA.
 Se você gostou desse projeto, divulgue a todos :))";
 	UPDATE_AVAILABLE = L"Atualização disponível: baixe em https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: já está injetado";
