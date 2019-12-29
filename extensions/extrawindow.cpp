@@ -175,7 +175,7 @@ public:
 		QMetaObject::invokeMethod(this, [this]
 		{
 			show();
-			QMetaObject::invokeMethod(this, [this] { AddSentence(EXTRA_WINDOW_INFO); }, Qt::QueuedConnection);
+			AddSentence(EXTRA_WINDOW_INFO);
 		}, Qt::QueuedConnection);
 	}
 
@@ -361,6 +361,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["current select"])	QMetaObject::invokeMethod(&extraWindow, [sentence = S(sentence)] { extraWindow.AddSentence(sentence); });
+	if (sentenceInfo["current select"] && sentenceInfo["text number"] != 0)
+		QMetaObject::invokeMethod(&extraWindow, [sentence = S(sentence)] { extraWindow.AddSentence(sentence); });
 	return false;
 }
