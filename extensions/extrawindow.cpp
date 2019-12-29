@@ -15,6 +15,7 @@
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
+extern const char* OPACITY;
 extern const char* SHOW_ORIGINAL;
 extern const char* SHOW_ORIGINAL_INFO;
 extern const char* SIZE_LOCK;
@@ -30,6 +31,13 @@ extern const char* FONT;
 extern const char* SAVE_SETTINGS;
 
 constexpr auto DICTIONARY_SAVE_FILE = u8"SavedDictionary.txt";
+
+QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool customOpacity = true)
+{
+	QColor color = QColorDialog::getColor(default, parent, title);
+	if (customOpacity) color.setAlpha(255 * QInputDialog::getDouble(parent, title, OPACITY, default.alpha() / 255.0, 0, 1, 3, nullptr, Qt::WindowCloseButtonHint));
+	return color;
+}
 
 struct PrettyWindow : QDialog
 {
@@ -48,8 +56,8 @@ struct PrettyWindow : QDialog
 		outliner.color = settings.value(OUTLINE_COLOR, outliner.color).value<QColor>();
 		outliner.size = settings.value(OUTLINE_SIZE, outliner.size).toDouble();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
-		menu.addAction(BG_COLOR, [this] { setBgColor(QColorDialog::getColor(bgColor, this, BG_COLOR, QColorDialog::ShowAlphaChannel)); });
-		menu.addAction(TEXT_COLOR, [this] { setTextColor(QColorDialog::getColor(textColor(), this, TEXT_COLOR, QColorDialog::ShowAlphaChannel)); });
+		menu.addAction(BG_COLOR, [this] { setBgColor(colorPrompt(this, bgColor, BG_COLOR)); });
+		menu.addAction(TEXT_COLOR, [this] { setTextColor(colorPrompt(this, textColor(), TEXT_COLOR)); });
 		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::setOutline);
 		outlineAction->setCheckable(true);
 		outlineAction->setChecked(outliner.size >= 0);
@@ -102,7 +110,7 @@ private:
 	{
 		if (enable)
 		{
-			QColor color = QColorDialog::getColor(outliner.color, this, OUTLINE_COLOR, QColorDialog::ShowAlphaChannel);
+			QColor color = colorPrompt(this, outliner.color, OUTLINE_COLOR);
 			if (color.isValid()) outliner.color = color;
 			outliner.size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, 0.5, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
 		}

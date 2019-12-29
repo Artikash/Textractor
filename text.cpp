@@ -133,6 +133,7 @@ const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size lock";
+const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
 const char* TEXT_OUTLINE = u8"Text outline";
