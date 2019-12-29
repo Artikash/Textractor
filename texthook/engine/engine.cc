@@ -10692,7 +10692,7 @@ bool InsertTaskforce2Hook()
   //GROWL_DWORD3(reladdr, processStartAddress, range);
   if (!addr) {
     ConsoleOutput("vnreng:Taskforce2: pattern not exist");
-    //return false;
+	return false;
   }
 
   HookParam hp = {};
