@@ -102,6 +102,7 @@ const char* TOO_MANY_HOOKS = u8"Textractor: too many hooks: can't insert";
 const char* STARTING_SEARCH = u8"Textractor: starting search";
 const char* NOT_ENOUGH_TEXT = u8"Textractor: not enough text to search accurately";
 const char* HOOK_SEARCH_INITIALIZED = u8"Textractor: search initialized with %zd hooks";
+const char* MAKE_GAME_PROCESS_TEXT = u8"Textractor: please click around in the game to force it to process text during the next %d seconds!";
 const char* HOOK_SEARCH_FINISHED = u8"Textractor: hook search finished, %d results found";
 const char* OUT_OF_RECORDS_RETRY = u8"Textractor: out of search records, please retry if results are poor (default record count increased)";
 const char* FUNC_MISSING = u8"Textractor: function not present";

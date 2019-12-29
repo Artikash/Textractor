@@ -5,6 +5,7 @@
 
 extern const char* STARTING_SEARCH;
 extern const char* HOOK_SEARCH_INITIALIZED;
+extern const char* MAKE_GAME_PROCESS_TEXT;
 extern const char* HOOK_SEARCH_FINISHED;
 extern const char* OUT_OF_RECORDS_RETRY;
 extern const char* NOT_ENOUGH_TEXT;
@@ -220,6 +221,7 @@ void SearchForHooks(SearchParam spUser)
 		}
 		ConsoleOutput(HOOK_SEARCH_INITIALIZED, addresses.size());
 		MH_ApplyQueued();
+		ConsoleOutput(MAKE_GAME_PROCESS_TEXT, sp.searchTime / 1000);
 		Sleep(sp.searchTime);
 		for (auto addr : addresses) MH_QueueDisableHook((void*)addr);
 		MH_ApplyQueued();
