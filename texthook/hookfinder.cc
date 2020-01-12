@@ -25,6 +25,7 @@ namespace
 	std::unique_ptr<HookRecord[]> records;
 	long recordsAvailable;
 	uint64_t signatureCache[CACHE_SIZE] = {};
+	long sumCache[CACHE_SIZE] = {};
 	uintptr_t pageCache[CACHE_SIZE] = {};
 
 #ifndef _WIN64
@@ -147,6 +148,9 @@ void Send(char** stack, uintptr_t address)
 				uint64_t signature = ((uint64_t)i << 56) | ((uint64_t)(str[2] + str[3]) << 48) | address;
 				if (signatureCache[signature % CACHE_SIZE] == signature) continue;
 				signatureCache[signature % CACHE_SIZE] = signature;
+				// if there are huge amount of strings that are the same, it's probably garbage: filter them out
+				// can't store all the strings, so use sum as heuristic instead
+				if (_InterlockedIncrement(sumCache + (sum % CACHE_SIZE)) > 25) continue;
 				long n = sp.maxRecords - _InterlockedDecrement(&recordsAvailable);
 				if (n < sp.maxRecords)
 				{
@@ -243,7 +247,7 @@ void SearchForHooks(SearchParam spUser)
 		}
 		records.reset();
 		VirtualFree(trampolines, 0, MEM_RELEASE);
-		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = 0;
+		for (int i = 0; i < CACHE_SIZE; ++i) signatureCache[i] = sumCache[i] = 0;
 	}).detach();
 }
 
