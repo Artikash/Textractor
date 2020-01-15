@@ -34,7 +34,7 @@ namespace
 		// Extension is dll and exports "OnNewSentence"
 		if (QTextFile(extenName + ".dll", QIODevice::ReadOnly).readAll().contains("OnNewSentence"))
 		{
-			if (HMODULE module = LoadLibraryW(S(extenName).c_str()))
+			if (HMODULE module = LoadLibraryW(S(extenName + ".dll").c_str()))
 			{
 				if (auto callback = (decltype(Extension::callback))GetProcAddress(module, "OnNewSentence"))
 				{
@@ -51,7 +51,7 @@ namespace
 	void Unload(int index)
 	{
 		std::scoped_lock writeLock(extenMutex);
-		FreeLibrary(GetModuleHandleW(extensions.at(index).name.c_str()));
+		FreeLibrary(GetModuleHandleW((extensions.at(index).name + L".dll").c_str()));
 		extensions.erase(extensions.begin() + index);
 	}
 
@@ -80,7 +80,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 void CleanupExtensions()
 {
 	std::scoped_lock writeLock(extenMutex);
-	for (auto extension : extensions) FreeLibrary(GetModuleHandleW(extension.name.c_str()));
+	for (auto extension : extensions) FreeLibrary(GetModuleHandleW((extension.name + L".dll").c_str()));
 	extensions.clear();
 }
 
