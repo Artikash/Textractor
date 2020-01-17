@@ -16658,21 +16658,32 @@ bool InsertAdobeFlash10Hook()
 */
 bool InsertRenpyHook()
 {
-	HookParam hp = {};
-	hp.address = (DWORD)GetProcAddress(GetModuleHandleW(L"python27"), "PyUnicodeUCS2_Format");
-	if (!hp.address)
+	for (int pythonMinorVersion = 0; pythonMinorVersion <= 8; ++pythonMinorVersion)
 	{
-		ConsoleOutput("Textractor: Ren'py failed: failed to find python27.dll or PyUnicodeUCS2_Format");
-		return false;
+		wchar_t python[] = L"python2X.dll";
+		python[7] = L'0' + pythonMinorVersion;
+		if (HMODULE module = GetModuleHandleW(python))
+		{
+			wcscpy_s(spDefault.exportModule, python);
+			HookParam hp = {};
+			hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Format");
+			if (!hp.address)
+			{
+				ConsoleOutput("Textractor: Ren'py failed: failed to find PyUnicodeUCS2_Format");
+				return false;
+			}
+			hp.offset = 4;
+			hp.index = 0xc;
+			hp.length_offset = 0;
+			hp.split = pusha_ebx_off - 4;
+			hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
+			//hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
+			NewHook(hp, "Ren'py");
+			return true;
+		}
 	}
-	hp.offset = 4;
-	hp.index = 0xc;
-	hp.length_offset = 0;
-	hp.split = pusha_ebx_off - 4;
-	hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
-	//hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
-	NewHook(hp, "Ren'py");
-	return true;
+	ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
+	return false;
 }
 
 void InsertMonoHook(HMODULE h)
