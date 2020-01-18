@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "util.h"
 #include "../texthook/texthook.h"
+#include <filesystem>
 
 extern const wchar_t* ALREADY_INJECTED;
 extern const wchar_t* NEED_32_BIT;
@@ -204,7 +205,7 @@ namespace Host
 				IsWow64Process(process, &invalidProcess);
 				if (invalidProcess) return AddConsoleOutput(NEED_32_BIT);
 #endif
-				static std::wstring location = Util::GetModuleFilename(LoadLibraryExW(ITH_DLL, nullptr, DONT_RESOLVE_DLL_REFERENCES)).value();
+				static std::wstring location = std::filesystem::current_path().wstring() + L"\\" + ITH_DLL;
 				if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 				{
 					WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);
