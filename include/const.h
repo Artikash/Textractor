@@ -28,6 +28,7 @@ enum HookParamType : unsigned
 	DIRECT_READ = 0x1000, // /R read code instead of classic /H hook code
 	FULL_STRING = 0x2000,
 	BLOCK_FLOOD = 0x4000, // remove this hook if flooding text causing perf issues
-	HOOK_ENGINE = 0x8000,
-	HOOK_ADDITIONAL = 0x10000,
+	HEX_DUMP = 0x8000,
+	HOOK_ENGINE = 0x10000,
+	HOOK_ADDITIONAL = 0x20000,
 };

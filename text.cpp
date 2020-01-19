@@ -21,15 +21,16 @@ const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file na
 const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
 const char* CODE_INFODUMP = u8R"(Enter read code
-R{S|Q|V}[null_length<][codepage#]@addr
+R{S|Q|V|M}[null_length<][codepage#]@addr
 OR
 Enter hook code
-H{A|B|W|S|Q|V}[F][null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
+H{A|B|W|H|S|Q|V|M}[F][null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
 All numbers except codepage/null_length in hexadecimal
 Default codepage is 932 (Shift-JIS) but this can be changed in settings
 A/B: codepage char little/big endian
 W: UTF-16 char
-S/Q/V: codepage/UTF-16/UTF-8 string
+H: Two hex bytes
+S/Q/V/M: codepage/UTF-16/UTF-8/hex string
 F: treat strings as full lines of text
 N: don't use context
 null_length: length of null terminator used for string

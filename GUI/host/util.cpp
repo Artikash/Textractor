@@ -1,5 +1,4 @@
 ﻿#include "util.h"
-#include <sstream>
 #include <Psapi.h>
 
 namespace
@@ -10,7 +9,7 @@ namespace
 		HookParam hp = {};
 		hp.type |= DIRECT_READ;
 
-		// {S|Q|V}
+		// {S|Q|V|M}
 		switch (RCode[0])
 		{
 		case L'S':
@@ -20,6 +19,9 @@ namespace
 			break;
 		case L'V':
 			hp.type |= USING_UTF8;
+			break;
+		case L'M':
+			hp.type |= USING_UNICODE | HEX_DUMP;
 			break;
 		default:
 			return {};
@@ -51,12 +53,9 @@ namespace
 		std::wsmatch match;
 		HookParam hp = {};
 
-		// {A|B|W|S|Q|V}
+		// {A|B|W|H|S|Q|V|M}
 		switch (HCode[0])
 		{
-		case L'S':
-			hp.type |= USING_STRING;
-			break;
 		case L'A':
 			hp.type |= BIG_ENDIAN;
 			hp.length_offset = 1;
@@ -64,15 +63,25 @@ namespace
 		case L'B':
 			hp.length_offset = 1;
 			break;
-		case L'Q':
-			hp.type |= USING_STRING | USING_UNICODE;
-			break;
 		case L'W':
 			hp.type |= USING_UNICODE;
 			hp.length_offset = 1;
 			break;
+		case L'H':
+			hp.type |= USING_UNICODE | HEX_DUMP;
+			hp.length_offset = 1;
+			break;
+		case L'S':
+			hp.type |= USING_STRING;
+			break;
+		case L'Q':
+			hp.type |= USING_STRING | USING_UNICODE;
+			break;
 		case L'V':
 			hp.type |= USING_STRING | USING_UTF8;
+			break;
+		case L'M':
+			hp.type |= USING_STRING | USING_UNICODE | HEX_DUMP;
 			break;
 		default:
 			return {};
@@ -178,7 +187,8 @@ namespace
 
 		if (hp.type & USING_UNICODE)
 		{
-			RCode += L'Q';
+			if (hp.type & HEX_DUMP) RCode += L'M';
+			else RCode += L'Q';
 			if (hp.null_length != 0) RCode += std::to_wstring(hp.null_length) + L'<';
 		}
 		else
@@ -199,8 +209,16 @@ namespace
 
 		if (hp.type & USING_UNICODE)
 		{
-			if (hp.type & USING_STRING) HCode += L'Q';
-			else HCode += L'W';
+			if (hp.type & HEX_DUMP)
+			{
+				if (hp.type & USING_STRING) HCode += L'M';
+				else HCode += L'H';
+			}
+			else
+			{
+				if (hp.type & USING_STRING) HCode += L'Q';
+				else HCode += L'W';
+			}
 		}
 		else
 		{
