@@ -530,15 +530,13 @@ void MainWindow::FindHooks()
 	try
 	{
 		Host::FindHooks(processId, sp, 
-			[=](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(Util::GenerateCode(hp) + L" => " + text)); });
+			[hooks, filter](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(Util::GenerateCode(hp) + L" => " + text)); });
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks]
 	{
-		DWORD64 cleanupTime = GetTickCount64() + 500'000;
 		for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
-			if (GetTickCount64() > cleanupTime) return;
-			else lastSize = hooks->size();
+			lastSize = hooks->size();
 
 		QString saveFileName;
 		QMetaObject::invokeMethod(this, [&]

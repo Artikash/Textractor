@@ -10328,6 +10328,18 @@ void SpecialHookV8String(DWORD dwDatabase, HookParam* hp, BYTE, DWORD* data, DWO
 
 bool InsertV8Hook(HMODULE module)
 {
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	for (const auto& pattern : Array<const BYTE[3]>{ { 0x55, 0x8b, 0xec }, { 0x55, 0x89, 0xe5 } })
+	{
+		int matches = Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, minAddress, maxAddress).size(), requiredRecords = matches * 20;
+		if (matches > 10'000 && requiredRecords > spDefault.maxRecords)
+		{
+			memcpy(spDefault.pattern, pattern, spDefault.length = sizeof(pattern));
+			spDefault.maxRecords = requiredRecords;
+		}
+	}
+	std::tie(spDefault.minAddress, spDefault.maxAddress) = std::tuple{ minAddress, maxAddress };
+	ConsoleOutput("Textractor: JavaScript hook is known to be low quality: try searching for hooks if you don't like it");
 	HookParam hp = {};
 	hp.address = (DWORD)GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z");
 	hp.offset = pusha_ecx_off - 4;
@@ -15152,6 +15164,7 @@ void SpecialHookLightvn(DWORD, HookParam*, BYTE, DWORD* data, DWORD* split, DWOR
 
 bool InsertLightvnHook()
 {
+	wcscpy_s(spDefault.boundaryModule, L"Engine.dll");
 	// This hooking method also has decent results, but hooking OutputDebugString seems better
 	const BYTE bytes[] = { 0x8d, 0x55, 0xfe, 0x52 };
 	for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READ, (uintptr_t)GetModuleHandleW(L"Engine.dll")))
@@ -16359,6 +16372,7 @@ bool InsertAdobeAirHook()
 */
 bool InsertAIRNovelHook()
 {
+	wcscpy_s(spDefault.boundaryModule, L"Adobe AIR.dll");
 	if (DWORD FREGetObjectAsUTF8 = (DWORD)GetProcAddress(GetModuleHandleW(L"Adobe AIR.dll"), "FREGetObjectAsUTF8"))
 	{
 		DWORD func = FREGetObjectAsUTF8 + 0x5a + 5 + *(int*)(FREGetObjectAsUTF8 + 0x5b);

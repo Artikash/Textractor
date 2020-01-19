@@ -82,7 +82,7 @@ namespace Engine
 			if (!domain) goto failed;
 			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
 			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
-			for (auto [prolog, size] : Array<std::tuple<const BYTE*, size_t>>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
+			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
 			for (auto addr : Util::SearchMemory(prolog, size, PAGE_EXECUTE_READWRITE))
 			{
 				[](uint64_t addr)
@@ -127,6 +127,9 @@ namespace Engine
 	{
 		if (uint64_t addr = (uint64_t)GetProcAddress(module, "?Write@String@v8@@QEBAHPEAGHHH@Z"))
 		{
+			std::tie(spDefault.minAddress, spDefault.maxAddress) = Util::QueryModuleLimits(module);
+			spDefault.maxRecords = Util::SearchMemory(spDefault.pattern, spDefault.length, PAGE_EXECUTE, spDefault.minAddress, spDefault.maxAddress).size() * 20;
+			ConsoleOutput("Textractor: JavaScript hook is known to be low quality: try searching for hooks if you don't like it");
 			HookParam hp = {};
 			hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
 			hp.address = addr;
