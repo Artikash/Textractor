@@ -54,7 +54,7 @@ void TextThread::Push(BYTE* data, int length)
 	
 	if (filterRepetition)
 	{
-		if (std::all_of(buffer.begin(), buffer.end(), [&](auto ch) { return repeatingChars.find(ch) != repeatingChars.end(); })) buffer.clear();
+		if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t ch) { return repeatingChars.find(ch) != repeatingChars.end(); })) buffer.clear();
 		if (RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 		{
 			if (hp.type & BLOCK_FLOOD) Host::RemoveHook(tp.processId, tp.addr);

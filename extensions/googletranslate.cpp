@@ -101,7 +101,7 @@ std::wstring GetTranslationUri(const std::wstring& text)
 
 bool IsHash(const std::wstring& result)
 {
-	return result.size() == 32 && std::all_of(result.begin(), result.end(), [](auto ch) { return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'z'); });
+	return result.size() == 32 && std::all_of(result.begin(), result.end(), [](char ch) { return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'z'); });
 }
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)

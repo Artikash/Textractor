@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	extenWindow(new ExtenWindow(this))
 {
 	ui->setupUi(this);
-	for (auto [text, slot] : Array<std::tuple<const char*, void(MainWindow::*)()>>{
+	for (auto [text, slot] : Array<const char*, void(MainWindow::*)()>{
 		{ ATTACH, &MainWindow::AttachProcess },
 		{ LAUNCH, &MainWindow::LaunchProcess },
 		{ DETACH, &MainWindow::DetachProcess },
@@ -211,8 +211,9 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
 	if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 	sentence += L'\n';
-	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]
+	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]() mutable
 	{
+		sanitize(sentence);
 		auto scrollbar = ui->textOutput->verticalScrollBar();
 		bool atBottom = scrollbar->value() + 3 > scrollbar->maximum() || (double)scrollbar->value() / scrollbar->maximum() > 0.975; // arbitrary
 		QTextCursor cursor(ui->textOutput->document());
@@ -354,7 +355,7 @@ void MainWindow::ForgetProcess()
 	for (auto file : { GAME_SAVE_FILE, HOOK_SAVE_FILE })
 	{
 		QStringList lines = QString::fromUtf8(QTextFile(file, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
-		lines.erase(std::remove_if(lines.begin(), lines.end(), [&](auto line) { return line.contains(S(processName.value())); }), lines.end());
+		lines.erase(std::remove_if(lines.begin(), lines.end(), [&](const QString& line) { return line.contains(S(processName.value())); }), lines.end());
 		QTextFile(file, QIODevice::WriteOnly | QIODevice::Truncate).write(lines.join("\n").append("\n").toUtf8());
 	}
 }
@@ -475,7 +476,7 @@ void MainWindow::FindHooks()
 		QLineEdit patternInput(x64 ? "CC CC 48 89" : "55 8B EC", &dialog);
 		assert(QByteArray::fromHex(patternInput.text().toUtf8()) == QByteArray((const char*)sp.pattern, sp.length));
 		layout.addRow(SEARCH_PATTERN, &patternInput);
-		for (auto [value, label] : Array<std::tuple<int&, const char*>>{
+		for (auto [value, label] : Array<int&, const char*>{
 			{ sp.searchTime, SEARCH_DURATION },
 			{ sp.offset, PATTERN_OFFSET },
 			{ sp.maxRecords, MAX_HOOK_SEARCH_RECORDS },
@@ -490,7 +491,7 @@ void MainWindow::FindHooks()
 		}
 		QLineEdit boundInput(QFileInfo(S(Util::GetModuleFilename(GetSelectedProcessId()).value_or(L""))).fileName(), &dialog);
 		layout.addRow(SEARCH_MODULE, &boundInput);
-		for (auto [value, label] : Array<std::tuple<uintptr_t&, const char*>>{
+		for (auto [value, label] : Array<uintptr_t&, const char*>{
 			{ sp.minAddress, MIN_ADDRESS },
 			{ sp.maxAddress, MAX_ADDRESS },
 			{ sp.padding, STRING_OFFSET },
@@ -528,7 +529,8 @@ void MainWindow::FindHooks()
 	auto hooks = std::make_shared<QStringList>();
 	try
 	{
-		Host::FindHooks(processId, sp, [=](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << S(Util::GenerateCode(hp) + L" => " + text); });
+		Host::FindHooks(processId, sp, 
+			[=](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(Util::GenerateCode(hp) + L" => " + text)); });
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks]
@@ -572,7 +574,7 @@ void MainWindow::Settings()
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat, &dialog);
 	QFormLayout layout(&dialog);
 	QPushButton saveButton(SAVE_SETTINGS, &dialog);
-	for (auto [value, label] : Array<std::tuple<bool&, const char*>>{
+	for (auto [value, label] : Array<bool&, const char*>{
 		{ TextThread::filterRepetition, FILTER_REPETITION },
 		{ autoAttach, AUTO_ATTACH },
 		{ autoAttachSavedOnly, ATTACH_SAVED_ONLY },
@@ -584,7 +586,7 @@ void MainWindow::Settings()
 		layout.addRow(label, checkBox);
 		connect(&saveButton, &QPushButton::clicked, [checkBox, label, &settings, &value] { settings.setValue(label, value = checkBox->isChecked()); });
 	}
-	for (auto [value, label] : Array<std::tuple<int&, const char*>>{
+	for (auto [value, label] : Array<int&, const char*>{
 		{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 		{ TextThread::flushDelay, FLUSH_DELAY },
 		{ TextThread::maxHistorySize, MAX_HISTORY_SIZE },
@@ -612,7 +614,7 @@ void MainWindow::Extensions()
 void MainWindow::ViewThread(int index)
 {
 	ui->ttCombo->setCurrentIndex(index);
-	ui->textOutput->setPlainText(S((current = &Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))))->storage->c_str()));
+	ui->textOutput->setPlainText(sanitize(S((current = &Host::GetThread(ParseTextThreadString(ui->ttCombo->itemText(index))))->storage->c_str())));
 	ui->textOutput->moveCursor(QTextCursor::End);
 }
 

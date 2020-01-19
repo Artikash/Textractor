@@ -60,7 +60,7 @@ namespace
 		std::scoped_lock writeLock(extenMutex);
 		std::vector<Extension> extensions;
 		for (auto extenName : extenNames)
-			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](auto extension) { return extension.name == S(extenName); }));
+			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](Extension extension) { return extension.name == S(extenName); }));
 		::extensions = extensions;
 	}
 }

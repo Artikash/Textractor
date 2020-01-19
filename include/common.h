@@ -26,7 +26,12 @@ constexpr bool x64 = true;
 constexpr bool x64 = false;
 #endif
 
-template <typename T, typename... X> using Array = std::conditional_t<sizeof...(X), std::tuple<T, X...>[], T[]>;
+template <typename T, typename... Xs>
+struct ArrayImpl { using type = std::tuple<T, Xs...>[]; };
+template <typename T>
+struct ArrayImpl<T> { using type = T[]; };
+template <typename... Ts>
+using Array = typename ArrayImpl<Ts...>::type;
 
 template <auto F> using Functor = std::integral_constant<std::decay_t<decltype(F)>, F>;
 

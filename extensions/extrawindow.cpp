@@ -157,7 +157,7 @@ public:
 		ui.display->setTextFormat(Qt::PlainText);
 		setGeometry(settings.value(WINDOW, geometry()).toRect());
 
-		for (auto [name, default, slot] : Array<std::tuple<const char*, bool, void(ExtraWindow::*)(bool)>>{
+		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
 			{ TOPMOST, false, &ExtraWindow::setTopmost },
 			{ SIZE_LOCK, false, &ExtraWindow::setLock },
 			{ SHOW_ORIGINAL, true, &ExtraWindow::setShowOriginal },
@@ -187,6 +187,7 @@ public:
 	void AddSentence(QString sentence)
 	{
 		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
+		sanitize(sentence);
 		sentenceHistory.push_back(sentence);
 		historyIndex = sentenceHistory.size() - 1;
 		ui.display->setText(sentence);
