@@ -1,7 +1,7 @@
 macro(msvc_registry_search)
     IF(MSVC)
         # look for user-registry pointing to qtcreator
-        get_filename_component(QT_BIN [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.cpp\\shell\\Open\\Command] PATH)
+        get_filename_component(QT_BIN [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.pro\\shell\\Open\\Command] PATH)
 
         # get root path so we can search for 5.3, 5.4, 5.5, etc
         string(REPLACE "/Tools" ";" QT_BIN "${QT_BIN}")
@@ -32,19 +32,19 @@ macro(msvc_registry_search)
                 SET(QT_MSVC "${QT_MSVC}_64")
             endif()
 
-            set(QT_TOLLCHAIN "${QT_VERSION}/msvc${QT_MSVC}")
-            if(EXISTS ${QT_TOLLCHAIN})
-                set(Qt5_DIR "${QT_TOLLCHAIN}/lib/cmake/Qt5")
+            set(QT_TOOLCHAIN "${QT_VERSION}/msvc${QT_MSVC}")
+            if(EXISTS ${QT_TOOLCHAIN})
+                set(Qt5_DIR "${QT_TOOLCHAIN}/lib/cmake/Qt5")
             elseif(QT_MSVC EQUAL "2017")
                 #2017 is ABI compatible with 2015
                 if(CMAKE_CL_64)
-                    set(QT_TOLLCHAIN "${QT_VERSION}/msvc2015_64")
+                    set(QT_TOOLCHAIN "${QT_VERSION}/msvc2015_64")
                 else()
-                    set(QT_TOLLCHAIN "${QT_VERSION}/msvc2015")
+                    set(QT_TOOLCHAIN "${QT_VERSION}/msvc2015")
                 endif()
 
-                if(EXISTS ${QT_TOLLCHAIN})
-                    set(Qt5_DIR "${QT_TOLLCHAIN}/lib/cmake/Qt5")
+                if(EXISTS ${QT_TOOLCHAIN})
+                    set(Qt5_DIR "${QT_TOOLCHAIN}/lib/cmake/Qt5")
                 else()
                     message(WARNING "Required QT5 toolchain is not installed")
                 endif()
