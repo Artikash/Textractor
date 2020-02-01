@@ -64,8 +64,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		L"POST",
 		FormatString(L"/ttranslatev3?fromLang=auto-detect&to=%s&text=%s", translateTo->c_str(), Escape(text)).c_str()
 	})
-		// Response formatted as JSON: translation starts with text":" and ends with ","
-		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+)\"\\,"))) return { true, results[1] };
+		// Response formatted as JSON: translation starts with text":" and ends with ","to
+		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+)\"\\,\"to"))) return { true, results[1] };
 		else return { false, TRANSLATION_ERROR };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
