@@ -204,8 +204,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 		if (!err)
 		{
 			err = true;
-			ConsoleOutput(SEND_ERROR);
-			ConsoleOutput("Textractor: in %s", hp.name);
+			ConsoleOutput("%s in %s", SEND_ERROR, hp.name);
 		}
 	}
 done:
@@ -267,7 +266,7 @@ void TextHook::Read()
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		ConsoleOutput(READ_ERROR);
+		ConsoleOutput("%s in %s", READ_ERROR, hp.name);
 		Clear();
 	}
 }

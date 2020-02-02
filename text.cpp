@@ -81,6 +81,7 @@ const wchar_t* CLIPBOARD = L"Clipboard";
 const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
 Project homepage: https://github.com/Artikash/Textractor
 Tutorial video: https://tinyurl.com/textractor-tutorial
+FAQ: https://github.com/Artikash/Textractor/wiki/FAQ
 Please contact me with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
