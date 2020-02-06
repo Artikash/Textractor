@@ -26,9 +26,11 @@ foreach ($language in @{
 	{
 		cd $arch;
 		$VS_arch = if ($arch -eq "x86") {"Win32"} else {"x64"};
-		cmake -G "Visual Studio 16 2019" -A"$VS_arch" -DVERSION="$version" -DTEXT_LANGUAGE="$($language.Key)" -DCMAKE_BUILD_TYPE="Release" ../..;
+		&"C:\Program Files\CMake\bin\cmake" -G "Visual Studio 16 2019" -A"$VS_arch" -DVERSION="$version" -DTEXT_LANGUAGE="$($language.Key)" -DCMAKE_BUILD_TYPE="Release" ../..;
 		&"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv" Textractor.sln /build "Release|$VS_arch";
 		cd ..;
+		&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Release_$arch/Textractor.exe";
+		&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Release_$arch/TextractorCLI.exe";
 		mkdir -Force -Verbose "$folder/$arch";
 		foreach ($file in @(
 			"Textractor.exe",
@@ -78,4 +80,5 @@ mkdir -Force -Verbose "Textractor";
 copy -Force -Recurse -Verbose -Destination "Textractor" -Path @("Runtime/*", "Textractor--$version/*");
 
 cd ..
-&"C:\Program Files (x86)\Inno Setup 6\iscc.exe" -DVERSION="$version" installer.iss
+&"C:\Program Files (x86)\Inno Setup 6\iscc" -DVERSION="$version" installer.iss
+&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Builds/Textractor-$version-Setup.exe";
