@@ -10351,16 +10351,15 @@ bool InsertV8Hook(HMODULE module)
 		0x5d, // pop ebp
 		0xc2 // ret
 	};
-	if (hp.address)
-		if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), hp.address, hp.address + 0x30))
-		{
-			hp.address = addr;
-			hp.offset = 0x8 + *(BYTE*)(addr + 2); // second argument + amount that the stack pointer is offset from arguments
-			hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
-			hp.length_offset = (0x10 + *(BYTE*)(addr + 2)) / 4; // fourth argument + amount that the stack pointer is offset from arguments
-			hp.text_fun = nullptr;
-			NewHook(hp, "JavaScript2");
-		}
+	if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), hp.address, hp.address + 0x30))
+	{
+		hp.address = addr;
+		hp.offset = 0x8 + *(BYTE*)(addr + 2); // second argument + amount that the stack pointer is offset from arguments
+		hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+		hp.length_offset = (0x10 + *(BYTE*)(addr + 2)) / 4; // fourth argument + amount that the stack pointer is offset from arguments
+		hp.text_fun = nullptr;
+		NewHook(hp, "JavaScript2");
+	}
 	return true;
 }
 

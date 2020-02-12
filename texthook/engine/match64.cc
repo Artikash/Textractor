@@ -104,7 +104,7 @@ namespace Engine
 										even though this should get the true length mono uses internally
 										there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
 										int len = *(int*)(data - 4);
-										return len > 0 && len < 1000 ? len * 2 : 0;
+										return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
 									};
 									NewHook(hp, name);
 								}
@@ -139,7 +139,7 @@ namespace Engine
 			hp.length_fun = [](uintptr_t, uintptr_t data)
 			{
 				int len = *(int*)(data - 4);
-				return len > 0 && len < 1000 ? len * 2 : 0;
+				return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
 			};
 			NewHook(hp, "JavaScript");
 			return true;
