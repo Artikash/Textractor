@@ -7,6 +7,7 @@
 
 extern const char* SELECT_LANGUAGE;
 extern const char* SELECT_LANGUAGE_MESSAGE;
+extern const char* LANGUAGE_SAVED;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
@@ -52,6 +53,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 			);
 			translateTo->assign(S(language.split(": ")[1]));
 			settings.setValue(LANGUAGE, S(translateTo->c_str()));
+			QMessageBox::information(nullptr, SELECT_LANGUAGE, QString(LANGUAGE_SAVED).arg(CONFIG_FILE));
 		});
 
 		QStringList savedCache = QString(QTextFile(CACHE_FILE, QIODevice::ReadOnly).readAll()).split("|T|\n", QString::SkipEmptyParts);

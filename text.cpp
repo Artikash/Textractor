@@ -116,6 +116,7 @@ const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* SELECT_LANGUAGE = u8"Select language";
 const char* SELECT_LANGUAGE_MESSAGE = u8"What language should %1 translate to?";
+const char* LANGUAGE_SAVED = u8"Translation language saved (you can delete it in the config file %1 then reopen Textractor to reselect)";
 const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
