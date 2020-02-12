@@ -80,5 +80,5 @@ mkdir -Force -Verbose "Textractor";
 copy -Force -Recurse -Verbose -Destination "Textractor" -Path @("Runtime/*", "Textractor--$version/*");
 
 cd ..
-&"C:\Program Files (x86)\Inno Setup 6\iscc" -DVERSION="$version" installer.iss
+&"C:\Program Files (x86)\Inno Setup 6\iscc" -DVERSION="$version" installer.iss;
 &"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Builds/Textractor-$version-Setup.exe";

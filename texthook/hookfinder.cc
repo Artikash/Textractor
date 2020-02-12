@@ -232,10 +232,10 @@ void SearchForHooks(SearchParam spUser)
 		Sleep(1000);
 		for (auto addr : addresses) MH_RemoveHook((void*)addr);
 		ConsoleOutput(HOOK_SEARCH_FINISHED, sp.maxRecords - recordsAvailable);
-		for (int i = 0, j = 0; i < sp.maxRecords; ++i)
+		for (int i = 0, results = 0; i < sp.maxRecords; ++i)
 		{
 			if (!records[i].address) continue;
-			if (++j % 100'000 == 0) ConsoleOutput("Textractor: %d results processed", j);
+			if (++results % 100'000 == 0) ConsoleOutput("Textractor: %d results processed", results);
 			HookParam hp = {};
 			hp.offset = records[i].offset;
 			hp.type = USING_UNICODE | USING_STRING;

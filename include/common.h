@@ -113,7 +113,8 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 }
 #pragma warning(pop)
 
-#define MESSAGE(text) MessageBoxW(NULL, FormatArg(text), L"Textractor", MB_OK)
+template <typename... Args>
+inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { MessageBoxW(NULL, FormatString(format, args...).c_str(), L"Textractor", MB_OK); }
 
 #ifdef _DEBUG
 #define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 

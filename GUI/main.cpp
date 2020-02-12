@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 						char buffer[1000] = {};
 						WinHttpReceiveResponse(request, NULL);
 						WinHttpReadData(request, buffer, 1000, DUMMY);
-						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) MESSAGE(UPDATE_AVAILABLE);
+						if (abs(strstr(buffer, "/tag/") - strstr(buffer, VERSION)) > 10) TEXTRACTOR_MESSAGE(UPDATE_AVAILABLE);
 					}
 	}).detach();
 
