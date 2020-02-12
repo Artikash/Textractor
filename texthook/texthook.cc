@@ -238,30 +238,14 @@ bool TextHook::InsertHookCode()
 void TextHook::Read()
 {
 	BYTE buffer[TEXT_BUFFER_SIZE] = {};
-	int changeCount = 0, dataLen = 1;
+	int dataLen = 1;
 	__try
 	{
-		while (WaitForSingleObject(readerEvent, 500) == WAIT_TIMEOUT)
+		while (WaitForSingleObject(readerEvent, 500) == WAIT_TIMEOUT) if (memcmp(buffer, location, dataLen) != 0) if (int currentLen = HookStrlen((BYTE*)location))
 		{
-			if (memcmp(buffer, location, dataLen) == 0)
-			{
-				changeCount = 0;
-				continue;
-			}
-			if (++changeCount > 10)
-			{
-				ConsoleOutput(GARBAGE_MEMORY);
-				Clear();
-				break;
-			}
-
-			if (int currentLen = HookStrlen((BYTE*)location))
-			{
-				dataLen = min(currentLen, TEXT_BUFFER_SIZE);
-				memcpy(buffer, location, dataLen);
-				TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
-			}
-			else changeCount = 0;
+			dataLen = min(currentLen, TEXT_BUFFER_SIZE);
+			memcpy(buffer, location, dataLen);
+			TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
 		}
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
