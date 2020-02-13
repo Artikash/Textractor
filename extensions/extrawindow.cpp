@@ -2,6 +2,7 @@
 #include "extension.h"
 #include "ui_extrawindow.h"
 #include "defs.h"
+#include "blockmarkuplanguage.h"
 #include <fstream>
 #include <filesystem>
 #include <process.h>
@@ -281,15 +282,15 @@ private:
 			catch (std::filesystem::filesystem_error) { return; }
 
 			dictionary.clear();
-			owningStorage.clear();
+			definitionStorage.clear();
 
 			auto StoreCopy = [&](const std::string& string)
 			{
-				return &*owningStorage.insert(owningStorage.end(), string.c_str(), string.c_str() + string.size() + 1);
+				return &*definitionStorage.insert(definitionStorage.end(), string.c_str(), string.c_str() + string.size() + 1);
 			};
 
 			std::string savedDictionary(std::istreambuf_iterator(std::ifstream(DICTIONARY_SAVE_FILE)), {});
-			owningStorage.reserve(savedDictionary.size());
+			definitionStorage.reserve(savedDictionary.size());
 			for (size_t end = 0; ;)
 			{
 				size_t term = savedDictionary.find("|TERM|", end);
@@ -299,14 +300,6 @@ private:
 				for (size_t next; (next = savedDictionary.find("|TERM|", term + 1)) != std::string::npos && next < definition; term = next)
 					dictionary.push_back({ StoreCopy(savedDictionary.substr(term + 6, next - term - 6)), storedDefinition });
 				dictionary.push_back({ StoreCopy(savedDictionary.substr(term + 6, definition - term - 6)), storedDefinition });
-			}
-			auto oldData = owningStorage.data();
-			owningStorage.shrink_to_fit();
-			dictionary.shrink_to_fit();
-			for (auto& [term, definition] : dictionary)
-			{
-				term += owningStorage.data() - oldData;
-				definition += owningStorage.data() - oldData;
 			}
 			std::sort(dictionary.begin(), dictionary.end());
 		}
@@ -354,7 +347,7 @@ private:
 		}
 
 		std::filesystem::file_time_type dictionaryFileLastWrite;
-		std::vector<char> owningStorage;
+		std::vector<char> definitionStorage;
 		std::vector<QString> definitions;
 		int definitionIndex;
 	} dictionaryWindow;

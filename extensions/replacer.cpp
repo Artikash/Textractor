@@ -1,4 +1,6 @@
 ﻿#include "extension.h"
+#include "trie.h"
+#include "charstorage.h"
 #include <cwctype>
 #include <fstream>
 #include <filesystem>
@@ -11,18 +13,14 @@ constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 std::atomic<std::filesystem::file_time_type> replaceFileLastWrite = {};
 std::shared_mutex m;
 
-class Trie
+class ReplacementTrie
 {
 public:
-	Trie(std::unordered_map<std::wstring, std::wstring> replacements)
+	ReplacementTrie(std::vector<std::pair<std::wstring, std::wstring>> replacements)
 	{
-		for (const auto& [original, replacement] : replacements)
-		{
-			Node* current = &root;
-			for (auto ch : original) if (!Ignore(ch)) current = Next(current, ch);
-			if (current != &root)
-				current->value = owningStorage.insert(owningStorage.end(), replacement.c_str(), replacement.c_str() + replacement.size() + 1) - owningStorage.begin();
-		}
+		for (auto& [original, replacement] : replacements)
+			if (!original.empty())
+				trie.Insert(std::wstring_view(original.c_str(), std::remove_if(original.begin(), original.end(), Ignore) - original.begin()))->SetValue(storage.Store(replacement));
 	}
 
 	std::wstring Replace(const std::wstring& sentence) const
@@ -33,17 +31,23 @@ public:
 			std::wstring_view replacement(sentence.c_str() + i, 1);
 			int originalLength = 1;
 
-			const Node* current = &root;
+			auto current = trie.Root();
 			for (int j = i; current && j <= sentence.size(); ++j)
 			{
-				if (current->value >= 0)
+				if (const wchar_t* tail = current->Tail())
+					for (; j <= sentence.size() && *tail; ++j)
+						if (Ignore(sentence[j]));
+						else if (sentence[j] == *tail) ++tail;
+						else goto doneSearchingTrie;
+				if (int* value = current->Value())
 				{
-					replacement = owningStorage.data() + current->value;
+					replacement = storage.Retrieve(*value);
 					originalLength = j - i;
 				}
-				if (!Ignore(sentence[j])) current = Next(current, sentence[j]);
+				if (!Ignore(sentence[j])) current = trie.Next(current, sentence[j]);
 			}
-
+		
+		doneSearchingTrie:
 			result += replacement;
 			i += originalLength;
 		}
@@ -52,7 +56,7 @@ public:
 
 	bool Empty()
 	{
-		return root.charMap.empty();
+		return trie.Root()->charMap.empty();
 	}
 
 private:
@@ -61,33 +65,19 @@ private:
 		return ch <= 0x20 || std::iswspace(ch);
 	}
 
-	template <typename Node>
-	static Node* Next(Node* node, wchar_t ch)
-	{
-		auto it = std::lower_bound(node->charMap.begin(), node->charMap.end(), ch, [](const auto& one, auto two) { return one.first < two; });
-		if (it != node->charMap.end() && it->first == ch) return it->second.get();
-		if constexpr (!std::is_const_v<Node>) return node->charMap.insert(it, { ch, std::make_unique<Node>() })->second.get();
-		return nullptr;
-	}
-
-	struct Node
-	{
-		std::vector<std::pair<wchar_t, std::unique_ptr<Node>>> charMap;
-		ptrdiff_t value = -1;
-	} root;
-
-	std::vector<wchar_t> owningStorage;
+	CharStorage<wchar_t> storage;
+	Trie<wchar_t, int> trie;
 } trie = { {} };
 
-std::unordered_map<std::wstring, std::wstring> Parse(std::wstring_view replacementScript)
+std::vector<std::pair<std::wstring, std::wstring>> Parse(std::wstring_view replacementScript)
 {
-	std::unordered_map<std::wstring, std::wstring> replacements;
+	std::vector<std::pair<std::wstring, std::wstring>> replacements;
 	for (size_t end = 0; ;)
 	{
 		size_t original = replacementScript.find(L"|ORIG|", end);
 		size_t becomes = replacementScript.find(L"|BECOMES|", original);
 		if ((end = replacementScript.find(L"|END|", becomes)) == std::wstring::npos) break;
-		replacements[std::wstring(replacementScript.substr(original + 6, becomes - original - 6))] = replacementScript.substr(becomes + 9, end - becomes - 9);
+		replacements.emplace_back(replacementScript.substr(original + 6, becomes - original - 6), replacementScript.substr(becomes + 9, end - becomes - 9));
 	}
 	return replacements;
 }
@@ -99,7 +89,7 @@ void UpdateReplacements()
 		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) == std::filesystem::last_write_time(REPLACE_SAVE_FILE)) return;
 		std::vector<BYTE> file(std::istreambuf_iterator(std::ifstream(REPLACE_SAVE_FILE, std::ios::binary)), {});
 		std::scoped_lock l(m);
-		trie = Trie(Parse({ (wchar_t*)file.data(), file.size() / sizeof(wchar_t) }));
+		trie = ReplacementTrie(Parse({ (wchar_t*)file.data(), file.size() / sizeof(wchar_t) }));
 	}
 	catch (std::filesystem::filesystem_error) { replaceFileLastWrite.store({}); }
 }
@@ -146,7 +136,7 @@ And this text ツ　　
 		assert(replacements.size() == 4);
 		std::wstring original = LR"(Don't replace this　
  さよなら バカ こんにちは delete this)";
-		std::wstring replaced = Trie(std::move(replacements)).Replace(original);
+		std::wstring replaced = ReplacementTrie(std::move(replacements)).Replace(original);
 		assert(replaced == L"Don't replace thisgoodbye idiot hello");
 	}
 );
