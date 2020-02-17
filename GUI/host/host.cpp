@@ -2,7 +2,6 @@
 #include "defs.h"
 #include "util.h"
 #include "../texthook/texthook.h"
-#include <filesystem>
 
 extern const wchar_t* ALREADY_INJECTED;
 extern const wchar_t* NEED_32_BIT;

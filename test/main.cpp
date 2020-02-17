@@ -1,7 +1,6 @@
 ﻿#include "common.h"
 #include "defs.h"
 #include "resource.h"
-#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <QApplication>

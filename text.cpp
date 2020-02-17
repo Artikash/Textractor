@@ -110,7 +110,7 @@ const char* OUT_OF_RECORDS_RETRY = u8"Textractor: out of search records, please 
 const char* FUNC_MISSING = u8"Textractor: function not present";
 const char* MODULE_MISSING = u8"Textractor: module not present";
 const char* GARBAGE_MEMORY = u8"Textractor: memory constantly changing, useless to read";
-const char* SEND_ERROR = u8"Textractor: Send ERROR (likely an incorrect H-code)";
+const char* SEND_ERROR = u8"Textractor: Send ERROR (likely an unstable/incorrect H-code)";
 const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code)";
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
@@ -174,6 +174,7 @@ const wchar_t* REPLACER_INSTRUCTIONS = LR"(This file only does anything when the
 Replacement commands must be formatted like this:
 |ORIG|original_text|BECOMES|replacement_text|END|
 All text in this file outside of a replacement command is ignored.
+A caret (^) acts as a wildcard that matches any other single character.
 Whitespace in original_text is ignored, but replacement_text can contain spaces, newlines, etc.
 This file must be encoded in Unicode (UTF-16 Little Endian).)";
 const char* THREAD_LINKER = u8"Thread Linker";

@@ -1,7 +1,8 @@
 ﻿#include "extension.h"
+#include "blockmarkup.h"
 #include <cwctype>
 #include <fstream>
-#include <filesystem>
+#include <sstream>
 #include <process.h>
 
 extern const wchar_t* REPLACER_INSTRUCTIONS;
@@ -14,14 +15,16 @@ std::shared_mutex m;
 class Trie
 {
 public:
-	Trie(std::unordered_map<std::wstring, std::wstring> replacements)
+	Trie(const std::istream& replacementScript)
 	{
-		for (const auto& [original, replacement] : replacements)
+		BlockMarkupIterator replacementScriptParser(replacementScript.rdbuf(), Array<std::wstring_view>{ L"|ORIG|", L"|BECOMES|" });
+		while (auto read = replacementScriptParser.Next())
 		{
+			const auto& [original, replacement] = *read;
 			Node* current = &root;
 			for (auto ch : original) if (!Ignore(ch)) current = Next(current, ch);
 			if (current != &root)
-				current->value = owningStorage.insert(owningStorage.end(), replacement.c_str(), replacement.c_str() + replacement.size() + 1) - owningStorage.begin();
+				current->value = charStorage.insert(charStorage.end(), replacement.c_str(), replacement.c_str() + replacement.size() + 1) - charStorage.begin();
 		}
 	}
 
@@ -38,10 +41,10 @@ public:
 			{
 				if (current->value >= 0)
 				{
-					replacement = owningStorage.data() + current->value;
+					replacement = charStorage.data() + current->value;
 					originalLength = j - i;
 				}
-				if (!Ignore(sentence[j])) current = Next(current, sentence[j]);
+				if (!Ignore(sentence[j])) current = Next(current, sentence[j]) ? Next(current, sentence[j]) : Next(current, L'^');
 			}
 
 			result += replacement;
@@ -76,30 +79,16 @@ private:
 		ptrdiff_t value = -1;
 	} root;
 
-	std::vector<wchar_t> owningStorage;
-} trie = { {} };
-
-std::unordered_map<std::wstring, std::wstring> Parse(std::wstring_view replacementScript)
-{
-	std::unordered_map<std::wstring, std::wstring> replacements;
-	for (size_t end = 0; ;)
-	{
-		size_t original = replacementScript.find(L"|ORIG|", end);
-		size_t becomes = replacementScript.find(L"|BECOMES|", original);
-		if ((end = replacementScript.find(L"|END|", becomes)) == std::wstring::npos) break;
-		replacements[std::wstring(replacementScript.substr(original + 6, becomes - original - 6))] = replacementScript.substr(becomes + 9, end - becomes - 9);
-	}
-	return replacements;
-}
+	std::vector<wchar_t> charStorage;
+} trie = { std::istringstream("") };
 
 void UpdateReplacements()
 {
 	try
 	{
 		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) == std::filesystem::last_write_time(REPLACE_SAVE_FILE)) return;
-		std::vector<BYTE> file(std::istreambuf_iterator(std::ifstream(REPLACE_SAVE_FILE, std::ios::binary)), {});
 		std::scoped_lock l(m);
-		trie = Trie(Parse({ (wchar_t*)file.data(), file.size() / sizeof(wchar_t) }));
+		trie = Trie(std::ifstream(REPLACE_SAVE_FILE, std::ios::binary));
 	}
 	catch (std::filesystem::filesystem_error) { replaceFileLastWrite.store({}); }
 }
@@ -138,12 +127,12 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 
 TEST(
 	{
-		auto replacements = Parse(LR"(
+		std::wstring replacementScript = LR"(
 |ORIG|さよなら|BECOMES|goodbye |END|Ignore this text
 And this text ツ　　
 |ORIG|バカ|BECOMES|idiot|END|
-|ORIG|こんにちは |BECOMES| hello|END||ORIG|delete this|BECOMES||END|)");
-		assert(replacements.size() == 4);
+|ORIG|こんにちは |BECOMES| hello|END||ORIG|delet^this|BECOMES||END|)";
+		Trie replacements(std::istringstream(std::string{ (const char*)replacementScript.c_str(), replacementScript.size() * sizeof(wchar_t) }));
 		std::wstring original = LR"(Don't replace this　
  さよなら バカ こんにちは delete this)";
 		std::wstring replaced = Trie(std::move(replacements)).Replace(original);

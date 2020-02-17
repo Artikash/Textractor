@@ -17,6 +17,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <atomic>
+#include <filesystem>
 #include <cstdint>
 #include <cassert>
 
@@ -33,7 +34,7 @@ struct ArrayImpl<T> { using type = T[]; };
 template <typename... Ts>
 using Array = typename ArrayImpl<Ts...>::type;
 
-template <auto F> using Functor = std::integral_constant<std::decay_t<decltype(F)>, F>;
+template <auto F> using Functor = std::integral_constant<std::remove_reference_t<decltype(F)>, F>;
 
 template <typename V>
 struct Identity { V operator()(V v) const { return v; } };

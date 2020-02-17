@@ -2,8 +2,8 @@
 #include "extension.h"
 #include "ui_extrawindow.h"
 #include "defs.h"
+#include "blockmarkup.h"
 #include <fstream>
-#include <filesystem>
 #include <process.h>
 #include <QColorDialog>
 #include <QFontDialog>
@@ -281,32 +281,31 @@ private:
 			catch (std::filesystem::filesystem_error) { return; }
 
 			dictionary.clear();
-			owningStorage.clear();
+			charStorage.clear();
 
-			auto StoreCopy = [&](const std::string& string)
+			auto StoreCopy = [&](std::string_view string)
 			{
-				return &*owningStorage.insert(owningStorage.end(), string.c_str(), string.c_str() + string.size() + 1);
+				auto location = &*charStorage.insert(charStorage.end(), string.begin(), string.end());
+				charStorage.push_back(0);
+				return location;
 			};
 
-			std::string savedDictionary(std::istreambuf_iterator(std::ifstream(DICTIONARY_SAVE_FILE)), {});
-			owningStorage.reserve(savedDictionary.size());
-			for (size_t end = 0; ;)
+			charStorage.reserve(std::filesystem::file_size(DICTIONARY_SAVE_FILE));
+			std::ifstream stream(DICTIONARY_SAVE_FILE);
+			BlockMarkupIterator savedDictionary(stream, Array<std::string_view>{ "|TERM|", "|DEFINITION|" });
+			while (auto read = savedDictionary.Next())
 			{
-				size_t term = savedDictionary.find("|TERM|", end);
-				size_t definition = savedDictionary.find("|DEFINITION|", term);
-				if ((end = savedDictionary.find("|END|", definition)) == std::string::npos) break;
-				auto storedDefinition = StoreCopy(savedDictionary.substr(definition + 12, end - definition - 12));
-				for (size_t next; (next = savedDictionary.find("|TERM|", term + 1)) != std::string::npos && next < definition; term = next)
-					dictionary.push_back({ StoreCopy(savedDictionary.substr(term + 6, next - term - 6)), storedDefinition });
-				dictionary.push_back({ StoreCopy(savedDictionary.substr(term + 6, definition - term - 6)), storedDefinition });
-			}
-			auto oldData = owningStorage.data();
-			owningStorage.shrink_to_fit();
-			dictionary.shrink_to_fit();
-			for (auto& [term, definition] : dictionary)
-			{
-				term += owningStorage.data() - oldData;
-				definition += owningStorage.data() - oldData;
+				const auto& [terms, definition] = *read;
+				auto storedDefinition = StoreCopy(definition);
+				std::string_view termsView = terms;
+				size_t start = 0, end = termsView.find("|TERM|");
+				while (end != std::string::npos)
+				{
+					dictionary.push_back(DictionaryEntry{ StoreCopy(termsView.substr(start, end - start)), storedDefinition });
+					start = end + 6;
+					end = termsView.find("|TERM|", start);
+				}
+				dictionary.push_back(DictionaryEntry{ StoreCopy(termsView.substr(start)), storedDefinition });
 			}
 			std::sort(dictionary.begin(), dictionary.end());
 		}
@@ -354,7 +353,7 @@ private:
 		}
 
 		std::filesystem::file_time_type dictionaryFileLastWrite;
-		std::vector<char> owningStorage;
+		std::vector<char> charStorage;
 		std::vector<QString> definitions;
 		int definitionIndex;
 	} dictionaryWindow;
