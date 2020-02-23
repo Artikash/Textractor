@@ -127,11 +127,10 @@ const char* DICTIONARY_INSTRUCTIONS = u8R"(This file is used only for the "Dicti
 It uses a custom format specific to Textractor and is not meant to be written manually.
 You should look for a dictionary in this format online (https://github.com/Artikash/Textractor-Dictionaries/releases is a good place to start).
 Alternatively, if you're a programmer, you can write a script to convert a dictionary from another format with the info below.
-Once you have a dictionary, to look up some text in Extra Window, select it. All matching definitions will be shown.
+Once you have a dictionary, to look up some text in Extra Window, hover over it. All matching definitions will be shown. Scroll to change definitions.
 Definitions are formatted like this:|TERM|Hola|TERM|hola|TERM|Bonjour|TERM|bonjour|DEFINITION|hello|END|
 The definition can include rich text (https://doc.qt.io/qt-5/richtext-html-subset.html) which will be formatted properly.
 All text in this file outside of a definition is ignored.
-Terms longer than 50 characters may not be shown (for performance reasons that should be fixed soon).
 This file must be encoded in UTF-8.)";
 const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown

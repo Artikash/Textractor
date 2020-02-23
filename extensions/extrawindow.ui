@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>800</width>
     <height>300</height>
    </rect>
   </property>
@@ -26,6 +26,9 @@
      </property>
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
      </property>
      <property name="alignment">
       <set>Qt::AlignTop</set>

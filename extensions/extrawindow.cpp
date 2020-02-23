@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QGraphicsEffect>
+#include <QFontMetrics>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -155,7 +156,7 @@ public:
 		PrettyWindow("Extra Window")
 	{
 		ui.display->setTextFormat(Qt::PlainText);
-		setGeometry(settings.value(WINDOW, geometry()).toRect());
+		if (settings.contains(WINDOW) && QGuiApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
 
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
 			{ TOPMOST, false, &ExtraWindow::setTopmost },
@@ -171,6 +172,7 @@ public:
 			action->setChecked(default);
 		}
 		ui.display->installEventFilter(this);
+		ui.display->setMouseTracking(true);
 
 		QMetaObject::invokeMethod(this, [this]
 		{
@@ -188,6 +190,7 @@ public:
 	{
 		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
 		sanitize(sentence);
+		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);
 		historyIndex = sentenceHistory.size() - 1;
 		ui.display->setText(sentence);
@@ -226,14 +229,42 @@ private:
 		settings.setValue(DICTIONARY, this->useDictionary = useDictionary);
 	}
 
+	void computeDictionaryPosition(QPoint mouse)
+	{
+		if (cachedDisplayInfo.compareExchange(ui.display))
+		{
+			QString sentence = ui.display->text();
+			QFontMetrics fontMetrics(ui.display->font(), ui.display);
+			textPositionMap.clear();
+			for (int i = 0, height = 0, lineBreak = 0; i < sentence.size(); ++i)
+			{
+				int block = 1;
+				for (int charHeight = fontMetrics.boundingRect(0, 0, 1, INT_MAX, Qt::TextWordWrap, sentence.mid(i, 1)).height();
+					i + block < sentence.size() && fontMetrics.boundingRect(0, 0, 1, INT_MAX, Qt::TextWordWrap, sentence.mid(i, block + 1)).height() < charHeight * 1.5; ++block);
+				auto boundingRect = fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.left(i + block));
+				if (boundingRect.height() > height)
+				{
+					height = boundingRect.height();
+					lineBreak = i;
+				}
+				textPositionMap.push_back({
+					fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.mid(lineBreak, i - lineBreak + 1)).width(),
+					height
+				});
+			}
+		}
+		int i;
+		for (i = 0; i < textPositionMap.size(); ++i) if (textPositionMap[i].y() > mouse.y() && textPositionMap[i].x() > mouse.x()) break;
+		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > ui.display->font().pointSize() * 2) return;
+		if (ui.display->text().mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
+		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() / 2);
+		dictionaryWindow.setTerm(ui.display->text().mid(i));
+		dictionaryWindow.move(ui.display->mapToGlobal(mouse + QPoint(2, 2)));
+	}
+
 	bool eventFilter(QObject*, QEvent* event) override
 	{
-		if (useDictionary && event->type() == QEvent::MouseButtonRelease && ui.display->hasSelectedText())
-		{
-			dictionaryWindow.ui.display->setFixedWidth(ui.display->width());
-			dictionaryWindow.setTerm(ui.display->text().mid(ui.display->selectionStart()));
-			dictionaryWindow.move({ x(), y() - dictionaryWindow.height() });
-		}
+		if (useDictionary && event->type() == QEvent::MouseMove) computeDictionaryPosition(((QMouseEvent*)event)->localPos().toPoint());
 		if (event->type() == QEvent::MouseButtonPress) dictionaryWindow.hide();
 		return false;
 	}
@@ -259,6 +290,26 @@ private:
 
 	bool locked, showOriginal, useDictionary;
 	QPoint oldPos;
+
+	class
+	{
+	public:
+		bool compareExchange(QLabel* display)
+		{
+			if (display->text() == text && display->font() == font && display->width() == width) return false;
+			text = display->text();
+			font = display->font();
+			width = display->width();
+			return true;
+		}
+
+	private:
+		QString text;
+		QFont font;
+		int width;
+	} cachedDisplayInfo;
+	std::vector<QPoint> textPositionMap;
+
 	std::vector<QString> sentenceHistory;
 	int historyIndex = 0;
 
@@ -312,11 +363,12 @@ private:
 
 		void setTerm(QString term)
 		{
+			this->term = term;
 			UpdateDictionary();
 			definitions.clear();
 			definitionIndex = 0;
 			std::unordered_set<std::string_view> definitionSet;
-			for (QByteArray utf8term = term.left(200).toUtf8(); !utf8term.isEmpty(); utf8term.chop(1))
+			for (QByteArray utf8term = term.left(500).toUtf8(); !utf8term.isEmpty(); utf8term.chop(1))
 				for (auto [it, end] = std::equal_range(dictionary.begin(), dictionary.end(), DictionaryEntry{ utf8term }); it != end; ++it)
 					if (definitionSet.emplace(it->definition).second)
 						definitions.push_back(QStringLiteral("<h3>%1 (%3/%4)</h3>%2").arg(utf8term, it->definition));
@@ -326,7 +378,7 @@ private:
 
 		void ShowDefinition()
 		{
-			if (definitions.empty()) return;
+			if (definitions.empty()) return hide();
 			ui.display->setText(definitions[definitionIndex]);
 			adjustSize();
 			resize(width(), 1);
@@ -340,6 +392,7 @@ private:
 			bool operator<(DictionaryEntry other) const { return strcmp(term, other.term) < 0; }
 		};
 		std::vector<DictionaryEntry> dictionary;
+		QString term;
 
 	private:
 		void wheelEvent(QWheelEvent* event) override
@@ -347,9 +400,7 @@ private:
 			int scroll = event->angleDelta().y();
 			if (scroll > 0 && definitionIndex > 0) definitionIndex -= 1;
 			if (scroll < 0 && definitionIndex + 1 < definitions.size()) definitionIndex += 1;
-			int oldHeight = height();
 			ShowDefinition();
-			move(x(), y() + oldHeight - height());
 		}
 
 		std::filesystem::file_time_type dictionaryFileLastWrite;
