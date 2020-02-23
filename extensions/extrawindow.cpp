@@ -231,10 +231,11 @@ private:
 
 	void computeDictionaryPosition(QPoint mouse)
 	{
+		const QFont& font = ui.display->font();
 		if (cachedDisplayInfo.compareExchange(ui.display))
 		{
 			QString sentence = ui.display->text();
-			QFontMetrics fontMetrics(ui.display->font(), ui.display);
+			QFontMetrics fontMetrics(font, ui.display);
 			textPositionMap.clear();
 			for (int i = 0, height = 0, lineBreak = 0; i < sentence.size(); ++i)
 			{
@@ -255,11 +256,18 @@ private:
 		}
 		int i;
 		for (i = 0; i < textPositionMap.size(); ++i) if (textPositionMap[i].y() > mouse.y() && textPositionMap[i].x() > mouse.x()) break;
-		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > ui.display->font().pointSize() * 2) return;
+		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > font.pointSize() * 2) return dictionaryWindow.hide();
 		if (ui.display->text().mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
-		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() / 2);
+		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
 		dictionaryWindow.setTerm(ui.display->text().mid(i));
-		dictionaryWindow.move(ui.display->mapToGlobal(mouse + QPoint(2, 2)));
+		int home = i == 0 ? 0 : textPositionMap[i - 1].x(), away = textPositionMap[i].x(), x = 0;
+		if (textPositionMap[i].x() > ui.display->width() / 2)
+		{
+			std::swap(home, away);
+			x -= dictionaryWindow.width();
+		}
+		x += (home * 3 + away) / 4;
+		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, textPositionMap[i].y())));
 	}
 
 	bool eventFilter(QObject*, QEvent* event) override
