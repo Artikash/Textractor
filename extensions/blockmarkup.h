@@ -3,53 +3,57 @@
 #include "common.h"
 #include <istream>
 
-template <typename C, int DelimiterCount, int bufferStartSize = 200>
+template <typename C, int delimiterCount, int blockSize = 0x1000 / sizeof(C)> // windows file block size
 class BlockMarkupIterator
 {
 public:
-	BlockMarkupIterator(std::istreambuf_iterator<char> it, const std::basic_string_view<C> (&delimiters)[DelimiterCount]) :
-		it(it)
+	BlockMarkupIterator(const std::istream& it, const std::basic_string_view<C>(&delimiters)[delimiterCount]) :
+		streambuf(*it.rdbuf())
 	{
-		std::copy_n(delimiters, DelimiterCount, this->delimiters.begin());
+		std::copy_n(delimiters, delimiterCount, this->delimiters.begin());
 	}
-	std::optional<std::array<std::basic_string<C>, DelimiterCount>> Next()
+
+	std::optional<std::array<std::basic_string<C>, delimiterCount>> Next()
 	{
-		std::array<std::basic_string<C>, DelimiterCount> results;
-		std::basic_string<C> buffer;
-		buffer.reserve(bufferStartSize);
-		Find(buffer, delimiters[0]);
-		buffer.clear();
-		for (int i = 0; i < DelimiterCount; ++i)
+		std::array<std::basic_string<C>, delimiterCount> results;
+		Find(delimiters[0], true);
+		for (int i = 0; i < delimiterCount; ++i)
 		{
-			const auto delimiter = i + 1 < DelimiterCount ? delimiters[i + 1] : end;
-			if (!Find(buffer, delimiter)) return {};
-			buffer.erase(buffer.size() - delimiter.size());
-			results[i] = std::move(buffer);
-			(buffer = {}).reserve(bufferStartSize);
+			const auto delimiter = i + 1 < delimiterCount ? delimiters[i + 1] : end;
+			if (auto found = Find(delimiter, false)) results[i] = std::move(found.value());
+			else return {};
 		}
 		return results;
 	}
 
 private:
-	bool Find(std::basic_string<C>& result, std::basic_string_view<C> delimiter)
+	std::optional<std::basic_string<C>> Find(std::basic_string_view<C> delimiter, bool discard)
 	{
-		while (Read((result += C{}).back())) if (result.back() == '|' && result.find(delimiter, result.size() - delimiter.size()) != std::string::npos) return true;
-		return false;
-	}
-
-	bool Read(C& out)
-	{
-		BYTE buffer[sizeof(C)];
-		for (int i = 0; i < sizeof(C); ++i, ++it)
-			if (it.equal({})) return false;
-			else buffer[i] = *it;
-		out = reinterpret_cast<C&>(buffer);
-		return true;
+		for (int i = 0; ;)
+		{
+			int pos = buffer.find(delimiter, i);
+			if (pos != std::string::npos)
+			{
+				auto result = !discard ? std::optional(std::basic_string(buffer.begin(), buffer.begin() + pos)) : std::nullopt;
+				buffer.erase(buffer.begin(), buffer.begin() + pos + delimiter.size());
+				return result;
+			}
+			int oldSize = buffer.size();
+			buffer.resize(oldSize + blockSize);
+			if (!streambuf.sgetn((char*)buffer.data() + oldSize, blockSize * sizeof(C))) return {};
+			i = max(0, oldSize - (int)delimiter.size());
+			if (discard)
+			{
+				buffer.erase(0, i);
+				i = 0;
+			}
+		}
 	}
 
 	static constexpr C endImpl[5] = { '|', 'E', 'N', 'D', '|' };
 	static constexpr std::basic_string_view end{ endImpl, 5 };
 
-	std::istreambuf_iterator<char> it;
-	std::array<std::basic_string_view<C>, DelimiterCount> delimiters;
+	std::basic_streambuf<char>& streambuf;
+	std::basic_string<C> buffer;
+	std::array<std::basic_string_view<C>, delimiterCount> delimiters;
 };

@@ -4,6 +4,7 @@
 #define ARCH "x86"
 #endif
 
+const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* DETACH = u8"Detach from game";
@@ -185,6 +186,7 @@ const char* HEXADECIMAL = u8"Hexadecimal";
 static auto _ = []
 {
 #ifdef TURKISH
+	NATIVE_LANGUAGE = "Turkish";
 	ATTACH = u8"Oyuna bağla";
 	DETACH = u8"Oyundan kopar";
 	ADD_HOOK = u8"Kanca ekle";
@@ -218,6 +220,7 @@ Kaynak kodu GKLv3 koruması altında proje ana sayfasında mevcut)";
 #endif // TURKISH
 
 #ifdef SPANISH
+	NATIVE_LANGUAGE = "Spanish";
 	ATTACH = u8"Adjuntar juego";
 	LAUNCH = u8"Iniciar juego";
 	DETACH = u8"Desconectar juego";
@@ -280,6 +283,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 #endif // SPANISH
 
 #ifdef SIMPLIFIED_CHINESE
+	NATIVE_LANGUAGE = "Chinese(Simplified)"
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
 	DETACH = u8"从游戏分离";
@@ -344,6 +348,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 #endif // SIMPLIFIED_CHINESE
 
 #ifdef RUSSIAN
+	NATIVE_LANGUAGE = "Russian";
 	ATTACH = u8"Присоединить к игре";
 	LAUNCH = u8"Запустить игру";
 	DETACH = u8"Отсоединить от игры";
@@ -475,6 +480,7 @@ end)";
 #endif // RUSSIAN
 
 #ifdef INDONESIAN
+	NATIVE_LANGUAGE = "Indonesian";
 	ATTACH = u8"Tempelkan kedalam game";
 	LAUNCH = u8"Mulai game";
 	DETACH = u8"Lepaskan dari game";
@@ -539,6 +545,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 #endif // INDONESIAN
 
 #ifdef PORTUGUESE
+	NATIVE_LANGUAGE = "Portuguese";
 	ATTACH = u8"Anexar ao Jogo";
 	LAUNCH = u8"Iniciar Jogo";
 	DETACH = u8"Desconectar do Jogo";
@@ -626,6 +633,7 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
 #endif // PORTUGUESE
 
 #ifdef THAI
+	NATIVE_LANGUAGE = "Thai";
 	ATTACH = u8"เชื่อมเกม";
 	LAUNCH = u8"เริ่มเกม";
 	DETACH = u8"ยกเลิกการเชื่อม";
@@ -687,6 +695,7 @@ Source code สามารถหาได้จากส่วนของ GPLv
 #endif // THAI
 
 #ifdef KOREAN
+	NATIVE_LANGUAGE = "Korean";
 	ATTACH = u8"게임에 부착";
 	LAUNCH = u8"게임 실행";
 	DETACH = u8"게임에서 탈착";

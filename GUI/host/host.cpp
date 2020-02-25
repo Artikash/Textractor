@@ -68,10 +68,8 @@ namespace
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
 		std::vector<TextThread*> threadsToRemove;
-		{
-			auto textThreadsByParams = ::textThreadsByParams.Acquire();
-			std::for_each(textThreadsByParams->begin(), textThreadsByParams->end(), [&](auto& it) { if (removeIf(it.first)) threadsToRemove.push_back(&it.second); });
-		}
+		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents)
+			if (removeIf(tp)) threadsToRemove.push_back(&thread);
 		for (auto thread : threadsToRemove)
 		{
 			OnDestroy(*thread);
@@ -131,14 +129,14 @@ namespace
 				{
 					auto tp = *(ThreadParam*)buffer;
 					auto textThreadsByParams = ::textThreadsByParams.Acquire();
-					auto textThread = textThreadsByParams->find(tp);
-					if (textThread == textThreadsByParams->end())
+					auto thread = textThreadsByParams->find(tp);
+					if (thread == textThreadsByParams->end())
 					{
-						try { textThread = textThreadsByParams->try_emplace(tp, tp, processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp).first; }
+						try { thread = textThreadsByParams->try_emplace(tp, tp, processRecordsByIds->at(tp.processId).GetHook(tp.addr).hp).first; }
 						catch (std::out_of_range) { continue; } // probably garbage data in pipe, try again
-						OnCreate(textThread->second);
+						OnCreate(thread->second);
 					}
-					textThread->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
+					thread->second.Push(buffer + sizeof(tp), bytesRead - sizeof(tp));
 				}
 				break;
 				}
@@ -247,9 +245,9 @@ namespace Host
 
 	TextThread* GetThread(int64_t handle)
 	{
-		auto textThreadsByParams = ::textThreadsByParams.Acquire();
-		auto thread = std::find_if(textThreadsByParams->begin(), textThreadsByParams->end(), [&](const auto& thread) { return thread.second.handle == handle; });
-		return thread != textThreadsByParams->end() ? &thread->second : nullptr;	
+		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents)
+			if (thread.handle == handle) return &thread;
+		return nullptr;	
 	}
 
 	void AddConsoleOutput(std::wstring text)

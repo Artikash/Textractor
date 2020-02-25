@@ -11,7 +11,6 @@ extern Synchronized<std::wstring> translateTo;
 const char* TRANSLATION_PROVIDER = "Google";
 QStringList languages
 {
-	"English: en",
 	"Afrikaans: af",
 	"Arabic: ar",
 	"Albanian: sq",
@@ -26,6 +25,7 @@ QStringList languages
 	"Czech: cs",
 	"Danish: da",
 	"Dutch: nl",
+	"English: en",
 	"Esperanto: eo",
 	"Estonian: et",
 	"Filipino: tl",

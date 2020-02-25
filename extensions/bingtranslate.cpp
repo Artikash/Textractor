@@ -9,7 +9,6 @@ extern Synchronized<std::wstring> translateTo;
 const char* TRANSLATION_PROVIDER = "Bing";
 QStringList languages
 {
-	"English: en",
 	"Arabic: ar",
 	"Bosnian: bs-Latn",
 	"Bulgarian: bg",
@@ -20,6 +19,7 @@ QStringList languages
 	"Czech: cs",
 	"Danish: da",
 	"Dutch: nl",
+	"English: en",
 	"Estonian: et",
 	"Finnish: fi",
 	"French: fr",

@@ -1,10 +1,13 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
 #include "defs.h"
+#include "util.h"
+#include "blockmarkup.h"
 #include "network.h"
-#include <map>
+#include <fstream>
 #include <QTimer>
 
+extern const char* NATIVE_LANGUAGE;
 extern const char* SELECT_LANGUAGE;
 extern const char* SELECT_LANGUAGE_MESSAGE;
 extern const char* LANGUAGE_SAVED;
@@ -15,19 +18,25 @@ extern QStringList languages;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
 const char* LANGUAGE = u8"Language";
-const QString CACHE_FILE = QString("%1 Cache.txt").arg(TRANSLATION_PROVIDER);
+const std::string TRANSLATION_CACHE_FILE = FormatString("%sCache.txt", TRANSLATION_PROVIDER);
 
 Synchronized<std::wstring> translateTo = L"en";
 QSettings settings(CONFIG_FILE, QSettings::IniFormat);
+
+struct Translation
+{
+	std::wstring original, translation;
+	bool operator<(const Translation& other) const { return original < other.original; }
+};
+Synchronized<std::vector<Translation>> translationCache;
 int savedSize;
-Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 
 void SaveCache()
 {
-	QTextFile file(CACHE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
-	auto translationCache = ::translationCache.Acquire();
-	for (const auto& [original, translation] : translationCache.contents)
-		file.write(S(FormatString(L"%s|T|\n%s|T|\n", original, translation)).toUtf8());
+	std::wstring allTranslations(L"\xfeff");
+	for (const auto& [original, translation] : translationCache.Acquire().contents)
+		allTranslations.append(L"|SENTENCE|").append(original).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
+	std::ofstream(TRANSLATION_CACHE_FILE, std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
 	savedSize = translationCache->size();
 }
 
@@ -46,7 +55,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				SELECT_LANGUAGE,
 				QString(SELECT_LANGUAGE_MESSAGE).arg(TRANSLATION_PROVIDER),
 				languages,
-				0,
+				std::find_if(languages.begin(), languages.end(), [](QString language) { return language.startsWith(NATIVE_LANGUAGE); }) - languages.begin(),
 				false,
 				nullptr,
 				Qt::WindowCloseButtonHint
@@ -56,10 +65,16 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 			QMessageBox::information(nullptr, SELECT_LANGUAGE, QString(LANGUAGE_SAVED).arg(CONFIG_FILE));
 		});
 
-		QStringList savedCache = QString(QTextFile(CACHE_FILE, QIODevice::ReadOnly).readAll()).split("|T|\n", QString::SkipEmptyParts);
-		for (int i = 0; i < savedCache.size() - 1; i += 2)
-			translationCache->insert({ S(savedCache[i]), S(savedCache[i + 1]) });
+		std::ifstream stream(TRANSLATION_CACHE_FILE, std::ios::binary);
+		BlockMarkupIterator savedTranslations(stream, Array<std::wstring_view>{ L"|SENTENCE|", L"|TRANSLATION|" });
+		auto translationCache = ::translationCache.Acquire();
+		while (auto read = savedTranslations.Next())
+		{
+			const auto& [original, translation] = read.value();
+			translationCache->push_back({ original, translation });
+		}
 		savedSize = translationCache->size();
+		std::sort(translationCache->begin(), translationCache->end());
 	}
 	break;
 	case DLL_PROCESS_DETACH:
@@ -94,14 +109,15 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	bool cache = false;
 	std::wstring translation;
-	if (translationCache->count(sentence) != 0) translation = translationCache->at(sentence);
-	else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
-	else std::tie(cache, translation) = Translate(sentence);
-	if (cache && sentenceInfo["current select"])
 	{
-		translationCache->insert({ sentence, translation });
-		if (translationCache->size() > savedSize + 50) SaveCache();
+		auto translationCache = ::translationCache.Acquire();
+		auto translationLocation = std::lower_bound(translationCache->begin(), translationCache->end(), Translation{ sentence });
+		if (translationLocation != translationCache->end() && translationLocation->original == sentence) translation = translationLocation->translation;
+		else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
+		else std::tie(cache, translation) = Translate(sentence);
+		if (cache && sentenceInfo["current select"]) translationCache->insert(translationLocation, { sentence, translation });
 	}
+	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
 	Unescape(translation);
 	sentence += L"\n" + translation;
