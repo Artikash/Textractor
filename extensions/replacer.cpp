@@ -17,10 +17,10 @@ class Trie
 public:
 	Trie(const std::istream& replacementScript)
 	{
-		BlockMarkupIterator replacementScriptParser(replacementScript.rdbuf(), Array<std::wstring_view>{ L"|ORIG|", L"|BECOMES|" });
+		BlockMarkupIterator replacementScriptParser(replacementScript, Array<std::wstring_view>{ L"|ORIG|", L"|BECOMES|" });
 		while (auto read = replacementScriptParser.Next())
 		{
-			const auto& [original, replacement] = *read;
+			const auto& [original, replacement] = read.value();
 			Node* current = &root;
 			for (auto ch : original) if (!Ignore(ch)) current = Next(current, ch);
 			if (current != &root)
@@ -103,7 +103,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		if (trie.Empty())
 		{
 			auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
-			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS)) file <<  (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
+			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS)) file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
 			_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
 		}
 	}

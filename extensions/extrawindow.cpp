@@ -2,9 +2,11 @@
 #include "extension.h"
 #include "ui_extrawindow.h"
 #include "defs.h"
+#include "util.h"
 #include "blockmarkup.h"
 #include <fstream>
 #include <process.h>
+#include <QRegularExpression>
 #include <QColorDialog>
 #include <QFontDialog>
 #include <QMenu>
@@ -260,13 +262,8 @@ private:
 		if (ui.display->text().mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
 		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
 		dictionaryWindow.setTerm(ui.display->text().mid(i));
-		int home = i == 0 ? 0 : textPositionMap[i - 1].x(), away = textPositionMap[i].x(), x = 0;
-		if (textPositionMap[i].x() > ui.display->width() / 2)
-		{
-			std::swap(home, away);
-			x -= dictionaryWindow.width();
-		}
-		x += (home * 3 + away) / 4;
+		int left = i == 0 ? 0 : textPositionMap[i - 1].x(), right = textPositionMap[i].x(),
+			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4;
 		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, textPositionMap[i].y())));
 	}
 
@@ -354,7 +351,7 @@ private:
 			BlockMarkupIterator savedDictionary(stream, Array<std::string_view>{ "|TERM|", "|DEFINITION|" });
 			while (auto read = savedDictionary.Next())
 			{
-				const auto& [terms, definition] = *read;
+				const auto& [terms, definition] = read.value();
 				auto storedDefinition = StoreCopy(definition);
 				std::string_view termsView = terms;
 				size_t start = 0, end = termsView.find("|TERM|");
@@ -366,7 +363,20 @@ private:
 				}
 				dictionary.push_back(DictionaryEntry{ StoreCopy(termsView.substr(start)), storedDefinition });
 			}
-			std::sort(dictionary.begin(), dictionary.end());
+			std::stable_sort(dictionary.begin(), dictionary.end());
+
+			inflections.clear();
+			stream.seekg(0);
+			BlockMarkupIterator savedInflections(stream, Array<std::string_view>{ "|ROOT|", "|INFLECTS TO|", "|NAME|" });
+			while (auto read = savedInflections.Next())
+			{
+				const auto& [root, inflectsTo, name] = read.value();
+				if (!inflections.emplace_back(Inflection{
+					S(root),
+					QRegularExpression(QRegularExpression::anchoredPattern(S(inflectsTo)), QRegularExpression::UseUnicodePropertiesOption),
+					S(name)
+				}).inflectsTo.isValid()) TEXTRACTOR_MESSAGE(L"Invalid regex: %s", StringToWideString(inflectsTo));
+			}
 		}
 
 		void setTerm(QString term)
@@ -375,11 +385,17 @@ private:
 			UpdateDictionary();
 			definitions.clear();
 			definitionIndex = 0;
-			std::unordered_set<std::string_view> definitionSet;
-			for (QByteArray utf8term = term.left(500).toUtf8(); !utf8term.isEmpty(); utf8term.chop(1))
-				for (auto [it, end] = std::equal_range(dictionary.begin(), dictionary.end(), DictionaryEntry{ utf8term }); it != end; ++it)
-					if (definitionSet.emplace(it->definition).second)
-						definitions.push_back(QStringLiteral("<h3>%1 (%3/%4)</h3>%2").arg(utf8term, it->definition));
+			std::unordered_set<const char*> foundDefinitions;
+			for (term = term.left(500); !term.isEmpty(); term.chop(1))
+				for (const auto& [rootTerm, definition, inflections] : LookupDefinitions(term, foundDefinitions))
+					definitions.push_back(
+						QStringLiteral("<h3>%1 (%5/%6)</h3><small>%2 %3</small><p>%4</p>").arg(
+							term,
+							rootTerm.split("<<")[0],
+							inflections.join(""),
+							definition
+						)
+					);
 			for (int i = 0; i < definitions.size(); ++i) definitions[i] = definitions[i].arg(i + 1).arg(definitions.size());
 			ShowDefinition();
 		}
@@ -403,6 +419,29 @@ private:
 		QString term;
 
 	private:
+		struct LookupResult
+		{
+			QString term;
+			QString definition;
+			QStringList inflectionsUsed;
+		};
+		std::vector<LookupResult> LookupDefinitions(QString term, std::unordered_set<const char*>& foundDefinitions, QStringList inflectionsUsed = {})
+		{
+			std::vector<LookupResult> results;
+			for (auto [it, end] = std::equal_range(dictionary.begin(), dictionary.end(), DictionaryEntry{ term.toUtf8() }); it != end; ++it)
+				if (foundDefinitions.emplace(it->definition).second)
+					results.push_back({ term, it->definition, inflectionsUsed });
+			for (const auto& inflection : inflections) if (auto match = inflection.inflectsTo.match(term); match.hasMatch())
+			{
+				QStringList currentInflectionsUsed = inflectionsUsed;
+				currentInflectionsUsed.push_front(inflection.name);
+				QString root = inflection.root;
+				for (int i = 0; i < root.size(); ++i) if (root[i].isDigit()) root.replace(i, 1, match.captured(root[i].unicode() - '0'));
+				for (const auto& definition : LookupDefinitions(root, foundDefinitions, currentInflectionsUsed)) results.push_back(definition);
+			}
+			return results;
+		}
+
 		void wheelEvent(QWheelEvent* event) override
 		{
 			int scroll = event->angleDelta().y();
@@ -410,6 +449,14 @@ private:
 			if (scroll < 0 && definitionIndex + 1 < definitions.size()) definitionIndex += 1;
 			ShowDefinition();
 		}
+
+		struct Inflection
+		{
+			QString root;
+			QRegularExpression inflectsTo;
+			QString name;
+		};
+		std::vector<Inflection> inflections;
 
 		std::filesystem::file_time_type dictionaryFileLastWrite;
 		std::vector<char> charStorage;
