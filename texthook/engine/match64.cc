@@ -80,6 +80,7 @@ namespace Engine
 			if (!getDomain || !getName || !getJitInfo) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
+			ConsoleOutput("Textractor: Mono Dynamic ENTER (hook = %s)", loadedConfig ? loadedConfig : "brute force");
 			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
 			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
 			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
@@ -91,13 +92,17 @@ namespace Engine
 					{
 						if (getJitInfo(domain, addr))
 							if (char* name = getName(addr))
-								if (strstr(name, "string:") && strstr(name, "+ 0x0") && !strstr(name, "string:mem"))
+								if ((!loadedConfig && strstr(name, "string:") && strstr(name, "+ 0x0") && !strstr(name, "string:mem")) ||
+									loadedConfig && strstr(name, loadedConfig) && strstr(name, "+ 0x0"))
 								{
 									HookParam hp = {};
 									hp.address = addr;
-									hp.type = USING_STRING | USING_UNICODE | BLOCK_FLOOD | FULL_STRING;
+									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
 									hp.offset = -0x20; // rcx
 									hp.padding = 20;
+									char nameForUser[HOOK_NAME_SIZE] = {};
+									strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
+									if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
 									hp.length_fun = [](uintptr_t, uintptr_t data)
 									{
 										/* Artikash 6/18/2019:
@@ -106,12 +111,14 @@ namespace Engine
 										int len = *(int*)(data - 4);
 										return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
 									};
-									NewHook(hp, name);
+									NewHook(hp, nameForUser);
 								}
 					}
 					__except (EXCEPTION_EXECUTE_HANDLER) {}
 				}(addr);
 			}
+			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please create a TextractorConfig.txt file"
+				"next to the main executable and put the name of a working hook inside it");
 			return true;
 		failed:
 			ConsoleOutput("Textractor: Mono Dynamic failed");

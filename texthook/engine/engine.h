@@ -15,6 +15,7 @@ namespace Engine {
 // Global variables
 extern wchar_t *processName, // cached
                processPath[MAX_PATH]; // cached
+inline const char *requestedEngine = nullptr, *loadedConfig = nullptr;
 
 // Artikash 6/17/2019 TODO: These have the wrong values on x64
 /** jichi 12/24/2014

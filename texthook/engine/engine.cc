@@ -16717,6 +16717,7 @@ void InsertMonoHook(HMODULE h)
 		if (!getDomain || !getName || !getJitInfo) goto failed;
 		static auto domain = getDomain();
 		if (!domain) goto failed;
+        ConsoleOutput("Textractor: Mono Dynamic ENTER (hook = %s)", loadedConfig ? loadedConfig : "brute force");
 		const BYTE prolog[] = { 0x55, 0x8b, 0xec };
 		for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
 		{
@@ -16726,24 +16727,29 @@ void InsertMonoHook(HMODULE h)
 				{
 					if (getJitInfo(domain, addr))
 						if (char* name = getName(addr))
-							if (strstr(name, "string:") && !strstr(name, "string:mem"))
+							if ((!loadedConfig && strstr(name, "string:") && !strstr(name, "string:mem")) || (loadedConfig && strstr(name, loadedConfig)))
 							{
 								HookParam hp = {};
 								hp.address = addr;
-								hp.type = USING_UNICODE | FULL_STRING | BLOCK_FLOOD;
+								hp.type = USING_UNICODE | FULL_STRING;
 								hp.offset = 4;
+                                char nameForUser[HOOK_NAME_SIZE] = {};
+                                strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
+                                if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
 								hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
 								{
 									MonoString* string = (MonoString*)argof(1, esp_base);
 									*data = (DWORD)string->chars;
 									*len = string->length * 2;
 								};
-								NewHook(hp, name);
+								NewHook(hp, nameForUser);
 							}
 				}
 				__except (EXCEPTION_EXECUTE_HANDLER) {}
 			}(addr);
 		}
+        if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please create a TextractorConfig.txt file"
+            "next to the main executable and put the name of a working hook inside it");
 		return true;
 	failed:
 		ConsoleOutput("Textractor: Mono Dynamic failed");

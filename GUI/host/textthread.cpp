@@ -58,7 +58,6 @@ void TextThread::Push(BYTE* data, int length)
 		if (std::all_of(buffer.begin(), buffer.end(), [&](wchar_t ch) { return repeatingChars.find(ch) != repeatingChars.end(); })) buffer.clear();
 		if (RemoveRepetition(buffer)) // sentence repetition detected, which means the entire sentence has already been received
 		{
-			if (hp.type & BLOCK_FLOOD) Host::RemoveHook(tp.processId, tp.addr);
 			repeatingChars = std::unordered_set(buffer.begin(), buffer.end());
 			AddSentence(std::move(buffer));
 			buffer.clear();
@@ -88,7 +87,6 @@ void TextThread::Flush()
 		sentence.erase(std::remove(sentence.begin(), sentence.end(), L'\0'));
 		if (Output(*this, sentence)) storage->append(sentence);
 	}
-	if (hp.type & BLOCK_FLOOD && totalSize > PIPE_BUFFER_SIZE) Host::RemoveHook(tp.processId, tp.addr);
 
 	std::scoped_lock lock(bufferMutex);
 	if (buffer.empty()) return;
