@@ -4,6 +4,7 @@
 #include "util.h"
 #include "blockmarkup.h"
 #include "network.h"
+#include <map>
 #include <fstream>
 #include <QTimer>
 
@@ -23,19 +24,14 @@ const std::string TRANSLATION_CACHE_FILE = FormatString("%sCache.txt", TRANSLATI
 Synchronized<std::wstring> translateTo = L"en";
 QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 
-struct Translation
-{
-	std::wstring original, translation;
-	bool operator<(const Translation& other) const { return original < other.original; }
-};
-Synchronized<std::vector<Translation>> translationCache;
+Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 int savedSize;
 
 void SaveCache()
 {
 	std::wstring allTranslations(L"\xfeff");
-	for (const auto& [original, translation] : translationCache.Acquire().contents)
-		allTranslations.append(L"|SENTENCE|").append(original).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
+	for (const auto& [sentence, translation] : translationCache.Acquire().contents)
+		allTranslations.append(L"|SENTENCE|").append(sentence).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
 	std::ofstream(TRANSLATION_CACHE_FILE, std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
 	savedSize = translationCache->size();
 }
@@ -70,11 +66,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		auto translationCache = ::translationCache.Acquire();
 		while (auto read = savedTranslations.Next())
 		{
-			const auto& [original, translation] = read.value();
-			translationCache->push_back({ original, translation });
+			auto& [sentence, translation] = read.value();
+			translationCache->try_emplace(std::move(sentence), std::move(translation));
 		}
 		savedSize = translationCache->size();
-		std::sort(translationCache->begin(), translationCache->end());
 	}
 	break;
 	case DLL_PROCESS_DETACH:
@@ -111,11 +106,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	std::wstring translation;
 	{
 		auto translationCache = ::translationCache.Acquire();
-		auto translationLocation = std::lower_bound(translationCache->begin(), translationCache->end(), Translation{ sentence });
-		if (translationLocation != translationCache->end() && translationLocation->original == sentence) translation = translationLocation->translation;
+		auto translationLocation = translationCache->find(sentence);
+		if (translationLocation != translationCache->end()) translation = translationLocation->second;
 		else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
 		else std::tie(cache, translation) = Translate(sentence);
-		if (cache && sentenceInfo["current select"]) translationCache->insert(translationLocation, { sentence, translation });
+		if (cache && sentenceInfo["current select"]) translationCache->try_emplace(translationLocation, sentence, translation);
 	}
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
