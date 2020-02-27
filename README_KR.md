@@ -38,7 +38,7 @@ Textractor 실행오류를 겪는다면 vcredist를 실행해 보시기 바랍�
 
 ## 컴파일링
 
-*Textractor*를 컴파일링 하기 전에, Qt version 5.11과 CMake를 포함한 Visual Studio가 있어야 합니다.<br>
+*Textractor*를 컴파일링 하기 전에, Qt version 5.13과 CMake를 포함한 Visual Studio가 있어야 합니다.<br>
 그 이후로는, 단순히 Visual Studio를 통해 폴더를 열고 빌드하는 것으로 실행이 가능합니다.
 
 ## 프로젝트 아키텍쳐

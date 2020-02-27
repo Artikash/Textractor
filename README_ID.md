@@ -43,7 +43,7 @@ Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahka
 
 ## Compiling
 
-Sebelum melakukan proses compile *Textractor*, kamu harus memiliki Visual Studio dengan dukungan Cmake, juga dengan Qt version 5.11<br>
+Sebelum melakukan proses compile *Textractor*, kamu harus memiliki Visual Studio dengan dukungan Cmake, juga dengan Qt version 5.13<br>
 Lalu kamu dapat membuka folder di Visual Studio, dan build. Run Textractor.exe.
 
 

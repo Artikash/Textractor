@@ -40,7 +40,7 @@ Contributing a translation is easy: just translate the strings in text.cpp as we
 
 ## Compiling
 
-Before compiling *Textractor*, you should get Visual Studio with CMake support, as well as Qt version 5.11<br>
+Before compiling *Textractor*, you should get Visual Studio with CMake support, as well as Qt version 5.13<br>
 You should then be able to simply open the folder in Visual Studio, and build. Run Textractor.exe.
 
 ## Project Architecture

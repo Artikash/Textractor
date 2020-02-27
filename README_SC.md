@@ -34,7 +34,7 @@ Textractor 的发行版可以在[这里](https://github.com/Artikash/Textractor/
 
 ## 编译
 
-编译 *Textractor* 前, 你应当获取支持 CMake 的 Visual Studio, 以及 Qt 5.11 版.<br>
+编译 *Textractor* 前, 你应当获取支持 CMake 的 Visual Studio, 以及 Qt 5.13 版.<br>
 之后就可以使用 Visual Studio 打开文件夹, 然后构建. 运行 Textractor.exe.
 
 ## 项目架构
