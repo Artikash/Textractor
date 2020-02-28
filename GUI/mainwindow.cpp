@@ -4,6 +4,7 @@
 #include "module.h"
 #include "host/hookcode.h"
 #include <shellapi.h>
+#include <QRegularExpression>
 #include <QStringListModel>
 #include <QScrollBar>
 #include <QMenu>
@@ -434,7 +435,7 @@ void MainWindow::FindHooks()
 	SearchParam sp = {};
 	sp.codepage = Host::defaultCodepage;
 	bool searchForText = false, customSettings = false;
-	std::wregex filter(L".");
+	QRegularExpression filter(".", QRegularExpression::DotMatchesEverythingOption);
 	
 	QDialog dialog(this, Qt::WindowCloseButtonHint);
 	QFormLayout layout(&dialog);
@@ -506,7 +507,7 @@ void MainWindow::FindHooks()
 			layout.addRow(label, input);
 			connect(input, &QLineEdit::textEdited, [&value](QString text) { if (uintptr_t newValue = text.toULongLong(&ok, 16); ok) value = newValue; });
 		}
-		QLineEdit filterInput(".", &dialog);
+		QLineEdit filterInput(filter.pattern(), &dialog);
 		layout.addRow(HOOK_SEARCH_FILTER, &filterInput);
 		QPushButton startButton(START_HOOK_SEARCH, &dialog);
 		layout.addWidget(&startButton);
@@ -523,19 +524,21 @@ void MainWindow::FindHooks()
 			memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), PATTERN_SIZE));
 		}
 		wcsncpy_s(sp.boundaryModule, S(boundInput.text()).c_str(), MAX_MODULE_SIZE - 1);
-		try { filter = S(filterInput.text()); } catch (std::regex_error) {}
+		filter.setPattern(filterInput.text());
+		if (!filter.isValid()) filter.setPattern(".");
 	}
 	else
 	{
 		sp.length = 0; // use default
-		filter = std::wregex(cjkCheckbox.isChecked() ? L"[\\u3000-\\ua000]{4,}" : L"[\\u0020-\\u1000]{4,}");
+		filter.setPattern(cjkCheckbox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 	}
+	filter.optimize();
 
 	auto hooks = std::make_shared<QStringList>();
 	try
 	{
-		Host::FindHooks(processId, sp, 
-			[hooks, filter](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(HookCode::Generate(hp) + L" => " + text)); });
+		Host::FindHooks(processId, sp,
+			[hooks, filter](HookParam hp, std::wstring text) { if (filter.match(S(text)).hasMatch()) *hooks << sanitize(S(HookCode::Generate(hp) + L" => " + text)); });
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks]
