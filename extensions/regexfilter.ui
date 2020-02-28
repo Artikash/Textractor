@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>350</width>
-    <height>76</height>
+    <height>105</height>
    </rect>
   </property>
   <widget class="QWidget">
@@ -22,6 +22,13 @@
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="save">
+      <property name="text">
+       <string>Save</string>
       </property>
      </widget>
     </item>
