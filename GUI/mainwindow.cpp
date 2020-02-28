@@ -190,7 +190,11 @@ void MainWindow::ThreadAdded(TextThread& thread)
 {
 	std::wstring threadCode = HookCode::Generate(thread.hp, thread.tp.processId);
 	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
-	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
+	if (savedMatch)
+	{
+		savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
+		current = &thread;
+	}
 	QMetaObject::invokeMethod(this, [this, savedMatch, ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode))]
 	{
 		ui->ttCombo->addItem(ttString);
@@ -212,7 +216,7 @@ bool MainWindow::SentenceReceived(TextThread& thread, std::wstring& sentence)
 {
 	if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 	sentence += L'\n';
-	if (current == &thread) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]() mutable
+	if (&thread == current) QMetaObject::invokeMethod(this, [this, sentence = S(sentence)]() mutable
 	{
 		sanitize(sentence);
 		auto scrollbar = ui->textOutput->verticalScrollBar();

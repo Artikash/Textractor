@@ -11,7 +11,7 @@ struct InfoForExtension
 struct SentenceInfo
 {
 	const InfoForExtension* infoArray;
-	int64_t operator[](std::string propertyName)
+	int64_t operator[](std::string_view propertyName)
 	{
 		for (auto info = infoArray; info->name; ++info) // nullptr name marks end of info array
 			if (propertyName == info->name) return info->value;
