@@ -1,8 +1,7 @@
-#pragma once
+﻿#pragma once
 
 // engine/engine.h
 // 8/23/2013 jichi
-// See: http://ja.wikipedia.org/wiki/プロジェクト:美少女ゲーム系/ゲームエンジン
 
 #include <windows.h>
 
