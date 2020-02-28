@@ -2,7 +2,6 @@
 #include "extension.h"
 #include "ui_extrawindow.h"
 #include "defs.h"
-#include "util.h"
 #include "blockmarkup.h"
 #include <fstream>
 #include <process.h>

@@ -114,6 +114,28 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 }
 #pragma warning(pop)
 
+inline std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
+{
+	std::vector<wchar_t> buffer(text.size() + 1);
+	if (int length = MultiByteToWideChar(encoding, 0, text.c_str(), text.size() + 1, buffer.data(), buffer.size()))
+		return std::wstring(buffer.data(), length - 1);
+	return {};
+}
+
+inline std::wstring StringToWideString(const std::string& text)
+{
+	std::vector<wchar_t> buffer(text.size() + 1);
+	MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, buffer.data(), buffer.size());
+	return buffer.data();
+}
+
+inline std::string WideStringToString(const std::wstring& text)
+{
+	std::vector<char> buffer((text.size() + 1) * 4);
+	WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, buffer.data(), buffer.size(), nullptr, nullptr);
+	return buffer.data();
+}
+
 template <typename... Args>
 inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { MessageBoxW(NULL, FormatString(format, args...).c_str(), L"Textractor", MB_OK); }
 

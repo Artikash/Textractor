@@ -1,5 +1,5 @@
 #include "host.h"
-#include "util.h"
+#include "hookcode.h"
 #include <io.h>
 #include <fcntl.h>
 #include <iostream>
@@ -12,7 +12,16 @@ int main()
 	fflush(stdout);
 	Host::Start([](auto) {}, [](auto) {}, [](auto&) {}, [](auto&) {}, [](TextThread& thread, std::wstring& output)
 	{
-		wprintf_s(L"[%I64X:%I32X:%I64X:%I64X:%I64X:%s:%s] %s\n", thread.handle, thread.tp.processId, thread.tp.addr, thread.tp.ctx, thread.tp.ctx2, thread.name.c_str(), Util::GenerateCode(thread.hp, thread.tp.processId).c_str(), output.c_str());
+		wprintf_s(L"[%I64X:%I32X:%I64X:%I64X:%I64X:%s:%s] %s\n",
+			thread.handle,
+			thread.tp.processId,
+			thread.tp.addr,
+			thread.tp.ctx,
+			thread.tp.ctx2,
+			thread.name.c_str(),
+			HookCode::Generate(thread.hp, thread.tp.processId).c_str(),
+			output.c_str()
+		);
 		fflush(stdout);
 		return false;
 	});
@@ -24,7 +33,7 @@ int main()
 		if (swscanf(input, L"%500s -P%d", command, &processId) != 2) ExitProcess(0);
 		if (_wcsicmp(command, L"attach") == 0) Host::InjectProcess(processId);
 		else if (_wcsicmp(command, L"detach") == 0) Host::DetachProcess(processId);
-		else if (auto hp = Util::ParseCode(command)) Host::InsertHook(processId, hp.value());
+		else if (auto hp = HookCode::Parse(command)) Host::InsertHook(processId, hp.value());
 		else ExitProcess(0);
 	}
 	ExitProcess(0);

@@ -1,6 +1,5 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
-#include "util.h"
 #include <fstream>
 #include <QPlainTextEdit>
 

@@ -1,7 +1,8 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defs.h"
-#include "host/util.h"
+#include "module.h"
+#include "host/hookcode.h"
 #include <shellapi.h>
 #include <QStringListModel>
 #include <QScrollBar>
@@ -113,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	AttachConsole(ATTACH_PARENT_PROCESS);
 	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), CL_OPTIONS, wcslen(CL_OPTIONS), DUMMY, NULL);
-	auto processes = Util::GetAllProcesses();
+	auto processes = GetAllProcesses();
 	int argc;
 	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
 	for (int i = 0; i < argc; ++i)
@@ -136,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 					attachTargets.insert(S(process.split(" , ")[0]));
 
 			if (!attachTargets.empty())
-				for (auto [processId, processName] : Util::GetAllProcesses())
+				for (auto [processId, processName] : GetAllProcesses())
 					if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
 		}
 	}).detach();
@@ -159,7 +160,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 {
 	alreadyAttached.insert(processId);
 
-	QString process = S(Util::GetModuleFilename(processId).value_or(L"???"));
+	QString process = S(GetModuleFilename(processId).value_or(L"???"));
 	QMetaObject::invokeMethod(this, [this, process, processId]
 	{
 		ui->processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
@@ -173,7 +174,7 @@ void MainWindow::ProcessConnected(DWORD processId)
 	auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
 	if (hookList != allProcesses.rend())
 		for (auto hookInfo : hookList->split(" , "))
-			if (auto hp = Util::ParseCode(S(hookInfo))) Host::InsertHook(processId, hp.value());
+			if (auto hp = HookCode::Parse(S(hookInfo))) Host::InsertHook(processId, hp.value());
 			else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx, &savedThreadCtx2, savedThreadCode, (unsigned)std::size(savedThreadCode));
 }
 
@@ -187,7 +188,7 @@ void MainWindow::ProcessDisconnected(DWORD processId)
 
 void MainWindow::ThreadAdded(TextThread& thread)
 {
-	std::wstring threadCode = Util::GenerateCode(thread.hp, thread.tp.processId);
+	std::wstring threadCode = HookCode::Generate(thread.hp, thread.tp.processId);
 	bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
 	if (savedMatch) savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;
 	QMetaObject::invokeMethod(this, [this, savedMatch, ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode))]
@@ -290,7 +291,7 @@ std::optional<std::wstring> MainWindow::UserSelectedProcess()
 void MainWindow::AttachProcess()
 {
 	QMultiHash<QString, DWORD> allProcesses;
-	for (auto [processId, processName] : Util::GetAllProcesses())
+	for (auto [processId, processName] : GetAllProcesses())
 		if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::wstring::npos))
 			allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
@@ -348,7 +349,7 @@ void MainWindow::DetachProcess()
 
 void MainWindow::ForgetProcess()
 {
-	std::optional<std::wstring> processName = Util::GetModuleFilename(GetSelectedProcessId());
+	std::optional<std::wstring> processName = GetModuleFilename(GetSelectedProcessId());
 	if (!processName) processName = UserSelectedProcess();
 	DetachProcess();
 	if (!processName) return;
@@ -369,7 +370,7 @@ void MainWindow::AddHook(QString hook)
 {
 	if (QString hookCode = QInputDialog::getText(this, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, hook, &ok, Qt::WindowCloseButtonHint); ok)
 		if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks();
-		else if (auto hp = Util::ParseCode(S(hookCode))) try { Host::InsertHook(GetSelectedProcessId(), hp.value()); } catch (std::out_of_range) {}
+		else if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(GetSelectedProcessId(), hp.value()); } catch (std::out_of_range) {}
 		else Host::AddConsoleOutput(INVALID_CODE);
 }
 
@@ -403,7 +404,7 @@ void MainWindow::RemoveHooks()
 
 void MainWindow::SaveHooks()
 {
-	auto processName = Util::GetModuleFilename(GetSelectedProcessId());
+	auto processName = GetModuleFilename(GetSelectedProcessId());
 	if (!processName) return;
 	QHash<uint64_t, QString> hookCodes;
 	for (int i = 0; i < ui->ttCombo->count(); ++i)
@@ -412,12 +413,12 @@ void MainWindow::SaveHooks()
 		if (tp.processId == GetSelectedProcessId())
 		{
 			HookParam hp = Host::GetThread(tp).hp;
-			if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = S(Util::GenerateCode(hp, tp.processId));
+			if (!(hp.type & HOOK_ENGINE)) hookCodes[tp.addr] = S(HookCode::Generate(hp, tp.processId));
 		}
 	}
 	auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
 	ThreadParam tp = current->tp;
-	if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(Util::GenerateCode(current->hp, tp.processId)));
+	if (tp.processId == GetSelectedProcessId()) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(HookCode::Generate(current->hp, tp.processId)));
 	QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 }
 
@@ -489,7 +490,7 @@ void MainWindow::FindHooks()
 			layout.addRow(label, spinBox);
 			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value](int newValue) { value = newValue; });
 		}
-		QLineEdit boundInput(QFileInfo(S(Util::GetModuleFilename(GetSelectedProcessId()).value_or(L""))).fileName(), &dialog);
+		QLineEdit boundInput(QFileInfo(S(GetModuleFilename(GetSelectedProcessId()).value_or(L""))).fileName(), &dialog);
 		layout.addRow(SEARCH_MODULE, &boundInput);
 		for (auto [value, label] : Array<uintptr_t&, const char*>{
 			{ sp.minAddress, MIN_ADDRESS },
@@ -530,7 +531,7 @@ void MainWindow::FindHooks()
 	try
 	{
 		Host::FindHooks(processId, sp, 
-			[hooks, filter](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(Util::GenerateCode(hp) + L" => " + text)); });
+			[hooks, filter](HookParam hp, std::wstring text) { if (std::regex_search(text, filter)) *hooks << sanitize(S(HookCode::Generate(hp) + L" => " + text)); });
 	}
 	catch (std::out_of_range) { return; }
 	std::thread([this, hooks]

@@ -1,5 +1,5 @@
-﻿#include "util.h"
-#include <Psapi.h>
+﻿#include "hookcode.h"
+#include "module.h"
 
 namespace
 {
@@ -250,7 +250,7 @@ namespace
 		if (processId && !(hp.type & MODULE_OFFSET))
 			if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
 				if (MEMORY_BASIC_INFORMATION info = {}; VirtualQueryEx(process, (LPCVOID)hp.address, &info, sizeof(info)))
-					if (auto moduleName = Util::GetModuleFilename(processId, (HMODULE)info.AllocationBase))
+					if (auto moduleName = GetModuleFilename(processId, (HMODULE)info.AllocationBase))
 					{
 						hp.type |= MODULE_OFFSET;
 						hp.address -= (uint64_t)info.AllocationBase;
@@ -265,53 +265,9 @@ namespace
 	}
 }
 
-namespace Util
+namespace HookCode
 {
-	std::optional<std::wstring> GetModuleFilename(DWORD processId, HMODULE module)
-	{
-		std::vector<wchar_t> buffer(MAX_PATH);
-		if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId)) 
-			if (GetModuleFileNameExW(process, module, buffer.data(), MAX_PATH)) return buffer.data();
-		return {};
-	}
-
-	std::optional<std::wstring> GetModuleFilename(HMODULE module)
-	{
-		std::vector<wchar_t> buffer(MAX_PATH);
-		if (GetModuleFileNameW(module, buffer.data(), MAX_PATH)) return buffer.data();
-		return {};
-	}
-
-	std::vector<std::pair<DWORD, std::optional<std::wstring>>> GetAllProcesses()
-	{
-		std::vector<DWORD> processIds(10000);
-		DWORD spaceUsed = 0;
-		EnumProcesses(processIds.data(), 10000 * sizeof(DWORD), &spaceUsed);
-		std::vector<std::pair<DWORD, std::optional<std::wstring>>> processes;
-		for (int i = 0; i < spaceUsed / sizeof(DWORD); ++i) processes.push_back({ processIds[i], Util::GetModuleFilename(processIds[i]) });
-		return processes;
-	}
-
-	std::optional<std::wstring> GetClipboardText()
-	{
-		if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) return {};
-		if (!OpenClipboard(NULL)) return {};
-
-		std::optional<std::wstring> text;
-		if (AutoHandle<Functor<GlobalUnlock>> clipboard = GetClipboardData(CF_UNICODETEXT)) text = (wchar_t*)GlobalLock(clipboard);
-		CloseClipboard();
-		return text;
-	}
-
-	std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
-	{
-		std::vector<wchar_t> buffer(text.size() + 1);
-		if (int length = MultiByteToWideChar(encoding, 0, text.c_str(), text.size() + 1, buffer.data(), buffer.size())) 
-			return std::wstring(buffer.data(), length - 1);
-		return {};
-	}
-
-	std::optional<HookParam> ParseCode(std::wstring code)
+	std::optional<HookParam> Parse(std::wstring code)
 	{
 		if (code[0] == L'/') code.erase(0, 1); // legacy/AGTH compatibility
 		if (code[0] == L'R') return ParseRCode(code.erase(0, 1));
@@ -319,7 +275,7 @@ namespace Util
 		return {};
 	}
 
-	std::wstring GenerateCode(HookParam hp, DWORD processId)
+	std::wstring Generate(HookParam hp, DWORD processId)
 	{
 		return hp.type & DIRECT_READ ? GenerateRCode(hp) : GenerateHCode(hp, processId);
 	}

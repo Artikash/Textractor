@@ -2,34 +2,34 @@
 
 std::vector<int> GenerateSuffixArray(const std::wstring& text)
 {
-	std::vector<int> identity(text.size());
-	for (int i = 0; i < text.size(); ++i) identity[i] = i;
-	std::vector<int> suffixArray = identity;
+	std::vector<int> suffixArray(text.size());
+	for (int i = 0; i < text.size(); ++i) suffixArray[i] = i;
 	// The below code is a more efficient way of doing this:
 	// std::sort(suffixArray.begin(), suffixArray.end(), [&](int a, int b) { return wcscmp(text.c_str() + a, text.c_str() + b) > 0; });
 	std::stable_sort(suffixArray.begin(), suffixArray.end(), [&](int a, int b) { return text[a] > text[b]; });
-	std::vector<int> classes(text.begin(), text.end());
+	std::vector<int> eqClasses(text.begin(), text.end());
+	std::vector<int> count(text.size());
 	for (int length = 1; length < text.size(); length *= 2)
 	{
 		// Determine equivalence class up to length, by checking length / 2 equivalence of suffixes and their following length / 2 suffixes
-		std::vector<int> oldClasses = classes;
-		classes[suffixArray[0]] = 0;
+		std::vector<int> prevEqClasses = eqClasses;
+		eqClasses[suffixArray[0]] = 0;
 		for (int i = 1; i < text.size(); ++i)
 		{
 			int currentSuffix = suffixArray[i];
 			int lastSuffix = suffixArray[i - 1];
-			if (currentSuffix + length < text.size() && oldClasses[currentSuffix] == oldClasses[lastSuffix] &&
-				oldClasses[currentSuffix + length / 2] == oldClasses.at(lastSuffix + length / 2)) // not completely certain that this will stay in range
-				classes[currentSuffix] = classes[lastSuffix];
-			else classes[currentSuffix] = i;
+			if (currentSuffix + length < text.size() && prevEqClasses[currentSuffix] == prevEqClasses[lastSuffix] &&
+				prevEqClasses[currentSuffix + length / 2] == prevEqClasses.at(lastSuffix + length / 2)) // not completely certain that this will stay in range
+				eqClasses[currentSuffix] = eqClasses[lastSuffix];
+			else eqClasses[currentSuffix] = i;
 		}
 
 		// Sort within equivalence class based on order of following suffix after length (orders up to length * 2)
-		std::vector<int> count = identity;
+		for (int i = 0; i < text.size(); ++i) count[i] = i;
 		for (auto suffix : std::vector(suffixArray))
 		{
 			int precedingSuffix = suffix - length;
-			if (precedingSuffix >= 0) suffixArray[count[classes[precedingSuffix]]++] = precedingSuffix;
+			if (precedingSuffix >= 0) suffixArray[count[eqClasses[precedingSuffix]]++] = precedingSuffix;
 		}
 	}
 	for (int i = 0; i + 1 < text.size(); ++i)

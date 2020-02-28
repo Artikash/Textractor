@@ -1,4 +1,5 @@
-#include "util.h"
+#include "common.h"
+#include "module.h"
 #include <sstream>
 
 namespace
@@ -36,7 +37,7 @@ namespace
 		errorMsg << std::uppercase << std::hex <<
 			L"Error code: " << exception->ExceptionRecord->ExceptionCode << std::endl <<
 			L"Error address: " << exception->ExceptionRecord->ExceptionAddress << std::endl <<
-			L"Error in module: " << Util::GetModuleFilename((HMODULE)info.AllocationBase).value_or(L"Could not find") << std::endl <<
+			L"Error in module: " << GetModuleFilename((HMODULE)info.AllocationBase).value_or(L"Could not find") << std::endl <<
 			L"Additional info: " << info.AllocationBase << std::endl;
 
 		if (exception->ExceptionRecord->ExceptionCode == 0xE06D7363)

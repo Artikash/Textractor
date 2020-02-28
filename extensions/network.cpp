@@ -1,5 +1,4 @@
 #include "network.h"
-#include "util.h"
 
 HttpRequest::HttpRequest(
 	const wchar_t* agentName,

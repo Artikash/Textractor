@@ -1,6 +1,5 @@
 #include "textthread.h"
 #include "host.h"
-#include "util.h"
 
 extern const wchar_t* INVALID_CODEPAGE;
 
@@ -16,7 +15,7 @@ static bool RemoveRepetition(std::wstring& text)
 
 TextThread::TextThread(ThreadParam tp, HookParam hp, std::optional<std::wstring> name) :
 	handle(threadCounter++),
-	name(name.value_or(Util::StringToWideString(hp.name).value())),
+	name(name.value_or(StringToWideString(hp.name))),
 	tp(tp),
 	hp(hp)
 {}
@@ -48,7 +47,7 @@ void TextThread::Push(BYTE* data, int length)
 
 	if (hp.type & HEX_DUMP) for (int i = 0; i < length; i += sizeof(short)) buffer.append(FormatString(L"%04hX ", *(short*)(data + i)));
 	else if (hp.type & USING_UNICODE) buffer.append((wchar_t*)data, length / sizeof(wchar_t));
-	else if (auto converted = Util::StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());
+	else if (auto converted = StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	if (hp.type & FULL_STRING) buffer.push_back(L'\n');
 	lastPushTime = GetTickCount();

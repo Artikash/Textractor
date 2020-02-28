@@ -1,6 +1,5 @@
 ﻿#include "extension.h"
 #include "network.h"
-#include "util.h"
 #include <ctime>
 #include <QStringList>
 

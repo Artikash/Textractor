@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "host/util.h"
+#include "module.h"
 #include <winhttp.h>
 #include <QApplication>
 
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 					}
 	}).detach();
 
-	QDir::setCurrent(QFileInfo(S(Util::GetModuleFilename().value())).absolutePath());
+	QDir::setCurrent(QFileInfo(S(GetModuleFilename().value())).absolutePath());
 
 	QApplication app(argc, argv);
 	app.setFont(QFont("MS Shell Dlg 2", 10));

@@ -9,7 +9,7 @@ add_executable(Textractor WIN32
 	host/exception.cpp
 	host/host.cpp
 	host/textthread.cpp
-	host/util.cpp
+	host/hookcode.cpp
 	Textractor.rc
 	Textractor.ico
 )

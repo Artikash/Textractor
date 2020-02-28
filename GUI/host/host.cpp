@@ -1,6 +1,6 @@
 #include "host.h"
 #include "defs.h"
-#include "util.h"
+#include "hookcode.h"
 #include "../texthook/texthook.h"
 
 extern const wchar_t* ALREADY_INJECTED;
@@ -48,7 +48,7 @@ namespace
 
 		Host::HookEventHandler OnHookFound = [](HookParam hp, std::wstring text)
 		{
-			Host::AddConsoleOutput(Util::GenerateCode(hp) + L": " + text);
+			Host::AddConsoleOutput(HookCode::Generate(hp) + L": " + text);
 		};
 
 	private:
@@ -107,9 +107,9 @@ namespace
 					std::wstring wide = info.text;
 					if (wide.size() > STRING) OnHookFound(info.hp, std::move(info.text));
 					info.hp.type &= ~USING_UNICODE;
-					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage))
+					if (auto converted = StringToWideString((char*)info.text, info.hp.codepage))
 						if (converted->size() > STRING) OnHookFound(info.hp, std::move(converted.value()));
-					if (auto converted = Util::StringToWideString((char*)info.text, info.hp.codepage = CP_UTF8))
+					if (auto converted = StringToWideString((char*)info.text, info.hp.codepage = CP_UTF8))
 						if (converted->size() > STRING) OnHookFound(info.hp, std::move(converted.value()));
 				}
 				break;
@@ -122,7 +122,7 @@ namespace
 				case HOST_NOTIFICATION_TEXT:
 				{
 					auto info = *(ConsoleOutputNotif*)buffer;
-					Host::AddConsoleOutput(Util::StringToWideString(info.message).value());
+					Host::AddConsoleOutput(StringToWideString(info.message));
 				}
 				break;
 				default:
@@ -179,8 +179,12 @@ namespace Host
 				for (int retry = 0; !clipboardText && retry < 3; ++retry) // retry loop in case something else is using the clipboard
 				{
 					Sleep(10);
-					if (clipboardText = Util::GetClipboardText()) GetThread(clipboard).AddSentence(std::move(clipboardText.value()));
+					if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) continue;
+					if (!OpenClipboard(NULL)) continue;
+					if (AutoHandle<Functor<GlobalUnlock>> clipboard = GetClipboardData(CF_UNICODETEXT)) clipboardText = (wchar_t*)GlobalLock(clipboard);
+					CloseClipboard();
 				}
+				if (clipboardText) GetThread(clipboard).AddSentence(std::move(clipboardText.value()));
 			}
 			throw;
 		}).detach();
