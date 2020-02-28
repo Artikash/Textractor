@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->textOutput, &QPlainTextEdit::customContextMenuRequested, this, &MainWindow::OutputContextMenu);
 
 	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
-	if (settings.contains(WINDOW)) setGeometry(settings.value(WINDOW).toRect());
+	if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().center())) setGeometry(settings.value(WINDOW).toRect());
 	SetOutputFont(settings.value(FONT, ui->textOutput->font().toString()).toString());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
 	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();

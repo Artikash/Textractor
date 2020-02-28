@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
+    <width>1000</width>
     <height>600</height>
    </rect>
   </property>
@@ -77,8 +77,8 @@
        <widget class="QPlainTextEdit" name="textOutput">
         <property name="font">
          <font>
-          <family>Meiryo</family>
-          <pointsize>12</pointsize>
+          <family>Meiryo UI</family>
+          <pointsize>13</pointsize>
          </font>
         </property>
         <property name="contextMenuPolicy">
