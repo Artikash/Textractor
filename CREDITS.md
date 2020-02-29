@@ -13,6 +13,7 @@ If you're on this list and want your link changed let me know.
 - Portuguese translation by [TsumiHokiro](https://github.com/TsumiHokiro)
 - Thai translation by [azmadoppler](https://github.com/azmadoppler)
 - Korean translation by O SK
+- Italian translation by [StarFang208](https://github.com/StarFang208)
 - ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
 - ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
 - VNR engine made by [jichi](https://archive.is/prJwr)
