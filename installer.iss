@@ -24,6 +24,7 @@ Name: "id"; MessagesFile: "compiler:Languages\Unofficial\Indonesian.isl"
 Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "th"; MessagesFile: "compiler:Languages\Unofficial\Thai.isl"
 Name: "ko"; MessagesFile: "compiler:Languages\Unofficial\Korean.isl"
+Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
 
 
 [Files]
@@ -37,3 +38,4 @@ Source: "Builds\Textractor-Indonesian-{#VERSION}\*"; DestDir: "{app}"; Languages
 Source: "Builds\Textractor-Portuguese-{#VERSION}\*"; DestDir: "{app}"; Languages: pt; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Thai-{#VERSION}\*"; DestDir: "{app}"; Languages: th; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Korean-{#VERSION}\*"; DestDir: "{app}"; Languages: ko; Flags: recursesubdirs ignoreversion
+Source: "Builds\Textractor-Italian-{#VERSION}\*"; DestDir: "{app}"; Languages: it; Flags: recursesubdirs ignoreversion

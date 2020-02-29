@@ -16,6 +16,7 @@ foreach ($language in @{
 	PORTUGUESE="Portuguese";
 	THAI="Thai";
 	KOREAN="Korean";
+	ITALIAN="Italian";
 }.GetEnumerator())
 {
 	$folder = "Textractor-$($language.Value)-$version";
@@ -79,6 +80,7 @@ rm -Force -Recurse -Verbose "Textractor";
 mkdir -Force -Verbose "Textractor";
 copy -Force -Recurse -Verbose -Destination "Textractor" -Path @("Runtime/*", "Textractor--$version/*");
 
-cd ..
+cd ..;
 &"C:\Program Files (x86)\Inno Setup 6\iscc" -DVERSION="$version" installer.iss;
 &"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Builds/Textractor-$version-Setup.exe";
+&"C:\Program Files\7-Zip\7z" a "Builds/Textractor-$version-Zip-Version-English-Only.zip" Builds/Textractor/

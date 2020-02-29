@@ -4,5 +4,5 @@ add_executable(TextractorCLI
 	exception.cpp
 	host.cpp
 	textthread.cpp
-	util.cpp
+	hookcode.cpp
 )
