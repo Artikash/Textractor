@@ -6007,7 +6007,7 @@ void InsertWaffleHook()
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
 
-void InsertTinkerBellHook()
+bool InsertTinkerBellHook()
 {
   //DWORD s1,s2,i;
   //DWORD ch=0x8141;
@@ -6042,7 +6042,9 @@ void InsertTinkerBellHook()
       }
     }
   }
+  if (count) return true;
   ConsoleOutput("vnreng:TinkerBell: failed");
+  return false;
 }
 
 //  s1=SearchPattern(processStartAddress,processStopAddress-processStartAddress-4,&ch,4);

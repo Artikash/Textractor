@@ -279,10 +279,17 @@ void PcHooks::hookOtherPcFunctions()
   //   _Out_opt_  LPBOOL lpUsedDefaultChar
   // );
 
-  // 3/17/2014 jichi: Temporarily disabled
+  // 2/29/2020 Artikash: TODO: Sort out what to do for string comparison functions
   // http://sakuradite.com/topic/159
   NEW_HOOK(L"kernel32.dll", MultiByteToWideChar, s_arg3, 0,4,0, USING_STRING, s_arg4 / arg_sz)
   NEW_HOOK(L"kernel32.dll", WideCharToMultiByte, s_arg3, 0,4,0, USING_UNICODE|USING_STRING, s_arg4 / arg_sz)
+
+  NEW_HOOK(L"kernel32.dll", GetStringTypeA, s_arg3, 0, 0, 0, USING_STRING, s_arg4 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", GetStringTypeExA, s_arg3, 0, 0, 0, USING_STRING, s_arg4 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", FoldStringA, s_arg2, 0, 0, 0, USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", GetStringTypeW, s_arg2, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", GetStringTypeExW, s_arg3, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg4 / arg_sz)
+  NEW_HOOK(L"kernel32.dll", FoldStringW, s_arg2, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg3 / arg_sz)
 
   NEW_HOOK(L"user32.dll", CharNextA, s_arg1, 0,0,0, USING_STRING|DATA_INDIRECT, 1) // LPTSTR WINAPI CharNext(_In_ LPCTSTR lpsz);
   NEW_HOOK(L"user32.dll", CharNextW, s_arg1, 0,0,0, USING_UNICODE|DATA_INDIRECT, 1)
