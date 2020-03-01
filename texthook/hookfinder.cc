@@ -19,6 +19,7 @@ namespace
 	struct HookRecord
 	{
 		uint64_t address = 0;
+		uintptr_t padding = 0;
 		int offset = 0;
 		char text[MAX_STRING_SIZE] = {};
 	};
@@ -134,9 +135,9 @@ void Send(char** stack, uintptr_t address)
 	// it is unsafe to call ANY external functions from this, as they may have been hooked (if called the hook would call this function making an infinite loop)
 	// the exceptions are compiler intrinsics like _InterlockedDecrement
 	if (recordsAvailable <= 0) return;
-	for (int i = -registers; i < 10; ++i)
+	for (int i = -registers; i < 10; ++i) for (auto padding : { uintptr_t{}, sp.padding })
 	{
-		char* str = stack[i] + sp.padding;
+		char* str = stack[i] + padding;
 		if (IsBadReadPtr(str) || IsBadReadPtr(str + MAX_STRING_SIZE)) continue;
 		__try
 		{
@@ -155,6 +156,7 @@ void Send(char** stack, uintptr_t address)
 				if (n < sp.maxRecords)
 				{
 					records[n].address = address;
+					records[n].padding = padding;
 					records[n].offset = i * sizeof(char*);
 					for (int j = 0; j < length; ++j) records[n].text[j] = str[j];
 					records[n].text[length] = 0;
@@ -240,7 +242,7 @@ void SearchForHooks(SearchParam spUser)
 			hp.offset = records[i].offset;
 			hp.type = USING_UNICODE | USING_STRING;
 			hp.address = records[i].address;
-			hp.padding = sp.padding;
+			hp.padding = records[i].padding;
 			hp.codepage = sp.codepage;
 			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
 			NotifyHookFound(hp, (wchar_t*)records[i].text);

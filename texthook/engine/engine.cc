@@ -20748,6 +20748,13 @@ bool InsertTecmoPSPHook()
  */
 bool InsertPCSX2Hooks()
 {
+    memcpy(spDefault.pattern, Array<BYTE>{ 0x89, 0xc8, 0xc1, 0xe8, 0x0c }, spDefault.length = 5);
+    *spDefault.boundaryModule = 0;
+    spDefault.offset = 0;
+    spDefault.searchTime = 60'000;
+    spDefault.maxRecords = 500'000;
+    spDefault.padding = 0x20000000;
+    ConsoleOutput("Textractor: PCSX2 detected (searching for hooks may work)");
   // TODO: Add generic hooks
   return InsertTypeMoonPS2Hook()
       || InsertMarvelousPS2Hook()
