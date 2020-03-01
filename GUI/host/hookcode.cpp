@@ -281,14 +281,14 @@ namespace HookCode
 	}
 
 	TEST(
-		assert(StringToWideString(u8"こんにちは").value() == L"こんにちは"),
+		assert(StringToWideString(u8"こんにちは") == L"こんにちは"),
 		assert(HexString(-12) == L"-C"),
 		assert(HexString(12) == L"C"),
-		assert(ParseCode(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
-		assert(ParseCode(L"HB4@0")),
-		assert(ParseCode(L"/RS65001#@44")),
-		assert(!ParseCode(L"HQ@4")),
-		assert(!ParseCode(L"/RW@44")),
-		assert(!ParseCode(L"/HWG@33"))
+		assert(Parse(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
+		assert(Parse(L"HB4@0")),
+		assert(Parse(L"/RS65001#@44")),
+		assert(!Parse(L"HQ@4")),
+		assert(!Parse(L"/RW@44")),
+		assert(!Parse(L"/HWG@33"))
 	);
 }
