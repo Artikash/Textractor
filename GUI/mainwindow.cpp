@@ -435,7 +435,7 @@ void MainWindow::FindHooks()
 	SearchParam sp = {};
 	sp.codepage = Host::defaultCodepage;
 	bool searchForText = false, customSettings = false;
-	QRegularExpression filter(".", QRegularExpression::DotMatchesEverythingOption);
+	QRegularExpression filter(".", QRegularExpression::UseUnicodePropertiesOption | QRegularExpression::DotMatchesEverythingOption);
 	
 	QDialog dialog(this, Qt::WindowCloseButtonHint);
 	QFormLayout layout(&dialog);

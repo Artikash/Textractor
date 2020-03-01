@@ -259,7 +259,7 @@ namespace
 
 		HCode += L'@' + HexString(hp.address);
 		if (hp.type & MODULE_OFFSET) HCode += L':' + std::wstring(hp.module);
-		if (hp.type & FUNCTION_OFFSET) HCode += L':' + std::wstring(hp.function, hp.function + MAX_MODULE_SIZE);
+		if (hp.type & FUNCTION_OFFSET) HCode += L':' + StringToWideString(hp.function);
 
 		return HCode;
 	}
