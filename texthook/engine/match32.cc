@@ -72,6 +72,14 @@ bool DeterminePCEngine()
     return true;
   }
 
+  if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
+  {
+      ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
+      wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
+      spDefault.padding = 12;
+      return true;
+  }
+
   // PC games
   PcHooks::hookGDIFunctions();
   PcHooks::hookGDIPlusFunctions();

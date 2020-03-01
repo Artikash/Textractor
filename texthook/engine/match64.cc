@@ -160,6 +160,14 @@ namespace Engine
 
 		for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
 
+		if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
+		{
+			ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
+			wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
+			spDefault.padding = 20;
+			return true;
+		}
+
 		for (const wchar_t* monoName : { L"mono.dll", L"mono-2.0-bdwgc.dll" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 
 		for (std::wstring DXVersion : { L"d3dx9", L"d3dx10" })
