@@ -20749,7 +20749,8 @@ bool InsertTecmoPSPHook()
 bool InsertPCSX2Hooks()
 {
     memcpy(spDefault.pattern, Array<BYTE>{ 0x89, 0xc8, 0xc1, 0xe8, 0x0c }, spDefault.length = 5);
-    *spDefault.boundaryModule = 0;
+	spDefault.minAddress = 0;
+	spDefault.maxAddress = -1ULL;
     spDefault.offset = 0;
     spDefault.searchTime = 60'000;
     spDefault.maxRecords = 500'000;
