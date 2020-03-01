@@ -116,8 +116,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		if (httpRequest.response[0] == L'[')
 		{
 			std::wstring translation;
-			for (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); httpRequest.response = results.suffix())
-				if (!IsHash(results[1])) translation += std::wstring(results[1]) + L" ";
+			for (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"(?:\\[\\[|null,)\"([ -~]{3,}?)\"[,\\]]")); httpRequest.response = results.suffix())
+				if (!IsHash(results[1])) translation += std::wstring(results[1]) + L"\n";
 			if (!translation.empty()) return { true, translation };
 		}
 		return { false, FormatString(L"%s (TKK=%u)", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0)) };
