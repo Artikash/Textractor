@@ -13,7 +13,7 @@ const char* REGEX_SAVE_FILE = "SavedRegexFilters.txt";
 
 std::optional<std::wregex> regex;
 std::shared_mutex m;
-std::atomic<DWORD> selectedProcessId;
+DWORD (*GetSelectedProcessId)() = nullptr;
 
 class Window : public QMainWindow 
 {
@@ -44,7 +44,7 @@ private:
 	{
 		auto formatted = FormatString(
 			L"\xfeff|PROCESS|%s|FILTER|%s|END|\r\n",
-			GetModuleFilename(selectedProcessId.load()).value_or(FormatString(L"Error getting name of process 0x%X", selectedProcessId.load())),
+			GetModuleFilename(GetSelectedProcessId()).value_or(FormatString(L"Error getting name of process 0x%X", GetSelectedProcessId())),
 			S(ui.input->text())
 		);
 		std::ofstream(REGEX_SAVE_FILE, std::ios::binary | std::ios::app).write((const char*)formatted.c_str(), formatted.size() * sizeof(wchar_t));
@@ -55,18 +55,15 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
+	static auto _ = GetSelectedProcessId = (DWORD(*)())sentenceInfo["DWORD (*GetSelectedProcessId)()"];
 	if (sentenceInfo["text number"] == 0) return false;
-	if (sentenceInfo["current select"])
+	if (sentenceInfo["current select"] && !regex) if (auto processName = GetModuleFilename(sentenceInfo["process id"]))
 	{
-		selectedProcessId = sentenceInfo["process id"];
-		if (!regex) if (auto processName = GetModuleFilename(sentenceInfo["process id"]))
-		{
-			std::ifstream stream(REGEX_SAVE_FILE, std::ios::binary);
-			BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|PROCESS|", L"|FILTER|" });
-			std::vector<std::wstring> regexes;
-			while (auto read = savedFilters.Next()) if (read->at(0) == processName) regexes.push_back(std::move(read->at(1)));
-			if (!regexes.empty()) QMetaObject::invokeMethod(&window, [regex = S(regexes.back())]{ window.setRegex(regex); }, Qt::BlockingQueuedConnection);
-		}
+		std::ifstream stream(REGEX_SAVE_FILE, std::ios::binary);
+		BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|PROCESS|", L"|FILTER|" });
+		std::vector<std::wstring> regexes;
+		while (auto read = savedFilters.Next()) if (read->at(0) == processName) regexes.push_back(std::move(read->at(1)));
+		if (!regexes.empty()) QMetaObject::invokeMethod(&window, [regex = S(regexes.back())] { window.setRegex(regex); }, Qt::BlockingQueuedConnection);
 	}
 	std::shared_lock l(m);
 	if (regex) sentence = std::regex_replace(sentence, regex.value(), L"");
