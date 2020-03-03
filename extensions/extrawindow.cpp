@@ -16,6 +16,7 @@
 #include <QWheelEvent>
 
 extern const char* EXTRA_WINDOW_INFO;
+extern const char* SENTENCE_TOO_BIG;
 extern const char* TOPMOST;
 extern const char* OPACITY;
 extern const char* SHOW_ORIGINAL;
@@ -189,6 +190,7 @@ public:
 
 	void AddSentence(QString sentence)
 	{
+		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
 		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
@@ -200,7 +202,8 @@ public:
 private:
 	void setTopmost(bool topmost)
 	{
-		SetWindowPos((HWND)winId(), topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		for (auto window : { winId(), dictionaryWindow.winId() })
+			SetWindowPos((HWND)window, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 		settings.setValue(TOPMOST, topmost);
 	};
 
@@ -232,10 +235,10 @@ private:
 
 	void computeDictionaryPosition(QPoint mouse)
 	{
+		QString sentence = ui.display->text();
 		const QFont& font = ui.display->font();
 		if (cachedDisplayInfo.compareExchange(ui.display))
 		{
-			QString sentence = ui.display->text();
 			QFontMetrics fontMetrics(font, ui.display);
 			textPositionMap.clear();
 			for (int i = 0, height = 0, lineBreak = 0; i < sentence.size(); ++i)
@@ -258,9 +261,9 @@ private:
 		int i;
 		for (i = 0; i < textPositionMap.size(); ++i) if (textPositionMap[i].y() > mouse.y() && textPositionMap[i].x() > mouse.x()) break;
 		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > font.pointSize() * 2) return dictionaryWindow.hide();
-		if (ui.display->text().mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
+		if (sentence.mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
 		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
-		dictionaryWindow.setTerm(ui.display->text().mid(i));
+		dictionaryWindow.setTerm(sentence.mid(i));
 		int left = i == 0 ? 0 : textPositionMap[i - 1].x(), right = textPositionMap[i].x(),
 			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4;
 		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, textPositionMap[i].y())));
@@ -293,6 +296,7 @@ private:
 	}
 
 	bool locked, showOriginal, useDictionary;
+	int maxSentenceSize = 1500;
 	QPoint oldPos;
 
 	class
