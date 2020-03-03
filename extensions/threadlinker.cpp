@@ -63,8 +63,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	int64_t textHandle = sentenceInfo["text number"];
 
 	for (auto linkedHandle : linkedTextHandles[textHandle])
-		((void(*)(void*, int64_t, const wchar_t*))sentenceInfo["void (*AddSentence)(void* this, int64_t number, const wchar_t* sentence)"])
-			((void*)sentenceInfo["this"], linkedHandle, sentence.c_str());
+		((void(*)(int64_t, const wchar_t*))sentenceInfo["void (*AddSentence)(int64_t number, const wchar_t* sentence)"])(linkedHandle, sentence.c_str());
 
 	return false;
 }
