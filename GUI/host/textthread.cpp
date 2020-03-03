@@ -77,7 +77,7 @@ void TextThread::Flush()
 		if (storage->size() > maxHistorySize) storage->erase(0, storage->size() - maxHistorySize); // https://github.com/Artikash/Textractor/issues/127#issuecomment-486882983
 	}
 
-	std::deque<std::wstring> sentences;
+	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
 	int totalSize = 0;
 	for (auto& sentence : sentences)

@@ -6,7 +6,7 @@
 class TextThread
 {
 public:
-	using OutputCallback = std::function<bool(TextThread&, std::wstring&)>;
+	using OutputCallback = bool(*)(TextThread&, std::wstring&);
 	inline static OutputCallback Output;
 
 	inline static bool filterRepetition = true;
@@ -37,7 +37,7 @@ private:
 	std::unordered_set<wchar_t> repeatingChars;
 	std::mutex bufferMutex;
 	DWORD lastPushTime = 0;
-	Synchronized<std::deque<std::wstring>> queuedSentences;
+	Synchronized<std::vector<std::wstring>> queuedSentences;
 	struct TimerDeleter { void operator()(HANDLE h) { DeleteTimerQueueTimer(NULL, h, INVALID_HANDLE_VALUE); } };
 	AutoHandle<TimerDeleter> timer = NULL;
 };

@@ -5,7 +5,7 @@
 
 namespace Host
 {
-	using ProcessEventHandler = std::function<void(DWORD)>;
+	using ProcessEventHandler = void(*)(DWORD);
 	using ThreadEventHandler = std::function<void(TextThread&)>;
 	using HookEventHandler = std::function<void(HookParam, std::wstring text)>;
 	void Start(ProcessEventHandler Connect, ProcessEventHandler Disconnect, ThreadEventHandler Create, ThreadEventHandler Destroy, TextThread::OutputCallback Output);
