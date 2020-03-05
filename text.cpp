@@ -7,6 +7,7 @@
 const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
+const char* GAME_CONFIG = u8"Configure game";
 const char* DETACH = u8"Detach from game";
 const char* FORGET = u8"Forget game";
 const char* ADD_HOOK = u8"Add hook";
@@ -77,6 +78,7 @@ const char* DEFAULT_CODEPAGE = u8"Default codepage";
 const char* FLUSH_DELAY = u8"Flush delay";
 const char* MAX_BUFFER_SIZE = u8"Max buffer size";
 const char* MAX_HISTORY_SIZE = u8"Max history size";
+const char* CONFIG_JP_LOCALE = u8"Launch with JP locale";
 const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
 const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)

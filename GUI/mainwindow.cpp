@@ -6,6 +6,7 @@
 #include "host/host.h"
 #include "host/hookcode.h"
 #include <shellapi.h>
+#include <process.h>
 #include <QRegularExpression>
 #include <QStringListModel>
 #include <QScrollBar>
@@ -16,6 +17,7 @@
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
+extern const char* GAME_CONFIG;
 extern const char* DETACH;
 extern const char* FORGET;
 extern const char* ADD_HOOK;
@@ -59,6 +61,7 @@ extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;
 extern const char* MAX_HISTORY_SIZE;
+extern const char* CONFIG_JP_LOCALE;
 extern const wchar_t* ABOUT;
 extern const wchar_t* CL_OPTIONS;
 extern const wchar_t* LAUNCH_FAILED;
@@ -68,6 +71,8 @@ namespace
 {
 	constexpr auto HOOK_SAVE_FILE = u8"SavedHooks.txt";
 	constexpr auto GAME_SAVE_FILE = u8"SavedGames.txt";
+
+	enum LaunchWithJapaneseLocale { PROMPT, ALWAYS, NEVER };
 
 	std::atomic<DWORD> selectedProcessId = 0;
 	Ui::MainWindow ui{};
@@ -154,7 +159,8 @@ namespace
 		std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 		PROCESS_INFORMATION info = {};
-		if (!x64 && QMessageBox::question(This, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)
+		auto useLocale = QSettings(CONFIG_FILE, QSettings::IniFormat).value(CONFIG_JP_LOCALE, PROMPT).toInt();
+		if (!x64 && (useLocale == ALWAYS || (useLocale == PROMPT && QMessageBox::question(This, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)))
 		{
 			if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
 			{
@@ -186,6 +192,16 @@ namespace
 		CloseHandle(info.hThread);
 	}
 
+	void OpenProcessConfig()
+	{
+		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
+		{
+			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, L"TextractorConfig.txt");
+			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
+			_wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
+		}
+	}
+
 	void DetachProcess()
 	{
 		try { Host::DetachProcess(selectedProcessId); }
@@ -194,7 +210,7 @@ namespace
 
 	void ForgetProcess()
 	{
-		std::optional<std::wstring> processName = GetModuleFilename(selectedProcessId);
+		auto processName = GetModuleFilename(selectedProcessId);
 		if (!processName) processName = UserSelectedProcess();
 		DetachProcess();
 		if (!processName) return;
@@ -447,6 +463,12 @@ namespace
 			layout.addRow(label, spinBox);
 			QObject::connect(&saveButton, &QPushButton::clicked, [spinBox, label, &settings, &value] { settings.setValue(label, value = spinBox->value()); });
 		}
+		QComboBox localeComboBox(&dialog);
+		assert(PROMPT == 0 && ALWAYS == 1 && NEVER == 2);
+		localeComboBox.addItems({ { "Prompt", "Always", "Never" } });
+		localeComboBox.setCurrentIndex(settings.value(CONFIG_JP_LOCALE, PROMPT).toInt());
+		layout.addRow(CONFIG_JP_LOCALE, &localeComboBox);
+		QObject::connect(&localeComboBox, qOverload<int>(&QComboBox::activated), [&settings](int i) { settings.setValue(CONFIG_JP_LOCALE, i); });
 		layout.addWidget(&saveButton);
 		QObject::connect(&saveButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 		dialog.setWindowTitle(SETTINGS);
@@ -569,6 +591,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	for (auto [text, slot] : Array<const char*, void(&)()>{
 		{ ATTACH, AttachProcess },
 		{ LAUNCH, LaunchProcess },
+		{ GAME_CONFIG, OpenProcessConfig },
 		{ DETACH, DetachProcess },
 		{ FORGET, ForgetProcess },
 		{ ADD_HOOK, AddHook },
