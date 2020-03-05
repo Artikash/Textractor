@@ -17,6 +17,7 @@
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* SENTENCE_TOO_BIG;
+extern const char* MAX_SENTENCE_SIZE;
 extern const char* TOPMOST;
 extern const char* OPACITY;
 extern const char* SHOW_ORIGINAL;
@@ -159,6 +160,7 @@ public:
 	{
 		ui.display->setTextFormat(Qt::PlainText);
 		if (settings.contains(WINDOW) && QGuiApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
+		maxSentenceSize = settings.value(MAX_SENTENCE_SIZE, maxSentenceSize).toInt();
 
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
 			{ TOPMOST, false, &ExtraWindow::setTopmost },
@@ -173,6 +175,10 @@ public:
 			action->setCheckable(true);
 			action->setChecked(default);
 		}
+		menu.addAction(MAX_SENTENCE_SIZE, this, [this]
+		{
+			settings.setValue(MAX_SENTENCE_SIZE, maxSentenceSize = QInputDialog::getInt(this, MAX_SENTENCE_SIZE, "", maxSentenceSize, 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint));
+		});
 		ui.display->installEventFilter(this);
 		ui.display->setMouseTracking(true);
 
@@ -296,7 +302,7 @@ private:
 	}
 
 	bool locked, showOriginal, useDictionary;
-	int maxSentenceSize = 1500;
+	int maxSentenceSize = 500;
 	QPoint oldPos;
 
 	class
@@ -389,7 +395,7 @@ private:
 			definitions.clear();
 			definitionIndex = 0;
 			std::unordered_set<const char*> foundDefinitions;
-			for (term = term.left(500); !term.isEmpty(); term.chop(1))
+			for (term = term.left(100); !term.isEmpty(); term.chop(1))
 				for (const auto& [rootTerm, definition, inflections] : LookupDefinitions(term, foundDefinitions))
 					definitions.push_back(
 						QStringLiteral("<h3>%1 (%5/%6)</h3><small>%2%3</small><p>%4</p>").arg(

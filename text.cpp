@@ -122,7 +122,8 @@ const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
-const char* SENTENCE_TOO_BIG = u8"Sentence much too large to display";
+const char* SENTENCE_TOO_BIG = u8"Sentence too large to display";
+const char* MAX_SENTENCE_SIZE = u8"Max sentence size";
 const char* TOPMOST = u8"Always on top";
 const char* DICTIONARY = u8"Dictionary";
 const char* DICTIONARY_INSTRUCTIONS = u8R"(This file is used only for the "Dictionary" feature of the Extra Window extension.
