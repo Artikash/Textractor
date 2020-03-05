@@ -16734,10 +16734,12 @@ void InsertMonoHook(HMODULE h)
 								HookParam hp = {};
 								hp.address = addr;
 								hp.type = USING_UNICODE | FULL_STRING;
+                                if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
 								hp.offset = 4;
                                 char nameForUser[HOOK_NAME_SIZE] = {};
                                 strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
                                 if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
+                                if (char* end = strstr(nameForUser, "{")) *end = 0;
 								hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD* data, DWORD* split, DWORD* len)
 								{
 									MonoString* string = (MonoString*)argof(1, esp_base);
@@ -16750,8 +16752,7 @@ void InsertMonoHook(HMODULE h)
 				__except (EXCEPTION_EXECUTE_HANDLER) {}
 			}(addr);
 		}
-        if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please create a TextractorConfig.txt file"
-            "next to the main executable and put the name of a working hook inside it");
+        if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 		return true;
 	failed:
 		ConsoleOutput("Textractor: Mono Dynamic failed");

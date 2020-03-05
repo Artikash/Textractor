@@ -30,4 +30,5 @@ enum HookParamType : unsigned
 	HEX_DUMP = 0x4000,
 	HOOK_ENGINE = 0x8000,
 	HOOK_ADDITIONAL = 0x10000,
+	KNOWN_UNSTABLE = 0x20000,
 };

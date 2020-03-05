@@ -98,11 +98,13 @@ namespace Engine
 									HookParam hp = {};
 									hp.address = addr;
 									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
+									if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
 									hp.offset = -0x20; // rcx
 									hp.padding = 20;
 									char nameForUser[HOOK_NAME_SIZE] = {};
 									strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
 									if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
+									if (char* end = strstr(nameForUser, "{")) *end = 0;
 									hp.length_fun = [](uintptr_t, uintptr_t data)
 									{
 										/* Artikash 6/18/2019:
@@ -117,8 +119,8 @@ namespace Engine
 					__except (EXCEPTION_EXECUTE_HANDLER) {}
 				}(addr);
 			}
-			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please create a TextractorConfig.txt file"
-				"next to the main executable and put the name of a working hook inside it");
+
+			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 			return true;
 		failed:
 			ConsoleOutput("Textractor: Mono Dynamic failed");

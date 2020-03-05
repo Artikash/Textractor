@@ -201,7 +201,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
-		if (!err)
+		if (!err && !(hp.type & KNOWN_UNSTABLE))
 		{
 			err = true;
 			ConsoleOutput("%s in %s", SEND_ERROR, hp.name);
@@ -222,6 +222,7 @@ bool TextHook::InsertHookCode()
 		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) address += (uint64_t)moduleBase;
 		else return ConsoleOutput(MODULE_MISSING), false;
 
+	VirtualProtect(location, 10, PAGE_EXECUTE_READWRITE, DUMMY);
 	void* original;
 	MH_STATUS error;
 	while ((error = MH_CreateHook(location, trampoline, &original)) != MH_OK)
