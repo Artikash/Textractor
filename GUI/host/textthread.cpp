@@ -83,7 +83,7 @@ void TextThread::Flush()
 	for (auto& sentence : sentences)
 	{
 		totalSize += sentence.size();
-		sentence.erase(std::remove(sentence.begin(), sentence.end(), L'\0'));
+		sentence.erase(std::remove(sentence.begin(), sentence.end(), L'\0'), sentence.end());
 		if (Output(*this, sentence)) storage->append(sentence);
 	}
 
