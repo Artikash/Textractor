@@ -1,6 +1,7 @@
 #include "match.h"
 #include "engine.h"
 #include "main.h"
+#include "defs.h"
 #include "native/pchooks.h"
 
 extern const char* HIJACK_ERROR;
@@ -43,9 +44,9 @@ namespace Engine
 		{
 			GetModuleFileNameW(nullptr, processPath, MAX_PATH);
 			processName = wcsrchr(processPath, L'\\') + 1;
-			wchar_t configFilename[MAX_PATH + sizeof(L"TextractorConfig.txt")];
+			wchar_t configFilename[MAX_PATH + std::size(GAME_CONFIG_FILE)];
 			wcsncpy_s(configFilename, processPath, MAX_PATH - 1);
-			wcscpy_s(wcsrchr(configFilename, L'\\') + 1, sizeof(L"TextractorConfig.txt"), L"TextractorConfig.txt");
+			wcscpy_s(wcsrchr(configFilename, L'\\') + 1, std::size(GAME_CONFIG_FILE), GAME_CONFIG_FILE);
 			if (AutoHandle<> configFile = CreateFileW(configFilename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 			{
 				if (ReadFile(configFile, configFileData, sizeof(configFileData) - 1, DUMMY, nullptr)) ConsoleOutput("Textractor: game configuration loaded");

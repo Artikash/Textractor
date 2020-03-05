@@ -159,7 +159,7 @@ namespace
 		std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 		PROCESS_INFORMATION info = {};
-		auto useLocale = QSettings(CONFIG_FILE, QSettings::IniFormat).value(CONFIG_JP_LOCALE, PROMPT).toInt();
+		auto useLocale = openSettings().value(CONFIG_JP_LOCALE, PROMPT).toInt();
 		if (!x64 && (useLocale == ALWAYS || (useLocale == PROMPT && QMessageBox::question(This, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)))
 		{
 			if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
@@ -196,7 +196,7 @@ namespace
 	{
 		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
 		{
-			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, L"TextractorConfig.txt");
+			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, GAME_CONFIG_FILE);
 			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
 			_wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
 		}
@@ -665,7 +665,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-	QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(WINDOW, geometry());
+	openSettings().setValue(WINDOW, geometry());
 	CleanupExtensions();
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);

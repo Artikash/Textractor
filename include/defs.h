@@ -24,10 +24,6 @@ constexpr auto PIPE_AVAILABLE_EVENT = L"TEXTRACTOR_PIPE_AVAILABLE";
 // Files
 
 constexpr auto ITH_DLL = L"texthook"; // .dll but LoadLibrary automatically adds that
-constexpr auto CONFIG_FILE = u8"Textractor.ini";
-
-// Misc
-
-constexpr auto WINDOW = u8"Window";
+constexpr auto& GAME_CONFIG_FILE = L"TextractorConfig.txt";
 
 // EOF

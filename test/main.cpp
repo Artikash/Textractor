@@ -1,5 +1,4 @@
 ﻿#include "common.h"
-#include "defs.h"
 #include "resource.h"
 #include <fstream>
 #include <sstream>

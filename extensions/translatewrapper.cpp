@@ -1,6 +1,5 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
-#include "defs.h"
 #include "blockmarkup.h"
 #include "network.h"
 #include <map>
@@ -21,7 +20,6 @@ const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%sCache.txt", TRANSLATION_PROVIDER);
 
 Synchronized<std::wstring> translateTo = L"en";
-QSettings settings(CONFIG_FILE, QSettings::IniFormat);
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 int savedSize;
@@ -41,6 +39,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 	case DLL_PROCESS_ATTACH:
 	{
+		static QSettings settings = openSettings();
 		settings.beginGroup(TRANSLATION_PROVIDER);
 		if (settings.contains(LANGUAGE)) translateTo->assign(S(settings.value(LANGUAGE).toString()));
 		else QTimer::singleShot(0, []

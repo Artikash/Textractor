@@ -1,7 +1,6 @@
 #include "qtcommon.h"
 #include "extension.h"
 #include "ui_extrawindow.h"
-#include "defs.h"
 #include "blockmarkup.h"
 #include <fstream>
 #include <process.h>
@@ -77,7 +76,7 @@ struct PrettyWindow : QDialog
 
 protected:
 	QMenu menu{ ui.display };
-	QSettings settings{ CONFIG_FILE, QSettings::IniFormat, this };
+	QSettings settings{ openSettings(this) };
 
 private:
 	void RequestFont()

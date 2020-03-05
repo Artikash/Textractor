@@ -1,6 +1,5 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
-#include "defs.h"
 #include <concrt.h>
 #include <QMenu>
 #include <QFileDialog>
