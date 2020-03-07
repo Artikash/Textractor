@@ -40,7 +40,7 @@ private:
 			}
 			int oldSize = buffer.size();
 			buffer.resize(oldSize + blockSize);
-			if (!streambuf.sgetn((char*)buffer.data() + oldSize, blockSize * sizeof(C))) return {};
+			if (!streambuf.sgetn((char*)(buffer.data() + oldSize), blockSize * sizeof(C))) return {};
 			i = max(0, oldSize - (int)delimiter.size());
 			if (discard)
 			{
