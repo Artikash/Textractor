@@ -398,7 +398,7 @@ private:
 				for (const auto& [rootTerm, definition, inflections] : LookupDefinitions(term, foundDefinitions))
 					definitions.push_back(
 						QStringLiteral("<h3>%1 (%5/%6)</h3><small>%2%3</small><p>%4</p>").arg(
-							term,
+							term.split("<<")[0],
 							rootTerm.split("<<")[0],
 							inflections.join(""),
 							definition
