@@ -23,14 +23,8 @@ public:
 	~ExtenWindow();
 
 private:
-	inline static constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
-
-	void Add(QFileInfo extenFile);
-	void Sync();
 	bool eventFilter(QObject* target, QEvent* event) override;
 	void keyPressEvent(QKeyEvent* event) override;
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dropEvent(QDropEvent* event) override;
-
-	Ui::ExtenWindow* ui;
 };

@@ -15,10 +15,11 @@ std::optional<std::wregex> regex;
 std::shared_mutex m;
 DWORD (*GetSelectedProcessId)() = nullptr;
 
-class Window : public QMainWindow 
+class Window : public QDialog
 {
 public:
 	Window()
+		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		ui.setupUi(this);
 

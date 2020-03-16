@@ -56,11 +56,12 @@ void Unescape(std::wstring& text)
 	{
 		if (text[i] == L'\\')
 		{
-			text[i] = 0x200b;
-			if (text[i + 1] == L'r') text[i + 1] = 0x200b; // for some reason \r gets displayed as a newline
+			text[i] = 0;
+			if (text[i + 1] == L'r') text[i + 1] = 0; // for some reason \r gets displayed as a newline
 			if (text[i + 1] == L'n') text[i + 1] = L'\n';
 			if (text[i + 1] == L't') text[i + 1] = L'\t';
 			if (text[i + 1] == L'\\') ++i;
 		}
 	}
+	text.erase(std::remove(text.begin(), text.end(), 0), text.end());
 }

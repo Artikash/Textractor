@@ -74,8 +74,8 @@ namespace
 
 	enum LaunchWithJapaneseLocale { PROMPT, ALWAYS, NEVER };
 
+	Ui::MainWindow ui;
 	std::atomic<DWORD> selectedProcessId = 0;
-	Ui::MainWindow ui{};
 	ExtenWindow* extenWindow = nullptr;
 	std::unordered_set<DWORD> alreadyAttached;
 	bool autoAttach = false, autoAttachSavedOnly = true;

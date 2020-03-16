@@ -4,6 +4,18 @@
 #define ARCH "x86"
 #endif
 
+#if 0
+#define TURKISH
+#define SPANISH
+#define SIMPLIFIED_CHINESE
+#define RUSSIAN
+#define INDONESIAN
+#define ITALIAN
+#define THAI
+#define PORTUGUESE
+#define KOREAN
+#endif
+
 const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
@@ -117,11 +129,10 @@ const char* SEND_ERROR = u8"Textractor: Send ERROR (likely an unstable/incorrect
 const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code)";
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
-const char* SELECT_LANGUAGE = u8"Select language";
-const char* SELECT_LANGUAGE_MESSAGE = u8"What language should %1 translate to?";
-const char* LANGUAGE_SAVED = u8"Translation language saved (you can delete it in the config file %1 then reopen Textractor to reselect)";
+const char* TRANSLATE_TO = u8"Translate to";
 const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
+const char* API_KEY = u8"API key";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* SENTENCE_TOO_BIG = u8"Sentence too large to display";
@@ -278,8 +289,6 @@ Código fuente disponible bajo GPLv3 en la página del proyecto)";
 	READ_ERROR = u8"Textractor: Reader ERROR (probablemente un R-code incorrecto)";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: no se puede encontrar texto";
-	SELECT_LANGUAGE = u8"Seleccionar lenguaje";
-	SELECT_LANGUAGE_MESSAGE = u8"¿A qué idioma debe traducir %1?";
 	TOO_MANY_TRANS_REQUESTS = L"Demasiadas peticiones de traducción: no se puede hacer más";
 	TRANSLATION_ERROR = L"Error al traducir";
 	EXTRA_WINDOW_INFO = u8R"(Clic derecho para configurar
@@ -293,7 +302,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 #endif // SPANISH
 
 #ifdef SIMPLIFIED_CHINESE
-	NATIVE_LANGUAGE = "Chinese(Simplified)";
+	NATIVE_LANGUAGE = "Chinese (Simplified)";
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
 	DETACH = u8"从游戏分离";
@@ -343,8 +352,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	READ_ERROR = u8"Textractor: Reader 错误 (R码可能不正确)";
 	HIJACK_ERROR = u8"Textractor: Hijack 错误";
 	COULD_NOT_FIND = u8"Textractor: 无法找到文本";
-	SELECT_LANGUAGE = u8"选择语言";
-	SELECT_LANGUAGE_MESSAGE = u8"想要使用 %1 翻译到哪种语言?";
 	TOO_MANY_TRANS_REQUESTS = L"太多翻译请求: 拒绝生成更多";
 	TRANSLATION_ERROR = L"翻译时出错";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
@@ -438,8 +445,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	READ_ERROR = u8"Textractor: Reader ERROR (вероятно неверный R-code)";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: невозможно найти текст";
-	SELECT_LANGUAGE = u8"Выберете язык";
-	SELECT_LANGUAGE_MESSAGE = u8"На какой язык переводить в %1?";
 	TOO_MANY_TRANS_REQUESTS = L"Слишком много запросов для перевода: отклонено";
 	TRANSLATION_ERROR = L"Ошибка при переводе";
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
@@ -540,8 +545,6 @@ Jika kamu menyukai project ini, tolong sebarluaskan project ini :))";
 	READ_ERROR = u8"Textractor: Reader ERROR (Kemungkinan R-Code salah)";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: tidak dapat menemukan teks";
-	SELECT_LANGUAGE = u8"Pilih bahasa";
-	SELECT_LANGUAGE_MESSAGE = u8"Bahasa apakah yang %1 harus terjemahkan?";
 	TOO_MANY_TRANS_REQUESTS = L"Terlalu banyak permintaan terjemahan: menolak untuk menerjemahkan";
 	TRANSLATION_ERROR = L"Terjadi kesalahan ketika menerjemahkan";
 	EXTRA_WINDOW_INFO = u8R"(Klik kanan untuk merubah pengaturan
@@ -646,8 +649,6 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	READ_ERROR = u8"Textractor: Reader ERROR (probabilmente un R-code incorretto)";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: impossibile trovare il testo";
-	SELECT_LANGUAGE = u8"Seleziona lingua";
-	SELECT_LANGUAGE_MESSAGE = u8"In quale lingua dovrei %1 tradurlo?";
 	TOO_MANY_TRANS_REQUESTS = L"Troppe richieste di traduzione: rifiuta per farne altre";
 	TRANSLATION_ERROR = L"Errore durante la traduzione";
 	EXTRA_WINDOW_INFO = u8R"(Tasto destro per cambiare le impostazioni
@@ -762,8 +763,6 @@ Se você gostou desse projeto, divulgue a todos :))";
 	SEND_ERROR = u8"Textractor: ERRO no envio (provavelmente um H-code incorreto)";
 	READ_ERROR = u8"Textractor:  ERRO na leitura (provavelmente um R-code incorreto)";
 	COULD_NOT_FIND = u8"Textractor: não foi possível encontrar texto";
-	SELECT_LANGUAGE = u8"Selecione a lingua";
-	SELECT_LANGUAGE_MESSAGE = u8"Qual lingua deve o/a %1 traduzir para?";
 	TOO_MANY_TRANS_REQUESTS = L"Foram feitos pedidos de tradução demais: recusa na feitura de mais pedidos";
 	TRANSLATION_ERROR = L"Erro enquanto traduzindo";
 	EXTRA_WINDOW_INFO = u8R"(Clique com o botão direito para mudar as opções
@@ -839,8 +838,6 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	READ_ERROR = u8"Textractor: Reader ERROR (คาดว่าเป็นความผิดพลาดของ R-Code)";
 	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 	COULD_NOT_FIND = u8"Textractor: ไม่สามารถหาข้อมูลตัวอักษรได้";
-	SELECT_LANGUAGE = u8"เลือกภาษา";
-	SELECT_LANGUAGE_MESSAGE = u8"ภาษาใดที่ %1 ควรจะแปลให้เป็น?";
 	TOO_MANY_TRANS_REQUESTS = L"มีการเรียกขอมากเกินกำหนด : ปฏิเสธที่จะทำการขอคำแปลต่อ";
 	TRANSLATION_ERROR = L"เกิดข้อผิดพลาดระหว่างการแปลภาษา";
 	EXTRA_WINDOW_INFO = u8R"(คลิกขวาเพื่อที่จะตั่งค่า 
@@ -906,8 +903,6 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	LAUNCH_FAILED = L"Textractor: 실행할 수 없습니다";
 	INVALID_CODE = L"Textractor: 유효하지 않은 코드";
 	INVALID_CODEPAGE = L"Textractor: 텍스트를 변환할 수 없습니다 (유효하지 않은 코드페이지?)";
-	SELECT_LANGUAGE = u8"언어 선택";
-	SELECT_LANGUAGE_MESSAGE = u8"어떤 언어로 %1 번역하시겠습니까?";
 	TOO_MANY_TRANS_REQUESTS = L"너무 많은 번역요청: 요청 거부됨";
 	TRANSLATION_ERROR = L"번역 에러";
 	EXTRA_WINDOW_INFO = u8R"(오른쪽 클릭으로 설정변경

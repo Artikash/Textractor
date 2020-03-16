@@ -41,10 +41,11 @@ bool logErrors = true;
 Synchronized<std::string> script;
 std::atomic<int> revCount = 0;
 
-class Window : public QMainWindow
+class Window : public QDialog
 {
 public:
 	Window()
+		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
@@ -53,7 +54,6 @@ public:
 		layout.addWidget(&loadButton);
 
 		resize(800, 600);
-		setCentralWidget(&centralWidget);
 		setWindowTitle("Lua");
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
 	}
@@ -76,10 +76,9 @@ private:
 		QTextFile(LUA_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate).write(scriptEditor.toPlainText().toUtf8());
 	}
 
-	QWidget centralWidget{ this };
-	QHBoxLayout layout{ &centralWidget };
-	QPlainTextEdit scriptEditor{ QTextFile(LUA_SAVE_FILE, QIODevice::ReadOnly).readAll(), &centralWidget };
-	QPushButton loadButton{ LOAD_LUA_SCRIPT, &centralWidget };
+	QHBoxLayout layout{ this };
+	QPlainTextEdit scriptEditor{ QTextFile(LUA_SAVE_FILE, QIODevice::ReadOnly).readAll(), this };
+	QPushButton loadButton{ LOAD_LUA_SCRIPT, this };
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)

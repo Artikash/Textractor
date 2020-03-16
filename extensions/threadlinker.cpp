@@ -11,17 +11,17 @@ extern const char* HEXADECIMAL;
 std::unordered_map<int64_t, std::unordered_multiset<int64_t>> linkedTextHandles;
 std::shared_mutex m;
 
-class Window : public QMainWindow
+class Window : public QDialog
 {
 public:
 	Window()
+		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
 
 		layout.addWidget(&linkList);
 		layout.addWidget(&linkButton);
 
-		setCentralWidget(&centralWidget);
 		setWindowTitle(THREAD_LINKER);
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
 	}
@@ -51,10 +51,9 @@ private:
 		}
 	}
 
-	QWidget centralWidget{ this };
-	QHBoxLayout layout{ &centralWidget };
-	QListWidget linkList{ &centralWidget };
-	QPushButton linkButton{ LINK, &centralWidget };
+	QHBoxLayout layout{ this };
+	QListWidget linkList{ this };
+	QPushButton linkButton{ LINK, this };
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)

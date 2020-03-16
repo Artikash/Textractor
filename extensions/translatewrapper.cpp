@@ -4,12 +4,11 @@
 #include "network.h"
 #include <map>
 #include <fstream>
+#include <QComboBox>
 #include <QTimer>
 
 extern const char* NATIVE_LANGUAGE;
-extern const char* SELECT_LANGUAGE;
-extern const char* SELECT_LANGUAGE_MESSAGE;
-extern const char* LANGUAGE_SAVED;
+extern const char* TRANSLATE_TO;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
@@ -17,8 +16,10 @@ extern QStringList languages;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
 const char* LANGUAGE = u8"Language";
-const std::string TRANSLATION_CACHE_FILE = FormatString("%sCache.txt", TRANSLATION_PROVIDER);
+const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
 
+QFormLayout* display;
+QSettings* settings;
 Synchronized<std::wstring> translateTo = L"en";
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
@@ -33,31 +34,30 @@ void SaveCache()
 	savedSize = translationCache->size();
 }
 
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+class Window : public QDialog
 {
-	switch (ul_reason_for_call)
+public:
+	Window() :
+		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-	case DLL_PROCESS_ATTACH:
-	{
-		static QSettings settings = openSettings();
+		display = &layout;
+		::settings = &settings;
+
+		languageBox.addItems(languages);
+
 		settings.beginGroup(TRANSLATION_PROVIDER);
-		if (settings.contains(LANGUAGE)) translateTo->assign(S(settings.value(LANGUAGE).toString()));
-		else QTimer::singleShot(0, []
-		{
-			QString language = QInputDialog::getItem(
-				nullptr,
-				SELECT_LANGUAGE,
-				QString(SELECT_LANGUAGE_MESSAGE).arg(TRANSLATION_PROVIDER),
-				languages,
-				std::find_if(languages.begin(), languages.end(), [](QString language) { return language.startsWith(NATIVE_LANGUAGE); }) - languages.begin(),
-				false,
-				nullptr,
-				Qt::WindowCloseButtonHint
-			);
-			translateTo->assign(S(language.split(": ")[1]));
-			settings.setValue(LANGUAGE, S(translateTo->c_str()));
-			QMessageBox::information(nullptr, SELECT_LANGUAGE, QString(LANGUAGE_SAVED).arg(CONFIG_FILE));
-		});
+		int language = -1;
+		if (settings.contains(LANGUAGE)) language = languageBox.findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
+		if (language < 0) language = languageBox.findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (language < 0) language = languageBox.findText("English", Qt::MatchStartsWith);
+		languageBox.setCurrentIndex(language);
+		saveLanguage(languageBox.currentText());
+		connect(&languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+
+		layout.addRow(TRANSLATE_TO, &languageBox);
+
+		setWindowTitle(TRANSLATION_PROVIDER);
+		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
 
 		std::ifstream stream(TRANSLATION_CACHE_FILE, std::ios::binary);
 		BlockMarkupIterator savedTranslations(stream, Array<std::wstring_view>{ L"|SENTENCE|", L"|TRANSLATION|" });
@@ -69,15 +69,22 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		}
 		savedSize = translationCache->size();
 	}
-	break;
-	case DLL_PROCESS_DETACH:
+
+	~Window()
 	{
 		SaveCache();
 	}
-	break;
+
+private:
+	void saveLanguage(QString language)
+	{
+		settings.setValue(LANGUAGE, S(translateTo->assign(S(language.split(": ")[1]))));
 	}
-	return TRUE;
-}
+
+	QFormLayout layout{ this };
+	QComboBox languageBox{ this };
+	QSettings settings{ openSettings(this) };
+} window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {

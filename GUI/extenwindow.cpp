@@ -15,18 +15,21 @@ extern const char* CONFIRM_EXTENSION_OVERWRITE;
 extern const char* EXTENSION_WRITE_ERROR;
 extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 
-constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
-
 namespace
 {
+	constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
+	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines";
+
 	struct Extension
 	{
 		std::wstring name;
 		wchar_t* (*callback)(wchar_t*, const InfoForExtension*);
 	};
 
+	Ui::ExtenWindow ui;
 	concurrency::reader_writer_lock extenMutex;
 	std::vector<Extension> extensions;
+	ExtenWindow* This = nullptr;
 
 	bool Load(QString extenName)
 	{
@@ -62,6 +65,39 @@ namespace
 			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](Extension extension) { return extension.name == S(extenName); }));
 		::extensions = extensions;
 	}
+
+	void Sync()
+	{
+		ui.extenList->clear();
+		QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
+		concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
+		for (auto extension : extensions)
+		{
+			ui.extenList->addItem(S(extension.name));
+			extenSaveFile.write((S(extension.name) + ">").toUtf8());
+		}
+	}
+
+	void Add(QFileInfo extenFile)
+	{
+		if (extenFile.suffix() == "dll")
+		{
+			if (extenFile.absolutePath() != QDir::currentPath())
+			{
+				if (QFile::exists(extenFile.fileName()) && QMessageBox::question(This, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
+				if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(This, EXTENSIONS, EXTENSION_WRITE_ERROR);
+			}
+			if (Load(extenFile.completeBaseName())) return Sync();
+		}
+		QMessageBox::information(This, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
+	}
+
+	void OpenMenu(QPoint point)
+	{
+		QAction addExtension(ADD_EXTENSION);
+		if (QMenu::exec({ &addExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
+			if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+	}
 }
 
 bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* sentenceInfo)
@@ -84,57 +120,22 @@ void CleanupExtensions()
 }
 
 ExtenWindow::ExtenWindow(QWidget* parent) :
-	QMainWindow(parent, Qt::WindowCloseButtonHint),
-	ui(new Ui::ExtenWindow)
+	QMainWindow(parent, Qt::WindowCloseButtonHint)
 {
-	ui->setupUi(this);
-
-	connect(ui->extenList, &QListWidget::customContextMenuRequested, [this](QPoint point)
-	{
-		if (QMenu(this).exec({ std::make_unique<QAction>(ADD_EXTENSION).get() }, ui->extenList->mapToGlobal(point)))
-			if (QString extenFile = QFileDialog::getOpenFileName(this, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
-	});
-
-	ui->vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
+	This = this;
+	ui.setupUi(this);
+	ui.vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
 	setWindowTitle(EXTENSIONS);
 
-	ui->extenList->installEventFilter(this);
+	connect(ui.extenList, &QListWidget::customContextMenuRequested, OpenMenu);
+	ui.extenList->installEventFilter(this);
 
 	if (!QFile::exists(EXTEN_SAVE_FILE)) QTextFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly).write(DEFAULT_EXTENSIONS);
 	for (auto extenName : QString(QTextFile(EXTEN_SAVE_FILE, QIODevice::ReadOnly).readAll()).split(">")) Load(extenName);
 	Sync();
 }
 
-ExtenWindow::~ExtenWindow()
-{
-	delete ui;
-}
-
-void ExtenWindow::Add(QFileInfo extenFile)
-{
-	if (extenFile.suffix() == "dll")
-	{
-		if (extenFile.absolutePath() != QDir::currentPath())
-		{
-			if (QFile::exists(extenFile.fileName()) && QMessageBox::question(this, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
-			if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(this, EXTENSIONS, EXTENSION_WRITE_ERROR);
-		}
-		if (Load(extenFile.completeBaseName())) return Sync();
-	}
-	QMessageBox::information(this, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
-}
-
-void ExtenWindow::Sync()
-{
-	ui->extenList->clear();
-	QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
-	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
-	for (auto extension : extensions)
-	{
-		ui->extenList->addItem(S(extension.name));
-		extenSaveFile.write((S(extension.name) + ">").toUtf8());
-	}
-}
+ExtenWindow::~ExtenWindow() = default;
 
 bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 {
@@ -142,7 +143,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 	if (event->type() == QEvent::ChildRemoved)
 	{
 		QStringList extenNames;
-		for (int i = 0; i < ui->extenList->count(); ++i) extenNames.push_back(ui->extenList->item(i)->text());
+		for (int i = 0; i < ui.extenList->count(); ++i) extenNames.push_back(ui.extenList->item(i)->text());
 		Reorder(extenNames);
 		Sync();
 	}
@@ -151,9 +152,9 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 
 void ExtenWindow::keyPressEvent(QKeyEvent* event)
 {
-	if (event->key() == Qt::Key_Delete && ui->extenList->currentItem())
+	if (event->key() == Qt::Key_Delete && ui.extenList->currentItem())
 	{
-		Unload(ui->extenList->currentIndex().row());
+		Unload(ui.extenList->currentIndex().row());
 		Sync();
 	}
 }
