@@ -2244,7 +2244,6 @@ void InsertRealliveHook()
   //ConsoleOutput("Probably Reallive. Wait for text.");
   ConsoleOutput("vnreng: TRIGGER Reallive");
   trigger_fun = InsertRealliveDynamicHook;
-  SetTrigger();
 }
 
 namespace { // unnamed
@@ -5804,7 +5803,6 @@ bool InsertShinaHook()
 {
   int ver = GetShinaRioVersion();
   if (ver >= 50) {
-	  SetTrigger();
 	  //trigger_fun = StackSearchingTrigger<GetGlyphOutlineA, NULL>;
 	  trigger_fun = [](LPVOID funcAddr, DWORD, DWORD stack)
 	  {
@@ -6003,7 +6001,6 @@ void InsertWaffleHook()
     }
   //ConsoleOutput("Probably Waffle. Wait for text.");
   trigger_fun = InsertWaffleDynamicHook;
-  SetTrigger();
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
 
@@ -8595,7 +8592,6 @@ bool InsertSystemAoiDynamic()
   ConsoleOutput("vnreng: DYNAMIC SystemAoi");
   //ConsoleOutput("Probably SoftHouseChara. Wait for text.");
   trigger_fun = InsertSystemAoiDynamicHook;
-  SetTrigger();
   return true;
 }
 
@@ -8882,7 +8878,6 @@ void InsertIronGameSystemHook()
 {
   //ConsoleOutput("Probably IronGameSystem. Wait for text.");
   trigger_fun = InsertIGSDynamicHook;
-  SetTrigger();
   ConsoleOutput("vnreng: TRIGGER IronGameSystem");
 }
 
@@ -9519,7 +9514,6 @@ void InsertRyokuchaHook()
 {
   //ConsoleOutput("Probably Ryokucha. Wait for text.");
   trigger_fun = InsertRyokuchaDynamicHook;
-  SetTrigger();
   ConsoleOutput("vnreng: TRIGGER Ryokucha");
 }
 
@@ -16719,7 +16713,7 @@ void InsertMonoHook(HMODULE h)
 		if (!getDomain || !getName || !getJitInfo) goto failed;
 		static auto domain = getDomain();
 		if (!domain) goto failed;
-        ConsoleOutput("Textractor: Mono Dynamic ENTER (hook = %s)", loadedConfig ? loadedConfig : "brute force");
+        ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", loadedConfig ? loadedConfig : "brute force");
 		const BYTE prolog[] = { 0x55, 0x8b, 0xec };
 		for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
 		{
@@ -16729,7 +16723,7 @@ void InsertMonoHook(HMODULE h)
 				{
 					if (getJitInfo(domain, addr))
 						if (char* name = getName(addr))
-							if ((!loadedConfig && strstr(name, "string:") && !strstr(name, "string:mem")) || (loadedConfig && strstr(name, loadedConfig)))
+							if (ShouldMonoHook(name))
 							{
 								HookParam hp = {};
 								hp.address = addr;
@@ -16758,7 +16752,6 @@ void InsertMonoHook(HMODULE h)
 		ConsoleOutput("Textractor: Mono Dynamic failed");
 		return true;
 	};
-	SetTrigger();
 }
 
 /** jichi 12/26/2014 Mono

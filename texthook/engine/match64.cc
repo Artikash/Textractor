@@ -80,7 +80,7 @@ namespace Engine
 			if (!getDomain || !getName || !getJitInfo) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
-			ConsoleOutput("Textractor: Mono Dynamic ENTER (hook = %s)", loadedConfig ? loadedConfig : "brute force");
+			ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", loadedConfig ? loadedConfig : "brute force");
 			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
 			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
 			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
@@ -92,8 +92,7 @@ namespace Engine
 					{
 						if (getJitInfo(domain, addr))
 							if (char* name = getName(addr))
-								if ((!loadedConfig && strstr(name, "string:") && strstr(name, "+ 0x0") && !strstr(name, "string:mem")) ||
-									loadedConfig && strstr(name, loadedConfig) && strstr(name, "+ 0x0"))
+								if (strstr(name, "0x0") && ShouldMonoHook(name))
 								{
 									HookParam hp = {};
 									hp.address = addr;
@@ -126,7 +125,6 @@ namespace Engine
 			ConsoleOutput("Textractor: Mono Dynamic failed");
 			return true;
 		};
-		SetTrigger();
 		return ret;
 	}
 

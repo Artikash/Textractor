@@ -33,11 +33,6 @@ namespace Engine
 		return found;
 	}
 
-	DWORD InsertDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
-	{
-		return trigger_fun ? !trigger_fun(addr, frame, stack) : 0;
-	}
-
 	void Hijack()
 	{
 		static auto _ = []
@@ -56,6 +51,7 @@ namespace Engine
 					ConsoleOutput("Textractor: Engine = %s", requestedEngine = configFileData + 7);
 				}
 				else loadedConfig = configFileData;
+				if (loadedConfig && !*loadedConfig) loadedConfig = nullptr;
 			}
 
 			processStartAddress = processStopAddress = (uintptr_t)GetModuleHandleW(nullptr);
@@ -73,5 +69,16 @@ namespace Engine
 			DetermineEngineType();
 			return NULL;
 		}();
+	}
+
+	bool ShouldMonoHook(const char* name)
+	{
+		if (!loadedConfig) return strstr(name, "string:") && !strstr(name, "string:mem");
+		for (const char* hook = loadedConfig; hook; hook = strchr(hook + 1, '\t'))
+			for (auto start = name; *start; ++start)
+				for (int i = 0; ; ++i)
+					if (start[i] != hook[i + 1]) break;
+					else if (!hook[i + 2] || hook[i + 2] == '\t') return true;
+		return false;
 	}
 }

@@ -16,15 +16,6 @@ extern wchar_t *processName, // cached
                processPath[MAX_PATH]; // cached
 inline const char *requestedEngine = nullptr, *loadedConfig = nullptr;
 
-// Artikash 6/17/2019 TODO: These have the wrong values on x64
-/** jichi 12/24/2014
-	  *  @param  addr  function address
-	  *  @param  frame  real address of the function, supposed to be the same as addr
-	  *  @param  stack  address of current stack - 4
-	  *  @return  If success, which is reverted
-  */
-inline bool (*trigger_fun)(LPVOID addr, DWORD frame, DWORD stack);
-
 bool InsertMonoHooks(); // Mono
 
 // Wii engines

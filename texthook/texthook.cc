@@ -5,7 +5,6 @@
 
 #include "texthook.h"
 #include "main.h"
-#include "engine/match.h"
 #include "ithsys/ithsys.h"
 
 extern const char* FUNC_MISSING;
@@ -93,27 +92,22 @@ namespace { // unnamed
 	int this_offset = 50, send_offset = 60, original_offset = 126;
 #endif
 
-	bool trigger = false;
-
 	enum { TEXT_BUFFER_SIZE = PIPE_BUFFER_SIZE - sizeof(ThreadParam) };
 } // unnamed namespace
-
-void SetTrigger()
-{
-	trigger = true;
-}
 
 // - TextHook methods -
 
 bool TextHook::Insert(HookParam hp, DWORD set_flag)
 {
-	std::scoped_lock lock(viewMutex);
-	hp.type |= set_flag;
-	if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
-	this->hp = hp;
-	address = hp.address;
+	{
+		std::scoped_lock lock(viewMutex);
+		hp.type |= set_flag;
+		if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
+		this->hp = hp;
+		address = hp.address;
+	}
 	if (hp.type & DIRECT_READ) return InsertReadCode();
-	else return InsertHookCode();
+	return InsertHookCode();
 }
 
 // jichi 5/11/2014:
@@ -123,14 +117,14 @@ void TextHook::Send(uintptr_t dwDataBase)
 	_InterlockedIncrement(&useCount);
 	__try
 	{
-		if (trigger) trigger = Engine::InsertDynamicHook(location, *(DWORD *)(dwDataBase - 0x1c), *(DWORD *)(dwDataBase - 0x18));
+		if (auto current_trigger_fun = trigger_fun.exchange(nullptr))
+			if (!current_trigger_fun(location, *(DWORD*)(dwDataBase - 0x1c), *(DWORD*)(dwDataBase - 0x18))) trigger_fun = current_trigger_fun;
 
 #ifndef _WIN64
 		DWORD dwCount = 0,
 			dwSplit = 0,
 			dwDataIn = *(DWORD*)(dwDataBase + hp.offset), // default values
 			dwRetn = *(DWORD*)dwDataBase; // first value on stack (if hooked start of function, this is return address)
-
 
 		// jichi 10/24/2014: generic hook function
 		if (hp.hook_fun && !hp.hook_fun(dwDataBase, &hp)) hp.hook_fun = nullptr;
