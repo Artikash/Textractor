@@ -51,11 +51,12 @@ foreach ($language in @{
 			"Thread Linker.dll"
 		))
 		{
-			&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 "Release_$arch/$file";
 			copy -Force -Recurse -Verbose -Destination "$folder/$arch" -Path "Release_$arch/$file";
 		}
 	}
 }
+
+&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 @(dir "Textractor-*-$version\**\*");
 
 rm -Force -Recurse -Verbose "Runtime";
 mkdir -Force -Verbose "Runtime";
