@@ -169,7 +169,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 				if (!IsHash(results[1])) translation += std::wstring(results[1]) + L" ";
 			if (!translation.empty()) return { true, translation };
 		}
-		return { false, FormatString(L"%s (TKK=%u)", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0)) };
+		return { false, FormatString(L"%s (TKK=%u): %s", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0), httpRequest.response) };
 	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

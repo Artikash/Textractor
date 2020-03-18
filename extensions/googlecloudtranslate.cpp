@@ -6,7 +6,7 @@ extern const wchar_t* TRANSLATION_ERROR;
 extern const char* API_KEY;
 
 extern QFormLayout* display;
-extern QSettings* settings;
+extern QSettings settings;
 extern Synchronized<std::wstring> translateTo;
 
 const char* TRANSLATION_PROVIDER = "Google Cloud Translate";
@@ -82,9 +82,9 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		auto keyInput = new QLineEdit(settings->value(API_KEY).toString());
+		auto keyInput = new QLineEdit(settings.value(API_KEY).toString());
 		key->assign(S(keyInput->text()));
-		QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings->setValue(API_KEY, S(::key->assign(S(key)))); });
+		QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(::key->assign(S(key)))); });
 		display->addRow(API_KEY, keyInput);
 		auto googleCloudInfo = new QLabel(
 			"<a href=\"https://codelabs.developers.google.com/codelabs/cloud-translation-intro\">https://codelabs.developers.google.com/codelabs/cloud-translation-intro</a>"
@@ -113,7 +113,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	{
 		// Response formatted as JSON: starts with "translatedText": " and translation is enclosed in quotes followed by a comma
 		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\"translatedText\": \"(.+?)\","))) return { true, results[1] };
-		return { false, TRANSLATION_ERROR };
+		return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

@@ -89,6 +89,6 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	})
 		// Response formatted as JSON: translation starts with text":" and ends with ","to
 		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+)\",\"t"))) return { true, results[1] };
-		else return { false, TRANSLATION_ERROR };
+		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

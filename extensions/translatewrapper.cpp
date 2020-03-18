@@ -5,7 +5,6 @@
 #include <map>
 #include <fstream>
 #include <QComboBox>
-#include <QTimer>
 
 extern const char* NATIVE_LANGUAGE;
 extern const char* TRANSLATE_TO;
@@ -19,7 +18,7 @@ const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
-QSettings* settings;
+QSettings settings = openSettings();
 Synchronized<std::wstring> translateTo = L"en";
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
@@ -40,21 +39,20 @@ public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		display = &layout;
-		::settings = &settings;
-
-		languageBox.addItems(languages);
+		display = new QFormLayout(this);
 
 		settings.beginGroup(TRANSLATION_PROVIDER);
-		int language = -1;
-		if (settings.contains(LANGUAGE)) language = languageBox.findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = languageBox.findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
-		if (language < 0) language = languageBox.findText("English", Qt::MatchStartsWith);
-		languageBox.setCurrentIndex(language);
-		saveLanguage(languageBox.currentText());
-		connect(&languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
 
-		layout.addRow(TRANSLATE_TO, &languageBox);
+		auto languageBox = new QComboBox(this);
+		languageBox->addItems(languages);
+		int language = -1;
+		if (settings.contains(LANGUAGE)) language = languageBox->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
+		if (language < 0) language = languageBox->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (language < 0) language = languageBox->findText("English", Qt::MatchStartsWith);
+		languageBox->setCurrentIndex(language);
+		saveLanguage(languageBox->currentText());
+		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+		display->addRow(TRANSLATE_TO, languageBox);
 
 		setWindowTitle(TRANSLATION_PROVIDER);
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
@@ -80,10 +78,6 @@ private:
 	{
 		settings.setValue(LANGUAGE, S(translateTo->assign(S(language.split(": ")[1]))));
 	}
-
-	QFormLayout layout{ this };
-	QComboBox languageBox{ this };
-	QSettings settings{ openSettings(this) };
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
