@@ -86,13 +86,10 @@ DWORD WINAPI Pipe(LPVOID)
 	FreeLibraryAndExitThread(GetModuleHandleW(ITH_DLL), 0);
 }
 
-void TextOutput(ThreadParam tp, BYTE* text, int len)
+void TextOutput(ThreadParam tp, BYTE (*buffer)[PIPE_BUFFER_SIZE], int len)
 {
-	if (len < 0) return;
-	if (len > PIPE_BUFFER_SIZE - sizeof(tp)) len = PIPE_BUFFER_SIZE - sizeof(tp);
-	BYTE buffer[PIPE_BUFFER_SIZE] = {};
+	if (len < 0 || len > PIPE_BUFFER_SIZE - sizeof(tp)) ConsoleOutput("Textractor: something went very wrong (invalid length %d at hook address %I64d)", len, tp.addr);
 	*(ThreadParam*)buffer = tp;
-	memcpy(buffer + sizeof(tp), text, len);
 	WriteFile(hookPipe, buffer, sizeof(tp) + len, DUMMY, nullptr);
 }
 

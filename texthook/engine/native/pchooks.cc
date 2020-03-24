@@ -300,7 +300,7 @@ void PcHooks::hookOtherPcFunctions()
   if (HMODULE module = GetModuleHandleW(L"OLEAUT32.dll"))
   {
     NEW_MODULE_HOOK(module, SysAllocString, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, 0)
-	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING, s_arg2 / arg_sz)
+	NEW_MODULE_HOOK(module, SysAllocStringLen, s_arg1, 0, 0, 0, USING_UNICODE|USING_STRING|KNOWN_UNSTABLE, s_arg2 / arg_sz)
   }
 }
 

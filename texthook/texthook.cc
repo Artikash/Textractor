@@ -92,6 +92,7 @@ namespace { // unnamed
 	int this_offset = 50, send_offset = 60, original_offset = 126;
 #endif
 
+	thread_local BYTE buffer[PIPE_BUFFER_SIZE];
 	enum { TEXT_BUFFER_SIZE = PIPE_BUFFER_SIZE - sizeof(ThreadParam) };
 } // unnamed namespace
 
@@ -114,6 +115,7 @@ bool TextHook::Insert(HookParam hp, DWORD set_flag)
 // - dwDataBase: the stack address
 void TextHook::Send(uintptr_t dwDataBase)
 {
+	BYTE(*buffer)[PIPE_BUFFER_SIZE] = &::buffer, *pbData = *buffer + sizeof(ThreadParam);
 	_InterlockedIncrement(&useCount);
 	__try
 	{
@@ -145,9 +147,8 @@ void TextHook::Send(uintptr_t dwDataBase)
 			dwCount = GetLength(dwDataBase, dwDataIn);
 		}
 
-		if (dwCount == 0) goto done;
+		if (dwCount <= 0) goto done;
 		if (dwCount > TEXT_BUFFER_SIZE) dwCount = TEXT_BUFFER_SIZE;
-		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1) {
 			dwDataIn &= 0xffff;
 			if ((hp.type & BIG_ENDIAN) && (dwDataIn >> 8)) dwDataIn = _byteswap_ushort(dwDataIn & 0xffff);
@@ -160,7 +161,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) dwRetn = 0;
 
-		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, pbData, dwCount);
+		TextOutput({ GetCurrentProcessId(), address, dwRetn, dwSplit }, buffer, dwCount);
 #else // _WIN32
 		if (hp.type & HOOK_EMPTY) goto done; // jichi 10/24/2014: dummy hook only for dynamic hook
 		int count = 0;
@@ -176,9 +177,8 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		data += hp.padding;
 		count = GetLength(dwDataBase, data);
-		if (count == 0) goto done;
+		if (count <= 0) goto done;
 		if (count > TEXT_BUFFER_SIZE) count = TEXT_BUFFER_SIZE;
-		BYTE pbData[TEXT_BUFFER_SIZE];
 		if (hp.length_offset == 1)
 		{
 			data &= 0xffff;
@@ -190,7 +190,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) tp.ctx = 0;
 
-		TextOutput(tp, pbData, count);
+		TextOutput(tp, buffer, count);
 #endif // _WIN64
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
@@ -232,14 +232,14 @@ bool TextHook::InsertHookCode()
 
 void TextHook::Read()
 {
-	BYTE buffer[TEXT_BUFFER_SIZE] = {};
 	int dataLen = 1;
+	BYTE(*buffer)[PIPE_BUFFER_SIZE] = &::buffer, *pbData = *buffer + sizeof(ThreadParam);
 	__try
 	{
-		while (WaitForSingleObject(readerEvent, 500) == WAIT_TIMEOUT) if (memcmp(buffer, location, dataLen) != 0) if (int currentLen = HookStrlen((BYTE*)location))
+		while (WaitForSingleObject(readerEvent, 500) == WAIT_TIMEOUT) if (memcmp(pbData, location, dataLen) != 0) if (int currentLen = HookStrlen((BYTE*)location))
 		{
 			dataLen = min(currentLen, TEXT_BUFFER_SIZE);
-			memcpy(buffer, location, dataLen);
+			memcpy(pbData, location, dataLen);
 			TextOutput({ GetCurrentProcessId(), address, 0, 0 }, buffer, dataLen);
 		}
 	}

@@ -7,7 +7,7 @@
 #include "common.h"
 #include "types.h"
 
-void TextOutput(ThreadParam tp, BYTE* text, int len);
+void TextOutput(ThreadParam tp, BYTE (*buffer)[PIPE_BUFFER_SIZE], int len);
 void ConsoleOutput(LPCSTR text, ...);
 void NotifyHookFound(HookParam hp, wchar_t* text);
 void NotifyHookRemove(uint64_t addr, LPCSTR name);
