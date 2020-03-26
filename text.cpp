@@ -130,8 +130,14 @@ const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* TRANSLATE_TO = u8"Translate to";
-const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Too many translation requests: refuse to make more";
+const char* RATE_LIMIT_ALL_THREADS = u8"Rate limit all text threads";
+const char* RATE_LIMIT_SELECTED_THREAD = u8"Rate limit currently selected text thread";
+const char* USE_TRANS_CACHE = u8"Use translation cache";
+const char* RATE_LIMIT_TOKEN_COUNT = u8"Rate limiter token count";
+const char* RATE_LIMIT_TOKEN_RESTORE_DELAY = u8"Rate limiter token restore delay (ms)";
+const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Rate limit exceeded: refuse to make more translation requests";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
+const char* USE_PREV_SENTENCE_CONTEXT = u8"Use previous sentence as context";
 const char* API_KEY = u8"API key";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";

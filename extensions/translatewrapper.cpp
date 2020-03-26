@@ -8,11 +8,16 @@
 
 extern const char* NATIVE_LANGUAGE;
 extern const char* TRANSLATE_TO;
+extern const char* RATE_LIMIT_ALL_THREADS;
+extern const char* RATE_LIMIT_SELECTED_THREAD;
+extern const char* USE_TRANS_CACHE;
+extern const char* RATE_LIMIT_TOKEN_COUNT;
+extern const char* RATE_LIMIT_TOKEN_RESTORE_DELAY;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
 extern QStringList languages;
-std::pair<bool, std::wstring> Translate(const std::wstring& text);
+std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo);
 
 const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
@@ -21,6 +26,8 @@ QFormLayout* display;
 QSettings settings = openSettings();
 Synchronized<std::wstring> translateTo = L"en";
 
+bool rateLimitAll = true, rateLimitSelected = false, useCache = true;
+int tokenCount = 30, tokenRestoreDelay = 60000;
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 int savedSize;
 
@@ -51,8 +58,32 @@ public:
 		if (language < 0) language = languageBox->findText("English", Qt::MatchStartsWith);
 		languageBox->setCurrentIndex(language);
 		saveLanguage(languageBox->currentText());
-		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
 		display->addRow(TRANSLATE_TO, languageBox);
+		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+		for (auto [value, label] : Array<bool&, const char*>{
+			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
+			{ rateLimitSelected, RATE_LIMIT_SELECTED_THREAD },
+			{ useCache, USE_TRANS_CACHE },
+		})
+		{
+			value = settings.value(label, value).toBool();
+			auto checkBox = new QCheckBox(this);
+			checkBox->setChecked(value);
+			display->addRow(label, checkBox);
+			connect(checkBox, &QCheckBox::clicked, [label, &value](bool checked) { settings.setValue(label, value = checked); });
+		}
+		for (auto [value, label] : Array<int&, const char*>{
+			{ tokenCount, RATE_LIMIT_TOKEN_COUNT },
+			{ tokenRestoreDelay, RATE_LIMIT_TOKEN_RESTORE_DELAY },
+		})
+		{
+			value = settings.value(label, value).toInt();
+			auto spinBox = new QSpinBox(this);
+			spinBox->setRange(0, INT_MAX);
+			spinBox->setValue(value);
+			display->addRow(label, spinBox);
+			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [label, &value](int newValue) { settings.setValue(label, value = newValue); });
+		}
 
 		setWindowTitle(TRANSLATION_PROVIDER);
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
@@ -92,25 +123,25 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 			auto tokens = this->tokens.Acquire();
 			tokens->push_back(GetTickCount());
 			if (tokens->size() > tokenCount * 5) tokens->erase(tokens->begin(), tokens->begin() + tokenCount * 3);
-			tokens->erase(std::remove_if(tokens->begin(), tokens->end(), [this](DWORD token) { return GetTickCount() - token > delay; }), tokens->end());
+			tokens->erase(std::remove_if(tokens->begin(), tokens->end(), [](DWORD token) { return GetTickCount() - token > tokenRestoreDelay; }), tokens->end());
 			return tokens->size() < tokenCount;
 		}
 
 	private:
-		const int tokenCount = 30, delay = 60 * 1000;
 		Synchronized<std::vector<DWORD>> tokens;
 	} rateLimiter;
 
 	bool cache = false;
 	std::wstring translation;
+	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
-		auto translationLocation = translationCache->find(sentence);
-		if (translationLocation != translationCache->end()) translation = translationLocation->second;
-		else if (!(rateLimiter.Request() || sentenceInfo["current select"])) translation = TOO_MANY_TRANS_REQUESTS;
-		else std::tie(cache, translation) = Translate(sentence);
-		if (cache && sentenceInfo["current select"]) translationCache->try_emplace(translationLocation, sentence, translation);
+		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b";
 	}
+	if (translation.empty())
+		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, sentenceInfo);
+		else translation = TOO_MANY_TRANS_REQUESTS;
+	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
 	Unescape(translation);

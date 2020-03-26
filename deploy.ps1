@@ -37,6 +37,7 @@ foreach ($language in @{
 			"texthook.dll",
 			"Bing Translate.dll",
 			"Copy to Clipboard.dll",
+			"DeepL Translate.dll",
 			"Extra Newlines.dll",
 			"Extra Window.dll",
 			"Google Translate.dll",

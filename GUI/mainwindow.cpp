@@ -297,8 +297,8 @@ namespace
 
 		QDialog dialog(This, Qt::WindowCloseButtonHint);
 		QFormLayout layout(&dialog);
-		QCheckBox cjkCheckbox(&dialog);
-		layout.addRow(SEARCH_CJK, &cjkCheckbox);
+		QCheckBox cjkCheckBox(&dialog);
+		layout.addRow(SEARCH_CJK, &cjkCheckBox);
 		QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help | QDialogButtonBox::Retry, &dialog);
 		layout.addRow(&confirm);
 		confirm.button(QDialogButtonBox::Ok)->setText(START_HOOK_SEARCH);
@@ -388,7 +388,7 @@ namespace
 		else
 		{
 			sp.length = 0; // use default
-			filter.setPattern(cjkCheckbox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
+			filter.setPattern(cjkCheckBox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 		}
 		filter.optimize();
 

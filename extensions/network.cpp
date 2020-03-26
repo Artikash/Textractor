@@ -22,6 +22,10 @@ HttpRequest::HttpRequest(
 				if (WinHttpSendRequest(request, headers, -1UL, body, bodyLength, bodyLength, NULL))
 				{
 					WinHttpReceiveResponse(request, NULL);
+					DWORD size = 0;
+					WinHttpQueryHeaders(request, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX, NULL, &size, WINHTTP_NO_HEADER_INDEX);
+					this->headers.resize(size);
+					WinHttpQueryHeaders(request, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX, this->headers.data(), &size, WINHTTP_NO_HEADER_INDEX);
 					std::string data;
 					DWORD availableSize, downloadedSize;
 					do

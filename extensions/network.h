@@ -23,6 +23,7 @@ struct HttpRequest
 	operator bool() { return errorCode == ERROR_SUCCESS; }
 
 	std::wstring response;
+	std::wstring headers;
 	InternetHandle connection = NULL;
 	InternetHandle request = NULL;
 	DWORD errorCode = ERROR_SUCCESS;

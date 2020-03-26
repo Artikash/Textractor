@@ -101,7 +101,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	return TRUE;
 }
 
-std::pair<bool, std::wstring> Translate(const std::wstring& text)
+std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {
 
 	if (HttpRequest httpRequest{

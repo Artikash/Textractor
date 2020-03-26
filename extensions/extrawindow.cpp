@@ -270,8 +270,9 @@ private:
 		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
 		dictionaryWindow.setTerm(sentence.mid(i));
 		int left = i == 0 ? 0 : textPositionMap[i - 1].x(), right = textPositionMap[i].x(),
-			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4;
-		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, textPositionMap[i].y())));
+			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4, y = 0;
+		for (auto point : textPositionMap) if (point.y() > y && point.y() < textPositionMap[i].y()) y = point.y();
+		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, y - dictionaryWindow.height() + 1)));
 	}
 
 	bool eventFilter(QObject*, QEvent* event) override
@@ -397,7 +398,7 @@ private:
 			for (term = term.left(100); !term.isEmpty(); term.chop(1))
 				for (const auto& [rootTerm, definition, inflections] : LookupDefinitions(term, foundDefinitions))
 					definitions.push_back(
-						QStringLiteral("<h3>%1 (%5/%6)</h3><small>%2%3</small><p>%4</p>").arg(
+						QStringLiteral("<h3>%1 (%5/%6)</h3><small>%2%3</small>%4").arg(
 							term.split("<<")[0].toHtmlEscaped(),
 							rootTerm.split("<<")[0].toHtmlEscaped(),
 							inflections.join(""),
@@ -455,7 +456,9 @@ private:
 			int scroll = event->angleDelta().y();
 			if (scroll > 0 && definitionIndex > 0) definitionIndex -= 1;
 			if (scroll < 0 && definitionIndex + 1 < definitions.size()) definitionIndex += 1;
+			int oldHeight = height();
 			ShowDefinition();
+			move(x(), y() + oldHeight - height());
 		}
 
 		struct Inflection

@@ -152,7 +152,7 @@ bool IsHash(const std::wstring& result)
 	return result.size() == 32 && std::all_of(result.begin(), result.end(), [](char ch) { return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'z'); });
 }
 
-std::pair<bool, std::wstring> Translate(const std::wstring& text)
+std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {
 	if (!TKK)
 		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })
