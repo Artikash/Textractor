@@ -1,32 +1,28 @@
-﻿#include "extension.h"
+﻿#include "qtcommon.h"
+#include "extension.h"
 #include "network.h"
 #include <ctime>
-#include <QStringList>
 
 extern const wchar_t* TRANSLATION_ERROR;
+extern const char* API_KEY;
 
+extern QFormLayout* display;
+extern QSettings settings;
 extern Synchronized<std::wstring> translateTo;
 
 const char* TRANSLATION_PROVIDER = "Google Translate";
 QStringList languages
 {
 	"Afrikaans: af",
-	"Albanian: sq",
-	"Amharic: am",
 	"Arabic: ar",
-	"Armenian: hy",
-	"Azerbaijani: az",
-	"Basque: eu",
+	"Albanian: sq",
 	"Belarusian: be",
 	"Bengali: bn",
 	"Bosnian: bs",
 	"Bulgarian: bg",
 	"Catalan: ca",
-	"Cebuano: ceb",
-	"Chichewa: ny",
-	"Chinese (Simplified): zh",
-	"Chinese (Traditional): zh-TW",
-	"Corsican: co",
+	"Chinese(Simplified): zh-CH",
+	"Chinese(Traditional): zh-TW",
 	"Croatian: hr",
 	"Czech: cs",
 	"Danish: da",
@@ -37,91 +33,76 @@ QStringList languages
 	"Filipino: tl",
 	"Finnish: fi",
 	"French: fr",
-	"Frisian: fy",
 	"Galician: gl",
-	"Georgian: ka",
 	"German: de",
 	"Greek: el",
-	"Gujarati: gu",
-	"Haitian Creole: ht",
-	"Hausa: ha",
-	"Hawaiian: haw",
 	"Hebrew: iw",
 	"Hindi: hi",
-	"Hmong: hmn",
 	"Hungarian: hu",
 	"Icelandic: is",
-	"Igbo: ig",
 	"Indonesian: id",
 	"Irish: ga",
 	"Italian: it",
 	"Japanese: ja",
-	"Javanese: jw",
-	"Kannada: kn",
-	"Kazakh: kk",
-	"Khmer: km",
-	"Kinyarwanda: rw",
+	"Klingon: tlh",
 	"Korean: ko",
-	"Kurdish (Kurmanji): ku",
-	"Kyrgyz: ky",
-	"Lao: lo",
 	"Latin: la",
 	"Latvian: lv",
 	"Lithuanian: lt",
-	"Luxembourgish: lb",
 	"Macedonian: mk",
-	"Malagasy: mg",
 	"Malay: ms",
-	"Malayalam: ml",
 	"Maltese: mt",
-	"Maori: mi",
-	"Marathi: mr",
-	"Mongolian: mn",
-	"Myanmar (Burmese): my",
-	"Nepali: ne",
 	"Norwegian: no",
-	"Odia (Oriya): or",
-	"Pashto: ps",
 	"Persian: fa",
 	"Polish: pl",
 	"Portuguese: pt",
-	"Punjabi: pa",
 	"Romanian: ro",
 	"Russian: ru",
-	"Samoan: sm",
-	"Scots Gaelic: gd",
 	"Serbian: sr",
-	"Sesotho: st",
-	"Shona: sn",
-	"Sindhi: sd",
-	"Sinhala: si",
 	"Slovak: sk",
 	"Slovenian: sl",
 	"Somali: so",
 	"Spanish: es",
-	"Sundanese: su",
 	"Swahili: sw",
 	"Swedish: sv",
-	"Tajik: tg",
-	"Tamil: ta",
-	"Tatar: tt",
-	"Telugu: te",
 	"Thai: th",
 	"Turkish: tr",
-	"Turkmen: tk",
-	"Ukrainian: uk",
+	"Ukranian: uk",
 	"Urdu: ur",
-	"Uyghur: ug",
-	"Uzbek: uz",
 	"Vietnamese: vi",
 	"Welsh: cy",
-	"Xhosa: xh",
 	"Yiddish: yi",
-	"Yoruba: yo",
 	"Zulu: zu"
 };
 
+Synchronized<std::wstring> key;
+
 unsigned TKK = 0;
+
+BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	{
+		auto keyInput = new QLineEdit(settings.value(API_KEY).toString());
+		key->assign(S(keyInput->text()));
+		QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(::key->assign(S(key)))); });
+		display->addRow(API_KEY, keyInput);
+		auto googleCloudInfo = new QLabel(
+			"<a href=\"https://codelabs.developers.google.com/codelabs/cloud-translation-intro\">https://codelabs.developers.google.com/codelabs/cloud-translation-intro</a>"
+		);
+		googleCloudInfo->setOpenExternalLinks(true);
+		display->addRow(googleCloudInfo);
+	}
+	break;
+	case DLL_PROCESS_DETACH:
+	{
+	}
+	break;
+	}
+	return TRUE;
+}
 
 std::wstring GetTranslationUri(const std::wstring& text)
 {
@@ -154,6 +135,22 @@ bool IsHash(const std::wstring& result)
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {
+	if (!key->empty())
+	{
+		if (HttpRequest httpRequest{
+			L"Mozilla/5.0 Textractor",
+			L"translation.googleapis.com",
+			L"GET",
+			FormatString(L"/language/translate/v2?format=text&q=%s&target=%s&key=%s", Escape(text), translateTo->c_str(), key->c_str()).c_str()
+		})
+		{
+			// Response formatted as JSON: starts with "translatedText": " and translation is enclosed in quotes followed by a comma
+			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\"translatedText\": \"(.+?)\","))) return { true, results[1] };
+			return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
+		}
+		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
+	}
+
 	if (!TKK)
 		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })
 			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"(\\d{7,})'")))

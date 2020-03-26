@@ -41,7 +41,6 @@ foreach ($language in @{
 			"Extra Newlines.dll",
 			"Extra Window.dll",
 			"Google Translate.dll",
-			"Google Cloud Translate.dll",
 			"Lua.dll",
 			"Regex Filter.dll",
 			"Remove Repeated Characters.dll",
