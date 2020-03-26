@@ -38,7 +38,7 @@ struct MonoFunction { // argument indices start from 0 for SpecialHookMonoString
   size_t textIndex; // argument index
   short lengthIndex; // argument index
   unsigned long hookType; // HookParam type
-  void *text_fun; // HookParam::text_fun_t
+  void(*text_fun)(DWORD stack, HookParam* hp, BYTE obsoleteAlwaysZero, DWORD* data, DWORD* split, DWORD* len); // HookParam::text_fun_t
 };
 
 #define MONO_FUNCTIONS_INITIALIZER \

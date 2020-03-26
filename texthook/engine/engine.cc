@@ -16803,10 +16803,11 @@ bool InsertMonoHooks()
     if (FARPROC addr = ::GetProcAddress(h, func.functionName)) {
       hp.address = (DWORD)addr;
 	  hp.type = func.hookType;
+      if (loadedConfig) hp.type |= HOOK_EMPTY;
 	  hp.filter_fun = NoAsciiFilter;
       hp.offset = func.textIndex * 4;
       hp.length_offset = func.lengthIndex * 4;
-      hp.text_fun = (decltype(hp.text_fun))func.text_fun;
+      hp.text_fun = func.text_fun;
       ConsoleOutput("vnreng: Mono: INSERT");
       NewHook(hp, func.functionName);
       ret = true;
