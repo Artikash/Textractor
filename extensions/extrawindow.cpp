@@ -265,14 +265,14 @@ private:
 		}
 		int i;
 		for (i = 0; i < textPositionMap.size(); ++i) if (textPositionMap[i].y() > mouse.y() && textPositionMap[i].x() > mouse.x()) break;
-		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > font.pointSize() * 2) return dictionaryWindow.hide();
+		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > font.pointSize() * 3) return dictionaryWindow.hide();
 		if (sentence.mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
 		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
 		dictionaryWindow.setTerm(sentence.mid(i));
 		int left = i == 0 ? 0 : textPositionMap[i - 1].x(), right = textPositionMap[i].x(),
 			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4, y = 0;
 		for (auto point : textPositionMap) if (point.y() > y && point.y() < textPositionMap[i].y()) y = point.y();
-		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, y - dictionaryWindow.height() + 1)));
+		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, y - dictionaryWindow.height())));
 	}
 
 	bool eventFilter(QObject*, QEvent* event) override
