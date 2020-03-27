@@ -13,7 +13,7 @@ extern Synchronized<std::wstring> translateTo;
 const char* TRANSLATION_PROVIDER = "DeepL Translate";
 QStringList languages
 {
-	"Chinese: ZH",
+	"Chinese (simplified): ZH",
 	"Dutch: NL",
 	"English: EN",
 	"French: FR",
@@ -25,6 +25,9 @@ QStringList languages
 	"Russian: RU",
 	"Spanish: ES",
 };
+
+bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = false;
+int tokenCount = 10, tokenRestoreDelay = 60000;
 
 const wchar_t* accept[] = { L"*/*", nullptr };
 
@@ -87,8 +90,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo s
 }
 	)", ++id, r + (n - r % n), WideStringToString(translateTo->c_str()), jsonText, useContext ? WideStringToString(context->operator[](sentenceInfo["text number"])) : "");
 	context->insert_or_assign(sentenceInfo["text number"], L'"' + text + L'"');
-	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain\r\nOrigin: https://www.deepl.com\r\nTE: Trailers"
-		+ LMTBID.Acquire().contents;
+	// missing accept-encoding header since it fucks up HttpRequest
+	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain\r\nOrigin: https://www.deepl.com\r\nTE: Trailers" + LMTBID.Acquire().contents;
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www2.deepl.com",

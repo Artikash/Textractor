@@ -21,8 +21,8 @@ QStringList languages
 	"Bosnian: bs",
 	"Bulgarian: bg",
 	"Catalan: ca",
-	"Chinese(Simplified): zh-CH",
-	"Chinese(Traditional): zh-TW",
+	"Chinese (simplified): zh-CH",
+	"Chinese (traditional): zh-TW",
 	"Croatian: hr",
 	"Czech: cs",
 	"Danish: da",
@@ -74,6 +74,9 @@ QStringList languages
 	"Yiddish: yi",
 	"Zulu: zu"
 };
+
+bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
+int tokenCount = 30, tokenRestoreDelay = 60000;
 
 Synchronized<std::wstring> key;
 

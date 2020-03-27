@@ -28,13 +28,14 @@ constexpr bool x64 = false;
 #endif
 
 template <typename T, typename... Xs>
-struct ArrayImpl { using type = std::tuple<T, Xs...>[]; };
+struct ArrayImpl { using Type = std::tuple<T, Xs...>[]; };
 template <typename T>
-struct ArrayImpl<T> { using type = T[]; };
+struct ArrayImpl<T> { using Type = T[]; };
 template <typename... Ts>
-using Array = typename ArrayImpl<Ts...>::type;
+using Array = typename ArrayImpl<Ts...>::Type;
 
-template <auto F> using Functor = std::integral_constant<std::remove_reference_t<decltype(F)>, F>;
+template <auto F>
+using Functor = std::integral_constant<std::remove_reference_t<decltype(F)>, F>;
 
 template <typename V>
 struct Identity { V operator()(V v) const { return v; } };

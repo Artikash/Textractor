@@ -14,10 +14,10 @@ QStringList languages
 	"Bangla: bn",
 	"Bosnian: bs",
 	"Bulgarian: bg",
-	"Cantonese (Traditional): yue",
+	"Cantonese (traditional): yue",
 	"Catalan: ca",
-	"Chinese (Simplified): zh-Hans",
-	"Chinese (Traditional): zh-Hant",
+	"Chinese (simplified): zh-Hans",
+	"Chinese (traditional): zh-Hant",
 	"Croatian: hr",
 	"Czech: cs",
 	"Danish: da",
@@ -78,6 +78,9 @@ QStringList languages
 	"Welsh: cy",
 	"Yucatec Maya: yua"
 };
+
+bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
+int tokenCount = 30, tokenRestoreDelay = 60000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {

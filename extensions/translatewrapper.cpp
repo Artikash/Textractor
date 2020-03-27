@@ -8,6 +8,7 @@
 
 extern const char* NATIVE_LANGUAGE;
 extern const char* TRANSLATE_TO;
+extern const char* TRANSLATE_SELECTED_THREAD_ONLY;
 extern const char* RATE_LIMIT_ALL_THREADS;
 extern const char* RATE_LIMIT_SELECTED_THREAD;
 extern const char* USE_TRANS_CACHE;
@@ -17,6 +18,8 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
 extern QStringList languages;
+extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
+extern int tokenCount, tokenRestoreDelay;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo);
 
 const char* LANGUAGE = u8"Language";
@@ -26,8 +29,6 @@ QFormLayout* display;
 QSettings settings = openSettings();
 Synchronized<std::wstring> translateTo = L"en";
 
-bool rateLimitAll = true, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000;
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 int savedSize;
 
@@ -61,6 +62,7 @@ public:
 		display->addRow(TRANSLATE_TO, languageBox);
 		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
 		for (auto [value, label] : Array<bool&, const char*>{
+			{ translateSelectedOnly, TRANSLATE_SELECTED_THREAD_ONLY },
 			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
 			{ rateLimitSelected, RATE_LIMIT_SELECTED_THREAD },
 			{ useCache, USE_TRANS_CACHE },
@@ -136,9 +138,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
-		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b";
+		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
 	}
-	if (translation.empty())
+	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
 		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, sentenceInfo);
 		else translation = TOO_MANY_TRANS_REQUESTS;
 	if (cache) translationCache->try_emplace(sentence, translation);

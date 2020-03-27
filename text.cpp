@@ -130,8 +130,9 @@ const char* READ_ERROR = u8"Textractor: Reader ERROR (likely an incorrect R-code
 const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* TRANSLATE_TO = u8"Translate to";
+const char* TRANSLATE_SELECTED_THREAD_ONLY = u8"Translate selected text thread only";
 const char* RATE_LIMIT_ALL_THREADS = u8"Rate limit all text threads";
-const char* RATE_LIMIT_SELECTED_THREAD = u8"Rate limit currently selected text thread";
+const char* RATE_LIMIT_SELECTED_THREAD = u8"Rate limit selected text thread";
 const char* USE_TRANS_CACHE = u8"Use translation cache";
 const char* RATE_LIMIT_TOKEN_COUNT = u8"Rate limiter token count";
 const char* RATE_LIMIT_TOKEN_RESTORE_DELAY = u8"Rate limiter token restore delay (ms)";
@@ -308,7 +309,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 #endif // SPANISH
 
 #ifdef SIMPLIFIED_CHINESE
-	NATIVE_LANGUAGE = "Chinese (Simplified)";
+	NATIVE_LANGUAGE = "Chinese (simplified)";
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
 	DETACH = u8"从游戏分离";
