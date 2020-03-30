@@ -333,6 +333,7 @@ namespace
 			return;
 		}
 
+		filter.setPattern(cjkCheckBox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 		if (customSettings)
 		{
 			QDialog dialog(This, Qt::WindowCloseButtonHint);
@@ -388,7 +389,6 @@ namespace
 		else
 		{
 			sp.length = 0; // use default
-			filter.setPattern(cjkCheckBox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 		}
 		filter.optimize();
 
