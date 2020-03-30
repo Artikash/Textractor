@@ -91,7 +91,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	{
 		revCount = ::revCount;
 		luaL_dostring(L, "ProcessSentence = nil");
-		if (luaL_dostring(L, script->c_str()) != LUA_OK)
+		if (luaL_dostring(L, script.Copy().c_str()) != LUA_OK)
 		{
 			sentence += L"\n" + FormatString(LUA_ERROR, StringToWideString(lua_tolstring(L, 1, nullptr)));
 			lua_settop(L, 0);

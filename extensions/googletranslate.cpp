@@ -4,13 +4,11 @@
 #include <ctime>
 
 extern const wchar_t* TRANSLATION_ERROR;
-extern const char* API_KEY;
 
-extern QFormLayout* display;
-extern QSettings settings;
-extern Synchronized<std::wstring> translateTo;
+extern Synchronized<std::wstring> translateTo, apiKey;
 
 const char* TRANSLATION_PROVIDER = "Google Translate";
+const char* GET_API_KEY_FROM = "https://codelabs.developers.google.com/codelabs/cloud-translation-intro";
 QStringList languages
 {
 	"Afrikaans: af",
@@ -125,43 +123,16 @@ QStringList languages
 };
 
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000;
-
-Synchronized<std::wstring> key;
+int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
 unsigned TKK = 0;
-
-BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	{
-		auto keyInput = new QLineEdit(settings.value(API_KEY).toString());
-		key->assign(S(keyInput->text()));
-		QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(::key->assign(S(key)))); });
-		display->addRow(API_KEY, keyInput);
-		auto googleCloudInfo = new QLabel(
-			"<a href=\"https://codelabs.developers.google.com/codelabs/cloud-translation-intro\">https://codelabs.developers.google.com/codelabs/cloud-translation-intro</a>"
-		);
-		googleCloudInfo->setOpenExternalLinks(true);
-		display->addRow(googleCloudInfo);
-	}
-	break;
-	case DLL_PROCESS_DETACH:
-	{
-	}
-	break;
-	}
-	return TRUE;
-}
 
 std::wstring GetTranslationUri(const std::wstring& text)
 {
 	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access
-	if (!TKK) return FormatString(L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=%s&q=%s", translateTo->c_str(), text);
+	if (!TKK) return FormatString(L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=%s&q=%s", translateTo.Copy(), Escape(text));
 
-	// Artikash 8/19/2018: reverse engineered from translate.google.com
+	// reverse engineered from translate.google.com
 	std::wstring escapedText;
 	unsigned a = time(NULL) / 3600, b = a; // the first part of TKK
 	for (unsigned char ch : WideStringToString(text))
@@ -177,7 +148,7 @@ std::wstring GetTranslationUri(const std::wstring& text)
 	a ^= TKK;
 	a %= 1000000;
 
-	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo->c_str(), a, a ^ b, escapedText);
+	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo.Copy(), a, a ^ b, escapedText);
 }
 
 bool IsHash(const std::wstring& result)
@@ -187,13 +158,13 @@ bool IsHash(const std::wstring& result)
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {
-	if (!key->empty())
-	{
+	if (!apiKey->empty())
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"translation.googleapis.com",
-			L"GET",
-			FormatString(L"/language/translate/v2?format=text&q=%s&target=%s&key=%s", Escape(text), translateTo->c_str(), key->c_str()).c_str()
+			L"POST",
+			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s", translateTo.Copy(), apiKey.Copy()).c_str(),
+			FormatString(R"({"q":["%s"]})", JSON::Escape(text))
 		})
 		{
 			// Response formatted as JSON: starts with "translatedText": " and translation is enclosed in quotes followed by a comma
@@ -201,7 +172,6 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 			return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		}
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
-	}
 
 	if (!TKK)
 		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })

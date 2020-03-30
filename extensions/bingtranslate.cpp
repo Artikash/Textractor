@@ -4,9 +4,10 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
-extern Synchronized<std::wstring> translateTo;
+extern Synchronized<std::wstring> translateTo, apiKey;
 
 const char* TRANSLATION_PROVIDER = "Bing Translate";
+const char* GET_API_KEY_FROM = "https://www.microsoft.com/en-us/translator/business/trial/#get-started";
 QStringList languages
 {
 	"Afrikaans: af",
@@ -80,15 +81,31 @@ QStringList languages
 };
 
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000;
+int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
 {
+	if (!apiKey->empty())
+		if (HttpRequest httpRequest{
+			L"Mozilla/5.0 Textractor",
+			L"api.cognitive.microsofttranslator.com",
+			L"POST",
+			FormatString(L"/translate?api-version=3.0&to=%s", translateTo.Copy()).c_str(),
+			FormatString(R"([{"text":"%s"}])", JSON::Escape(text)),
+			FormatString(L"Content-Type: application/json; charset=UTF-8\r\nOcp-Apim-Subscription-Key:%s", apiKey.Copy()).c_str()
+		})
+		{
+			// Response formatted as JSON: translation starts with text":" and ends with ","to
+			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\",\""))) return { true, results[1] };
+			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
+		}
+		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
+
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www.bing.com",
 		L"POST",
-		FormatString(L"/ttranslatev3?fromLang=auto-detect&to=%s&text=%s", translateTo->c_str(), Escape(text)).c_str()
+		FormatString(L"/ttranslatev3?fromLang=auto-detect&to=%s&text=%s", translateTo.Copy(), Escape(text)).c_str()
 	})
 		// Response formatted as JSON: translation starts with text":" and ends with ","to
 		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\",\""))) return { true, results[1] };

@@ -14,12 +14,15 @@ extern const char* RATE_LIMIT_SELECTED_THREAD;
 extern const char* USE_TRANS_CACHE;
 extern const char* RATE_LIMIT_TOKEN_COUNT;
 extern const char* RATE_LIMIT_TOKEN_RESTORE_DELAY;
+extern const char* MAX_SENTENCE_SIZE;
+extern const char* API_KEY;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
+extern const char* GET_API_KEY_FROM;
 extern QStringList languages;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
-extern int tokenCount, tokenRestoreDelay;
+extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo);
 
 const char* LANGUAGE = u8"Language";
@@ -27,7 +30,7 @@ const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLAT
 
 QFormLayout* display;
 QSettings settings = openSettings();
-Synchronized<std::wstring> translateTo = L"en";
+Synchronized<std::wstring> translateTo = L"en", apiKey;
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 int savedSize;
@@ -77,6 +80,7 @@ public:
 		for (auto [value, label] : Array<int&, const char*>{
 			{ tokenCount, RATE_LIMIT_TOKEN_COUNT },
 			{ tokenRestoreDelay, RATE_LIMIT_TOKEN_RESTORE_DELAY },
+			{ maxSentenceSize, MAX_SENTENCE_SIZE },
 		})
 		{
 			value = settings.value(label, value).toInt();
@@ -85,6 +89,15 @@ public:
 			spinBox->setValue(value);
 			display->addRow(label, spinBox);
 			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [label, &value](int newValue) { settings.setValue(label, value = newValue); });
+		}
+		if (GET_API_KEY_FROM)
+		{
+			auto keyInput = new QLineEdit(settings.value(API_KEY).toString());
+			apiKey->assign(S(keyInput->text()));
+			QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(apiKey->assign(S(key)))); });
+			auto keyLabel = new QLabel(QString("<a href=\"%1\">%2</a>").arg(GET_API_KEY_FROM, API_KEY), this);
+			keyLabel->setOpenExternalLinks(true);
+			display->addRow(keyLabel, keyInput);
 		}
 
 		setWindowTitle(TRANSLATION_PROVIDER);
@@ -115,7 +128,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["text number"] == 0) return false;
+	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
 
 	static class
 	{
@@ -146,11 +159,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
-	Unescape(translation);
+	JSON::Unescape(translation);
 	sentence += L"\n" + translation;
 	return true;
 }
 
-TEST(
-	assert(Translate(L"こんにちは").second.find(L"ello") != std::wstring::npos)
-);
+TEST(assert(Translate(L"こんにちは").second.find(L"ello") != std::wstring::npos));

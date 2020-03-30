@@ -78,6 +78,11 @@ public:
 	Locker Acquire() { return { std::unique_lock(m), contents }; }
 	Locker operator->() { return Acquire(); }
 
+	T Copy()
+	{
+		return Acquire().contents;
+	}
+
 private:
 	T contents;
 	M m;

@@ -12,13 +12,12 @@ struct HttpRequest
 		const wchar_t* serverName,
 		const wchar_t* action,
 		const wchar_t* objectName,
+		std::string body = "",
+		const wchar_t* headers = NULL,
+		const wchar_t* referrer = NULL,
 		DWORD requestFlags = WINHTTP_FLAG_SECURE | WINHTTP_FLAG_ESCAPE_DISABLE,
 		const wchar_t* httpVersion = NULL,
-		const wchar_t* referrer = NULL,
-		const wchar_t** acceptTypes = NULL,
-		const wchar_t* headers = NULL,
-		void* body = NULL,
-		DWORD bodyLength = 0
+		const wchar_t** acceptTypes = NULL
 	);
 	operator bool() { return errorCode == ERROR_SUCCESS; }
 
@@ -30,4 +29,9 @@ struct HttpRequest
 };
 
 std::wstring Escape(const std::wstring& text);
-void Unescape(std::wstring& text);
+
+namespace JSON
+{
+	void Unescape(std::wstring& text);
+	std::string Escape(const std::wstring& text);
+}
