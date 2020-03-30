@@ -530,7 +530,7 @@ namespace
 	void ThreadAdded(TextThread& thread)
 	{
 		std::wstring threadCode = HookCode::Generate(thread.hp, thread.tp.processId);
-		bool savedMatch = savedThreadCtx == thread.tp.ctx && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
+		bool savedMatch = (savedThreadCtx & 0xFFFF) == (thread.tp.ctx & 0xFFFF) && savedThreadCtx2 == thread.tp.ctx2 && savedThreadCode == threadCode;
 		if (savedMatch)
 		{
 			savedThreadCtx = savedThreadCtx2 = savedThreadCode[0] = 0;

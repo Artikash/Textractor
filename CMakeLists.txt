@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 
 project(Textractor)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -36,5 +36,6 @@ add_subdirectory(texthook)
 add_subdirectory(extensions)
 add_subdirectory(test)
 if (DEFINED VERSION)
-  add_subdirectory(GUI/host) # uncomment to build CLI
+  add_subdirectory(GUI/host)
 endif()
+#add_subdirectory(GUI/host)
