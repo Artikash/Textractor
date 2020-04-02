@@ -207,7 +207,7 @@ namespace Host
 				IsWow64Process(process, &invalidProcess);
 				if (invalidProcess) return AddConsoleOutput(NEED_32_BIT);
 #endif
-				static std::wstring location = std::filesystem::path(GetModuleFilename().value()).replace_filename(ITH_DLL);
+				static std::wstring location = GetModuleFilename().value().replace_filename(ITH_DLL);
 				if (LPVOID remoteData = VirtualAllocEx(process, nullptr, (location.size() + 1) * sizeof(wchar_t), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE))
 				{
 					WriteProcessMemory(process, remoteData, location.c_str(), (location.size() + 1) * sizeof(wchar_t), nullptr);

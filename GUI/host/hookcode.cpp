@@ -254,7 +254,7 @@ namespace
 					{
 						hp.type |= MODULE_OFFSET;
 						hp.address -= (uint64_t)info.AllocationBase;
-						wcsncpy_s(hp.module, moduleName->c_str() + moduleName->rfind(L'\\') + 1, MAX_MODULE_SIZE - 1);
+						wcsncpy_s(hp.module, moduleName->filename().c_str(), MAX_MODULE_SIZE - 1);
 					}
 
 		HCode += L'@' + HexString(hp.address);

@@ -141,7 +141,7 @@ namespace
 	{
 		QMultiHash<QString, DWORD> allProcesses;
 		for (auto [processId, processName] : GetAllProcesses())
-			if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::wstring::npos))
+			if (processName && (showSystemProcesses || processName->wstring().find(L":\\Windows\\") == std::wstring::npos))
 				allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
 		QStringList processList(allProcesses.uniqueKeys());
@@ -194,9 +194,9 @@ namespace
 
 	void OpenProcessConfig()
 	{
-		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
+		if (auto processName = GetModuleFilename(selectedProcessId))
 		{
-			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, GAME_CONFIG_FILE);
+			auto configFile = processName->replace_filename(GAME_CONFIG_FILE);
 			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
 			_wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
 		}
@@ -642,7 +642,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 			if (arg[1] == L'p' || arg[1] == L'P')
 				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
 				else for (auto [processId, processName] : processes)
-					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processId);
+					if (processName.value_or(L"").filename() == arg.substr(2)) Host::InjectProcess(processId);
 
 	std::thread([]
 	{
