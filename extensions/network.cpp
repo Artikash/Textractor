@@ -20,7 +20,7 @@ HttpRequest::HttpRequest(
 			if (InternetHandle request = WinHttpOpenRequest(connection, action, objectName, httpVersion, referrer, acceptTypes, requestFlags))
 				if (WinHttpSendRequest(request, headers, -1UL, body.empty() ? NULL : body.data(), body.size(), body.size(), NULL))
 				{
-					//WinHttpReceiveResponse(request, NULL);
+					WinHttpReceiveResponse(request, NULL);
 					//DWORD size = 0;
 					//WinHttpQueryHeaders(request, WINHTTP_QUERY_RAW_HEADERS_CRLF, WINHTTP_HEADER_NAME_BY_INDEX, NULL, &size, WINHTTP_NO_HEADER_INDEX);
 					//this->headers.resize(size);
