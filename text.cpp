@@ -312,14 +312,19 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	NATIVE_LANGUAGE = "Chinese (simplified)";
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
+	GAME_CONFIG = u8"配置游戏";
 	DETACH = u8"从游戏分离";
+	FORGET = u8"移除游戏";
 	ADD_HOOK = u8"添加钩子";
+	REMOVE_HOOKS = u8"移除钩子";
 	SAVE_HOOKS = u8"保存钩子";
+	SEARCH_FOR_HOOKS = u8"搜索钩子";
 	SETTINGS = u8"设置";
 	EXTENSIONS = u8"扩展";
 	SELECT_PROCESS = u8"选择进程";
 	ATTACH_INFO = u8R"(如果没看见想要附加的进程，尝试使用管理员权限运行
 也可以手动输入进程ID)";
+	SELECT_PROCESS_INFO = u8"如果手动输入进程文件名，请使用绝对路径";
 	FROM_COMPUTER = u8"从计算机中选择";
 	PROCESSES = u8"进程 (*.exe)";
 	SAVE_SETTINGS = u8"保存设置";
@@ -327,10 +332,38 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 (如果使用超级管理员运行，则无法工作)
 在列表中拖拽来重新排序
 使用 delete 键移除选中的扩展)";
+	ADD_EXTENSION = u8"添加扩展";
+	INVALID_EXTENSION = u8"%1 是一个无效扩展";
+	CONFIRM_EXTENSION_OVERWRITE = u8"此扩展的另一个版本已存在，是否删除并覆盖它?";
+	EXTENSION_WRITE_ERROR = u8"保存扩展失败";
 	USE_JP_LOCALE = u8"模拟日本区域设置?";
+	HOOK_SEARCH_UNSTABLE_WARNING = u8"搜索钩子的功能是不稳定的! 可能会导致你的游戏崩溃! ";
+	SEARCH_CJK = u8"搜索中文/日文/韩文";
+	SEARCH_PATTERN = u8"搜索匹配特征 (hex byte array)";
+	SEARCH_DURATION = u8"搜索持续时间 (ms)";
+	SEARCH_MODULE = u8"搜索的模块名";
+	PATTERN_OFFSET = u8"特征地址与Hook地址的偏移量";
+	MAX_HOOK_SEARCH_RECORDS = u8"搜索结果上限";
+	MIN_ADDRESS = u8"起始地址 (hex)";
+	MAX_ADDRESS = u8"结束地址 (hex)";
+	STRING_OFFSET = u8"字符串偏移量 (hex)";
+	HOOK_SEARCH_FILTER = u8"必须匹配的正则表达式";
+	TEXT = u8"文本";
+	CODEPAGE = u8"代码页";
+	SEARCH_FOR_TEXT = u8"搜索指定文本";
+	START_HOOK_SEARCH = u8"开始搜索钩子";
+	SAVE_SEARCH_RESULTS = u8"保存搜索结果";
+	TEXT_FILES = u8"文本文档 (*.txt)";
+	DOUBLE_CLICK_TO_REMOVE_HOOK = u8"双击移除不需要的钩子";
+	FILTER_REPETITION = u8"过滤重复文本";
+	AUTO_ATTACH = u8"自动附加";
+	ATTACH_SAVED_ONLY = u8"自动附加 (saved only)";
+	SHOW_SYSTEM_PROCESSES = u8"显示系统进程";
 	DEFAULT_CODEPAGE = u8"默认代码页";
 	FLUSH_DELAY = u8"刷新延迟";
 	MAX_BUFFER_SIZE = u8"最大缓冲区长度";
+	MAX_HISTORY_SIZE = u8"最大缓存文本长度";
+	CONFIG_JP_LOCALE = u8"模拟日本区域启动游戏";
 	CONSOLE = L"控制台";
 	CLIPBOARD = L"剪贴板";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
@@ -341,7 +374,8 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 项目主页提供基于 GPLv3 协议的源代码)";
 	UPDATE_AVAILABLE = L"有可用的更新: 请从 https://github.com/Artikash/Textractor/releases 下载";
 	ALREADY_INJECTED = L"Textractor: 已经注入";
-	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用 Textractor x86";
+	NEED_32_BIT = L"Textractor: 架构不匹配: 请尝试使用32位版本的Textractor";
+	NEED_64_BIT = L"Textractor: 架构不匹配: 请尝试使用64位版本的Textractor";
 	INJECT_FAILED = L"Textractor: 无法注入";
 	LAUNCH_FAILED = L"Textractor: 无法启动";
 	INVALID_CODE = L"Textractor: 无效代码";
@@ -351,7 +385,12 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	REMOVING_HOOK = u8"Textractor: 移除钩子: %s";
 	HOOK_FAILED = u8"Textractor: 钩子注入失败";
 	TOO_MANY_HOOKS = u8"Textractor: 钩子太多: 无法注入";
-	NOT_ENOUGH_TEXT = u8"Textractor: 没有足够的文本来精确搜索";
+	STARTING_SEARCH = u8"Textractor: 开始搜索";
+	NOT_ENOUGH_TEXT = u8"Textractor: 没有足够的文本用来精确搜索";
+	HOOK_SEARCH_INITIALIZED = u8"Textractor: 搜索初始化完成将使用 %zd 个钩子";
+	MAKE_GAME_PROCESS_TEXT = u8"Textractor: 请点击游戏区域, 在接下来的 %d 秒内使游戏处理文本";
+	HOOK_SEARCH_FINISHED = u8"Textractor: 钩子搜索完毕, 找到了 %d 条结果";
+	OUT_OF_RECORDS_RETRY = u8"Textractor: 超出钩子记录数, 如果结果不理想, 请重试(默认记录数增加)";
 	FUNC_MISSING = u8"Textractor: 函数不存在";
 	MODULE_MISSING = u8"Textractor: 模块不存在";
 	GARBAGE_MEMORY = u8"Textractor: 内存一直在变，读了也没用";
@@ -359,6 +398,11 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	READ_ERROR = u8"Textractor: Reader 错误 (R码可能不正确)";
 	HIJACK_ERROR = u8"Textractor: Hijack 错误";
 	COULD_NOT_FIND = u8"Textractor: 无法找到文本";
+	TRANSLATE_TO = u8"翻译到";
+	TRANSLATE_SELECTED_THREAD_ONLY = u8"仅翻译当前选择的文本线程";
+	RATE_LIMIT_ALL_THREADS = u8"限制所有文本线程的请求频率";
+	RATE_LIMIT_SELECTED_THREAD = u8"限制当前选择线程的请求频率";
+	USE_TRANS_CACHE = u8"使用缓存的翻译结果";
 	TOO_MANY_TRANS_REQUESTS = L"太多翻译请求: 拒绝生成更多";
 	TRANSLATION_ERROR = L"翻译时出错";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
