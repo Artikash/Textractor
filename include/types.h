@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include "const.h"
 
 class WinMutex // Like CMutex but works with scoped_lock

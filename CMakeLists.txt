@@ -24,6 +24,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 
 include_directories(include)
+add_library(pch text.cpp)
+target_precompile_headers(pch PUBLIC include/common.h)
+
 file(GLOB ASSETS assets/*)
 file(COPY ${ASSETS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 

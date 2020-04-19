@@ -6,3 +6,4 @@ add_executable(TextractorCLI
 	textthread.cpp
 	hookcode.cpp
 )
+target_precompile_headers(TextractorCLI REUSE_FROM pch)

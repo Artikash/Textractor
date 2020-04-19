@@ -3,8 +3,6 @@
 // util.h
 // 8/23/2013 jichi
 
-#include "common.h"
-
 namespace Util {
 
 bool unloadCurrentModule();

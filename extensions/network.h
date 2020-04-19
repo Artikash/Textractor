@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include <winhttp.h>
 
 using InternetHandle = AutoHandle<Functor<WinHttpCloseHandle>>;
