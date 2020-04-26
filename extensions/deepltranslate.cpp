@@ -25,13 +25,13 @@ QStringList languages
 	"Spanish: ES",
 };
 
-bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = false;
+bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true;
 int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
 const wchar_t* accept[] = { L"*/*", nullptr };
 Synchronized<std::wstring> LMTBID;
 
-std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo)
+std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!apiKey->empty())
 		if (HttpRequest httpRequest{

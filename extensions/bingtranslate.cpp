@@ -83,7 +83,7 @@ QStringList languages
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
 int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
-std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo)
+std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!apiKey->empty())
 		if (HttpRequest httpRequest{

@@ -23,7 +23,7 @@ extern const char* GET_API_KEY_FROM;
 extern QStringList languages;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
 extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
-std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo);
+std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
 const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
@@ -154,7 +154,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
 	}
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
-		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, sentenceInfo);
+		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence);
 		else translation = TOO_MANY_TRANS_REQUESTS;
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
