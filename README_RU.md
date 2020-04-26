@@ -7,8 +7,6 @@
 **Textractor** (a.k.a. NextHooker) это проект x86/x64 Windows/Wine программы для захвата текста из видеоигр, основанный на [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Смотреть [обучающее видео](https://tinyurl.com/textractor-tutorial) для быстрого ознакомления.
 
-[![Задонатить автору](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
-
 ## Загрузка
 
 Выпуски Textractor могут быть найдены [здесь](https://github.com/Artikash/Textractor/releases).<br>

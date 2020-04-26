@@ -8,8 +8,6 @@
 (หรือ NextHooker) คือโปรแกรมโอเพนซอร์ซสำหรับปฏิบัติการที่มีหน้าที่เพื่อเชื่อมกับตัวอักษรกับเกมจากที่มาจากระบบปฏิบัติการ Window/Wine โดยมีแบบดังเดิมมาจาก [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 สามารถดูตัวอย่างวิธีการใช้งาน [วีดีโอตัวอย่างการใช้งาน](https://tinyurl.com/textractor-tutorial) เพื่อที่จะแสดงความเข้าใจคร่าวๆเกี่ยวกับโปรแกรม.
 
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
-
 ## ดาวน์โหลด
 
 Textractor รุ่นล่าสุดสามารถดาวน์โหลดจาก [ที่นี้](https://github.com/Artikash/Textractor/releases).<br>

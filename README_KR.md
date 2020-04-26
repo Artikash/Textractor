@@ -7,8 +7,6 @@
 **Textractor** (a.k.a. NextHooker)는 Windows/Wine에서 작동하는 [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)을 기반으로 한 오픈소스 x86/x64 비디오게임 텍스트 후커 입니다.<br>
 빠른 사용법의 이해를 위해 [tutorial video](https://tinyurl.com/textractor-tutorial) 를 참고하세요.
 
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=akashmozumdar%40gmail.com&item_name=Textractor%20development&currency_code=USD)
-
 ## 다운로드
 
 [여기](https://github.com/Artikash/Textractor/releases)에서 Textractor 최신버전을 받으실 수 있습니다.<br>
