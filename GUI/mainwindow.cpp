@@ -105,6 +105,10 @@ namespace
 
 	std::array<InfoForExtension, 10> GetSentenceInfo(TextThread& thread)
 	{
+		void (*AddText)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* text)
+		{
+			QMetaObject::invokeMethod(This, [number, text = std::wstring(text)] { if (TextThread* thread = Host::GetThread(number)) thread->Push(text.c_str()); });
+		};
 		void (*AddSentence)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* sentence)
 		{
 			// pointer from Host::GetThread may not stay valid unless on main thread
@@ -121,6 +125,7 @@ namespace
 		{ "text handle", thread.handle },
 		{ "text name", (int64_t)thread.name.c_str() },
 		{ "void (*AddSentence)(int64_t number, const wchar_t* sentence)", (int64_t)AddSentence },
+		{ "void (*AddText)(int64_t number, const wchar_t* text)", (int64_t)AddText },
 		{ "DWORD (*GetSelectedProcessId)()", (int64_t)GetSelectedProcessId },
 		{ nullptr, 0 } // nullptr marks end of info array
 		} };
