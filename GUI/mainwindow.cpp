@@ -33,6 +33,7 @@ extern const char* SELECT_PROCESS_INFO;
 extern const char* FROM_COMPUTER;
 extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
+extern const char* FAILED_TO_CREATE_CONFIG_FILE;
 extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
 extern const char* SEARCH_CJK;
 extern const char* SEARCH_PATTERN;
@@ -107,7 +108,7 @@ namespace
 		void (*AddSentence)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* sentence)
 		{
 			// pointer from Host::GetThread may not stay valid unless on main thread
-			QMetaObject::invokeMethod(This, [number, sentence = std::wstring(sentence)]{ if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(sentence); });
+			QMetaObject::invokeMethod(This, [number, sentence = std::wstring(sentence)] { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(sentence); });
 		};
 		DWORD (*GetSelectedProcessId)() = [] { return selectedProcessId.load(); };
 
@@ -198,7 +199,8 @@ namespace
 		{
 			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, GAME_CONFIG_FILE);
 			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
-			_wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
+			if (std::filesystem::exists(configFile)) _wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
+			else QMessageBox::critical(This, GAME_CONFIG, QString(FAILED_TO_CREATE_CONFIG_FILE).arg(S(configFile)));
 		}
 	}
 

@@ -64,6 +64,7 @@ const char* INVALID_EXTENSION = u8"%1 is an invalid extension";
 const char* CONFIRM_EXTENSION_OVERWRITE = u8"Another version of this extension already exists, do you want to delete and overwrite it?";
 const char* EXTENSION_WRITE_ERROR = u8"Failed to save extension";
 const char* USE_JP_LOCALE = u8"Emulate japanese locale?";
+const char* FAILED_TO_CREATE_CONFIG_FILE = u8"Failed to create config file \"%1\"";
 const char* HOOK_SEARCH_UNSTABLE_WARNING = u8"Searching for hooks is unstable! Be prepared for your game to crash!";
 const char* SEARCH_CJK = u8"Search for Chinese/Japanese/Korean";
 const char* SEARCH_PATTERN = u8"Search pattern (hex byte array)";
