@@ -302,7 +302,7 @@ private:
 	}
 
 	bool locked, showOriginal, useDictionary;
-	int maxSentenceSize = 500;
+	int maxSentenceSize = 1000;
 	QPoint oldPos;
 
 	class
