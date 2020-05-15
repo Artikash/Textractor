@@ -5,6 +5,7 @@ If you're on this list and want your link changed let me know.
   - [DoumanAsh](https://github.com/DoumanAsh)
   - [Niakr1s](https://github.com/Niakr1s)
   - [tinyAdapter](https://github.com/tinyAdapter)
+- French translation by Racky
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by niisokusu
 - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
