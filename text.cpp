@@ -17,6 +17,8 @@
 #define FRENCH
 #endif
 
+// If you are updating a previous translation see https://github.com/Artikash/issues/313
+
 const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
