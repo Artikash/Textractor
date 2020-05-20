@@ -169,6 +169,8 @@ void InsertWaffleHook();        // WAFFLE: cg.pak
 bool InsertCircusHook1();
 bool InsertCircusHook2();
 
+//bishop I like this ,No character name
+bool InsertBishopHook();
 } // namespace Engine
 
 // EOF

@@ -108,6 +108,12 @@ bool DetermineEngineByFile1()
 	  return true;
   }
 
+  if (Util::CheckFile(L"*.bsa"))
+  {
+      InsertBishopHook();
+      return true;
+  }
+
   if (GetModuleHandleW(L"Engine.dll") && GetModuleHandleW(L"BugTrapU.dll"))
   {
 	  InsertLightvnHook();
@@ -765,10 +771,10 @@ bool DetermineNoEngine()
     return true;
   }
 
-  if (Util::CheckFile(L"*.bsa")) {
+  /*if (Util::CheckFile(L"*.bsa")) {
     ConsoleOutput("vnreng: IGNORE Bishop");
     return true;
-  }
+  }*/
 
   // jichi 3/19/2014: Escude game
   // Example: bgm.bin gfx.bin maou.bin script.bin snd.bin voc.bin

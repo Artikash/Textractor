@@ -5937,6 +5937,7 @@ bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
   //ConsoleOutput("Unknown waffle engine.");
   return true; // jichi 12/25/2013: return true
 }
+
 //  DWORD retn,limit,str;
 //  WORD ch;
 //  NTSTATUS status;
@@ -5986,6 +5987,37 @@ bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
  */
 void InsertWaffleHook()
 {
+/* new waffle?  After 2018  need replace '\r\n' 
+   test on 俺の知らぬ間に彼女が… https://vndb.org/v27781
+   and 変態エルフ姉妹と真面目オーク https://vndb.org/v24215
+   and 母三人とアナあそび https://vndb.org/v24214
+*/
+    const BYTE bytes[] = { 0x6a, 0xff,   //005942C1   6Aff            push FFFFFFFF 
+        0x53,                            //005942C3   53              push ebx 
+        0x57,                            //005942C4   57              push edi
+        0x8d,0x4d,0x40,                  //005942C5   8D4D 40         lea ecx,dword ptr ss:[ebp+40]
+        0xe8,XX4,                        //005942C8   E8 430CEDFF     call mother3.464F10
+        0x8b,0x46,0x04,                  //005942CD   8B46 04         mov eax,dword ptr ds:[esi+4]
+        0x89,0x45,0x5c,                  //005942D0   8945 5C         mov dword ptr ss:[ebp+5C],eax 
+        0x8b,0x46,0x08,                  //005942D3   8B46 08         mov eax,dword ptr ds:[esi+8]
+        0x8b,0x75,0xe8,                  //005942D6   8B75 E8         mov esi,dword ptr ss:[ebp-18] 
+        0x89,0x45,0x60,                  //005942D9   8945 60         mov dword ptr ss : [ebp + 60] ,eax 
+        0x8b,0x46,0x08,                  //005942DC   8B46 08         mov eax,dword ptr ds:[esi+8]
+        0x8b,0x88,0x00,0x01,0x00,0x00,   //005942DF   8B88 00010000   mov ecx,dword ptr ds : [eax + 100] 
+        0x57                             //005942E5   57              push edi 
+    };
+    if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress)) 
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.offset = pusha_ebp_off - 4;
+        hp.index = 0x28;
+        hp.type = DATA_INDIRECT | USING_STRING;
+        ConsoleOutput("Textractor: INSERT WAFFLE");
+        NewHook(hp, "WAFFLE");
+        return;
+    }
+    
   for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 4; i++)
     if (*(DWORD *)i == 0xac68) {
       HookParam hp = {};
@@ -16623,6 +16655,7 @@ static bool AdobeFlashFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
       return true;
   return false;
 }
+
 bool InsertAdobeFlash10Hook()
 {
   const BYTE bytes[] = {
@@ -21406,7 +21439,36 @@ bool InsertMarvelous2PS2Hook()
   ConsoleOutput("vnreng: Marvelous2 PS2: leave");
   return addr;
 }
-
+/**test https://vndb.org/r70193  館 ～官能奇譚～ インモラルエディション ダウン
+* works on https://vndb.org/v22697 
+* and https://vndb.org/v26206 
+* and https://vndb.org/v27492 etc.
+*/
+bool InsertBishopHook()
+{
+    const BYTE bytes[] = {
+        0x8d,0x47,0x04,                //00b2dbda   8D47 04          lea eax,dword ptr ds:[edi+4]
+        0x0f,0xb7,0x04,0x58,           //00b2dbdd   0FB70458         movzx eax,word ptr ds:[eax+ebx*2] 
+        0xdd,0x86,0x70,0x01,0x00,0x00, //00b2dbe1   DD86 70010000    fld st(0),qword ptr ds:[esi+0x170] ; hook here
+        0x50,                          //00b2dbe7   50               push eax
+        0x83,0xec,0x08,                //00b2dbe8   83EC 08          sub esp,8
+        0xdd,0x1c,0x24                 //00b2dbeb   DD1C24           fstp qword ptr ss:[esp],st(0)
+    };
+    enum { addr_offset = 0xb2dbe1 - 0xb2dbda };
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+    if (!addr) {
+        ConsoleOutput("Textractor: Bishop: pattern not found");
+        return false;
+    }
+    HookParam hp = {};
+    hp.address = addr + addr_offset;
+    hp.offset = pusha_eax_off - 4;
+    hp.type = USING_UNICODE;
+    hp.length_offset = 1;
+    ConsoleOutput("Textractor: INSERT Bishop");
+    NewHook(hp, "Bishop");
+    return true;
+}
 #if 0 // jichi 7/19/2014: duplication text
 
 /** 7/19/2014 jichi

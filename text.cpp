@@ -324,7 +324,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	SELECT_PROCESS = u8"选择进程";
 	ATTACH_INFO = u8R"(如果没看见想要附加的进程，尝试使用管理员权限运行
 也可以手动输入进程ID)";
-	SELECT_PROCESS_INFO = u8"如果手动输入进程文件名，请使用绝对路径";
+	SELECT_PROCESS_INFO = u8"如果手动输入游戏名，请使用绝对路径";
 	FROM_COMPUTER = u8"从计算机中选择";
 	PROCESSES = u8"进程 (*.exe)";
 	SAVE_SETTINGS = u8"保存设置";
@@ -334,20 +334,20 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 使用 delete 键移除选中的扩展)";
 	ADD_EXTENSION = u8"添加扩展";
 	INVALID_EXTENSION = u8"%1 是一个无效扩展";
-	CONFIRM_EXTENSION_OVERWRITE = u8"此扩展的另一个版本已存在，是否删除并覆盖它?";
+	CONFIRM_EXTENSION_OVERWRITE = u8"此扩展的另一个版本已启用，是否删除并覆盖它?";
 	EXTENSION_WRITE_ERROR = u8"保存扩展失败";
 	USE_JP_LOCALE = u8"模拟日本区域设置?";
 	HOOK_SEARCH_UNSTABLE_WARNING = u8"搜索钩子的功能是不稳定的! 可能会导致你的游戏崩溃! ";
 	SEARCH_CJK = u8"搜索中文/日文/韩文";
 	SEARCH_PATTERN = u8"搜索匹配特征 (hex byte array)";
 	SEARCH_DURATION = u8"搜索持续时间 (ms)";
-	SEARCH_MODULE = u8"搜索的模块名";
-	PATTERN_OFFSET = u8"特征地址与Hook地址的偏移量";
+	SEARCH_MODULE = u8"搜索指定模块";
+	PATTERN_OFFSET = u8"相对于特征地址的偏移值";
 	MAX_HOOK_SEARCH_RECORDS = u8"搜索结果上限";
 	MIN_ADDRESS = u8"起始地址 (hex)";
 	MAX_ADDRESS = u8"结束地址 (hex)";
-	STRING_OFFSET = u8"字符串偏移量 (hex)";
-	HOOK_SEARCH_FILTER = u8"必须匹配的正则表达式";
+	STRING_OFFSET = u8"字符串偏移值 (hex)";
+	HOOK_SEARCH_FILTER = u8"结果必须匹配的正则表达式";
 	TEXT = u8"文本";
 	CODEPAGE = u8"代码页";
 	SEARCH_FOR_TEXT = u8"搜索指定文本";
@@ -384,13 +384,13 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	INSERTING_HOOK = u8"Textractor: 注入钩子: %s";
 	REMOVING_HOOK = u8"Textractor: 移除钩子: %s";
 	HOOK_FAILED = u8"Textractor: 钩子注入失败";
-	TOO_MANY_HOOKS = u8"Textractor: 钩子太多: 无法注入";
-	STARTING_SEARCH = u8"Textractor: 开始搜索";
+	TOO_MANY_HOOKS = u8"Textractor: 钩子数量已达上限: 无法注入";
+	STARTING_SEARCH = u8"Textractor: 开始搜索钩子";
 	NOT_ENOUGH_TEXT = u8"Textractor: 没有足够的文本用来精确搜索";
-	HOOK_SEARCH_INITIALIZED = u8"Textractor: 搜索初始化完成将使用 %zd 个钩子";
-	MAKE_GAME_PROCESS_TEXT = u8"Textractor: 请点击游戏区域, 在接下来的 %d 秒内使游戏处理文本";
+	HOOK_SEARCH_INITIALIZED = u8"Textractor: 搜索初始化完成, 创建了 %zd 个钩子";
+	MAKE_GAME_PROCESS_TEXT = u8"Textractor: 请点击游戏区域, 在接下来的 %d 秒内使游戏强制处理文本";
 	HOOK_SEARCH_FINISHED = u8"Textractor: 钩子搜索完毕, 找到了 %d 条结果";
-	OUT_OF_RECORDS_RETRY = u8"Textractor: 超出钩子记录数, 如果结果不理想, 请重试(默认记录数增加)";
+	OUT_OF_RECORDS_RETRY = u8"Textractor: 搜索结果已达上限, 如果结果不理想, 请重试(默认最大记录数增加)";
 	FUNC_MISSING = u8"Textractor: 函数不存在";
 	MODULE_MISSING = u8"Textractor: 模块不存在";
 	GARBAGE_MEMORY = u8"Textractor: 内存一直在变，读了也没用";
@@ -398,21 +398,71 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	READ_ERROR = u8"Textractor: Reader 错误 (R码可能不正确)";
 	HIJACK_ERROR = u8"Textractor: Hijack 错误";
 	COULD_NOT_FIND = u8"Textractor: 无法找到文本";
-	TRANSLATE_TO = u8"翻译到";
+	TRANSLATE_TO = u8"翻译为";
 	TRANSLATE_SELECTED_THREAD_ONLY = u8"仅翻译当前选择的文本线程";
 	RATE_LIMIT_ALL_THREADS = u8"限制所有文本线程的请求频率";
 	RATE_LIMIT_SELECTED_THREAD = u8"限制当前选择线程的请求频率";
 	USE_TRANS_CACHE = u8"使用缓存的翻译结果";
+	RATE_LIMIT_TOKEN_COUNT = u8"限流器令牌数";
+	RATE_LIMIT_TOKEN_RESTORE_DELAY = u8"限流器令牌重置时间 (ms)";
 	TOO_MANY_TRANS_REQUESTS = L"太多翻译请求: 拒绝生成更多";
 	TRANSLATION_ERROR = L"翻译时出错";
+	USE_PREV_SENTENCE_CONTEXT = u8"使用之前的句子作为上下文";
+	API_KEY = u8"API key";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
 在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
+	SENTENCE_TOO_BIG = u8"文本过长无法显示";
+	MAX_SENTENCE_SIZE = u8"最大文本长度";
+	TOPMOST = u8"窗口总是置顶";
+	DICTIONARY = u8"字典";
+	SHOW_ORIGINAL = u8"显示原文";
+	SHOW_ORIGINAL_INFO = u8R"(将不显示原文
+仅当此扩展置于翻译扩展之后使用时才有效)";
+	OPACITY = u8"透明度";
+	SIZE_LOCK = u8"锁定窗口大小";
 	BG_COLOR = u8"背景颜色";
 	TEXT_COLOR = u8"文本颜色";
-	TOPMOST = u8"总是位于最上层";
+	TEXT_OUTLINE = u8"文字边框";
+	OUTLINE_COLOR = u8"边框颜色";
+	OUTLINE_SIZE = u8"边框大小";
+	OUTLINE_SIZE_INFO = u8"以像素为单位的大小(建议保持在字体大小的20%以下)";
+	FONT = u8"字体";
+	LUA_INTRO = u8R"(--[[
+ProcessSentence 是Textractor每接收到一句文本时都会调用的函数。
+
+参数 sentence:  Textractor接收到的文本 (UTF-8)。
+参数 sentenceInfo: 用于保存文本相关信息的table。
+
+如果你返回一个字符串，文本将被转换为该字符串。
+如果返回 nil，该文本将不会被修改。
+
+此扩展使用了几个Lua解释器的副本用于保证线程安全。
+在ProcessSentence函数中对全局变量的修改可能不会生效。
+
+sentenceInfo有以下成员:
+"current select": 除非文本属于用户当前选择的文本线程，否则为0。
+"process id": 这句文本所属的进程id. 0 表示控制台与剪贴板线程。
+"text number": 当前选择的文本线程的id. 这是在创建文本线程时逐个递增的计数。 0 为控制台, 1 为剪贴板。
+--]]
+function ProcessSentence(sentence, sentenceInfo)
+  --在此处添加你的代码...
+end)";
+	LOAD_LUA_SCRIPT = u8"加载脚本";
+	LUA_ERROR = L"Lua 错误";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
 	CURRENT_FILTER = u8"当前过滤中: %1";
+	REPLACER_INSTRUCTIONS = LR"(使用"Replace"扩展时会使用此文件
+替换指令必须遵循以下格式:
+|ORIG|原文|BECOMES|替代文本|END|
+替换指令之外的所有文本都会被忽略.
+原文中的空白字符将被忽略，但是替代文本可以包含空白字符、换行符等.
+此文件必须使用Unicode字符集(UTF-16 little endian).)";
+	THREAD_LINKER = u8"线程链接器";
+	LINK = u8"链接";
+	THREAD_LINK_FROM = u8"需要链接的线程id";
+	THREAD_LINK_TO = u8"链接到的线程id";
+	HEXADECIMAL = u8"十六进制";
 #endif // SIMPLIFIED_CHINESE
 
 #ifdef RUSSIAN

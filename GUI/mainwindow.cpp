@@ -391,18 +391,23 @@ namespace
 			sp.length = 0; // use default
 		}
 		filter.optimize();
-
+		auto d= filter.pattern().toStdWString();
 		auto hooks = std::make_shared<QStringList>();
+		auto timeout = GetTickCount64() + sp.searchTime + 100'00;
 		try
 		{
 			Host::FindHooks(processId, sp,
 				[hooks, filter](HookParam hp, std::wstring text) { if (filter.match(S(text)).hasMatch()) *hooks << sanitize(S(HookCode::Generate(hp) + L" => " + text)); });
 		}
 		catch (std::out_of_range) { return; }
-		std::thread([hooks]
+		std::thread([hooks,timeout]
 		{
-			for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
-				lastSize = hooks->size();
+				for (int lastSize = 0; auto f = hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) {
+					lastSize = hooks->size();
+					if (GetTickCount64() > timeout) 
+						break; //如果size始终为0，就是死循环
+				}
+
 
 			QString saveFileName;
 			QMetaObject::invokeMethod(This, [&]

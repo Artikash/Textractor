@@ -1,29 +1,44 @@
-{
-  // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
+﻿{
   "configurations": [
     {
       "name": "x86-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x86" ]
+      "inheritEnvironments": [ "msvc_x86" ],
+      "variables": []
     },
     {
       "name": "x86-RelWithDebInfo",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
-      "inheritEnvironments": [ "msvc_x86" ]
+      "inheritEnvironments": [ "msvc_x86" ],
+      "variables": []
     },
     {
       "name": "x64-Debug",
       "generator": "Ninja",
       "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x64" ]
+      "inheritEnvironments": [ "msvc_x64" ],
+      "variables": []
     },
     {
       "name": "x64-RelWithDebInfo",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
-      "inheritEnvironments": [ "msvc_x64" ]
+      "inheritEnvironments": [ "msvc_x64" ],
+      "variables": []
+    },
+    {
+      "name": "x86-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "variables": []
     }
   ]
 }
