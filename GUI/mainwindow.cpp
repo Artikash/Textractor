@@ -391,7 +391,6 @@ namespace
 			sp.length = 0; // use default
 		}
 		filter.optimize();
-		auto d= filter.pattern().toStdWString();
 		auto hooks = std::make_shared<QStringList>();
 		auto timeout = GetTickCount64() + sp.searchTime + 100'00;
 		try
