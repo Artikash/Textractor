@@ -435,6 +435,23 @@ bool DetermineEngineByFile4()
     return true;
   }
 
+  // jichi 11/22/2015: 凍京NECRO 体験版
+  // Jazzinghen 23/05/2020: Add check for 凍京NECRO
+  // ResEdit shows multiple potential strings:
+  // - TOKYONECRO
+  // - 東京NECRO
+  // - TokyoNecro.exe in "OriginalFilename"
+  if (Util::CheckFile(L"*.npk")) {
+    if (Util::SearchResourceString(L"TOKYONECRO")) {
+      ConsoleOutput("vnreng: Hooking TokyoNecro");
+      InsertTokyoNecroHook();
+    }
+    else {
+      ConsoleOutput("vnreng: IGNORE new Nitroplus");
+    }
+    return true;
+  }
+
   return false;
 }
 
@@ -706,12 +723,6 @@ bool DetermineNoEngine()
   // jichi 6/7/2015: RPGMaker v3
   if (Util::CheckFile(L"*.rgss3a")) {
     ConsoleOutput("vnreng: IGNORE RPGMaker RGSS3");
-    return true;
-  }
-
-  // jichi 11/22/2015: 凍京NECRO 体験版
-  if (Util::CheckFile(L"*.npk")) {
-    ConsoleOutput("vnreng: IGNORE new Nitroplus");
     return true;
   }
 
