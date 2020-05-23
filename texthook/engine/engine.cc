@@ -6744,12 +6744,6 @@ bool InsertTokyoNecroHook() {
   }
   addr += addr_offset;
 
-  std::stringstream stream;
-  stream << std::hex << addr;
-  std::string debugOut = "vnreng: TokyoNecro. Hook address: " +
-                         stream.str();
-  ConsoleOutput(debugOut.c_str());
-
   enum { push_ebp = 0x55 }; // OPCode for function begin
   if (*(BYTE *)addr != push_ebp) {
     // This should never happen
