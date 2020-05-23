@@ -27,6 +27,7 @@
 //#include <boost/foreach.hpp>
 #include <cstdio>
 #include <string>
+#include <sstream>
 
 // jichi 375/2014: Add offset of pusha/pushad
 // http://faydoc.tripod.com/cpu/pushad.htm
@@ -6612,6 +6613,106 @@ bool InsertNitroplusHook()
   ConsoleOutput("vnreng: INSERT Nitroplus");
   NewHook(hp, "Nitroplus");
   //RegisterEngineType(ENGINE_Nitroplus);
+  return true;
+}
+
+/**
+ *  Jazzinghen 23/05/2020: Add TokyoNecro hook
+ *
+ *  [Nitroplus] 東京Necro 1.01
+ *
+ *  Hook code: HS-14*8@B5420:TokyoNecro.exe
+ * 
+ *  - 
+ *
+ *  Disassembled code:
+ *
+ *  TokyoNecro.exe+B5420 - 55                - push ebp                  ; place to hook
+ *  TokyoNecro.exe+B5421 - 8B EC             - mov ebp,esp
+ *  TokyoNecro.exe+B5423 - 6A FF             - push -01
+ *  TokyoNecro.exe+B5425 - 68 E8613000       - push TokyoNecro.exe+1961E8
+ *  TokyoNecro.exe+B542A - 64 A1 00000000    - mov eax,fs:[00000000]
+ *  TokyoNecro.exe+B5430 - 50                - push eax
+ *  TokyoNecro.exe+B5431 - 64 89 25 00000000 - mov fs:[00000000],esp
+ *  TokyoNecro.exe+B5438 - 83 EC 1C          - sub esp,1C
+ *  TokyoNecro.exe+B543B - 8B 55 08          - mov edx,[ebp+08]
+ *  TokyoNecro.exe+B543E - 53                - push ebx
+ *  TokyoNecro.exe+B543F - 56                - push esi
+ *  TokyoNecro.exe+B5440 - 8B C2             - mov eax,edx
+ *  TokyoNecro.exe+B5442 - 57                - push edi
+ *  TokyoNecro.exe+B5443 - 8B D9             - mov ebx,ecx
+ *  TokyoNecro.exe+B5445 - C7 45 EC 0F000000 - mov [ebp-14],0000000F
+ *  TokyoNecro.exe+B544C - C7 45 E8 00000000 - mov [ebp-18],00000000
+ *
+ *  Notes:
+ *
+ *  The text is contained into the memory location at [ebp+08].
+ *
+ *  There's a second hook that seems to be capturing the game encyclopedia plus
+ *  extra garbage (only when it is brought to screen): /HS4@B5380:tokyonecro.exe
+ *  https://wiki.anime-sharing.com/hgames/index.php?title=AGTH/H-Codes#More_H-Codes.5B74.5D
+ * 
+ *  I can confirm that that function is called consistently at every call of the
+ *  encyclopedia but I don't know what memory location is a positive number in the hook
+ *  code.
+ */
+
+bool InsertTokyoNecroHook() {
+
+  const BYTE bytecodes[] = {
+      0x55,                         // 55                - push ebp
+      0x8b, 0xec,                   // 8B EC             - mov ebp,esp
+      0x6a, 0xff,                   // 6A FF             - push -01
+      0x68, XX4,                    // 68 E8613000       - push TokyoNecro.exe+1961E8
+      0x64, 0xa1, XX4,              // 64 A1 00000000    - mov eax,fs:[00000000]
+      0x50,                         // 50                - push eax
+      0x64, 0x89, 0x25, XX4,        // 64 89 25 00000000 - mov fs:[00000000],esp
+      0x83, 0xec, 0x1c,             // 83 EC 1C          - sub esp,1C
+      0x8b, 0x55, 0x08,             // 8B 55 08          - mov edx,[ebp+08]
+      0x53,                         // 53                - push ebx
+      0x56,                         // 56                - push esi
+      0x8B, 0xc2,                   // 8B C2             - mov eax,edx
+      0x57,                         // 57                - push edi
+      0x8b, 0xd9,                   // 8B D9             - mov ebx,ecx
+      0xc7, 0x45, 0xec, XX4,        // C7 45 EC 0F000000 - mov [ebp-14],0000000F
+      0xc7, 0x45, 0xe8, XX4         // C7 45 E8 00000000 - mov [ebp-18],00000000
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr =
+      MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
+                        processStartAddress + range);
+  enum {
+    addr_offset = 0
+  }; // distance to the beginning of the function
+
+  if (addr == 0ull) {
+    ConsoleOutput("vnreng:TokyoNecro: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+
+  std::stringstream stream;
+  stream << std::hex << addr;
+  std::string debugOut = "vnreng: TokyoNecro. Hook address: " +
+                         stream.str();
+  ConsoleOutput(debugOut.c_str());
+
+  enum { push_ebp = 0x55 }; // OPCode for function begin
+  if (*(BYTE *)addr != push_ebp) {
+    // This should never happen
+    ConsoleOutput("vnreng:TokyoNecro: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = -0x14;
+  hp.index = 8;
+  hp.type = USING_STRING;
+
+  ConsoleOutput("vnreng: INSERT TokyoNecro");
+  NewHook(hp, "TokyoNecro");
+
   return true;
 }
 

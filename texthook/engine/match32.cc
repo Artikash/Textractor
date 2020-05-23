@@ -443,7 +443,6 @@ bool DetermineEngineByFile4()
   // - TokyoNecro.exe in "OriginalFilename"
   if (Util::CheckFile(L"*.npk")) {
     if (Util::SearchResourceString(L"TOKYONECRO")) {
-      ConsoleOutput("vnreng: Hooking TokyoNecro");
       InsertTokyoNecroHook();
     }
     else {
