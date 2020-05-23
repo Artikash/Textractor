@@ -27,7 +27,6 @@
 //#include <boost/foreach.hpp>
 #include <cstdio>
 #include <string>
-#include <sstream>
 
 // jichi 375/2014: Add offset of pusha/pushad
 // http://faydoc.tripod.com/cpu/pushad.htm
