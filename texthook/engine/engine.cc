@@ -6592,11 +6592,37 @@ bool InsertNitroplusHook()
  *  [Nitroplus] 東京Necro 1.01
  *
  *  Hook code: HS-14*8@B5420:TokyoNecro.exe
- * 
- *  - 
+ *
+ *  Debug method:
+ *  Found memory location where the text was written, then used hardware break on write.
+ *  After that found the function that writes the text in, found that the memory pointed
+ *  contains more than just the text. Followed the call stack "upwards" until a function
+ *  that handles only the text copy is found.
  *
  *  Disassembled code:
- *
+ *  TokyoNecro.exe+B53F7 - 51                - push ecx
+ *  TokyoNecro.exe+B53F8 - E8 3DC80B00       - call TokyoNecro.exe+171C3A
+ *  TokyoNecro.exe+B53FD - 83 C4 04          - add esp,04
+ *  TokyoNecro.exe+B5400 - 8B 4D F4          - mov ecx,[ebp-0C]
+ *  TokyoNecro.exe+B5403 - 33 C0             - xor eax,eax
+ *  TokyoNecro.exe+B5405 - 64 89 0D 00000000 - mov fs:[00000000],ecx
+ *  TokyoNecro.exe+B540C - 8B E5             - mov esp,ebp
+ *  TokyoNecro.exe+B540E - 5D                - pop ebp
+ *  TokyoNecro.exe+B540F - C2 0400           - ret 0004
+ *  TokyoNecro.exe+B5412 - CC                - int 3
+ *  TokyoNecro.exe+B5413 - CC                - int 3
+ *  TokyoNecro.exe+B5414 - CC                - int 3
+ *  TokyoNecro.exe+B5415 - CC                - int 3
+ *  TokyoNecro.exe+B5416 - CC                - int 3
+ *  TokyoNecro.exe+B5417 - CC                - int 3
+ *  TokyoNecro.exe+B5418 - CC                - int 3
+ *  TokyoNecro.exe+B5419 - CC                - int 3
+ *  TokyoNecro.exe+B541A - CC                - int 3
+ *  TokyoNecro.exe+B541B - CC                - int 3
+ *  TokyoNecro.exe+B541C - CC                - int 3
+ *  TokyoNecro.exe+B541D - CC                - int 3
+ *  TokyoNecro.exe+B541E - CC                - int 3
+ *  TokyoNecro.exe+B541F - CC                - int 3
  *  TokyoNecro.exe+B5420 - 55                - push ebp                  ; place to hook
  *  TokyoNecro.exe+B5421 - 8B EC             - mov ebp,esp
  *  TokyoNecro.exe+B5423 - 6A FF             - push -01
@@ -6615,44 +6641,71 @@ bool InsertNitroplusHook()
  *  TokyoNecro.exe+B544C - C7 45 E8 00000000 - mov [ebp-18],00000000
  *
  *  Notes:
+ * 
+ *  There's more data above due to the fact that the start of the function is very
+ *  common and it was hooking a wrong function.
  *
- *  The text is contained into the memory location at [ebp+08].
+ *  The text is contained into the memory location at [esp+04] when hooking the
+ *  code at TokyoNecro.exe+B5420
+ * 
+ *  If the game is hooked right at the main menu it will also catch the real time clock
+ *  rendered there.
  *
  *  There's a second hook that seems to be capturing the game encyclopedia plus
  *  extra garbage (only when it is brought to screen): /HS4@B5380:tokyonecro.exe
  *  https://wiki.anime-sharing.com/hgames/index.php?title=AGTH/H-Codes#More_H-Codes.5B74.5D
- * 
+ *
  *  I can confirm that that function is called consistently at every call of the
- *  encyclopedia but I don't know what memory location is a positive number in the hook
- *  code.
+ *  encyclopedia but I don't know what memory location is a positive number in
+ *  the hook code.
  */
 
 bool InsertTokyoNecroHook() {
 
   const BYTE bytecodes[] = {
-      0x55,                         // 55                - push ebp
-      0x8b, 0xec,                   // 8B EC             - mov ebp,esp
-      0x6a, 0xff,                   // 6A FF             - push -01
-      0x68, XX4,                    // 68 E8613000       - push TokyoNecro.exe+1961E8
-      0x64, 0xa1, XX4,              // 64 A1 00000000    - mov eax,fs:[00000000]
-      0x50,                         // 50                - push eax
-      0x64, 0x89, 0x25, XX4,        // 64 89 25 00000000 - mov fs:[00000000],esp
-      0x83, 0xec, 0x1c,             // 83 EC 1C          - sub esp,1C
-      0x8b, 0x55, 0x08,             // 8B 55 08          - mov edx,[ebp+08]
-      0x53,                         // 53                - push ebx
-      0x56,                         // 56                - push esi
-      0x8B, 0xc2,                   // 8B C2             - mov eax,edx
-      0x57,                         // 57                - push edi
-      0x8b, 0xd9,                   // 8B D9             - mov ebx,ecx
-      0xc7, 0x45, 0xec, XX4,        // C7 45 EC 0F000000 - mov [ebp-14],0000000F
-      0xc7, 0x45, 0xe8, XX4         // C7 45 E8 00000000 - mov [ebp-18],00000000
+      0x8b, 0x4d, 0xf4,      // 8B 4D F4          - mov ecx,[ebp-0C]   
+      0x33, 0xc0,            // 33 C0             - xor eax,eax
+      0x64, 0x89, 0x0d, XX4, // 64 89 0D 00000000 - mov fs:[00000000],ecx
+      0x8b, 0xe5,            // 8B E5             - mov esp,ebp
+      0x5d,                  // 5D                - pop ebp
+      0xc2, XX2,             // C2 0400           - ret 0004
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0xcc,                  // CC                - int 3
+      0x55,                  // 55                - push ebp
+      0x8b, 0xec,            // 8B EC             - mov ebp,esp
+      0x6a, 0xff,            // 6A FF             - push -01
+      0x68, XX4,             // 68 E8613000       - push TokyoNecro.exe+1961E8
+      0x64, 0xa1, XX4,       // 64 A1 00000000    - mov eax,fs:[00000000]
+      0x50,                  // 50                - push eax
+      0x64, 0x89, 0x25, XX4, // 64 89 25 00000000 - mov fs:[00000000],esp
+      0x83, 0xec, 0x1c,      // 83 EC 1C          - sub esp,1C
+      0x8b, 0x55, 0x08,      // 8B 55 08          - mov edx,[ebp+08]
+      0x53,                  // 53                - push ebx
+      0x56,                  // 56                - push esi
+      0x8B, 0xc2,            // 8B C2             - mov eax,edx
+      0x57,                  // 57                - push edi
+      0x8b, 0xd9,            // 8B D9             - mov ebx,ecx
+      0xc7, 0x45, 0xec, XX4, // C7 45 EC 0F000000 - mov [ebp-14],0000000F
+      0xc7, 0x45, 0xe8, XX4  // C7 45 E8 00000000 - mov [ebp-18],00000000 // 
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr =
       MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
                         processStartAddress + range);
   enum {
-    addr_offset = 0
+    addr_offset = 32
   }; // distance to the beginning of the function
 
   if (addr == 0ull) {
@@ -6676,8 +6729,12 @@ bool InsertTokyoNecroHook() {
 
   HookParam hp = {};
   hp.address = addr;
-  hp.offset = -0x14;
-  hp.index = 8;
+  // The memory address is held at [ebp+08] at TokyoNecro.exe+B543B, meaning that at
+  // the start of the function it's right above the stack pointer. Since there's no
+  // way to do an operation on the value of a register BEFORE dereferencing (e.g.
+  // (void*)(esp+4) instead of ((void*)esp)+4) we have to go up the stack instead of
+  // using the data in the registers
+  hp.offset = 0x4;
   hp.type = USING_STRING;
 
   ConsoleOutput("vnreng: INSERT TokyoNecro");
