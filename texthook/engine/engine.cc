@@ -26,6 +26,7 @@
 #include "native/pchooks.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
+#include <sstream>
 #include <string>
 
 // jichi 375/2014: Add offset of pusha/pushad
@@ -6629,29 +6630,6 @@ bool InsertNitroplusHook()
  *  that handles only the text copy is found.
  *
  *  Disassembled code:
- *  TokyoNecro.exe+B53F7 - 51                - push ecx
- *  TokyoNecro.exe+B53F8 - E8 3DC80B00       - call TokyoNecro.exe+171C3A
- *  TokyoNecro.exe+B53FD - 83 C4 04          - add esp,04
- *  TokyoNecro.exe+B5400 - 8B 4D F4          - mov ecx,[ebp-0C]
- *  TokyoNecro.exe+B5403 - 33 C0             - xor eax,eax
- *  TokyoNecro.exe+B5405 - 64 89 0D 00000000 - mov fs:[00000000],ecx
- *  TokyoNecro.exe+B540C - 8B E5             - mov esp,ebp
- *  TokyoNecro.exe+B540E - 5D                - pop ebp
- *  TokyoNecro.exe+B540F - C2 0400           - ret 0004
- *  TokyoNecro.exe+B5412 - CC                - int 3
- *  TokyoNecro.exe+B5413 - CC                - int 3
- *  TokyoNecro.exe+B5414 - CC                - int 3
- *  TokyoNecro.exe+B5415 - CC                - int 3
- *  TokyoNecro.exe+B5416 - CC                - int 3
- *  TokyoNecro.exe+B5417 - CC                - int 3
- *  TokyoNecro.exe+B5418 - CC                - int 3
- *  TokyoNecro.exe+B5419 - CC                - int 3
- *  TokyoNecro.exe+B541A - CC                - int 3
- *  TokyoNecro.exe+B541B - CC                - int 3
- *  TokyoNecro.exe+B541C - CC                - int 3
- *  TokyoNecro.exe+B541D - CC                - int 3
- *  TokyoNecro.exe+B541E - CC                - int 3
- *  TokyoNecro.exe+B541F - CC                - int 3
  *  TokyoNecro.exe+B5420 - 55                - push ebp                  ; place to hook
  *  TokyoNecro.exe+B5421 - 8B EC             - mov ebp,esp
  *  TokyoNecro.exe+B5423 - 6A FF             - push -01
@@ -6668,6 +6646,20 @@ bool InsertNitroplusHook()
  *  TokyoNecro.exe+B5443 - 8B D9             - mov ebx,ecx
  *  TokyoNecro.exe+B5445 - C7 45 EC 0F000000 - mov [ebp-14],0000000F
  *  TokyoNecro.exe+B544C - C7 45 E8 00000000 - mov [ebp-18],00000000
+ *  TokyoNecro.exe+B5453 - C6 45 D8 00       - mov byte ptr [ebp-28],00
+ *  TokyoNecro.exe+B5457 - 8D 70 01          - lea esi,[eax+01]
+ *  TokyoNecro.exe+B545A - 8D 9B 00000000    - lea ebx,[ebx+00000000]
+ *  TokyoNecro.exe+B5460 - 8A 08             - mov cl,[eax]
+ *  TokyoNecro.exe+B5462 - 40                - inc eax
+ *  TokyoNecro.exe+B5463 - 84 C9             - test cl,cl
+ *  TokyoNecro.exe+B5465 - 75 F9             - jne TokyoNecro.exe+B5460
+ *  TokyoNecro.exe+B5467 - 2B C6             - sub eax,esi
+ *  TokyoNecro.exe+B5469 - 52                - push edx
+ *  TokyoNecro.exe+B546A - 8B F8             - mov edi,eax                ▷ Search
+ *  TokyoNecro.exe+B546C - 8D 75 D8          - lea esi,[ebp-28]           |
+ *  TokyoNecro.exe+B546F - E8 6CE1F4FF       - call TokyoNecro.exe+35E0   |
+ *  TokyoNecro.exe+B5474 - C7 45 FC 00000000 - mov [ebp-04],00000000      |
+ *  TokyoNecro.exe+B547B - 8B 8B 84030000    - mov ecx,[ebx+00000384]     ▷
  *
  *  Notes:
  * 
@@ -6692,64 +6684,39 @@ bool InsertNitroplusHook()
 bool InsertTokyoNecroHook() {
 
   const BYTE bytecodes[] = {
-      0x8b, 0x4d, 0xf4,      // 8B 4D F4          - mov ecx,[ebp-0C]   
-      0x33, 0xc0,            // 33 C0             - xor eax,eax
-      0x64, 0x89, 0x0d, XX4, // 64 89 0D 00000000 - mov fs:[00000000],ecx
-      0x8b, 0xe5,            // 8B E5             - mov esp,ebp
-      0x5d,                  // 5D                - pop ebp
-      0xc2, XX2,             // C2 0400           - ret 0004
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0xcc,                  // CC                - int 3
-      0x55,                  // 55                - push ebp
-      0x8b, 0xec,            // 8B EC             - mov ebp,esp
-      0x6a, 0xff,            // 6A FF             - push -01
-      0x68, XX4,             // 68 E8613000       - push TokyoNecro.exe+1961E8
-      0x64, 0xa1, XX4,       // 64 A1 00000000    - mov eax,fs:[00000000]
-      0x50,                  // 50                - push eax
-      0x64, 0x89, 0x25, XX4, // 64 89 25 00000000 - mov fs:[00000000],esp
-      0x83, 0xec, 0x1c,      // 83 EC 1C          - sub esp,1C
-      0x8b, 0x55, 0x08,      // 8B 55 08          - mov edx,[ebp+08]
-      0x53,                  // 53                - push ebx
-      0x56,                  // 56                - push esi
-      0x8B, 0xc2,            // 8B C2             - mov eax,edx
-      0x57,                  // 57                - push edi
-      0x8b, 0xd9,            // 8B D9             - mov ebx,ecx
-      0xc7, 0x45, 0xec, XX4, // C7 45 EC 0F000000 - mov [ebp-14],0000000F
-      0xc7, 0x45, 0xe8, XX4  // C7 45 E8 00000000 - mov [ebp-18],00000000 // 
+      0x8B, 0xF8,                               // 8B F8             - mov edi,eax
+      0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
+      0xE8, 0x6C, 0xE1, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
+      0xC7, 0x45, 0xFC, 0x00, 0x00, 0x00, 0x00, // C7 45 FC 00000000 - mov [ebp-04],00000000
+      0x8B, 0x8B, 0x84, 0x03, 0x00, 0x00        // 8B 8B 84030000    - mov ecx,[ebx+00000384]
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr =
       MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
                         processStartAddress + range);
-  enum {
-    addr_offset = 32
-  }; // distance to the beginning of the function
+
+  constexpr ULONG addr_offset = 0xB546A - 0xB5420;  // Distance from memory TokyoNecro.exe+B546A to
+                                                    // TokyoNecro.exe+B5420
 
   if (addr == 0ull) {
     ConsoleOutput("vnreng:TokyoNecro: pattern not found");
     return false;
   }
-  addr += addr_offset;
 
+  addr -= addr_offset;
+  
+  std::stringstream stream;
+  stream << std::hex << addr;
+  std::string debugOut = "vnreng: TokyoNecro. Hook address: " + stream.str();
+  ConsoleOutput(debugOut.c_str());
+  
   enum { push_ebp = 0x55 }; // OPCode for function begin
   if (*(BYTE *)addr != push_ebp) {
-    // This should never happen
-    ConsoleOutput("vnreng:TokyoNecro: beginning of the function not found");
-    return false;
+      // This should never happen
+      ConsoleOutput("vnreng:TokyoNecro: beginning of the function not found");
+      return false;
   }
-
+  
   HookParam hp = {};
   hp.address = addr;
   // The memory address is held at [ebp+08] at TokyoNecro.exe+B543B, meaning that at
@@ -6759,10 +6726,10 @@ bool InsertTokyoNecroHook() {
   // using the data in the registers
   hp.offset = 0x4;
   hp.type = USING_STRING;
-
-  ConsoleOutput("vnreng: INSERT TokyoNecro");
   NewHook(hp, "TokyoNecro");
 
+  ConsoleOutput("vnreng: INSERT TokyoNecro");
+  
   return true;
 }
 
