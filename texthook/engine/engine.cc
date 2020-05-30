@@ -26,7 +26,6 @@
 #include "native/pchooks.h"
 //#include <boost/foreach.hpp>
 #include <cstdio>
-#include <sstream>
 #include <string>
 
 // jichi 375/2014: Add offset of pusha/pushad
@@ -6589,7 +6588,7 @@ bool InsertNitroplusHook()
 /**
  *  Jazzinghen 23/05/2020: Add TokyoNecro hook
  *
- *  [Nitroplus] 東京Necro 1.01
+ *  [Nitroplus] 東京Necro 1.01 - Text boxes hook
  *
  *  Hook code: HS-14*8@B5420:TokyoNecro.exe
  *
@@ -6627,9 +6626,7 @@ bool InsertNitroplusHook()
  *  TokyoNecro.exe+B5469 - 52                - push edx
  *  TokyoNecro.exe+B546A - 8B F8             - mov edi,eax                ▷ Search
  *  TokyoNecro.exe+B546C - 8D 75 D8          - lea esi,[ebp-28]           |
- *  TokyoNecro.exe+B546F - E8 6CE1F4FF       - call TokyoNecro.exe+35E0   |
- *  TokyoNecro.exe+B5474 - C7 45 FC 00000000 - mov [ebp-04],00000000      |
- *  TokyoNecro.exe+B547B - 8B 8B 84030000    - mov ecx,[ebx+00000384]     ▷
+ *  TokyoNecro.exe+B546F - E8 6CE1F4FF       - call TokyoNecro.exe+35E0   ▷
  *
  *  Notes:
  * 
@@ -6641,24 +6638,16 @@ bool InsertNitroplusHook()
  * 
  *  If the game is hooked right at the main menu it will also catch the real time clock
  *  rendered there.
- *
- *  There's a second hook that seems to be capturing the game encyclopedia plus
- *  extra garbage (only when it is brought to screen): /HS4@B5380:tokyonecro.exe
- *  https://wiki.anime-sharing.com/hgames/index.php?title=AGTH/H-Codes#More_H-Codes.5B74.5D
- *
- *  I can confirm that that function is called consistently at every call of the
- *  encyclopedia but I don't know what memory location is a positive number in
- *  the hook code.
  */
 
-bool InsertTokyoNecroHook() {
+namespace TokyoNecro {
+
+bool TextHook() {
 
   const BYTE bytecodes[] = {
       0x8B, 0xF8,                               // 8B F8             - mov edi,eax
       0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
       0xE8, 0x6C, 0xE1, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
-      0xC7, 0x45, 0xFC, 0x00, 0x00, 0x00, 0x00, // C7 45 FC 00000000 - mov [ebp-04],00000000
-      0x8B, 0x8B, 0x84, 0x03, 0x00, 0x00        // 8B 8B 84030000    - mov ecx,[ebx+00000384]
   };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr =
@@ -6674,16 +6663,11 @@ bool InsertTokyoNecroHook() {
   }
 
   addr -= addr_offset;
-  
-  std::stringstream stream;
-  stream << std::hex << addr;
-  std::string debugOut = "vnreng: TokyoNecro. Hook address: " + stream.str();
-  ConsoleOutput(debugOut.c_str());
-  
-  enum { push_ebp = 0x55 }; // OPCode for function begin
+
+  constexpr BYTE push_ebp = 0x55; // OPCode for function begin
   if (*(BYTE *)addr != push_ebp) {
       // This should never happen
-      ConsoleOutput("vnreng:TokyoNecro: beginning of the function not found");
+      ConsoleOutput("vnreng:TokyoNecroText: beginning of the function not found");
       return false;
   }
   
@@ -6696,11 +6680,98 @@ bool InsertTokyoNecroHook() {
   // using the data in the registers
   hp.offset = 0x4;
   hp.type = USING_STRING;
-  NewHook(hp, "TokyoNecro");
+  NewHook(hp, "TokyoNecroText");
 
-  ConsoleOutput("vnreng: INSERT TokyoNecro");
+  ConsoleOutput("vnreng: INSERT TokyoNecroText");
   
   return true;
+}
+
+/**
+ * [Nitroplus] 東京Necro 1.01 - Database/Encyclopedia hook
+ *
+ * Hook code: HS4*@B5380:tokyonecro.exe
+ *
+ * TokyoNecro.exe+B5380 - 55                - push ebp                  ; Location to hook
+ * TokyoNecro.exe+B5381 - 8B EC             - mov ebp,esp
+ * TokyoNecro.exe+B5383 - 6A FF             - push -01
+ * TokyoNecro.exe+B5385 - 68 E8618E00       - push TokyoNecro.exe+1961E8
+ * TokyoNecro.exe+B538A - 64 A1 00000000    - mov eax,fs:[00000000]
+ * TokyoNecro.exe+B5390 - 50                - push eax
+ * TokyoNecro.exe+B5391 - 64 89 25 00000000 - mov fs:[00000000],esp
+ * TokyoNecro.exe+B5398 - 83 EC 1C          - sub esp,1C
+ * TokyoNecro.exe+B539B - 8B 55 08          - mov edx,[ebp+08]
+ * TokyoNecro.exe+B539E - 53                - push ebx
+ * TokyoNecro.exe+B539F - 56                - push esi
+ * TokyoNecro.exe+B53A0 - 8B C2             - mov eax,edx
+ * TokyoNecro.exe+B53A2 - 57                - push edi
+ * TokyoNecro.exe+B53A3 - 8B D9             - mov ebx,ecx
+ * TokyoNecro.exe+B53A5 - C7 45 EC 0F000000 - mov [ebp-14],0000000F
+ * TokyoNecro.exe+B53AC - C7 45 E8 00000000 - mov [ebp-18],00000000
+ * TokyoNecro.exe+B53B3 - C6 45 D8 00       - mov byte ptr [ebp-28],00
+ * TokyoNecro.exe+B53B7 - 8D 70 01          - lea esi,[eax+01]
+ * TokyoNecro.exe+B53BA - 8D 9B 00000000    - lea ebx,[ebx+00000000]
+ * TokyoNecro.exe+B53C0 - 8A 08             - mov cl,[eax]
+ * TokyoNecro.exe+B53C2 - 40                - inc eax
+ * TokyoNecro.exe+B53C3 - 84 C9             - test cl,cl
+ * TokyoNecro.exe+B53C5 - 75 F9             - jne TokyoNecro.exe+B53C0
+ * TokyoNecro.exe+B53C7 - 2B C6             - sub eax,esi
+ * TokyoNecro.exe+B53C9 - 52                - push edx
+ * TokyoNecro.exe+B53CA - 8B F8             - mov edi,eax               ▷ Search
+ * TokyoNecro.exe+B53CC - 8D 75 D8          - lea esi,[ebp-28]          |
+ * TokyoNecro.exe+B53CF - E8 0CE2F4FF       - call TokyoNecro.exe+35E0  ▷
+ *
+ *
+ */
+
+bool DatabaseHook()
+{
+  const BYTE bytecodes[] = {
+      0x8B, 0xF8,                               // 8B F8             - mov edi,eax
+      0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
+      0xE8, 0x0C, 0xE2, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr =
+      MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
+                        processStartAddress + range);
+
+  constexpr ULONG addr_offset = 0xB53CA - 0xB5380;  // Distance from memory TokyoNecro.exe+B546A to
+                                                    // TokyoNecro.exe+B5420
+
+  if (addr == 0ull) {
+    ConsoleOutput("vnreng:TokyoNecro: pattern not found");
+    return false;
+  }
+
+  addr -= addr_offset;
+  
+  constexpr BYTE push_ebp = 0x55; // OPCode for function begin
+  if (*(BYTE *)addr != push_ebp) {
+      // This should never happen
+      ConsoleOutput("vnreng:TokyoNecroDatabase: beginning of the function not found");
+      return false;
+  }
+  
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = 0x4;
+  hp.type = USING_STRING;
+  NewHook(hp, "TokyoNecroDatabase");
+
+  ConsoleOutput("vnreng: INSERT TokyoNecroDatabase");
+  
+  return true;
+}
+
+} // namespace TokyoNecro
+
+bool InsertTokyoNecroHook()
+{
+    bool result = TokyoNecro::TextHook();
+    result = TokyoNecro::DatabaseHook() || result;
+
+    return result;
 }
 
 // jichi 6/21/2015
