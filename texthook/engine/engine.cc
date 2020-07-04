@@ -6684,25 +6684,16 @@ bool TextHook() {
       MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
                         processStartAddress + range);
 
-  constexpr ULONG addr_offset = 0xB546A - 0xB5420;  // Distance from memory TokyoNecro.exe+B546A to
-                                                    // TokyoNecro.exe+B5420
-
   if (addr == 0ull) {
     ConsoleOutput("vnreng:TokyoNecro: pattern not found");
     return false;
   }
 
-  addr -= addr_offset;
-
-  constexpr BYTE push_ebp = 0x55; // OPCode for function begin
-  if (*(BYTE *)addr != push_ebp) {
-      // This should never happen
-      ConsoleOutput("vnreng:TokyoNecroText: beginning of the function not found");
-      return false;
-  }
+  // Look for the start of the function
+  const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
   
   HookParam hp = {};
-  hp.address = addr;
+  hp.address = function_start;
   // The memory address is held at [ebp+08] at TokyoNecro.exe+B543B, meaning that at
   // the start of the function it's right above the stack pointer. Since there's no
   // way to do an operation on the value of a register BEFORE dereferencing (e.g.
@@ -6766,25 +6757,16 @@ bool DatabaseHook()
       MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
                         processStartAddress + range);
 
-  constexpr ULONG addr_offset = 0xB53CA - 0xB5380;  // Distance from memory TokyoNecro.exe+B546A to
-                                                    // TokyoNecro.exe+B5420
-
   if (addr == 0ull) {
     ConsoleOutput("vnreng:TokyoNecro: pattern not found");
     return false;
   }
 
-  addr -= addr_offset;
-  
-  constexpr BYTE push_ebp = 0x55; // OPCode for function begin
-  if (*(BYTE *)addr != push_ebp) {
-      // This should never happen
-      ConsoleOutput("vnreng:TokyoNecroDatabase: beginning of the function not found");
-      return false;
-  }
+  // Look for the start of the function
+  const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
   
   HookParam hp = {};
-  hp.address = addr;
+  hp.address = function_start;
   hp.offset = 0x4;
   hp.type = USING_STRING;
   NewHook(hp, "TokyoNecroDatabase");
