@@ -163,7 +163,7 @@ void InsertRyokuchaHook();      // Ryokucha: _checksum.exe
 void InsertRealliveHook();      // RealLive: RealLive*.exe
 void InsertStuffScriptHook();   // Stuff: *.mpk
 bool InsertTinkerBellHook();    // TinkerBell: arc00.dat
-void InsertWaffleHook();        // WAFFLE: cg.pak
+bool InsertWaffleHook();        // WAFFLE: cg.pak
 
 // CIRCUS: avdata/
 bool InsertCircusHook1();

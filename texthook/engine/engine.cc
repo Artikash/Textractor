@@ -5984,8 +5984,9 @@ bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
  *  Sample game: 完全時間停止 体験版
  *  GDI text: TextOutA and GetTextExtentPoint32A
  */
-void InsertWaffleHook()
+bool InsertWaffleHook()
 {
+  bool found = false;
   for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 4; i++)
     if (*(DWORD *)i == 0xac68) {
       HookParam hp = {};
@@ -5997,10 +5998,39 @@ void InsertWaffleHook()
       hp.type = DATA_INDIRECT|USING_SPLIT;
       ConsoleOutput("vnreng: INSERT WAFFLE");
       NewHook(hp, "WAFFLE");
-      return;
+      found = true;
     }
+
+  /** new waffle? stolen from https://github.com/lgztx96
+*   test on 母三人とアナあそび https://vndb.org/v24214
+*   and 変態エルフ姉妹と真面目オーク https://vndb.org/v24215
+*   and いかにして俺の妻は孕んだか……  https://vndb.org/v26205
+*   and 俺の知らぬ間に彼女が… https://vndb.org/v27781
+*/
+  const BYTE bytes[] = {
+      0x50,                     //50         push eax
+      0x8b, 0xce,               //8BCE mov   ecx,esi
+      0xc6, 0x45, 0xfc, 0x01,   //C645 FC 01 move byte ptr ss:[ebp-4],1
+      0x89, 0x75, 0xd4,         //8975 D4    move dword ptr ss:[ebp-0x2c],esi
+      0xe8, XX4,                //E8 ??      call ??
+      0x8d, 0x45, 0xdc          //8D45 DC    lea eax,dword ptr ss:[ebp-0x24]
+  };
+  if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress))
+  {
+      HookParam hp = {};
+      hp.address = addr;
+      hp.offset = pusha_eax_off - 4;
+      hp.index = 0x00;
+      hp.split = 0x48;
+      hp.length_offset = 1;
+      hp.type = DATA_INDIRECT | USING_SPLIT;
+      ConsoleOutput("Textractor: INSERT WAFFLE2");
+      NewHook(hp, "WAFFLE2");
+      found = true;
+  }
   //ConsoleOutput("Probably Waffle. Wait for text.");
-  trigger_fun = InsertWaffleDynamicHook;
+  if (!found) trigger_fun = InsertWaffleDynamicHook;
+  return found;
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
 
@@ -9409,7 +9439,32 @@ static bool InsertNewWillPlusHook()
 		NewHook(hp, "WillPlus2");
 		found = true;
 	}
-	if (!found) ConsoleOutput("Textractor: WillPlus2: failed to find instructions");
+    /*
+    stolen from https://github.com/lgztx96
+    hook cmp esi,0x3000
+    Sample games:
+    https://vndb.org/r54549
+    https://vndb.org/v22705
+    https://vndb.org/v24852
+    https://vndb.org/v25719
+    https://vndb.org/v27227
+    https://vndb.org/v27385
+    */
+    const BYTE pattern[] =
+    {
+        0x81,0xfe,0x00,0x30,0x00,0x00   //81FE 00300000  cmp esi,0x3000
+    };
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.type = USING_UNICODE;
+        hp.offset = pusha_esi_off - 4;
+        hp.length_offset = 1;
+        NewHook(hp, "WillPlus3");
+        found = true;
+    }
+	if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
 	return found;
 }
 
