@@ -28,8 +28,8 @@ QStringList languages
 bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true;
 int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
-const wchar_t* accept[] = { L"*/*", nullptr };
-Synchronized<std::wstring> LMTBID;
+enum KeyType { CAT, REST };
+int keyType = CAT;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
@@ -38,10 +38,17 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			L"Mozilla/5.0 Textractor",
 			L"api.deepl.com",
 			L"POST",
-			L"/v2/translate",
+			keyType == CAT ? L"/v1/translate" : L"/v2/translate",
 			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), apiKey.Copy(), translateTo.Copy()),
 			L"Content-Type: application/x-www-form-urlencoded"
-		})
+		}; httpRequest && (!httpRequest.response.empty() || (httpRequest = HttpRequest{
+			L"Mozilla/5.0 Textractor",
+			L"api.deepl.com",
+			L"POST",
+			(keyType = !keyType) == CAT ? L"/v1/translate" : L"/v2/translate",
+			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), apiKey.Copy(), translateTo.Copy()),
+			L"Content-Type: application/x-www-form-urlencoded"
+		})))
 			// Response formatted as JSON: translation starts with text":" and ends with "}]
 			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\"\\}\\]"))) return { true, results[1] };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
@@ -75,7 +82,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 }
 	)", ++id, r + (n - r % n), translateTo.Copy(), JSON::Escape(text));
 	// missing accept-encoding header since it fucks up HttpRequest
-	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers" + LMTBID.Acquire().contents;
+	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers";
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www2.deepl.com",
@@ -84,14 +91,10 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		body,
 		headers.c_str(),
 		L"https://www.deepl.com/translator",
-		WINHTTP_FLAG_SECURE,
-		NULL,
-		accept
+		WINHTTP_FLAG_SECURE
 	})
-	{
 		// Response formatted as JSON: translation starts with preprocessed_sentence":" and ends with ","
 		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"postprocessed_sentence\":\"(.+?)\",\""))) return { true, results[1] };
 		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
-	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
