@@ -1,4 +1,4 @@
-#ifdef _WIN64
+﻿#ifdef _WIN64
 #define ARCH "x64"
 #else
 #define ARCH "x86"
