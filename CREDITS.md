@@ -6,10 +6,11 @@ If you're on this list and want your link changed let me know.
   - [Niakr1s](https://github.com/Niakr1s)
   - [tinyAdapter](https://github.com/tinyAdapter)
   - [lgztx96](https://github.com/lgztx96)
+  - with a special thanks to everyone reporting issues :)
 - French translation by Racky
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by niisokusu
-- Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter)
+- Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter) and [lgztx96](https://github.com/lgztx96)
 - Russian translation by [TokcDK](https://github.com/TokcDK)
 - Indonesian translation by [Hawxone](https://github.com/Hawxone)
 - Portuguese translation by [TsumiHokiro](https://github.com/TsumiHokiro)
@@ -23,7 +24,3 @@ If you're on this list and want your link changed let me know.
 - ITH originally made by [kaosu](http://www.hongfire.com/forum/member/562651-kaosu)
 - Locale Emulator library made by [xupefei](https://github.com/xupefei)
 - MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
-
-## Special Thanks
-
-- Everybody adding issues!
