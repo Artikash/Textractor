@@ -1,4 +1,4 @@
-﻿#ifdef _WIN64
+#ifdef _WIN64
 #define ARCH "x64"
 #else
 #define ARCH "x86"
@@ -725,6 +725,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	NATIVE_LANGUAGE = "Italian";
 	ATTACH = u8"Collega al gioco";
 	LAUNCH = u8"Avvia gioco";
+	GAME_CONFIG = u8"Configura gioco";
 	DETACH = u8"Scollega dal gioco";
 	FORGET = u8"Dimentica gioco";
 	ADD_HOOK = u8"Aggiungi gancio";
@@ -739,6 +740,25 @@ Puoi anche digitare l'ID del processo)";
 	SELECT_PROCESS_INFO = u8"Se digiti manualmente il nome file del processo, si prega di utilizzare il percorso assoluto";
 	FROM_COMPUTER = u8"Seleziona dal computer";
 	PROCESSES = u8"Processi (*.exe)";
+	CODE_INFODUMP = u8R"(Digita il codice di lettura
+R{S|Q|V|M}[null_length<][codepage#]@addr
+OR
+Digita il codice gancio
+H{A|B|W|H|S|Q|V|M}[F][null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
+Tutti i numeri eccetto codepage/null_lengt nell'esadecimale
+Codepage di base è 932 (Shift-JIS) ma può essere cambiato nelle impostazioni
+A/B: carattere del codepage little/big endian
+W: carattere UTF-16
+H: Due byte esadecimali
+S/Q/V/M: stringa codepage/UTF-16/UTF-8/hex 
+F: tratta le stringhe come linee di testo complete
+N: non usa il contesto
+null_lengt: lunghezza del terminatore null utilizzato per la stringa
+padding: lunghezza del data padding prima della stringa (C struct { int64_t size; char string[500]; } needs padding = 8)
+Negativi per data_offset/split_offset consulta i registri
+-4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
+-C for RAX, -14 for RBX, -1C for RCX, -24 for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
+* significa puntatore di deferenziazione+deref_offset)";
 	SAVE_SETTINGS = u8"Salva impostazioni";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Per aggiugnere un estenzione, clicca con il tasto destro la lista estenzioni
 Alternativamente, trascina e rilascia il file estenzione dal tuo computer
@@ -750,6 +770,7 @@ Per rimuovere un estenzione, selezionala e premi rimuovi)";
 	CONFIRM_EXTENSION_OVERWRITE = u8"Un'altra versione di questa estenzione esiste già, desidera cancellarla e sovvrascriverla?";
 	EXTENSION_WRITE_ERROR = u8"Impossibile salvare l'estenzione";
 	USE_JP_LOCALE = u8"Emulare l'impostazione locale giapponese?";
+	FAILED_TO_CREATE_CONFIG_FILE = u8"Impossibile creare il file di configurazione \"%1\"";
 	HOOK_SEARCH_UNSTABLE_WARNING = u8"Cercare i ganci è instabile! Preparati a un crash del tuo gioco!";
 	SEARCH_CJK = u8"Cerca per Cinese/Giapponese/Coreano";
 	SEARCH_PATTERN = u8"Cerca schema (matrice byte in esa)";
@@ -776,6 +797,7 @@ Per rimuovere un estenzione, selezionala e premi rimuovi)";
 	FLUSH_DELAY = u8"Ritardo flush";
 	MAX_BUFFER_SIZE = u8"Massima dimensione buffer";
 	MAX_HISTORY_SIZE = u8"Massima dimensione cronologia";
+	CONFIG_JP_LOCALE = u8"Avvia con il JP locale";
 	CONSOLE = L"Console";
 	CLIPBOARD = L"Appunti";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( creato da me: Artikash (email: akashmozumdar@gmail.com)
@@ -804,6 +826,7 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	STARTING_SEARCH = u8"Textractor: avvia la ricerca";
 	NOT_ENOUGH_TEXT = u8"Textractor: testo insufficente per la ricerca accurata";
 	HOOK_SEARCH_INITIALIZED = u8"Textractor: ricerca inizializzata con %zd ganci";
+	MAKE_GAME_PROCESS_TEXT = u8"Textractor: clicca intorno al gioco per forzarlo nel testo del processo durante i prossimi %d secondi";
 	HOOK_SEARCH_FINISHED = u8"ricerca ganci conclusa, %d risultati trovati";
 	OUT_OF_RECORDS_RETRY = u8"registri di ricerca esauriti, riprova se i risultati sono scarsi (conto registri di base aumentato)";
 	FUNC_MISSING = u8"Textractor: funzione non presente";
@@ -811,18 +834,46 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	GARBAGE_MEMORY = u8"Textractor: memoria è in costante cambiamento, inutila la lettura";
 	SEND_ERROR = u8"Textractor: Send ERROR (probabilmente un H-code incorretto)";
 	READ_ERROR = u8"Textractor: Reader ERROR (probabilmente un R-code incorretto)";
-	HIJACK_ERROR = u8"Textractor: Hijack ERROR";
+	HIJACK_ERROR = u8"Textractor: ERRORE di Hijack";
 	COULD_NOT_FIND = u8"Textractor: impossibile trovare il testo";
-	TOO_MANY_TRANS_REQUESTS = L"Troppe richieste di traduzione: rifiuta per farne altre";
+	TRANSLATE_TO = u8"Traduci a";
+	TRANSLATE_SELECTED_THREAD_ONLY = u8"Traduci solo il thread del testo selezionato";
+	RATE_LIMIT_ALL_THREADS = u8"Rate limit tutti i thread del testo";
+	RATE_LIMIT_SELECTED_THREAD = u8"Rate limit thread del testo selezionato";
+	USE_TRANS_CACHE = u8"Utilizza la cache di traduzione";
+	RATE_LIMIT_TOKEN_COUNT = u8"Numero di token del Rate Limit";
+	RATE_LIMIT_TOKEN_RESTORE_DELAY = u8"Token del rate limit ripristina il ritardo (ms)";
+	TOO_MANY_TRANS_REQUESTS = L"Rate limit superato: rifiuta per fare altre richieste di traduzione";
 	TRANSLATION_ERROR = L"Errore durante la traduzione";
+	USE_PREV_SENTENCE_CONTEXT = u8"Utilizza la precedente sentenza come contesto";
+	API_KEY = u8"Chiave API";
 	EXTRA_WINDOW_INFO = u8R"(Tasto destro per cambiare le impostazioni
 Clicca e trascina i bordi della finestra per muoverla, oppure nell'angolo in basso a destra per ridimensionare)";
+	SENTENCE_TOO_BIG = u8"Sentenza troppo grande da visualizzare";
+	MAX_SENTENCE_SIZE = u8"Dimensione massima sentenza";
 	TOPMOST = u8"Sempre in primo piano";
 	DICTIONARY = u8"Dizionario";
+	DICTIONARY_INSTRUCTIONS = u8R"(Questo file è utilizzato solo per la funzione "Dizionario" dell'estenzione Extra Window.
+Utilizza un formato personalizzato spedifico per Textractor e non è pensato per essere critto manualmente.
+Dovresti cercare per un dizionario in questo formato online (https://github.com/Artikash/Textractor-Dictionaries/releases è un buon posto per cominciare).
+In alternativa, se sei un progammatore, puoi scrivere uno script per convertire un dizionario da un'altro formato con le informazioni sottostanti.
+Una volta che hai il dizionario, cerca qualche testo in Extra Window, posizionaci sopra. Puoi scorrere fra tutte le definizioni corrispondenti.
+Le definizioni sono formattate cosi: |TERM|Hola<<ignored|TERM|hola|TERM|Bonjour|TERM|bonjour|DEFINITION|hello|END|
+
+Il termine e la definizione può includere rich text (https://doc.qt.io/qt-5/richtext-html-subset.html) che sarà formattato a dovere.
+Le inflessioni sono formattate cosi: |ROOT|1<<noun|INFLECTS TO|(\w*)s|NAME| plural|END|
+Textractor controllerà se un termine corrisponde il regex dell'inflessione e se cosi fosse, cercherà ricorsivamente per la radice.
+La radice è generata rimpiazziando ogni numero con il regex del gruppo di cattura corrispondente (con 0 sostituito dall'intera corrispondenza).
+Questo processo può risultare facilmente in cicli infiniti e/o in stack overflow. È il tuo compito impedirlo.
+Il regex dell'inflessione utilizza la sintassi unicode QRegularExpression (https://doc.qt.io/qt-5/qregularexpression.html).
+Textractor visualizzerà la radice finale cosi come tutte le inflessioni utilizzate per ottenere quella radice.
+Tuttavia, il testo in un termine dopo << è ignorato quando è visualizzato. Questo è pensato per conservare l'informazione sulle parti del discorso.
+Questo file deve essere codificato in UTF-8.)";
 	SHOW_ORIGINAL = u8"Testo originale";
 	SHOW_ORIGINAL_INFO = u8R"(Testo originale non sarà mostrato
 Funziona solo se questa estenzione è usata direttamente dopo un'estensione di traduzione)";
-	SIZE_LOCK = u8"Size lock";
+	SIZE_LOCK = u8"Lock delle dimensione";
+	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
 	TEXT_OUTLINE = u8"Contorno del testo";
@@ -861,7 +912,7 @@ I comandi di rimpiazzo devono essere formattati cosi:
 Tutto il testo in questo file all'infuori di un comando di rimpiazzo è ignorato.
 La spaziatura nel testo_originale è ignorato, ma testo_sostituito può contenere spaziature, ritorni a capo, ecc.
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).)";
-	THREAD_LINKER = u8"Thread Linker";
+	THREAD_LINKER = u8"Collegatore di thread";
 	LINK = u8"Collegamento";
 	THREAD_LINK_FROM = u8"Numero di thread da cui collegarsi";
 	THREAD_LINK_TO = u8"Numero di thread a cui collegarsi";
