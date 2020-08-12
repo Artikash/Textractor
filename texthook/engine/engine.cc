@@ -6642,6 +6642,8 @@ bool InsertNitroplusHook()
 
 namespace TokyoNecro {
 
+const BYTE funcSig[] = { 0x55, 0x8b, 0xec };
+
 bool TextHook() {
 
   const BYTE bytecodes[] = {
@@ -6649,18 +6651,18 @@ bool TextHook() {
       0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
       0xE8, 0x6C, 0xE1, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
   };
-  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr =
-      MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
-                        processStartAddress + range);
-
-  if (addr == 0ull) {
-    ConsoleOutput("vnreng:TokyoNecro: pattern not found");
+  ULONG addr = MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress, processStopAddress);
+  if (addr == 0) {
+    ConsoleOutput("Textractor:TokyoNecro: pattern not found");
     return false;
   }
 
   // Look for the start of the function
   const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
+  if (memcmp((void*)function_start, funcSig, sizeof(funcSig)) != 0) {
+      ConsoleOutput("Textractor: TokyoNecro: function start not found");
+      return false;
+  }
   
   HookParam hp = {};
   hp.address = function_start;
@@ -6671,10 +6673,8 @@ bool TextHook() {
   // using the data in the registers
   hp.offset = 0x4;
   hp.type = USING_STRING;
+  ConsoleOutput("Textractor: INSERT TokyoNecroText");
   NewHook(hp, "TokyoNecroText");
-
-  ConsoleOutput("vnreng: INSERT TokyoNecroText");
-  
   return true;
 }
 
@@ -6722,27 +6722,25 @@ bool DatabaseHook()
       0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
       0xE8, 0x0C, 0xE2, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
   };
-  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
-  ULONG addr =
-      MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress,
-                        processStartAddress + range);
-
-  if (addr == 0ull) {
+  ULONG addr = MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress, processStopAddress);
+  if (addr == 0) {
     ConsoleOutput("vnreng:TokyoNecro: pattern not found");
     return false;
   }
 
   // Look for the start of the function
   const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
+  if (memcmp((void*)function_start, funcSig, sizeof(funcSig)) != 0) {
+    ConsoleOutput("Textractor: TokyoNecro: function start not found");
+    return false;
+  }
   
   HookParam hp = {};
   hp.address = function_start;
   hp.offset = 0x4;
   hp.type = USING_STRING;
   NewHook(hp, "TokyoNecroDatabase");
-
   ConsoleOutput("vnreng: INSERT TokyoNecroDatabase");
-  
   return true;
 }
 
@@ -6750,10 +6748,8 @@ bool DatabaseHook()
 
 bool InsertTokyoNecroHook()
 {
-    bool result = TokyoNecro::TextHook();
-    result = TokyoNecro::DatabaseHook() || result;
-
-    return result;
+    TokyoNecro::DatabaseHook();
+    return TokyoNecro::TextHook();
 }
 
 // jichi 6/21/2015
