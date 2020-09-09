@@ -25,13 +25,9 @@ class TextHook
 {
 public:
 	HookParam hp;
-	union
-	{
-		uint64_t address;
-		void* location;
-	}; // Absolute address
+	uint64_t address; // Absolute address
 
-	bool Insert(HookParam hp, DWORD set_flag);
+	bool Insert(HookParam hp, uint64_t address, void* realAddress, DWORD set_flag);
 	void Clear();
 
 private:
@@ -45,6 +41,7 @@ private:
 	void RemoveReadCode();
 
 	volatile DWORD useCount;
+	void* location;
 	HANDLE readerThread, readerEvent;
 	bool err;
 	BYTE trampoline[x64 ? 140 : 40];

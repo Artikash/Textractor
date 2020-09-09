@@ -13,6 +13,8 @@
 extern const char* PIPE_CONNECTED;
 extern const char* INSERTING_HOOK;
 extern const char* REMOVING_HOOK;
+extern const char* FUNC_MISSING;
+extern const char* MODULE_MISSING;
 extern const char* HOOK_FAILED;
 extern const char* TOO_MANY_HOOKS;
 
@@ -132,6 +134,16 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 
 		MH_Initialize();
 
+		if (HMODULE addressVirtualizer = GetModuleHandleW(L"hooker.dll"))
+		{
+			static auto virtualizeAddress = GetProcAddress(addressVirtualizer, "virtualize_address"), devirtualizeAddress = GetProcAddress(addressVirtualizer, "devirtualize_address");
+			if (virtualizeAddress && devirtualizeAddress)
+			{
+				::virtualizeAddress = [](uint32_t virtualAddress) { return std::unique_ptr<void*[], Functor<UniversalFree>>(((void** (*)(uint32_t))virtualizeAddress)(virtualAddress)); };
+				::devirtualizeAddress = (uint32_t(*)(void*))devirtualizeAddress;
+			}
+		}
+
 		CloseHandle(CreateThread(nullptr, 0, Pipe, nullptr, 0, nullptr)); // Using std::thread here = deadlock
 	} 
 	break;
@@ -145,17 +157,34 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID)
 	return TRUE;
 }
 
-void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
+void NewHookImpl(HookParam hp, uint64_t address, void* realAddress, LPCSTR lpname, DWORD flag)
 {
 	if (++currentHook >= MAX_HOOK) return ConsoleOutput(TOO_MANY_HOOKS);
 	if (lpname && *lpname) strncpy_s(hp.name, lpname, HOOK_NAME_SIZE - 1);
 	ConsoleOutput(INSERTING_HOOK, hp.name);
 	RemoveHook(hp.address, 0);
-	if (!(*hooks)[currentHook].Insert(hp, flag))
+	if (!(*hooks)[currentHook].Insert(hp, address, realAddress, flag))
 	{
 		ConsoleOutput(HOOK_FAILED);
 		(*hooks)[currentHook].Clear();
 	}
+}
+
+void NewHook(HookParam hp, LPCSTR lpname, DWORD flag)
+{
+	auto address = hp.address;
+	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
+		if (hp.type & FUNCTION_OFFSET)
+			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) address += (uint64_t)function;
+			else return ConsoleOutput(FUNC_MISSING);
+		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) address += (uint64_t)moduleBase;
+		else return ConsoleOutput(MODULE_MISSING);
+	if (auto realAddresses = virtualizeAddress && address < UINT32_MAX ? virtualizeAddress(address) : nullptr)
+	{
+		hp.type |= VIRTUALIZED;
+		for (int i = 0; realAddresses[i]; ++i) NewHookImpl(hp, address, realAddresses[i], lpname, flag);
+	}
+	else NewHookImpl(hp, address, (void*)address, lpname, flag);
 }
 
 void RemoveHook(uint64_t addr, int maxOffset)

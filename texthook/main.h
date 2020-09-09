@@ -15,6 +15,10 @@ void RemoveHook(uint64_t addr, int maxOffset = 9);
 
 inline SearchParam spDefault;
 
+inline void UniversalFree(LPVOID address) { HeapFree(GetProcessHeap(), 0, address); }
+inline std::unique_ptr<void*[], Functor<UniversalFree>>(*virtualizeAddress)(uint32_t virtualAddress) = nullptr;
+inline uint32_t(*devirtualizeAddress)(void* realAddress) = nullptr;
+
 extern "C" // minhook library
 {
 	enum MH_STATUS

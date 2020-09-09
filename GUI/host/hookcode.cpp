@@ -88,7 +88,7 @@ namespace
 		}
 		HCode.erase(0, 1);
 
-		if ((hp.type & USING_STRING))
+		if (hp.type & USING_STRING)
 		{
 			if (HCode[0] == L'F')
 			{
@@ -247,7 +247,7 @@ namespace
 		if (hp.type & SPLIT_INDIRECT) HCode += L'*' + HexString(hp.split_index);
 
 		// Attempt to make the address relative
-		if (processId && !(hp.type & MODULE_OFFSET))
+		if (processId && !(hp.type & (MODULE_OFFSET | VIRTUALIZED)))
 			if (AutoHandle<> process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, processId))
 				if (MEMORY_BASIC_INFORMATION info = {}; VirtualQueryEx(process, (LPCVOID)hp.address, &info, sizeof(info)))
 					if (auto moduleName = GetModuleFilename(processId, (HMODULE)info.AllocationBase))

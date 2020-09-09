@@ -7,8 +7,6 @@
 #include "main.h"
 #include "ithsys/ithsys.h"
 
-extern const char* FUNC_MISSING;
-extern const char* MODULE_MISSING;
 extern const char* GARBAGE_MEMORY;
 extern const char* SEND_ERROR;
 extern const char* READ_ERROR;
@@ -98,14 +96,15 @@ namespace { // unnamed
 
 // - TextHook methods -
 
-bool TextHook::Insert(HookParam hp, DWORD set_flag)
+bool TextHook::Insert(HookParam hp, uint64_t address, void* realAddress, DWORD set_flag)
 {
 	{
 		std::scoped_lock lock(viewMutex);
 		hp.type |= set_flag;
 		if (hp.type & USING_UTF8) hp.codepage = CP_UTF8;
 		this->hp = hp;
-		address = hp.address;
+		this->address = address;
+		this->location = realAddress;
 	}
 	if (hp.type & DIRECT_READ) return InsertReadCode();
 	return InsertHookCode();
@@ -209,13 +208,6 @@ bool TextHook::InsertHookCode()
 {
 	// jichi 9/17/2013: might raise 0xC0000005 AccessViolationException on win7
 	// Artikash 10/30/2018: No, I think that's impossible now that I moved to minhook
-	if (hp.type & MODULE_OFFSET)  // Map hook offset to real address
-		if (hp.type & FUNCTION_OFFSET)
-			if (FARPROC function = GetProcAddress(GetModuleHandleW(hp.module), hp.function)) address += (uint64_t)function;
-			else return ConsoleOutput(FUNC_MISSING), false;
-		else if (HMODULE moduleBase = GetModuleHandleW(hp.module)) address += (uint64_t)moduleBase;
-		else return ConsoleOutput(MODULE_MISSING), false;
-
 	VirtualProtect(location, 10, PAGE_EXECUTE_READWRITE, DUMMY);
 	void* original;
 	MH_STATUS error;

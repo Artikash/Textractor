@@ -241,7 +241,8 @@ void SearchForHooks(SearchParam spUser)
 			HookParam hp = {};
 			hp.offset = records[i].offset;
 			hp.type = USING_UNICODE | USING_STRING;
-			hp.address = records[i].address;
+			if (devirtualizeAddress && (hp.address = devirtualizeAddress((void*)records[i].address))) hp.type |= VIRTUALIZED;
+			else hp.address = records[i].address;
 			hp.padding = records[i].padding;
 			hp.codepage = sp.codepage;
 			if (sp.hookPostProcessor) sp.hookPostProcessor(hp);
