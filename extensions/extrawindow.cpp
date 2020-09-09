@@ -444,8 +444,8 @@ private:
 			{
 				QStringList currentInflectionsUsed = inflectionsUsed;
 				currentInflectionsUsed.push_front(inflection.name);
-				QString root = inflection.root;
-				for (int i = 0; i < root.size(); ++i) if (root[i].isDigit()) root.replace(i, 1, match.captured(root[i].digitValue()));
+				QString root;
+				for (const auto& ch : inflection.root) root += ch.isDigit() ? match.captured(ch.digitValue()) : ch;
 				for (const auto& definition : LookupDefinitions(root, foundDefinitions, currentInflectionsUsed)) results.push_back(definition);
 			}
 			return results;
