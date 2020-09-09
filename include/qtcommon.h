@@ -31,4 +31,4 @@ inline QString S(const std::string& s) { return QString::fromStdString(s); }
 inline QString S(const std::wstring& s) { return QString::fromStdWString(s); }
 // TODO: allow paired surrogates
 inline void sanitize(QString& s) { s.chop(std::distance(std::remove_if(s.begin(), s.end(), [](QChar ch) { return ch.isSurrogate(); }), s.end())); }
-inline QString sanitize(QString&& s) { sanitize(s); return s; }
+inline QString sanitize(QString&& s) { sanitize(s); return std::move(s); }

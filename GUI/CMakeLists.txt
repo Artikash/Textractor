@@ -5,7 +5,7 @@ find_qt5(Core Widgets)
 add_executable(Textractor WIN32 
 	main.cpp
 	mainwindow.cpp
-    extenwindow.cpp
+	extenwindow.cpp
 	host/exception.cpp
 	host/host.cpp
 	host/textthread.cpp

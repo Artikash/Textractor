@@ -88,7 +88,7 @@ namespace
 		}
 		HCode.erase(0, 1);
 
-		if ((hp.type & USING_STRING))
+		if (hp.type & USING_STRING)
 		{
 			if (HCode[0] == L'F')
 			{

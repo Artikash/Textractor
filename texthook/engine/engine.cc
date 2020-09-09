@@ -10095,7 +10095,7 @@ BYTE JIS_tableL[0x80] = {
   0x98,0x99,0x9a,0x9b,0x9c,0x9d,0x9e,0x00,
 };
 
-void SpecialHookAnex86(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
+void SpecialHookAnex86(DWORD esp_base, HookParam*, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
   __asm
   {
@@ -10134,19 +10134,28 @@ _fin:
 } // unnamed namespace
 bool InsertAnex86Hook()
 {
-  const DWORD dwords[] = {0x618ac033,0x0d418a0c}; // jichi 12/25/2013: Remove static keyword
-  for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 8; i++)
-    if (*(DWORD *)i == dwords[0])
-      if (*(DWORD *)(i + 4) == dwords[1]) {
+    const BYTE bytes[] = {
+        0x8a, XX, 0x0c, // mov ??,[ecx+0C]
+        0x8a, XX, 0x0d  // mov ??,[ecx+0D]
+    };
+    bool found = false;
+    for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStopAddress)) {
+  //const DWORD dwords[] = {0x618ac033,0x0d418a0c}; // jichi 12/25/2013: Remove static keyword
+  //for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 8; i++)
+    //if (*(DWORD *)i == dwords[0])
+      //if (*(DWORD *)(i + 4) == dwords[1]) {
         HookParam hp = {};
-        hp.address = i;
+        if (*(BYTE*)(addr - 2) == 0x33 || *(BYTE*)(addr - 2) == 0x31) addr = addr - 2;
+        hp.address = addr;
+        hp.offset = pusha_ecx_off - 4;
         hp.text_fun = SpecialHookAnex86;
         //hp.type = EXTERN_HOOK;
         hp.length_offset = 1;
         ConsoleOutput("vnreng: INSERT Anex86");
         NewHook(hp, "Anex86");
-        return true;
+        found = true;
       }
+    if (found) return true;
   ConsoleOutput("vnreng:Anex86: failed");
   return false;
 }
