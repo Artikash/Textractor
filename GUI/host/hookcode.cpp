@@ -125,36 +125,44 @@ namespace
 			HCode.erase(0, match[0].length());
 		}
 
+		auto ConsumeHexInt = [&HCode]
+		{
+			size_t size = 0;
+			int value = 0;
+			try { value = std::stoi(HCode, &size, 16); }
+			catch (std::invalid_argument) {}
+			HCode.erase(0, size);
+			return value;
+		};
+
 		// data_offset
-		if (!std::regex_search(HCode, match, std::wregex(L"^-?[[:xdigit:]]+"))) return {};
-		hp.offset = std::stoi(match[0], nullptr, 16);
-		HCode.erase(0, match[0].length());
+		hp.offset = ConsumeHexInt();
 
 		// [*deref_offset1]
-		if (std::regex_search(HCode, match, std::wregex(L"^\\*(-?[[:xdigit:]]+)")))
+		if (HCode[0] == L'*')
 		{
 			hp.type |= DATA_INDIRECT;
-			hp.index = std::stoi(match[1], nullptr, 16);
-			HCode.erase(0, match[0].length());
+			HCode.erase(0, 1);
+			hp.index = ConsumeHexInt();
 		}
 
 		// [:split_offset[*deref_offset2]]
-		if (std::regex_search(HCode, match, std::wregex(L"^:(-?[[:xdigit:]]+)")))
+		if (HCode[0] == L':')
 		{
 			hp.type |= USING_SPLIT;
-			hp.split = std::stoi(match[1], nullptr, 16);
-			HCode.erase(0, match[0].length());
+			HCode.erase(0, 1);
+			hp.split = ConsumeHexInt();
 
-			if (std::regex_search(HCode, match, std::wregex(L"^\\*(-?[[:xdigit:]]+)")))
+			if (HCode[0] == L'*')
 			{
 				hp.type |= SPLIT_INDIRECT;
-				hp.split_index = std::stoi(match[1], nullptr, 16);
-				HCode.erase(0, match[0].length());
+				HCode.erase(0, 1);
+				hp.split_index = ConsumeHexInt();
 			}
 		}
 
 		// @addr[:module[:func]]
-		if (!std::regex_match(HCode, match, std::wregex(L"@([[:xdigit:]]+)(:.+?)?(:.+)?"))) return {};
+		if (!std::regex_match(HCode, match, std::wregex(L"^@([[:xdigit:]]+)(:.+?)?(:.+)?"))) return {};
 		hp.address = std::stoull(match[1], nullptr, 16);
 		if (match[2].matched)
 		{
@@ -287,7 +295,7 @@ namespace HookCode
 		assert(Parse(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
 		assert(Parse(L"HB4@0")),
 		assert(Parse(L"/RS65001#@44")),
-		assert(!Parse(L"HQ@4")),
+		assert(Parse(L"HQ@4")),
 		assert(!Parse(L"/RW@44")),
 		assert(!Parse(L"/HWG@33"))
 	);
