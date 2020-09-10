@@ -35,24 +35,29 @@ foreach ($language in @{
 		foreach ($file in @(
 			"Textractor.exe",
 			"TextractorCLI.exe",
-			"texthook.dll",
-			"Bing Translate.dll",
-			"Copy to Clipboard.dll",
-			"DeepL Translate.dll",
-			"Extra Newlines.dll",
-			"Extra Window.dll",
-			"Google Translate.dll",
-			"Lua.dll",
-			"Regex Filter.dll",
-			"Remove Repeated Characters.dll",
-			"Remove Repeated Phrases.dll",
-			"Remove Repeated Phrases 2.dll",
-			"Remove 30 Repeated Sentences.dll",
-			"Replacer.dll",
-			"Thread Linker.dll"
+			"texthook.dll"
 		))
 		{
 			copy -Force -Recurse -Verbose -Destination "$folder/$arch" -Path "Release_$arch/$file";
+		}
+		foreach ($extension in @(
+			"Bing Translate",
+			"Copy to Clipboard",
+			"DeepL Translate",
+			"Extra Newlines",
+			"Extra Window",
+			"Google Translate",
+			"Lua",
+			"Regex Filter",
+			"Remove Repeated Characters",
+			"Remove Repeated Phrases",
+			"Remove Repeated Phrases 2",
+			"Remove 30 Repeated Sentences",
+			"Replacer",
+			"Thread Linker"
+		))
+		{
+			copy -Force -Recurse -Verbose -Destination "$folder/$arch/$extension.xdll" -Path "Release_$arch/$extension.dll";
 		}
 	}
 }
