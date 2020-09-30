@@ -1158,26 +1158,26 @@ original_text의 빈공간은 무시되지만, replacement_text는 공백과 엔
 	ATTACH_INFO = u8R"(Si vous ne voyez pas le processus que vous souhaitez joindre, essayez de l'exécuter avec les droits d'administrateur
 Vous pouvez également saisir l'ID de processus)";
 	SELECT_PROCESS_INFO = u8"Si vous saisissez manuellement le nom du fichier de processus, veuillez utiliser le chemin exact";
-	FROM_COMPUTER = u8"Selectionner depuis l'ordinateur";
+	FROM_COMPUTER = u8"Sélectionner depuis l'ordinateur";
 	PROCESSES = u8"Processus (*.exe)";
-	CODE_INFODUMP = u8R"(Enter read code
+	CODE_INFODUMP = u8R"(Entrez le read code
 R{S|Q|V|M}[null_length<][codepage#]@addr
-OR
-Enter hook code
+OU
+Entrez le hook code
 H{A|B|W|H|S|Q|V|M}[F][null_length<][N][codepage#][padding+]data_offset[*deref_offset][:split_offset[*deref_offset]]@addr[:module[:func]]
-All numbers except codepage/null_length in hexadecimal
-Default codepage is 932 (Shift-JIS) but this can be changed in settings
+Tous les nombres sauf codepage/null_length sont en hexadécimal
+Le codepage par défaut est 932 (Shift-JIS) mais cela peut être modifié dans les paramètres
 A/B: codepage char little/big endian
 W: UTF-16 char
 H: Two hex bytes
 S/Q/V/M: codepage/UTF-16/UTF-8/hex string
 F: treat strings as full lines of text
-N: don't use context
+N: n'utilise pas de contexte
 null_length: length of null terminator used for string
 padding: length of padding data before string (C struct { int64_t size; char string[500]; } needs padding = 8)
-Negatives for data_offset/split_offset refer to registers
--4 for EAX, -8 for ECX, -C for EDX, -10 for EBX, -14 for ESP, -18 for EBP, -1C for ESI, -20 for EDI
--C for RAX, -14 for RBX, -1C for RCX, -24 for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
+Les valeures négatives pour data_offset/split_offset font références aux registres 
+-4 pour EAX, -8 pour ECX, -C pour EDX, -10 pour EBX, -14 pour ESP, -18 pour EBP, -1C pour ESI, -20 pour EDI
+-C pour RAX, -14 pour RBX, -1C pour RCX, -24 pour RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
 	SAVE_SETTINGS = u8"Sauvergarder les paramètres";
 	EXTEN_WINDOW_INSTRUCTIONS = u8R"(Pour ajouter une extension, cliquez avec le bouton droit sur la liste des extensions
@@ -1192,26 +1192,26 @@ Pour supprimer une extension, sélectionnez-la et appuyez sur supprimer)";
 	USE_JP_LOCALE = u8"Émuler les paramètres régionaux japonais?";
 	FAILED_TO_CREATE_CONFIG_FILE = u8"Impossible de créer le fichier de configuration \"%1\"";
 	HOOK_SEARCH_UNSTABLE_WARNING = u8"La recherche de crochets est instable! Soyez prêt à ce que votre jeu plante!";
-	SEARCH_CJK = u8"Recher pour Chinois/Japonais/Coréen";
+	SEARCH_CJK = u8"Rechercher pour Chinois/Japonais/Coréen";
 	SEARCH_PATTERN = u8"Modèle de recherche (tableau d'octets hexadécimaux)";
-	SEARCH_DURATION = u8"Durée de la recherche(ms)";
+	SEARCH_DURATION = u8"Durée de la recherche (ms)";
 	SEARCH_MODULE = u8"Recherche sans module";
 	PATTERN_OFFSET = u8"Décalage par rapport au début du modèle";
 	MAX_HOOK_SEARCH_RECORDS = u8"Limite du résultat de la recherche";
 	MIN_ADDRESS = u8"Minimum d'adresses (hex)";
 	MAX_ADDRESS = u8"Maximum d'adresses (hex)";
 	STRING_OFFSET = u8"Décalage de la chaîne (hex)";
-	HOOK_SEARCH_FILTER = u8"Results must match this regex";
+	HOOK_SEARCH_FILTER = u8"Les résultats doivent correspondre à ce regex";
 	TEXT = u8"Texte";
 	CODEPAGE = u8"Code de page";
 	SEARCH_FOR_TEXT = u8"Rechercher un texte spécifique";
 	START_HOOK_SEARCH = u8"Lancer la recherche de hook";
 	SAVE_SEARCH_RESULTS = u8"Sauvergarder les résultats de la recherche";
 	TEXT_FILES = u8"Texte (*.txt)";
-	DOUBLE_CLICK_TO_REMOVE_HOOK = u8"Double click un hook pour l'enlever";
+	DOUBLE_CLICK_TO_REMOVE_HOOK = u8"Double cliquer sur un hook pour l'enlever";
 	FILTER_REPETITION = u8"Répétition de filtre";
 	AUTO_ATTACH = u8"Attachement Automatique";
-	ATTACH_SAVED_ONLY = u8"Attachement Automatique(Sauvergardé seulement)";
+	ATTACH_SAVED_ONLY = u8"Attachement Automatique (Sauvergardé seulement)";
 	SHOW_SYSTEM_PROCESSES = u8"Montrer les processus système";
 	DEFAULT_CODEPAGE = u8"Page de code de base";
 	FLUSH_DELAY = u8"Retard de vidage";
@@ -1293,8 +1293,8 @@ Ce fichier doit être encodé en UTF-8.)";
 Fonctionne uniquement si cette extension est utilisée directement après une extension de traduction)";
 	SIZE_LOCK = u8"Verouiller la taille";
 	OPACITY = u8"Opacité";
-	BG_COLOR = u8"COuleur d'arrière-plan";
-	TEXT_COLOR = u8"COuleur du texte";
+	BG_COLOR = u8"Couleur d'arrière-plan";
+	TEXT_COLOR = u8"Couleur du texte";
 	TEXT_OUTLINE = u8"Contour du texte";
 	OUTLINE_COLOR = u8"Couleur du contour";
 	OUTLINE_SIZE = u8"Taille du contour";
@@ -1332,7 +1332,7 @@ Ce fichier doit être encodé en Unicode (UTF-16 Little Endian).)";
 	LINK = u8"Lien";
 	THREAD_LINK_FROM = u8"Nombre du thread du lien depuis";
 	THREAD_LINK_TO = u8"Nombre du thread du lien a";
-	HEXADECIMAL = u8"Hexadecimal";
+	HEXADECIMAL = u8"Hexadécimal";
 #endif // FRENCH
 };
 
