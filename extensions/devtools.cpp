@@ -3,10 +3,11 @@
 DevTools::DevTools(QObject* parent) :
 	QObject(parent),
 	idcounter(0),
+	idmethod(0),
 	pagenavigated(false),
 	translateready(false),
 	status("Stopped"),
-	session(1)
+	session(0)
 {	
 }
 
@@ -116,30 +117,6 @@ void DevTools::stateChanged(QAbstractSocket::SocketState state)
 	emit statusChanged(status);
 }
 
-void DevTools::setNavigated(bool value)
-{
-	mutex.lock();
-	pagenavigated = value;
-	mutex.unlock();
-}
-
-bool DevTools::getNavigated()
-{
-	return pagenavigated;
-}
-
-void DevTools::setTranslate(bool value)
-{
-	mutex.lock();
-	translateready = value;
-	mutex.unlock();
-}
-
-bool DevTools::getTranslate()
-{
-	return translateready;
-}
-
 bool DevTools::SendRequest(QString method, QJsonObject params, QJsonObject& root)
 {
 	if (!isConnected())
@@ -183,14 +160,54 @@ bool DevTools::SendRequest(QString method, QJsonObject params, QJsonObject& root
 		return false;
 }
 
+long DevTools::methodToReceive(QString method, QJsonObject params)
+{
+	QJsonObject json;
+	long id = idmIncrement();
+	json.insert("method", method);
+	json.insert("params", params);
+	mutex.lock();
+	mapmethod.insert(std::make_pair(id, json));
+	mutex.unlock();
+	return id;
+}
+
 long DevTools::idIncrement()
 {
 	return ++idcounter;
 }
 
+long DevTools::idmIncrement()
+{
+	return ++idmethod;
+}
+
 bool DevTools::isConnected()
 {
 	if (webSocket.state() == QAbstractSocket::ConnectedState)
+		return true;
+	else
+		return false;
+}
+
+bool DevTools::compareJson(QJsonObject storedparams, QJsonObject params)
+{
+	foreach(const QString & key, storedparams.keys())
+	{
+		if (storedparams.value(key).isArray())
+			return false;
+		if (storedparams.value(key) != params.value(key))
+			return false;
+		if (!compareJson(storedparams.value(key).toObject(), params.value(key).toObject()))
+			return false;
+	}
+	return true;
+}
+
+bool DevTools::checkMethod(long id)
+{
+	MapMethod::iterator iter = mapmethod.find(id);
+	if (iter == mapmethod.end())
 		return true;
 	else
 		return false;
@@ -204,23 +221,19 @@ void DevTools::onTextMessageReceived(QString message)
 		QJsonObject root = doc.object();
 		if (root.contains("method"))
 		{
-			if (root.value("method").toString() == "Page.navigatedWithinDocument")
+			for (auto iter = mapmethod.cbegin(); iter != mapmethod.cend();)
 			{
-				mutex.lock();
-				pagenavigated = true;
-				mutex.unlock();
-			}
-			if (root.value("method").toString() == "DOM.attributeModified")
-			{
-				if (root.value("params").toObject().value("value") == "lmt__mobile_share_container")
+				if ((iter->second.value("method") == root.value("method")) 
+					&& ((iter->second.value("params").toObject().isEmpty()) 
+						|| (compareJson(iter->second.value("params").toObject(), root.value("params").toObject()))))
 				{
 					mutex.lock();
-					translateready = true;
+					mapmethod.erase(iter++);
 					mutex.unlock();
 				}
+				++iter;
 			}
 			return;
-
 		}
 		if (root.contains("id"))
 		{
@@ -242,17 +255,18 @@ void DevTools::closeDevTools()
 {
 	if (this->mapqueue.size() > 0)
 	{
-		MapResponse::iterator iter = this->mapqueue.begin();
-		MapResponse::iterator iend = this->mapqueue.end();
+		MapResponse::iterator iter = mapqueue.begin();
+		MapResponse::iterator iend = mapqueue.end();
 		for (; iter != iend; iter++)
 		{
 			iter->second.set_exception("exception");
 		}
 	}
 	webSocket.close();
+	mapmethod.clear();
 	mapqueue.clear();
 	idcounter = 0;
-
+	idmethod = 0;
 	DWORD exitCode = 0;
 	if (GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE)
 	{

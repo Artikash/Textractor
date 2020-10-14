@@ -7,6 +7,7 @@
 using namespace Concurrency;
 
 typedef std::map<long, task_completion_event<QJsonObject>> MapResponse;
+typedef std::map<long, QJsonObject> MapMethod;
 
 class DevTools : public QObject {
 	Q_OBJECT
@@ -24,12 +25,10 @@ private Q_SLOTS:
 public:
 	void startDevTools(QString path, bool headless = false, int port = 9222);
 	void closeDevTools();
-	void setNavigated(bool value);
-	bool getNavigated();
-	void setTranslate(bool value);
-	bool getTranslate();
+	bool checkMethod(long id);
 	int getSession();
-	bool SendRequest(QString command, QJsonObject params, QJsonObject& result);
+	bool SendRequest(QString method, QJsonObject params, QJsonObject& root);
+	long methodToReceive(QString method, QJsonObject params);
 	QString getStatus();
 
 private:
@@ -37,13 +36,17 @@ private:
 	bool startChrome(QString path, bool headless = false, int port = 9222);
 	bool GetwebSocketDebuggerUrl(QString& url, int port = 9222);
 	long idIncrement();
+	long idmIncrement();
+	bool compareJson(QJsonObject storedparams, QJsonObject params);
 	int session;
 	QWebSocket webSocket;
 	std::mutex mutex;
 	MapResponse mapqueue;
+	MapMethod mapmethod;
 	bool pagenavigated;
 	bool translateready;
 	long idcounter;
+	long idmethod;
 	PROCESS_INFORMATION processInfo;
 	QString status;
 };

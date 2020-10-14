@@ -10,6 +10,12 @@ bool useCache = true, autostartchrome = false, headlesschrome = true;
 int maxSentenceSize = 500, chromeport = 9222;
 
 const char* TRANSLATION_PROVIDER = "DevTools DeepL Translate";
+const wchar_t* ERROR_CHROME = L"Error: chrome not started";
+const wchar_t* ERROR_START_CHROME = L"Error: failed to start chrome or to connect to it";
+const wchar_t* ERROR_GOT_TIMEOUT = L"Error: timeout (s)";
+const wchar_t* ERROR_COMMAND_FAIL = L"Error: command failed";
+const wchar_t* ERROR_LANGUAGE = L"Error: target languages do not match";
+
 QString URL = "https://www.deepl.com/en/translator";
 QStringList languages
 {
@@ -26,27 +32,10 @@ QStringList languages
 	"Spanish: es",
 };
 
-int docfound = -1;
-int targetNodeId = -1;
-int session = -1;
+int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devtools)
 {
-	if (devtools->getStatus() == "Stopped")
-	{
-		return { false, FormatString(L"Error: chrome not started") };
-	}
-	if ((devtools->getStatus().startsWith("Fail")) || (devtools->getStatus().startsWith("Unconnected")))
-	{
-		return { false, FormatString(L"Error: %s", S(devtools->getStatus())) };
-	}
-	if (session != devtools->getSession())
-	{
-		session = devtools->getSession();
-		docfound = -1;
-		targetNodeId = -1;
-	}
-
 	QString qtext = S(text);
 
 	// Check text for repeated symbols (e.g. only ellipsis)
@@ -57,9 +46,25 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 				break;
 			if ((i + 2) == qtext.length() && (qtext.front() == qtext.back()))
 			{
-				return { false, text };
+				return { true, text };
 			}
 		}
+	
+	if (devtools->getStatus() == "Stopped")
+	{
+		return { false, FormatString(L"%s", ERROR_CHROME) };
+	}
+	if ((devtools->getStatus().startsWith("Fail")) || (devtools->getStatus().startsWith("Unconnected")))
+	{
+		return { false, FormatString(L"%s", ERROR_START_CHROME) };
+	}
+	if (session != devtools->getSession())
+	{
+		session = devtools->getSession();
+		docfound = -1;
+		targetNodeId = -1;
+		pageenabled = -1;
+	}
 
 	// Add spaces near ellipsis for better translation and check for quotes
 	qtext.replace(QRegularExpression("[" + QString(8230) + "]" + "[" + QString(8230) + "]" + "[" + QString(8230) + "]"), QString(8230));
@@ -73,31 +78,34 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		qtext.chop(1);
 	}
 	QJsonObject root;
-	QJsonObject result;
 
 	// Enable page feedback
-	if (!devtools->SendRequest("Page.enable", {}, root))
+	if (pageenabled == -1)
 	{
-		return { false, FormatString(L"Error: page enable failed! %s", TRANSLATION_ERROR) };
+		if (!devtools->SendRequest("Page.enable", {}, root))
+		{
+			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+		}
+		pageenabled = 1;
 	}
+	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument", {});
+	long target = devtools->methodToReceive("DOM.attributeModified", { {"value" , "lmt__mobile_share_container"} });
 
 	// Navigate to site
 	QString fullurl = URL + "#ja/" + S(translateTo.Copy()) + "/" + qtext;
-	devtools->setNavigated(false);
-	devtools->setTranslate(false);
 	if (devtools->SendRequest("Page.navigate", { {"url", fullurl} }, root))
 	{
 		// Wait until page is loaded
 		float timer = 0;
 		int timer_stop = 10;
-		while (!devtools->getNavigated() && timer < timer_stop)
+		while (!devtools->checkMethod(navigate) && timer < timer_stop)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			timer += 0.1;
-		}
+		}		
 		if (timer >= timer_stop)
 		{
-			return { false, FormatString(L"Error: page load timeout %d s! %s", timer_stop, TRANSLATION_ERROR) };
+			return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
 		}
 		QString OuterHTML("<div></div>");
 
@@ -107,7 +115,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			if (!devtools->SendRequest("DOM.getDocument", {}, root))
 			{
 				docfound = -1;
-				return { false, FormatString(L"Error: getDocument failed! %s", TRANSLATION_ERROR) };
+				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 			}
 			docfound = root.value("result").toObject().value("root").toObject().value("nodeId").toInt();
 		}
@@ -119,14 +127,14 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 				|| (root.value("result").toObject().value("nodeId").toInt() == 0))
 			{
 				docfound = -1;
-				return { false, FormatString(L"Error: querySelector result failed! %s", TRANSLATION_ERROR) };
+				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 			}
 			targetNodeId = root.value("result").toObject().value("nodeId").toInt();
 		}
 
 		// Wait for translation to appear on the web page
 		timer = 0;
-		while (!devtools->getTranslate() && timer < timer_stop)
+		while (!devtools->checkMethod(target) && timer < timer_stop)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			timer += 0.1;
@@ -138,7 +146,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			if (!(devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root))
 				|| (root.value("result").toObject().value("nodeId").toInt() == 0))
 			{
-				return { false, FormatString(L"Error: result timeout %d s! %s", timer_stop, TRANSLATION_ERROR) };
+				return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
 			}
 			noteNodeId = root.value("result").toObject().value("nodeId").toInt();
 
@@ -152,14 +160,13 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			{
 				OuterHTML = "Could not get notification";
 			}
-			return { false, FormatString(L"Error: got notification from translator: %s", S(OuterHTML)) };
+			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 
 		}
 
 		// Catch the translation
 		devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root);
-		result = root.value("result").toObject();
-		OuterHTML = result.value("outerHTML").toString();
+		OuterHTML = root.value("result").toObject().value("outerHTML").toString();
 		OuterHTML.remove(QRegExp("<[^>]*>"));
 		OuterHTML = OuterHTML.trimmed();
 
@@ -175,7 +182,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 					QString targetlang = attributes[i + 1].toString().mid(0, 2);
 					if (targetlang != S(translateTo.Copy()))
 					{
-						return { false, FormatString(L"Error: target langs do not match (%s): %s", S(targetlang), S(OuterHTML)) };
+						return { false, FormatString(L"%s (%s): %s", ERROR_LANGUAGE, S(targetlang), S(OuterHTML)) };
 					}
 				}
 			}
@@ -190,6 +197,6 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	}
 	else
 	{
-		return { false, FormatString(L"Error: navigate failed! %s", TRANSLATION_ERROR) };
+		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 	}
 }
