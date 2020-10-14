@@ -56,7 +56,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 
 	// the following code was reverse engineered from the DeepL website; it's as close as I could make it but I'm not sure what parts of this could be removed and still have it work
 	int64_t r = _time64(nullptr), n = std::count(text.begin(), text.end(), L'i') + 1;
-	int id = 10000 * std::uniform_int_distribution(0, 9999)(std::mt19937(std::random_device()()));
+	thread_local auto generator = std::mt19937(std::random_device()());
+	int id = 10000 * std::uniform_int_distribution(0, 9999)(generator);
 	// user_preferred_langs? what should priority be? does timestamp do anything? other translation quality options?
 	auto body = FormatString(R"(
 {
@@ -80,16 +81,15 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		}]
 	}
 }
-	)", ++id, r + (n - r % n), translateTo.Copy(), JSON::Escape(text));
+	)", id + 1, r + (n - r % n), translateTo.Copy(), JSON::Escape(text));
 	// missing accept-encoding header since it fucks up HttpRequest
-	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers";
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www2.deepl.com",
 		L"POST",
 		L"/jsonrpc",
 		body,
-		headers.c_str(),
+		L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: application/json; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers",
 		L"https://www.deepl.com/translator",
 		WINHTTP_FLAG_SECURE
 	})
