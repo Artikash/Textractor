@@ -1,7 +1,7 @@
 include(QtUtils)
 msvc_registry_search()
-find_qt5(Core Widgets)
-
+find_qt5(Core Widgets WebSockets)
+set(CMAKE_AUTOMOC ON)
 cmake_policy(SET CMP0037 OLD)
 
 add_library(Bing\ Translate MODULE bingtranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
@@ -10,6 +10,7 @@ add_library(DeepL\ Translate MODULE deepltranslate.cpp translatewrapper.cpp netw
 add_library(Extra\ Newlines MODULE extranewlines.cpp extensionimpl.cpp)
 add_library(Extra\ Window MODULE extrawindow.cpp extensionimpl.cpp)
 add_library(Google\ Translate MODULE googletranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
+add_library(DevTools\ DeepL\ Translate MODULE devtoolsdeepltranslate.cpp devtoolswrapper.cpp devtools.cpp network.cpp extensionimpl.cpp)
 add_library(Lua MODULE lua.cpp extensionimpl.cpp)
 add_library(Regex\ Filter MODULE regexfilter.cpp extensionimpl.cpp)
 add_library(Remove\ Repeated\ Characters MODULE removerepeatchar.cpp extensionimpl.cpp)
@@ -25,6 +26,7 @@ target_precompile_headers(DeepL\ Translate REUSE_FROM pch)
 target_precompile_headers(Extra\ Newlines REUSE_FROM pch)
 target_precompile_headers(Extra\ Window REUSE_FROM pch)
 target_precompile_headers(Google\ Translate REUSE_FROM pch)
+target_precompile_headers(DevTools\ DeepL\ Translate REUSE_FROM pch)
 target_precompile_headers(Lua REUSE_FROM pch)
 target_precompile_headers(Regex\ Filter REUSE_FROM pch)
 target_precompile_headers(Remove\ Repeated\ Characters REUSE_FROM pch)
@@ -38,6 +40,16 @@ target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
 target_link_libraries(DeepL\ Translate winhttp Qt5::Widgets)
 target_link_libraries(Extra\ Window Qt5::Widgets)
 target_link_libraries(Google\ Translate winhttp Qt5::Widgets)
+target_link_libraries(DevTools\ DeepL\ Translate winhttp Qt5::Widgets Qt5::WebSockets)
 target_link_libraries(Lua lua53 Qt5::Widgets)
 target_link_libraries(Regex\ Filter Qt5::Widgets)
 target_link_libraries(Thread\ Linker Qt5::Widgets)
+
+if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSockets.dll)
+    add_custom_command(TARGET DevTools\ DeepL\ Translate
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+        COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
+        COMMAND Qt5::windeployqt --dir $<TARGET_FILE_DIR:${PROJECT_NAME}> "$<TARGET_FILE_DIR:${PROJECT_NAME}>/DevTools\ DeepL\ Translate.dll"
+    )
+endif()

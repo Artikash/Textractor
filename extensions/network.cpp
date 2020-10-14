@@ -10,13 +10,14 @@ HttpRequest::HttpRequest(
 	const wchar_t* referrer,
 	DWORD requestFlags,
 	const wchar_t* httpVersion,
-	const wchar_t** acceptTypes
+	const wchar_t** acceptTypes,
+	DWORD port
 )
 {
 	static std::atomic<HINTERNET> internet = NULL;
 	if (!internet) internet = WinHttpOpen(agentName, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
 	if (internet)
-		if (InternetHandle connection = WinHttpConnect(internet, serverName, INTERNET_DEFAULT_PORT, 0))
+		if (InternetHandle connection = WinHttpConnect(internet, serverName, port, 0))
 			if (InternetHandle request = WinHttpOpenRequest(connection, action, objectName, httpVersion, referrer, acceptTypes, requestFlags))
 				if (WinHttpSendRequest(request, headers, -1UL, body.empty() ? NULL : body.data(), body.size(), body.size(), NULL))
 				{

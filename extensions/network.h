@@ -16,7 +16,8 @@ struct HttpRequest
 		const wchar_t* referrer = NULL,
 		DWORD requestFlags = WINHTTP_FLAG_SECURE | WINHTTP_FLAG_ESCAPE_DISABLE,
 		const wchar_t* httpVersion = NULL,
-		const wchar_t** acceptTypes = NULL
+		const wchar_t** acceptTypes = NULL,
+		DWORD port = INTERNET_DEFAULT_PORT
 	);
 	operator bool() { return errorCode == ERROR_SUCCESS; }
 
