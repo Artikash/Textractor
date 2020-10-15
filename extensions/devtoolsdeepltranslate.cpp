@@ -15,6 +15,7 @@ const wchar_t* ERROR_START_CHROME = L"Error: failed to start chrome or to connec
 const wchar_t* ERROR_GOT_TIMEOUT = L"Error: timeout (s)";
 const wchar_t* ERROR_COMMAND_FAIL = L"Error: command failed";
 const wchar_t* ERROR_LANGUAGE = L"Error: target languages do not match";
+const wchar_t* ERROR_NOTE = L"Error: notification";
 
 QString URL = "https://www.deepl.com/en/translator";
 QStringList languages
@@ -49,7 +50,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 				return { true, text };
 			}
 		}
-	
+
 	if (devtools->getStatus() == "Stopped")
 	{
 		return { false, FormatString(L"%s", ERROR_CHROME) };
@@ -88,8 +89,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		}
 		pageenabled = 1;
 	}
-	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument", {});
-	long target = devtools->methodToReceive("DOM.attributeModified", { {"value" , "lmt__mobile_share_container"} });
+	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument");
+	long target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container" } });
 
 	// Navigate to site
 	QString fullurl = URL + "#ja/" + S(translateTo.Copy()) + "/" + qtext;
@@ -102,12 +103,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			timer += 0.1;
-		}		
+		}
 		if (timer >= timer_stop)
 		{
 			return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
 		}
-		QString OuterHTML("<div></div>");
 
 		// Get document
 		if (docfound == -1)
@@ -139,9 +139,13 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			timer += 0.1;
 		}
-		if (timer >= timer_stop)
+		
+		// Catch the translation
+		devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root);
+		QString OuterHTML = root.value("result").toObject().value("outerHTML").toString();
+		if (OuterHTML == "<div></div>")
 		{
-			// Catch notification if timeout
+			// Try to catch the notification
 			int noteNodeId = -1;
 			if (!(devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root))
 				|| (root.value("result").toObject().value("nodeId").toInt() == 0))
@@ -150,23 +154,15 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			}
 			noteNodeId = root.value("result").toObject().value("nodeId").toInt();
 
-			if (devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", noteNodeId + 1} }, root))
+			if (devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", noteNodeId} }, root))
 			{
 				OuterHTML = root.value("result").toObject().value("outerHTML").toString();
-				OuterHTML.remove(QRegExp("<[^>]*>"));
-				OuterHTML = OuterHTML.trimmed();
 			}
-			else
-			{
-				OuterHTML = "Could not get notification";
-			}
-			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+			OuterHTML.remove(QRegExp("<[^>]*>"));
+			OuterHTML = OuterHTML.trimmed();
 
+			return { false, FormatString(L"%s: %s", ERROR_NOTE, S(OuterHTML)) };
 		}
-
-		// Catch the translation
-		devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root);
-		OuterHTML = root.value("result").toObject().value("outerHTML").toString();
 		OuterHTML.remove(QRegExp("<[^>]*>"));
 		OuterHTML = OuterHTML.trimmed();
 

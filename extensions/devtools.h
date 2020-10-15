@@ -16,7 +16,7 @@ public:
 	~DevTools();
 
 Q_SIGNALS:
-	void statusChanged(const QString &);
+	void statusChanged(const QString&);
 
 private Q_SLOTS:
 	void stateChanged(QAbstractSocket::SocketState state);
@@ -28,7 +28,7 @@ public:
 	bool checkMethod(long id);
 	int getSession();
 	bool SendRequest(QString method, QJsonObject params, QJsonObject& root);
-	long methodToReceive(QString method, QJsonObject params);
+	long methodToReceive(QString method, QJsonObject params = {});
 	QString getStatus();
 
 private:
@@ -37,14 +37,12 @@ private:
 	bool GetwebSocketDebuggerUrl(QString& url, int port = 9222);
 	long idIncrement();
 	long idmIncrement();
-	bool compareJson(QJsonObject storedparams, QJsonObject params);
+	bool compareJson(QJsonValue storedparams, QJsonValue params);
 	int session;
 	QWebSocket webSocket;
 	std::mutex mutex;
 	MapResponse mapqueue;
 	MapMethod mapmethod;
-	bool pagenavigated;
-	bool translateready;
 	long idcounter;
 	long idmethod;
 	PROCESS_INFORMATION processInfo;

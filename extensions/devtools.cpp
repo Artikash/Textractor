@@ -4,11 +4,9 @@ DevTools::DevTools(QObject* parent) :
 	QObject(parent),
 	idcounter(0),
 	idmethod(0),
-	pagenavigated(false),
-	translateready(false),
 	status("Stopped"),
 	session(0)
-{	
+{
 }
 
 void DevTools::startDevTools(QString path, bool headless, int port)
@@ -59,14 +57,14 @@ bool DevTools::startChrome(QString path, bool headless, int port)
 	DWORD exitCode = 0;
 	if ((GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE) && (exitCode == STILL_ACTIVE))
 		return false;
-	QString args = "--proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir=" 
+	QString args = "--proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir="
 					+ QString::fromStdWString(std::filesystem::current_path())
-					+ "\\devtoolscache --remote-debugging-port=" 
+					+ "\\devtoolscache --remote-debugging-port="
 					+ QString::number(port);
 	if (headless)
 		args += " --headless";
 	STARTUPINFOW dummy = { sizeof(dummy) };
-	if (!CreateProcessW(NULL, (wchar_t*)(path + " " + args).utf16(), nullptr, nullptr, 
+	if (!CreateProcessW(NULL, (wchar_t*)(path + " " + args).utf16(), nullptr, nullptr,
 		FALSE, 0, nullptr, nullptr, &dummy, &processInfo))
 		return false;
 	else
@@ -127,8 +125,7 @@ bool DevTools::SendRequest(QString method, QJsonObject params, QJsonObject& root
 	long id = idIncrement();
 	json.insert("id", id);
 	json.insert("method", method);
-	if (!params.isEmpty())
-		json.insert("params", params);
+	json.insert("params", params);
 	QJsonDocument doc(json);
 	QString message(doc.toJson(QJsonDocument::Compact));
 	mutex.lock();
@@ -190,17 +187,27 @@ bool DevTools::isConnected()
 		return false;
 }
 
-bool DevTools::compareJson(QJsonObject storedparams, QJsonObject params)
+bool DevTools::compareJson(QJsonValue storedparams, QJsonValue params)
 {
-	foreach(const QString & key, storedparams.keys())
+	if (storedparams.isObject())
 	{
-		if (storedparams.value(key).isArray())
-			return false;
-		if (storedparams.value(key) != params.value(key))
-			return false;
-		if (!compareJson(storedparams.value(key).toObject(), params.value(key).toObject()))
-			return false;
+		foreach(const QString & key, storedparams.toObject().keys())
+		{
+			QJsonValue storedvalue = storedparams.toObject().value(key);
+			QJsonValue value = params.toObject().value(key);
+			if (!compareJson(storedvalue, value))
+				return false;
+		}
 	}
+	else if (storedparams.isArray())
+	{
+		for (int i = 0; i < storedparams.toArray().size(); i++)
+			if (!compareJson(storedparams.toArray()[i], params.toArray()[i]))
+				return false;
+	}
+	else if (storedparams.toVariant() != params.toVariant())
+		return false;
+
 	return true;
 }
 
@@ -223,9 +230,8 @@ void DevTools::onTextMessageReceived(QString message)
 		{
 			for (auto iter = mapmethod.cbegin(); iter != mapmethod.cend();)
 			{
-				if ((iter->second.value("method") == root.value("method")) 
-					&& ((iter->second.value("params").toObject().isEmpty()) 
-						|| (compareJson(iter->second.value("params").toObject(), root.value("params").toObject()))))
+				if ((iter->second.value("method") == root.value("method"))
+					&& (compareJson(iter->second.value("params"), root.value("params"))))
 				{
 					mutex.lock();
 					mapmethod.erase(iter++);
@@ -248,7 +254,7 @@ void DevTools::onTextMessageReceived(QString message)
 			}
 			return;
 		}
-	}	
+	}
 }
 
 void DevTools::closeDevTools()
