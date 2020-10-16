@@ -16397,18 +16397,28 @@ bool InsertShinyDaysGameHook()
     0xc6,0x84,0x24,0x90,0x02,0x00,0x00,0x02
   };
   LPVOID addr = (LPVOID)0x42ad94;
-  if (::memcmp(addr, bytes, sizeof(bytes)) != 0) {
-    ConsoleOutput("vnreng:ShinyDays: only work for 1.00");
-    return false;
+  if (::memcmp(addr, bytes, sizeof(bytes)) == 0) {
+      HookParam hp = {};
+      hp.address = 0x42ad9c;
+      hp.text_fun = SpecialGameHookShinyDays;
+      hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+      ConsoleOutput("vnreng: INSERT ShinyDays");
+      NewHook(hp, "ShinyDays 1.00");
+      return true;
+  }
+  addr = (LPVOID)0x42b7f4;
+  if (::memcmp(addr, bytes, sizeof(bytes)) == 0) {
+      HookParam hp = {};
+      hp.address = 0x42b7fc;
+      hp.text_fun = SpecialGameHookShinyDays;
+      hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+      ConsoleOutput("vnreng: INSERT ShinyDays");
+      NewHook(hp, "ShinyDays 1.00d");
+      return true;
   }
 
-  HookParam hp = {};
-  hp.address = 0x42ad9c;
-  hp.text_fun = SpecialGameHookShinyDays;
-  hp.type = USING_UNICODE|USING_STRING|NO_CONTEXT;
-  ConsoleOutput("vnreng: INSERT ShinyDays");
-  NewHook(hp, "ShinyDays 1.00");
-  return true;
+  ConsoleOutput("vnreng:ShinyDays: only work for 1.00 and 1.00d");
+  return false;
 }
 
 #if 0 // disabled as lova does not allow module from being modified
