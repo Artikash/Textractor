@@ -1,6 +1,5 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
-#include "network.h"
 #include "devtools.h"
 
 extern const wchar_t* TRANSLATION_ERROR;
@@ -33,7 +32,7 @@ QStringList languages
 	"Spanish: es",
 };
 
-int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1;
+int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1, useragentflag = -1;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devtools)
 {
@@ -65,6 +64,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		docfound = -1;
 		targetNodeId = -1;
 		pageenabled = -1;
+		useragentflag = -1;
 	}
 
 	// Add spaces near ellipsis for better translation and check for quotes
@@ -89,6 +89,22 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		}
 		pageenabled = 1;
 	}
+
+	// Change user-agent if in headless mode
+	if (useragentflag == -1)
+	{
+		QString useragent = devtools->getUserAgent();
+		useragent.replace(QRegularExpression("HeadlessChrome"), "Chrome");
+		if (!useragent.isEmpty())
+		{
+			if (!devtools->SendRequest("Network.setUserAgentOverride", { {"userAgent", useragent} }, root))
+			{
+				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+			}
+		}
+		useragentflag = 1;
+	}
+
 	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument");
 	long target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container" } });
 

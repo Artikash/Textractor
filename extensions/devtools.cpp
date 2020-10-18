@@ -13,20 +13,31 @@ void DevTools::startDevTools(QString path, bool headless, int port)
 {
 	if (startChrome(path, headless, port))
 	{
+		QJsonDocument doc;
 		QString webSocketDebuggerUrl;
-		if (GetwebSocketDebuggerUrl(webSocketDebuggerUrl, port))
+		if (GetJsonfromHTTP(doc, "/json/list", port))
 		{
-			connect(&webSocket, &QWebSocket::stateChanged, this, &DevTools::stateChanged);
-			connect(&webSocket, &QWebSocket::textMessageReceived, this, &DevTools::onTextMessageReceived);
-			webSocket.open(webSocketDebuggerUrl);
-			session += 1;
+			for (const auto obj : doc.array())
+				if (obj.toObject().value("type") == "page")
+				{
+					webSocketDebuggerUrl.append(obj.toObject().value("webSocketDebuggerUrl").toString());
+					break;
+				}
+			if (!webSocketDebuggerUrl.isEmpty())
+			{
+				if (GetJsonfromHTTP(doc, "/json/version", port))
+				{
+					useragent = doc.object().value("User-Agent").toString();
+				}	
+				connect(&webSocket, &QWebSocket::stateChanged, this, &DevTools::stateChanged);
+				connect(&webSocket, &QWebSocket::textMessageReceived, this, &DevTools::onTextMessageReceived);
+				webSocket.open(webSocketDebuggerUrl);
+				session += 1;
+				return;
+			}
 		}
-		else
-		{
-			status = "Failed to find chrome debug port!";
-			emit statusChanged(status);
-		}
-
+		status = "Failed to find chrome debug port!";
+		emit statusChanged(status);
 	}
 	else
 	{
@@ -43,6 +54,11 @@ int DevTools::getSession()
 QString DevTools::getStatus()
 {
 	return status;
+}
+
+QString DevTools::getUserAgent()
+{
+	return useragent;
 }
 
 DevTools::~DevTools()
@@ -71,14 +87,13 @@ bool DevTools::startChrome(QString path, bool headless, int port)
 		return true;
 }
 
-bool DevTools::GetwebSocketDebuggerUrl(QString& url, int port)
+bool DevTools::GetJsonfromHTTP(QJsonDocument& doc, QString object, int port)
 {
-	url.clear();
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"127.0.0.1",
 		L"POST",
-		FormatString(L"/json/list").c_str(),
+		object.toStdWString().c_str(),
 		"",
 		NULL,
 		NULL,
@@ -89,16 +104,8 @@ bool DevTools::GetwebSocketDebuggerUrl(QString& url, int port)
 		})
 	{
 		QString qtString = QString::fromStdWString(httpRequest.response);
-		QJsonDocument doc = QJsonDocument::fromJson(qtString.toUtf8());
-		QJsonArray rootObject = doc.array();
-
-		for (const auto obj : rootObject)
-			if (obj.toObject().value("type") == "page")
-			{
-				url.append(obj.toObject().value("webSocketDebuggerUrl").toString());
-				break;
-			}
-		if (!url.isEmpty())
+		doc = QJsonDocument::fromJson(qtString.toUtf8());
+		if (!doc.isEmpty())
 			return true;
 		else
 			return false;

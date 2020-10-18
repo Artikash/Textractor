@@ -1,4 +1,3 @@
-#include <fstream>
 #include <QtCore>
 #include <QtWebSockets/QWebSocket>
 #include <ppltasks.h>
@@ -30,11 +29,12 @@ public:
 	bool SendRequest(QString method, QJsonObject params, QJsonObject& root);
 	long methodToReceive(QString method, QJsonObject params = {});
 	QString getStatus();
+	QString getUserAgent();
 
 private:
 	bool isConnected();
 	bool startChrome(QString path, bool headless = false, int port = 9222);
-	bool GetwebSocketDebuggerUrl(QString& url, int port = 9222);
+	bool GetJsonfromHTTP(QJsonDocument& doc, QString object, int port = 9222);
 	long idIncrement();
 	long idmIncrement();
 	bool compareJson(QJsonValue storedparams, QJsonValue params);
@@ -47,4 +47,5 @@ private:
 	long idmethod;
 	PROCESS_INFORMATION processInfo;
 	QString status;
+	QString useragent;
 };
