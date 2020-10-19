@@ -50,6 +50,17 @@ void SaveCache()
 	savedSize = translationCache->size();
 }
 
+void EraseControlCharacters(std::wstring& text)
+{
+	for (auto it = text.begin(); it!= text.end(); ++it)
+	{
+		if ((*it == '\n') || (*it == '\r') || (*it == '\t') || (int(*it) == 4) || (int(*it) == 5))
+		{
+			text.erase(it--);
+		}
+	}
+}
+
 class Window : public QDialog
 {
 public:
@@ -184,7 +195,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b";
 	}
 	if (translation.empty() && (sentenceInfo["current select"]))
+	{
+		EraseControlCharacters(sentence);
 		std::tie(cache, translation) = Translate(sentence, devtools);
+	}
+		
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 

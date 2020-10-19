@@ -71,7 +71,7 @@ bool DevTools::startChrome(QString path, bool headless, int port)
 	if (!std::filesystem::exists(path.toStdWString()))
 		return false;
 	DWORD exitCode = 0;
-	if ((GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE) && (exitCode == STILL_ACTIVE))
+	if (GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE && exitCode == STILL_ACTIVE)
 		return false;
 	QString args = "--proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir="
 					+ QString::fromStdWString(std::filesystem::current_path())
@@ -237,8 +237,8 @@ void DevTools::onTextMessageReceived(QString message)
 		{
 			for (auto iter = mapmethod.cbegin(); iter != mapmethod.cend();)
 			{
-				if ((iter->second.value("method") == root.value("method"))
-					&& (compareJson(iter->second.value("params"), root.value("params"))))
+				if (iter->second.value("method") == root.value("method")
+					&& compareJson(iter->second.value("params"), root.value("params")))
 				{
 					mutex.lock();
 					mapmethod.erase(iter++);

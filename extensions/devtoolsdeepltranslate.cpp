@@ -33,28 +33,48 @@ QStringList languages
 };
 
 int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1, useragentflag = -1;
+long update = -1;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devtools)
 {
 	QString qtext = S(text);
+	qtext.remove(QString(12288)); // japanese space (no need for translator)
 
-	// Check text for repeated symbols (e.g. only ellipsis)
-	if (qtext.length() > 2)
-		for (int i = 1; i < (qtext.length() - 1); i++)
-		{
-			if (qtext[i] != qtext[1])
-				break;
-			if ((i + 2) == qtext.length() && (qtext.front() == qtext.back()))
-			{
-				return { true, text };
-			}
-		}
+	// Check quotes
+	bool checkquote = false;
+	if ((qtext.front() == QString(12300) && qtext.back() == QString(12301)) // japanese quotation marks
+		|| (qtext.front() == "\"" && qtext.back() == "\""))
+	{
+		checkquote = true;
+		qtext.remove(0, 1);
+		qtext.chop(1);
+	}
 
+	if (qtext == QString(12387)) // if text consists of only one sokuon, add exclamation mark for correct translation
+	{
+		qtext += "!";
+	}
+
+	// Check ellipsis
+	int count = qtext.count(QString(8230)); // ellipsis
+	if (count == qtext.length()
+		|| (count == (qtext.length() - 1) && qtext.back() == QString(12290))) // japanese end of a sentence
+	{
+		return { true, text };
+	}
+
+	// Put quotes back
+	if (checkquote)
+	{
+		qtext = "\"" + qtext + "\"";
+	}
+
+	// Check status
 	if (devtools->getStatus() == "Stopped")
 	{
 		return { false, FormatString(L"%s", ERROR_CHROME) };
 	}
-	if ((devtools->getStatus().startsWith("Fail")) || (devtools->getStatus().startsWith("Unconnected")))
+	if (devtools->getStatus().startsWith("Fail") || devtools->getStatus().startsWith("Unconnected"))
 	{
 		return { false, FormatString(L"%s", ERROR_START_CHROME) };
 	}
@@ -65,22 +85,15 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		targetNodeId = -1;
 		pageenabled = -1;
 		useragentflag = -1;
+		update = -1;
 	}
 
-	// Add spaces near ellipsis for better translation and check for quotes
-	qtext.replace(QRegularExpression("[" + QString(8230) + "]" + "[" + QString(8230) + "]" + "[" + QString(8230) + "]"), QString(8230));
-	qtext.replace(QRegularExpression("[" + QString(8230) + "]" + "[" + QString(8230) + "]"), QString(8230));
-	qtext.replace(QRegularExpression("[" + QString(8230) + "]"), " " + QString(8230) + " ");
-	bool checkquote = false;
-	if ((qtext.front() == QString(12300)) && (qtext.back() == QString(12301)))
-	{
-		checkquote = true;
-		qtext.remove(0, 1);
-		qtext.chop(1);
-	}
-	QJsonObject root;
+	// Erase tags and reduce the number of ellipsis for better translation
+	qtext.remove(QRegExp("<[^>]*>"));
+	qtext.replace(QRegExp("(" + QString(8230) + ")+"), " " + QString(8230));
 
 	// Enable page feedback
+	QJsonObject root;
 	if (pageenabled == -1)
 	{
 		if (!devtools->SendRequest("Page.enable", {}, root))
@@ -94,9 +107,9 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	if (useragentflag == -1)
 	{
 		QString useragent = devtools->getUserAgent();
-		useragent.replace(QRegularExpression("HeadlessChrome"), "Chrome");
 		if (!useragent.isEmpty())
 		{
+			useragent.replace("HeadlessChrome", "Chrome");
 			if (!devtools->SendRequest("Network.setUserAgentOverride", { {"userAgent", useragent} }, root))
 			{
 				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
@@ -107,108 +120,117 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 
 	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument");
 	long target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container" } });
+	if (update == -1)
+	{
+		update = devtools->methodToReceive("DOM.documentUpdated");
+	}
 
 	// Navigate to site
 	QString fullurl = URL + "#ja/" + S(translateTo.Copy()) + "/" + qtext;
-	if (devtools->SendRequest("Page.navigate", { {"url", fullurl} }, root))
+	if (!devtools->SendRequest("Page.navigate", { {"url", fullurl} }, root))
 	{
-		// Wait until page is loaded
-		float timer = 0;
-		int timer_stop = 10;
-		while (!devtools->checkMethod(navigate) && timer < timer_stop)
+		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+	}
+
+	// Wait until page is loaded
+	float timer = 0;
+	int timer_stop = 10;
+	while (!devtools->checkMethod(navigate) && timer < timer_stop)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		timer += 0.1;
+	}
+	if (timer >= timer_stop)
+	{
+		return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
+	}
+
+	// Check if document is outdated
+	if (devtools->checkMethod(update))
+	{
+		docfound = -1;
+		targetNodeId = -1;
+		update = -1;
+	}
+
+	// Get document
+	if (docfound == -1)
+	{
+		if (!devtools->SendRequest("DOM.getDocument", {}, root))
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			timer += 0.1;
+			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 		}
-		if (timer >= timer_stop)
+		docfound = root.value("result").toObject().value("root").toObject().value("nodeId").toInt();
+	}
+
+	// Get target selector
+	if (targetNodeId == -1)
+	{
+		if (!devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "textarea.lmt__target_textarea"} }, root)
+			|| root.value("result").toObject().value("nodeId").toInt() == 0)
+		{
+			docfound = -1;
+			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+		}
+		targetNodeId = root.value("result").toObject().value("nodeId").toInt();
+	}
+
+	// Wait for translation to appear on the web page
+	timer = 0;
+	while (!devtools->checkMethod(target) && timer < timer_stop)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		timer += 0.1;
+	}
+		
+	// Catch the translation
+	if (!devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root))
+	{
+		docfound = -1;
+		targetNodeId = -1;
+		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
+	}
+	QString OuterHTML = root.value("result").toObject().value("outerHTML").toString();
+	if (OuterHTML == "<div></div>")
+	{
+		// Try to catch the notification
+		int noteNodeId = -1;
+		if (!devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root)
+			|| root.value("result").toObject().value("nodeId").toInt() == 0)
 		{
 			return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
 		}
+		noteNodeId = root.value("result").toObject().value("nodeId").toInt();
 
-		// Get document
-		if (docfound == -1)
+		if (devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", noteNodeId} }, root))
 		{
-			if (!devtools->SendRequest("DOM.getDocument", {}, root))
-			{
-				docfound = -1;
-				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
-			}
-			docfound = root.value("result").toObject().value("root").toObject().value("nodeId").toInt();
-		}
-
-		//Get target selector
-		if (targetNodeId == -1)
-		{
-			if (!(devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "textarea.lmt__target_textarea"} }, root))
-				|| (root.value("result").toObject().value("nodeId").toInt() == 0))
-			{
-				docfound = -1;
-				return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
-			}
-			targetNodeId = root.value("result").toObject().value("nodeId").toInt();
-		}
-
-		// Wait for translation to appear on the web page
-		timer = 0;
-		while (!devtools->checkMethod(target) && timer < timer_stop)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			timer += 0.1;
-		}
-		
-		// Catch the translation
-		devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root);
-		QString OuterHTML = root.value("result").toObject().value("outerHTML").toString();
-		if (OuterHTML == "<div></div>")
-		{
-			// Try to catch the notification
-			int noteNodeId = -1;
-			if (!(devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root))
-				|| (root.value("result").toObject().value("nodeId").toInt() == 0))
-			{
-				return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
-			}
-			noteNodeId = root.value("result").toObject().value("nodeId").toInt();
-
-			if (devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", noteNodeId} }, root))
-			{
-				OuterHTML = root.value("result").toObject().value("outerHTML").toString();
-			}
-			OuterHTML.remove(QRegExp("<[^>]*>"));
-			OuterHTML = OuterHTML.trimmed();
-
-			return { false, FormatString(L"%s: %s", ERROR_NOTE, S(OuterHTML)) };
+			OuterHTML = root.value("result").toObject().value("outerHTML").toString();
 		}
 		OuterHTML.remove(QRegExp("<[^>]*>"));
 		OuterHTML = OuterHTML.trimmed();
 
-		// Check if the translator output language does not match the selected language
-		if (devtools->SendRequest("DOM.getAttributes", { {"nodeId", targetNodeId} }, root))
+		return { false, FormatString(L"%s: %s", ERROR_NOTE, S(OuterHTML)) };
+	}
+	OuterHTML.remove(QRegExp("<[^>]*>"));
+	OuterHTML = OuterHTML.trimmed();
+
+	// Check if the translator output language does not match the selected language
+	if (devtools->SendRequest("DOM.getAttributes", { {"nodeId", targetNodeId} }, root))
+	{
+		QJsonObject result = root.value("result").toObject();
+		QJsonArray attributes = result.value("attributes").toArray();
+		for (size_t i = 0; i < attributes.size(); i++)
 		{
-			QJsonObject result = root.value("result").toObject();
-			QJsonArray attributes = result.value("attributes").toArray();
-			for (size_t i = 0; i < attributes.size(); i++)
+			if (attributes[i].toString() == "lang")
 			{
-				if (attributes[i].toString() == "lang")
+				QString targetlang = attributes[i + 1].toString().mid(0, 2);
+				if (targetlang != S(translateTo.Copy()))
 				{
-					QString targetlang = attributes[i + 1].toString().mid(0, 2);
-					if (targetlang != S(translateTo.Copy()))
-					{
-						return { false, FormatString(L"%s (%s): %s", ERROR_LANGUAGE, S(targetlang), S(OuterHTML)) };
-					}
+					return { false, FormatString(L"%s (%s): %s", ERROR_LANGUAGE, S(targetlang), S(OuterHTML)) };
 				}
 			}
 		}
+	}
 
-		// Get quotes back
-		if (checkquote)
-		{
-			OuterHTML = "\"" + OuterHTML + "\"";
-		}
-		return { true, S(OuterHTML) };
-	}
-	else
-	{
-		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
-	}
+	return { true, S(OuterHTML) };
 }
