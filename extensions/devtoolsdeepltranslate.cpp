@@ -33,7 +33,8 @@ QStringList languages
 };
 
 int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1, useragentflag = -1;
-long update = -1;
+long update = -1, callnumber = 0;
+std::vector<long> callqueue;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devtools)
 {
@@ -118,6 +119,20 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		useragentflag = 1;
 	}
 
+	float timer = 0;
+	int timer_stop = 10;
+	long calltag = ++callnumber;
+	callqueue.insert(callqueue.begin(), calltag);
+	while (callqueue.back() != calltag && timer < 2 * timer_stop)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		timer += 0.1;
+	}
+	if (timer >= timer_stop)
+	{
+		callqueue.pop_back();
+		return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, 2 * timer_stop) };
+	}
 	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument");
 	long target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container" } });
 	if (update == -1)
@@ -129,12 +144,12 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	QString fullurl = URL + "#ja/" + S(translateTo.Copy()) + "/" + qtext;
 	if (!devtools->SendRequest("Page.navigate", { {"url", fullurl} }, root))
 	{
+		callqueue.pop_back();
 		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 	}
 
 	// Wait until page is loaded
-	float timer = 0;
-	int timer_stop = 10;
+	timer = 0;
 	while (!devtools->checkMethod(navigate) && timer < timer_stop)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -142,6 +157,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	}
 	if (timer >= timer_stop)
 	{
+		callqueue.pop_back();
 		return { false, FormatString(L"%s: %d ", ERROR_GOT_TIMEOUT, timer_stop) };
 	}
 
@@ -158,6 +174,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	{
 		if (!devtools->SendRequest("DOM.getDocument", {}, root))
 		{
+			callqueue.pop_back();
 			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 		}
 		docfound = root.value("result").toObject().value("root").toObject().value("nodeId").toInt();
@@ -170,6 +187,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			|| root.value("result").toObject().value("nodeId").toInt() == 0)
 		{
 			docfound = -1;
+			callqueue.pop_back();
 			return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 		}
 		targetNodeId = root.value("result").toObject().value("nodeId").toInt();
@@ -182,15 +200,17 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		timer += 0.1;
 	}
-		
+
 	// Catch the translation
 	if (!devtools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root))
 	{
 		docfound = -1;
 		targetNodeId = -1;
+		callqueue.pop_back();
 		return { false, FormatString(L"%s", ERROR_COMMAND_FAIL) };
 	}
 	QString OuterHTML = root.value("result").toObject().value("outerHTML").toString();
+	callqueue.pop_back();
 	if (OuterHTML == "<div></div>")
 	{
 		// Try to catch the notification
@@ -231,6 +251,5 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 			}
 		}
 	}
-
 	return { true, S(OuterHTML) };
 }
