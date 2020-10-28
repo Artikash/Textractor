@@ -32,7 +32,7 @@ QStringList languages
 	"Spanish: es",
 };
 
-int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1, useragentflag = -1;
+int docfound = -1, targetNodeId = -1, session = -1, pageenabled = -1, useragentflag = -1, backup = -1;
 long update = -1, callnumber = 0;
 std::vector<long> callqueue;
 
@@ -88,6 +88,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 		useragentflag = -1;
 		update = -1;
 		callnumber = 0;
+		backup = -1;
 	}
 
 	// Remove tags and reduce the number of ellipsis for correct translation
@@ -134,7 +135,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 
 	// Set methods to receive
 	long navigate = devtools->methodToReceive("Page.navigatedWithinDocument");
-	long target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container" } });
+	long target;
+	if (backup == -1)
+		target = devtools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container lmt--mobile-hidden" } });
+	else
+		target = devtools->methodToReceive("DOM.childNodeCountUpdated");
 	if (update == -1)
 		update = devtools->methodToReceive("DOM.documentUpdated");
 
@@ -204,8 +209,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	{
 		// Try to catch the notification
 		int noteNodeId = -1;
-		if (errorcode == 0 && !devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root)
-			|| root.value("result").toObject().value("nodeId").toInt() == 0)
+		if (errorcode == 0 && (!devtools->SendRequest("DOM.querySelector", { {"nodeId", docfound}, {"selector", "div.lmt__system_notification"} }, root)
+			|| root.value("result").toObject().value("nodeId").toInt() == 0) && timer >= timer_stop)
 		{
 			errorcode = 2;
 		}
@@ -221,6 +226,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devt
 	}
 	OuterHTML.remove(QRegExp("<[^>]*>"));
 	OuterHTML = OuterHTML.trimmed();
+	if (backup == -1 && errorcode == 0 && timer >= timer_stop)
+		backup = 1;
 
 	// Check if the translator output language does not match the selected language
 	QString targetlang;

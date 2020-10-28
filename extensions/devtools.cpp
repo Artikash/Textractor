@@ -7,6 +7,8 @@ DevTools::DevTools(QObject* parent) :
 	status("Stopped"),
 	session(0)
 {
+	connect(&webSocket, &QWebSocket::stateChanged, this, &DevTools::stateChanged);
+	connect(&webSocket, &QWebSocket::textMessageReceived, this, &DevTools::onTextMessageReceived);
 }
 
 void DevTools::startDevTools(QString path, bool headless, int port)
@@ -29,8 +31,6 @@ void DevTools::startDevTools(QString path, bool headless, int port)
 				{
 					useragent = doc.object().value("User-Agent").toString();
 				}	
-				connect(&webSocket, &QWebSocket::stateChanged, this, &DevTools::stateChanged);
-				connect(&webSocket, &QWebSocket::textMessageReceived, this, &DevTools::onTextMessageReceived);
 				webSocket.open(webSocketDebuggerUrl);
 				session += 1;
 				return;
