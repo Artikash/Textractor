@@ -6,8 +6,9 @@ If you're on this list and want your link changed let me know.
   - [Niakr1s](https://github.com/Niakr1s)
   - [tinyAdapter](https://github.com/tinyAdapter)
   - [lgztx96](https://github.com/lgztx96)
+  - [Jazzinghen](https://github.com/Jazzinghen)
   - with a special thanks to everyone reporting issues :)
-- French translation by Racky
+- French translation by Racky and [Gratusfr](https://github.com/Gratusfr)
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by niisokusu
 - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter) and [lgztx96](https://github.com/lgztx96)
