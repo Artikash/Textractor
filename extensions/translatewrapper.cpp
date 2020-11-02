@@ -29,7 +29,7 @@ const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
-QSettings settings = openSettings();
+Settings settings;
 Synchronized<std::wstring> translateTo = L"en", apiKey;
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
@@ -50,6 +50,7 @@ public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		display = new QFormLayout(this);
 
 		settings.beginGroup(TRANSLATION_PROVIDER);

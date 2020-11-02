@@ -148,6 +148,8 @@ inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { Mes
 template <typename... Args>
 inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { std::thread([=] { TEXTRACTOR_MESSAGE(format, args...); }).detach(); }
 
+void localize();
+
 #ifdef _DEBUG
 #define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
 #else

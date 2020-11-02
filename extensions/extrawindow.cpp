@@ -46,6 +46,7 @@ struct PrettyWindow : QDialog
 {
 	PrettyWindow(const char* name)
 	{
+		localize();
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
@@ -76,7 +77,7 @@ struct PrettyWindow : QDialog
 
 protected:
 	QMenu menu{ ui.display };
-	QSettings settings{ openSettings(this) };
+	Settings settings{ this };
 
 private:
 	void RequestFont()

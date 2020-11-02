@@ -215,7 +215,7 @@ const char* THREAD_LINK_FROM = u8"Thread number to link from";
 const char* THREAD_LINK_TO = u8"Thread number to link to";
 const char* HEXADECIMAL = u8"Hexadecimal";
 
-static auto _ = []
+void localize()
 {
 #ifdef TURKISH
 	NATIVE_LANGUAGE = "Turkish";
@@ -1334,6 +1334,6 @@ Ce fichier doit être encodé en Unicode (UTF-16 Little Endian).)";
 	THREAD_LINK_TO = u8"Nombre du thread du lien a";
 	HEXADECIMAL = u8"Hexadecimal";
 #endif // FRENCH
+};
 
-	return 0;
-}();
+static auto _ = (localize(), 0);

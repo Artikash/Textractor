@@ -165,7 +165,7 @@ namespace
 		std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 		PROCESS_INFORMATION info = {};
-		auto useLocale = openSettings().value(CONFIG_JP_LOCALE, PROMPT).toInt();
+		auto useLocale = Settings().value(CONFIG_JP_LOCALE, PROMPT).toInt();
 		if (!x64 && (useLocale == ALWAYS || (useLocale == PROMPT && QMessageBox::question(This, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)))
 		{
 			if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
@@ -439,10 +439,10 @@ namespace
 		}).detach();
 	}
 
-	void Settings()
+	void OpenSettings()
 	{
 		QDialog dialog(This, Qt::WindowCloseButtonHint);
-		QSettings settings(CONFIG_FILE, QSettings::IniFormat, &dialog);
+		Settings settings(&dialog);
 		QFormLayout layout(&dialog);
 		QPushButton saveButton(SAVE_SETTINGS, &dialog);
 		for (auto [value, label] : Array<bool&, const char*>{
@@ -501,7 +501,7 @@ namespace
 		font.fromString(fontString);
 		font.setStyleStrategy(QFont::NoFontMerging);
 		ui.textOutput->setFont(font);
-		QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(FONT, font.toString());
+		Settings().setValue(FONT, font.toString());
 	}
 
 	void ProcessConnected(DWORD processId)
@@ -605,7 +605,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 		{ REMOVE_HOOKS, RemoveHooks },
 		{ SAVE_HOOKS, SaveHooks },
 		{ SEARCH_FOR_HOOKS, FindHooks },
-		{ SETTINGS, Settings },
+		{ SETTINGS, OpenSettings },
 		{ EXTENSIONS, Extensions }
 	})
 	{
@@ -623,7 +623,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(ui.textOutput, &QPlainTextEdit::selectionChanged, this, CopyUnlessMouseDown);
 	connect(ui.textOutput, &QPlainTextEdit::customContextMenuRequested, this, OutputContextMenu);
 
-	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
+	Settings settings;
 	if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().center())) setGeometry(settings.value(WINDOW).toRect());
 	SetOutputFont(settings.value(FONT, ui.textOutput->font().toString()).toString());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
@@ -672,7 +672,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-	openSettings().setValue(WINDOW, geometry());
+	Settings().setValue(WINDOW, geometry());
 	CleanupExtensions();
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);
