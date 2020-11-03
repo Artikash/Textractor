@@ -2,8 +2,8 @@
 
 DevTools::DevTools(QObject* parent) :
 	QObject(parent),
-	idcounter(0),
-	idmethod(0),
+	idCounter(0),
+	idMethod(0),
 	status("Stopped"),
 	session(0)
 {
@@ -29,19 +29,19 @@ void DevTools::startDevTools(QString path, bool headless, int port)
 			{
 				if (GetJsonfromHTTP(doc, "/json/version", port))
 				{
-					useragent = doc.object().value("User-Agent").toString();
+					userAgent = doc.object().value("User-Agent").toString();
 				}	
 				webSocket.open(webSocketDebuggerUrl);
 				session += 1;
 				return;
 			}
 		}
-		status = "Failed to find chrome debug port!";
+		status = "Failed to find Chrome debug port!";
 		emit statusChanged(status);
 	}
 	else
 	{
-		status = "Failed to start chrome!";
+		status = "Failed to start Chrome!";
 		emit statusChanged(status);
 	}
 }
@@ -58,7 +58,7 @@ QString DevTools::getStatus()
 
 QString DevTools::getUserAgent()
 {
-	return useragent;
+	return userAgent;
 }
 
 DevTools::~DevTools()
@@ -136,7 +136,7 @@ bool DevTools::SendRequest(QString method, QJsonObject params, QJsonObject& root
 	QJsonDocument doc(json);
 	QString message(doc.toJson(QJsonDocument::Compact));
 	mutex.lock();
-	mapqueue.insert(std::make_pair(id, response));
+	mapQueue.insert(std::make_pair(id, response));
 	mutex.unlock();
 	webSocket.sendTextMessage(message);
 	webSocket.flush();
@@ -171,19 +171,19 @@ long DevTools::methodToReceive(QString method, QJsonObject params)
 	json.insert("method", method);
 	json.insert("params", params);
 	mutex.lock();
-	mapmethod.insert(std::make_pair(id, json));
+	mapMethod.insert(std::make_pair(id, json));
 	mutex.unlock();
 	return id;
 }
 
 long DevTools::idIncrement()
 {
-	return ++idcounter;
+	return ++idCounter;
 }
 
 long DevTools::idmIncrement()
 {
-	return ++idmethod;
+	return ++idMethod;
 }
 
 bool DevTools::isConnected()
@@ -194,25 +194,30 @@ bool DevTools::isConnected()
 		return false;
 }
 
-bool DevTools::compareJson(QJsonValue storedparams, QJsonValue params)
+bool DevTools::compareJson(QJsonValue stored, QJsonValue params)
 {
-	if (storedparams.isObject())
+	if (stored.isObject())
 	{
-		foreach(const QString & key, storedparams.toObject().keys())
+		foreach(const QString & key, stored.toObject().keys())
 		{
-			QJsonValue storedvalue = storedparams.toObject().value(key);
+			QJsonValue storedvalue = stored.toObject().value(key);
 			QJsonValue value = params.toObject().value(key);
 			if (!compareJson(storedvalue, value))
 				return false;
 		}
 	}
-	else if (storedparams.isArray())
+	else if (stored.isArray())
 	{
-		for (int i = 0; i < storedparams.toArray().size(); i++)
-			if (!compareJson(storedparams.toArray()[i], params.toArray()[i]))
+		for (int i = 0; i < stored.toArray().size(); i++)
+			if (!compareJson(stored.toArray()[i], params.toArray()[i]))
 				return false;
 	}
-	else if (storedparams.toVariant() != params.toVariant())
+	else if (stored.isString())
+	{
+		if (!stored.toString().contains(params.toString()))
+			return false;
+	}
+	else if (stored.toVariant() != params.toVariant())
 		return false;
 
 	return true;
@@ -220,8 +225,8 @@ bool DevTools::compareJson(QJsonValue storedparams, QJsonValue params)
 
 bool DevTools::checkMethod(long id)
 {
-	MapMethod::iterator iter = mapmethod.find(id);
-	if (iter == mapmethod.end())
+	MapMethod::iterator iter = mapMethod.find(id);
+	if (iter == mapMethod.end())
 		return true;
 	else
 		return false;
@@ -235,13 +240,13 @@ void DevTools::onTextMessageReceived(QString message)
 		QJsonObject root = doc.object();
 		if (root.contains("method"))
 		{
-			for (auto iter = mapmethod.cbegin(); iter != mapmethod.cend();)
+			for (auto iter = mapMethod.cbegin(); iter != mapMethod.cend();)
 			{
 				if (iter->second.value("method") == root.value("method")
 					&& compareJson(iter->second.value("params"), root.value("params")))
 				{
 					mutex.lock();
-					mapmethod.erase(iter++);
+					mapMethod.erase(iter++);
 					mutex.unlock();
 				}
 				++iter;
@@ -251,12 +256,12 @@ void DevTools::onTextMessageReceived(QString message)
 		if (root.contains("id"))
 		{
 			long id = root.value("id").toInt();
-			MapResponse::iterator request = mapqueue.find(id);
-			if (request != mapqueue.end())
+			MapResponse::iterator request = mapQueue.find(id);
+			if (request != mapQueue.end())
 			{
 				request->second.set(root);
 				mutex.lock();
-				mapqueue.erase(request);
+				mapQueue.erase(request);
 				mutex.unlock();
 			}
 			return;
@@ -266,20 +271,20 @@ void DevTools::onTextMessageReceived(QString message)
 
 void DevTools::closeDevTools()
 {
-	if (this->mapqueue.size() > 0)
+	if (this->mapQueue.size() > 0)
 	{
-		MapResponse::iterator iter = mapqueue.begin();
-		MapResponse::iterator iend = mapqueue.end();
+		MapResponse::iterator iter = mapQueue.begin();
+		MapResponse::iterator iend = mapQueue.end();
 		for (; iter != iend; iter++)
 		{
 			iter->second.set_exception("exception");
 		}
 	}
 	webSocket.close();
-	mapmethod.clear();
-	mapqueue.clear();
-	idcounter = 0;
-	idmethod = 0;
+	mapMethod.clear();
+	mapQueue.clear();
+	idCounter = 0;
+	idMethod = 0;
 	DWORD exitCode = 0;
 	if (GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE)
 	{

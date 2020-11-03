@@ -13,33 +13,37 @@ extern const char* TRANSLATE_SELECTED_THREAD_ONLY;
 extern const char* USE_TRANS_CACHE;
 extern const char* MAX_SENTENCE_SIZE;
 extern const char* TRANSLATION_PROVIDER;
-extern QStringList languages;
-const char* PATH_TO_CHROME = u8"Path to chrome";
-const char* AUTO_START_CHROME = u8"Start chrome automatically";
+extern QStringList languagesTo;
+extern QStringList languagesFrom;
+const char* TRANSLATE_FROM = u8"Translate from";
+const char* NATIVE_LANGUAGE_FROM = u8"Japanese";
+const char* PATH_TO_CHROME = u8"Path to Chrome";
+const char* AUTO_START_CHROME = u8"Start Chrome automatically";
 const char* HEADLESS_CHROME = u8"Start in headless mode";
 const char* CHROME_DEBUG_PORT = u8"Chrome debug port";
 const char* DEV_TOOLS_STATUS = u8"Status: ";
 const char* START_DEV_TOOLS_BUTTON = u8"Start";
-const char* START_DEV_TOOLS = u8"Start chrome";
+const char* START_DEV_TOOLS = u8"Start Chrome";
 const char* STOP_DEV_TOOLS_BUTTON = u8"Stop";
-const char* STOP_DEV_TOOLS = u8"Stop chrome";
+const char* STOP_DEV_TOOLS = u8"Stop Chrome";
 
-extern bool useCache, autostartchrome, headlesschrome;
-extern int maxSentenceSize, chromeport;
+extern bool useCache, autoStartChrome, headlessChrome;
+extern int maxSentenceSize, chromePort;
 
-std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devtools);
+std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devTools);
 
-const char* LANGUAGE = u8"Language";
+const char* LANGUAGE_TO = u8"Language";
+const char* LANGUAGE_FROM = u8"Language from";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
-QSettings settings = openSettings();
-Synchronized<std::wstring> translateTo = L"en";
+Settings settings;
+Synchronized<std::wstring> translateTo = L"en", translateFrom = L"ja";
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 
 int savedSize;
-DevTools* devtools = nullptr;
-std::wstring pathtochrome = L"";
+DevTools* devTools = nullptr;
+std::wstring pathToChrome = L"";
 
 void SaveCache()
 {
@@ -67,23 +71,35 @@ public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		display = new QFormLayout(this);
 		settings.beginGroup(TRANSLATION_PROVIDER);
 
-		auto languageBox = new QComboBox(this);
-		languageBox->addItems(languages);
-		int language = -1;
-		if (settings.contains(LANGUAGE)) language = languageBox->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = languageBox->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
-		if (language < 0) language = languageBox->findText("English", Qt::MatchStartsWith);
-		languageBox->setCurrentIndex(language);
-		saveLanguage(languageBox->currentText());
-		display->addRow(TRANSLATE_TO, languageBox);
-		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+		auto languageBoxTo = new QComboBox(this);
+		languageBoxTo->addItems(languagesTo);
+		int languageTo = -1;
+		if (settings.contains(LANGUAGE_TO)) languageTo = languageBoxTo->findText(settings.value(LANGUAGE_TO).toString(), Qt::MatchEndsWith);
+		if (languageTo < 0) languageTo = languageBoxTo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (languageTo < 0) languageTo = languageBoxTo->findText("English", Qt::MatchStartsWith);
+		languageBoxTo->setCurrentIndex(languageTo);
+		saveLanguage(languageBoxTo->currentText());
+		display->addRow(TRANSLATE_TO, languageBoxTo);
+		connect(languageBoxTo, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+
+		auto languageBoxFrom = new QComboBox(this);
+		languageBoxFrom->addItems(languagesFrom);
+		int languageFrom = -1;
+		if (settings.contains(LANGUAGE_FROM)) languageFrom = languageBoxFrom->findText(settings.value(LANGUAGE_FROM).toString(), Qt::MatchEndsWith);
+		if (languageFrom < 0) languageFrom = languageBoxFrom->findText(NATIVE_LANGUAGE_FROM, Qt::MatchStartsWith);
+		if (languageFrom < 0) languageFrom = languageBoxFrom->findText("Japanese", Qt::MatchStartsWith);
+		languageBoxFrom->setCurrentIndex(languageFrom);
+		saveLanguageFrom(languageBoxFrom->currentText());
+		display->addRow(TRANSLATE_FROM, languageBoxFrom);
+		connect(languageBoxFrom, &QComboBox::currentTextChanged, this, &Window::saveLanguageFrom);
 		for (auto [value, label] : Array<bool&, const char*>{
 			{ useCache, USE_TRANS_CACHE },
-			{ autostartchrome, AUTO_START_CHROME },
-			//{ headlesschrome, HEADLESS_CHROME }
+			{ autoStartChrome, AUTO_START_CHROME },
+			//{ headlessChrome, HEADLESS_CHROME }
 			})
 		{
 			value = settings.value(label, value).toBool();
@@ -94,7 +110,7 @@ public:
 		}
 		for (auto [value, label] : Array<int&, const char*>{
 			{ maxSentenceSize, MAX_SENTENCE_SIZE },
-			{ chromeport, CHROME_DEBUG_PORT },
+			{ chromePort, CHROME_DEBUG_PORT },
 			})
 		{
 			value = settings.value(label, value).toInt();
@@ -106,24 +122,24 @@ public:
 		}
 
 		auto keyInput = new QLineEdit(settings.value(PATH_TO_CHROME).toString());
-		pathtochrome = (S(keyInput->text()));
-		if (pathtochrome.empty())
+		pathToChrome = (S(keyInput->text()));
+		if (pathToChrome.empty())
 		{
-			for (auto defaultpath : Array<std::wstring>{
+			for (auto defaultPath : Array<std::wstring>{
 				{ L"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" },
 				{ L"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" },
 				})
-				if (std::filesystem::exists(defaultpath))
+				if (std::filesystem::exists(defaultPath))
 				{
-					pathtochrome = defaultpath;
-					keyInput->setText(S(pathtochrome));
+					pathToChrome = defaultPath;
+					keyInput->setText(S(pathToChrome));
 				}
 		}
-		connect(keyInput, &QLineEdit::textChanged, [keyInput](QString key) { settings.setValue(PATH_TO_CHROME, S(pathtochrome = (S(key)))); });
+		connect(keyInput, &QLineEdit::textChanged, [keyInput](QString key) { settings.setValue(PATH_TO_CHROME, S(pathToChrome = (S(key)))); });
 		display->addRow(PATH_TO_CHROME, keyInput);
 
-		connect(&startButton, &QPushButton::clicked, this, &Window::start);
-		connect(&stopButton, &QPushButton::clicked, this, &Window::stop);
+		connect(&startButton, &QPushButton::clicked, this, &Window::Start);
+		connect(&stopButton, &QPushButton::clicked, this, &Window::Stop);
 		display->addRow(START_DEV_TOOLS, &startButton);
 		display->addRow(STOP_DEV_TOOLS, &stopButton);
 
@@ -144,39 +160,42 @@ public:
 		}
 		savedSize = translationCache->size();
 
-		devtools = new DevTools(this);
-		connect(devtools, &DevTools::statusChanged, [this](QString text)
+		devTools = new DevTools(this);
+		connect(devTools, &DevTools::statusChanged, [this](QString text)
 			{
 				status.setText(text);
 			});
 
-		if (autostartchrome)
-			QMetaObject::invokeMethod(this, &Window::start, Qt::QueuedConnection);
+		if (autoStartChrome)
+			QMetaObject::invokeMethod(this, &Window::Start, Qt::QueuedConnection);
 	}
 
 	~Window()
 	{
-		stop();
-		if (devtools != nullptr)
-			delete devtools;
+		Stop();
+		if (devTools != nullptr)
+			delete devTools;
 		SaveCache();
 	}
 
 private:
-	void start()
+	void Start()
 	{
-		if (devtools->getStatus() == "Stopped")
-			devtools->startDevTools(S(pathtochrome), headlesschrome, chromeport);
+		if (devTools->getStatus() == "Stopped")
+			devTools->startDevTools(S(pathToChrome), headlessChrome, chromePort);
 	}
-	void stop()
+	void Stop()
 	{
-		devtools->closeDevTools();
+		devTools->closeDevTools();
 	}
-
 
 	void saveLanguage(QString language)
 	{
-		settings.setValue(LANGUAGE, S(translateTo->assign(S(language.split(": ")[1]))));
+		settings.setValue(LANGUAGE_TO, S(translateTo->assign(S(language.split(": ")[1]))));
+	}
+	void saveLanguageFrom(QString language)
+	{
+		settings.setValue(LANGUAGE_FROM, S(translateFrom->assign(S(language.split(": ")[1]))));
 	}
 	QPushButton startButton{ START_DEV_TOOLS_BUTTON, this };
 	QPushButton stopButton{ STOP_DEV_TOOLS_BUTTON, this };
@@ -197,7 +216,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translation.empty() && (sentenceInfo["current select"]))
 	{
 		EraseControlCharacters(sentence);
-		std::tie(cache, translation) = Translate(sentence, devtools);
+		std::tie(cache, translation) = Translate(sentence, devTools);
 	}
 		
 	if (cache) translationCache->try_emplace(sentence, translation);
