@@ -48,7 +48,7 @@ QStringList languagesFrom
 	"Spanish: es",
 };
 
-int docFound = -1, targetNodeId = -1, session = -1, pageEnabled = -1, userAgentFlag = -1, backup = -1, sourceLangId = -1;
+int docFound = -1, targetNodeId = -1, session = -1, pageEnabled = -1, userAgentFlag = -1, backup = -1, sourceLangId = -1, mobileShareId = -1;
 long update = -1, callNumber = 0;
 std::vector<long> callQueue;
 
@@ -101,6 +101,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 		docFound = -1;
 		targetNodeId = -1;
 		sourceLangId = -1;
+		mobileShareId = -1;
 		pageEnabled = -1;
 		userAgentFlag = -1;
 		update = -1;
@@ -153,7 +154,9 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 	// Set methods to receive
 	long navigate = devTools->methodToReceive("Page.navigatedWithinDocument");
 	long target;
-	if (backup == -1)
+	if (mobileShareId != -1 && backup == -1)
+		target = devTools->methodToReceive("DOM.attributeModified", { { "nodeId" , mobileShareId } , { "value" , "lmt__mobile_share_container lmt--mobile-hidden" } });
+	else if (mobileShareId == -1 && backup == -1)
 		target = devTools->methodToReceive("DOM.attributeModified", { { "value" , "lmt__mobile_share_container lmt--mobile-hidden" } });
 	else
 		target = devTools->methodToReceive("DOM.childNodeCountUpdated");
@@ -215,6 +218,19 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 		}
 		else
 			sourceLangId = root.value("result").toObject().value("nodeId").toInt();
+	}
+
+	// Get mobile share selector
+	if (mobileShareId == -1 && errorCode == 0)
+	{
+		if (!devTools->SendRequest("DOM.querySelector", { {"nodeId", docFound}, {"selector", "div.lmt__mobile_share_container"} }, root)
+			|| root.value("result").toObject().value("nodeId").toInt() == 0)
+		{
+			docFound = -1;
+			errorCode = 1;
+		}
+		else
+			mobileShareId = root.value("result").toObject().value("nodeId").toInt();
 	}
 
 	// Wait for the translation to appear on the web page
