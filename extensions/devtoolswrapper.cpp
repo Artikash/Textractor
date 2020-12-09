@@ -62,6 +62,11 @@ void EraseControlCharacters(std::wstring& text)
 		{
 			text.erase(it--);
 		}
+		if (*it == '\\' && *(it + 1) == 'n')
+		{
+			text.erase((it + 1)--);
+			text.erase(it--);
+		}
 	}
 }
 

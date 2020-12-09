@@ -15,6 +15,7 @@ const wchar_t* ERROR_GOT_TIMEOUT = L"Error: timeout (s)";
 const wchar_t* ERROR_COMMAND_FAIL = L"Error: command failed";
 const wchar_t* ERROR_LANGUAGE = L"Error: target languages do not match";
 const wchar_t* ERROR_NOTE = L"Error: notification";
+const wchar_t* ERROR_EMPTY_ANSWER = L"Error: empty translation";
 
 QString URL = "https://www.deepl.com/en/translator";
 QStringList languagesTo
@@ -56,6 +57,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 {
 	QString qtext = S(text);
 	qtext.remove(QString(12288)); // japanese space (no need for translator)
+	qtext.replace(QString(12289), ","); // replace the japanese comma with the latin comma for correct translation
 
 	// Remove quotes
 	bool checkQuote = false;
@@ -148,7 +150,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		timer += 0.1;
 	}
-	if (timer >= timerStop)
+	if (timer >= 2 * timerStop)
 		errorCode = 5;
 
 	// Set methods to receive
@@ -243,23 +245,29 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 
 	// Catch the translation
 	QString OuterHTML;
-	if (errorCode == 0 && !devTools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root))
+	if (errorCode == 0)
 	{
-		targetNodeId = -1;
-		errorCode = 1;
+		if (!devTools->SendRequest("DOM.getOuterHTML", { {"nodeId", targetNodeId + 1} }, root))
+		{
+			targetNodeId = -1;
+			errorCode = 1;
+		}
+		else
+		{
+			OuterHTML = root.value("result").toObject().value("outerHTML").toString();
+		}
 	}
-	else
-	{
-		OuterHTML = root.value("result").toObject().value("outerHTML").toString();
-	}
-	if (OuterHTML == "<div></div>")
+	if (errorCode == 0 && OuterHTML == "<div></div>")
 	{
 		// Try to catch the notification
 		int noteNodeId = -1;
-		if (errorCode == 0 && (!devTools->SendRequest("DOM.querySelector", { {"nodeId", docFound}, {"selector", "div.lmt__system_notification"} }, root)
-			|| root.value("result").toObject().value("nodeId").toInt() == 0) && timer >= timerStop)
+		if (!devTools->SendRequest("DOM.querySelector", { {"nodeId", docFound}, {"selector", "div.lmt__system_notification"} }, root)
+			|| root.value("result").toObject().value("nodeId").toInt() == 0)
 		{
-			errorCode = 2;
+			if (timer >= timerStop)
+				errorCode = 2;
+			else
+				errorCode = 6;
 		}
 		else
 		{
@@ -340,6 +348,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 		return { false, FormatString(L"%s (%s): %s", ERROR_LANGUAGE, S(targetLang), S(OuterHTML)) };
 	else if (errorCode == 5)
 		return { false, FormatString(L"%s: %d", ERROR_GOT_TIMEOUT, 2*timerStop) };
+	else if (errorCode == 6)
+		return { false, FormatString(L"%s", ERROR_EMPTY_ANSWER) };
 	else
 		return { false, FormatString(L"%s", TRANSLATION_ERROR) };
 }
