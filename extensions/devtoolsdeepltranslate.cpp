@@ -298,8 +298,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, DevTools* devT
 				{
 					errorCode = 4;
 				}
+				break;
 			}
-			break;
 		}
 	}
 
