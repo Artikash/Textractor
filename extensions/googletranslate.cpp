@@ -125,37 +125,6 @@ QStringList languages
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
 int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
 
-unsigned TKK = 0;
-
-std::wstring GetTranslationUri(const std::wstring& text)
-{
-	// If no TKK available, use this uri. Can't use too much or google will detect unauthorized access
-	if (!TKK) return FormatString(L"/translate_a/single?client=gtx&dt=ld&dt=rm&dt=t&tl=%s&q=%s", translateTo.Copy(), Escape(text));
-
-	// reverse engineered from translate.google.com
-	std::wstring escapedText;
-	unsigned a = time(NULL) / 3600, b = a; // the first part of TKK
-	for (unsigned char ch : WideStringToString(text))
-	{
-		escapedText += FormatString(L"%%%02X", (int)ch);
-		a += ch;
-		a += a << 10;
-		a ^= a >> 6;
-	}
-	a += a << 3;
-	a ^= a >> 11;
-	a += a << 15;
-	a ^= TKK;
-	a %= 1000000;
-
-	return FormatString(L"/translate_a/single?client=webapp&dt=ld&dt=rm&dt=t&sl=auto&tl=%s&tk=%u.%u&q=%s", translateTo.Copy(), a, a ^ b, escapedText);
-}
-
-bool IsHash(const std::wstring& result)
-{
-	return result.size() == 32 && std::all_of(result.begin(), result.end(), [](char ch) { return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'z'); });
-}
-
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!apiKey->empty())
@@ -164,31 +133,40 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			L"translation.googleapis.com",
 			L"POST",
 			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s", translateTo.Copy(), apiKey.Copy()).c_str(),
-			FormatString(R"({"q":["%s"]})", JSON::Escape(text))
+			FormatString(R"({"q":["%s"]})", JSON::Escape(WideStringToString(text)))
 		})
-		{
-			// Response formatted as JSON: starts with "translatedText": " and translation is enclosed in quotes followed by a comma
-			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\"translatedText\": \"(.+?)\","))) return { true, results[1] };
-			return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
-		}
+			if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"data"][L"translations"][0][L"translatedText"].String())) return { true, translation.value() };
+			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 
-	if (!TKK)
-		if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.google.com", L"GET", L"/" })
-			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"(\\d{7,})'")))
-				_InterlockedCompareExchange(&TKK, stoll(results[1]), 0);
-
-	if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"translate.googleapis.com", L"GET", GetTranslationUri(text).c_str() })
+	if (HttpRequest httpRequest{
+		L"Mozilla/5.0 Textractor",
+		L"translate.google.com",
+		L"POST",
+		L"/_/TranslateWebserverUi/data/batchexecute?rpcids=MkEWBc",
+		"f.req=" + Escape(WideStringToString(FormatString(LR"([[["MkEWBc","[[\"%s\",\"auto\",\"%s\",true],[null]]",null,"generic"]]])", JSON::Escape((JSON::Escape(text))), translateTo.Copy()))),
+		L"Content-Type: application/x-www-form-urlencoded"
+	})
 	{
-		// Response formatted as JSON: starts with "[[[" and translation is enclosed in quotes followed by a comma
-		if (httpRequest.response[0] == L'[')
+		if (auto start = httpRequest.response.find(L"[["); start != std::string::npos)
 		{
-			std::wstring translation;
-			for (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"\\[\"(.*?)\",[n\"]")); httpRequest.response = results.suffix())
-				if (!IsHash(results[1])) translation += std::wstring(results[1]) + L" ";
-			if (!translation.empty()) return { true, translation };
+			if (auto blob = Copy(JSON::Parse(httpRequest.response.substr(start))[0][2].String())) if (auto translations = Copy(JSON::Parse(blob.value())[1][0].Array()))
+			{
+				std::wstring translation;
+				if (translations->size() == 1 && (translations = Copy(translations.value()[0][5].Array())))
+				{
+					for (const auto& sentence : translations.value()) if (sentence[0].String()) (translation += *sentence[0].String()) += L" ";
+				}
+				else
+				{
+					for (const auto& conjugation : translations.value())
+						if (auto sentence = conjugation[0].String()) if (auto gender = conjugation[2].String()) translation += FormatString(L"%s %s\n", *sentence, *gender);
+				}
+				if (!translation.empty()) return { true, translation };
+				return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, blob.value()) };
+			}
 		}
-		return { false, FormatString(L"%s (TKK=%u): %s", TRANSLATION_ERROR, _InterlockedExchange(&TKK, 0), httpRequest.response) };
+		return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

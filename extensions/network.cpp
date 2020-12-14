@@ -54,44 +54,11 @@ std::wstring Escape(const std::wstring& text)
 	return escaped;
 }
 
-namespace JSON
+std::string Escape(const std::string& text)
 {
-	void Unescape(std::wstring& text)
-	{
-		for (int i = 0; i < text.size(); ++i)
-		{
-			if (text[i] == L'\\')
-			{
-				text[i] = 0;
-				if (text[i + 1] == L'r') text[i + 1] = 0; // for some reason \r gets displayed as a newline
-				if (text[i + 1] == L'n') text[i + 1] = L'\n';
-				if (text[i + 1] == L't') text[i + 1] = L'\t';
-				if (text[i + 1] == L'\\') ++i;
-			}
-		}
-		text.erase(std::remove(text.begin(), text.end(), 0), text.end());
-	}
-
-	std::string Escape(const std::wstring& text)
-	{
-		std::string escaped = WideStringToString(text);
-		int oldSize = escaped.size();
-		escaped.resize(escaped.size() + std::count_if(escaped.begin(), escaped.end(), [](char ch) { return ch == '\n' || ch == '\r' || ch == '\t' || ch == '\\' || ch == '"'; }));
-		auto out = escaped.rbegin();
-		for (int i = oldSize - 1; i >= 0; --i)
-		{
-			if (escaped[i] == '\n') *out++ = 'n';
-			else if (escaped[i] == '\t') *out++ = 't';
-			else if (escaped[i] == '\r') *out++ = 'r';
-			else if (escaped[i] == '\\' || escaped[i] == '"') *out++ = escaped[i];
-			else
-			{
-				*out++ = escaped[i];
-				continue;
-			}
-			*out++ = '\\';
-		}
-		escaped.erase(std::remove_if(escaped.begin(), escaped.end(), [](unsigned char ch) { return ch < 0x20; }), escaped.end());
-		return escaped;
-	}
+	std::string escaped;
+	for (unsigned char ch : text) escaped += FormatString("%%%02X", (int)ch);
+	return escaped;
 }
+
+//TEST(assert(JSON::Parse(LR"([{"string":"hello world","boolean":false,"number": 1.67e+4,"null": null,"array":[]},"hello world"])")))

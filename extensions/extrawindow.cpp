@@ -197,7 +197,7 @@ public:
 	void AddSentence(QString sentence)
 	{
 		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
-		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
+		if (!showOriginal) sentence = sentence.section("\n----\n", sentence.count("\n----\n") / 2 + 1);
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);
