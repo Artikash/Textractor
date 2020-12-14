@@ -45,7 +45,7 @@ namespace JSON
 		int i = 0;
 		for (; i < text.size(); ++i)
 		{
-			char ch = text[i];
+			auto ch = text[i];
 			if (ch == '"') return { unescaped, i + 1 };
 			if (ch == '\\')
 			{
