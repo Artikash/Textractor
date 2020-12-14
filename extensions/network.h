@@ -50,7 +50,7 @@ namespace JSON
 			if (ch == '\\')
 			{
 				ch = text[i + 1];
-				if (ch == 'u' && std::isxdigit(text[i + 2]) && std::isxdigit(text[i + 3]) && std::isxdigit(text[i + 4]) && std::isxdigit(text[i + 5]))
+				if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
 				{
 					char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
 					unescaped += UTF(strtol(charCode, nullptr, 16));
@@ -154,7 +154,7 @@ namespace JSON
 
 		if (ch == '-' || (ch >= '0' && ch <= '9'))
 		{
-			// no numbers currently used, add a actual parser when needed
+			// no numbers currently used, add an actual parser when needed
 			while (i < text.size() && ((text[i] >= '0' && text[i] <= '9') || text[i] == '-' || text[i] == '+' || text[i] == 'e' || text[i] == 'E' || text[i] == '.')) ++i;
 			return 0.0;
 		}
