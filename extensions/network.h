@@ -33,43 +33,6 @@ std::string Escape(const std::string& text);
 
 namespace JSON
 {
-	inline std::wstring UTF(int charCode)
-	{
-		return { (wchar_t)charCode };
-	}
-
-	template <typename C>
-	std::pair<std::basic_string<C>, int> Unescape(std::basic_string_view<C> text)
-	{
-		std::basic_string<C> unescaped;
-		int i = 0;
-		for (; i < text.size(); ++i)
-		{
-			auto ch = text[i];
-			if (ch == '"') return { unescaped, i + 1 };
-			if (ch == '\\')
-			{
-				ch = text[i + 1];
-				if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
-				{
-					char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
-					unescaped += UTF(strtol(charCode, nullptr, 16));
-					i += 5;
-					continue;
-				}
-				for (auto [original, value] : Array<char, char>{ { 'b', '\b' }, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'} }) if (ch == original)
-				{
-					unescaped.push_back(value);
-					goto replaced;
-				}
-				unescaped.push_back(ch);
-				replaced: i += 1;
-			}
-			else unescaped.push_back(ch);
-		}
-		return { unescaped, i };
-	}
-
 	template <typename C>
 	std::basic_string<C> Escape(std::basic_string<C> text)
 	{
@@ -91,6 +54,44 @@ namespace JSON
 		}
 		text.erase(std::remove_if(text.begin(), text.end(), [](uint64_t ch) { return ch < 0x20 || ch == 0x7f; }), text.end());
 		return text;
+	}
+
+	template <typename C> struct UTF {};
+	template <> struct UTF<wchar_t>
+	{
+		inline static std::wstring FromCodepoint(int codepoint) { return { (wchar_t)codepoint }; } // TODO: surrogate pairs
+	};
+
+	template <typename C>
+	std::pair<std::basic_string<C>, int> Unescape(std::basic_string_view<C> text)
+	{
+		std::basic_string<C> unescaped;
+		int i = 0;
+		for (; i < text.size(); ++i)
+		{
+			auto ch = text[i];
+			if (ch == '"') return { unescaped, i + 1 };
+			if (ch == '\\')
+			{
+				ch = text[i + 1];
+				if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
+				{
+					char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
+					unescaped += UTF<C>::FromCodepoint(strtol(charCode, nullptr, 16));
+					i += 5;
+					continue;
+				}
+				for (auto [original, value] : Array<char, char>{ { 'b', '\b' }, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'} }) if (ch == original)
+				{
+					unescaped.push_back(value);
+					goto replaced;
+				}
+				unescaped.push_back(ch);
+				replaced: i += 1;
+			}
+			else unescaped.push_back(ch);
+		}
+		return { unescaped, i };
 	}
 
 	template <typename C>
@@ -119,10 +120,10 @@ namespace JSON
 		}
 	};
 	
-	template <typename C>
+	template <typename C, int maxDepth = 25>
 	Value<C> Parse(std::basic_string_view<C> text, int64_t& i, int depth)
 	{
-		if (depth > 25) return {};
+		if (depth > maxDepth) return {};
 		C ch;
 		auto SkipWhitespace = [&]
 		{
@@ -169,7 +170,7 @@ namespace JSON
 				i += 1;
 				if (SkipWhitespace()) return {};
 				if (ch == ']') return i += 1, Value<C>(array);
-				if (!array.emplace_back(Parse(text, i, depth + 1))) return {};
+				if (!array.emplace_back(Parse<C, maxDepth>(text, i, depth + 1))) return {};
 				if (SkipWhitespace()) return {};
 				if (ch == ']') return i += 1, Value<C>(array);
 				if (ch != ',') return {};
@@ -188,7 +189,7 @@ namespace JSON
 				auto key = ExtractString();
 				if (SkipWhitespace() || ch != ':') return {};
 				i += 1;
-				if (!(object[std::move(key)] = Parse(text, i, depth + 1))) return {};
+				if (!(object[std::move(key)] = Parse<C, maxDepth>(text, i, depth + 1))) return {};
 				if (SkipWhitespace()) return {};
 				if (ch == '}') return i += 1, Value<C>(object);
 				if (ch != ',') return {};

@@ -161,7 +161,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
 	for (int i = 0; i < translation.size(); ++i) if (translation[i] == '\r' && translation[i + 1] == '\n') translation[i] = 0x200b; // for some reason \r appears as newline - no need to double
-	if (!translation.empty()) (sentence += L"\n----\n") += translation;
+	if (!translation.empty()) (sentence += L"\x200b \n") += translation;
 	return true;
 }
 
