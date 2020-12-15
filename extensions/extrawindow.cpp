@@ -197,7 +197,7 @@ public:
 	void AddSentence(QString sentence)
 	{
 		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
-		if (!showOriginal && sentence.count(u8"\x200b \n")) sentence = sentence.split(u8"\x200b \n")[1];
+		if (!showOriginal && sentence.contains(u8"\x200b \n")) sentence = sentence.split(u8"\x200b \n")[1];
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);

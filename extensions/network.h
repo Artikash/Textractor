@@ -63,38 +63,6 @@ namespace JSON
 	};
 
 	template <typename C>
-	std::pair<std::basic_string<C>, int> Unescape(std::basic_string_view<C> text)
-	{
-		std::basic_string<C> unescaped;
-		int i = 0;
-		for (; i < text.size(); ++i)
-		{
-			auto ch = text[i];
-			if (ch == '"') return { unescaped, i + 1 };
-			if (ch == '\\')
-			{
-				ch = text[i + 1];
-				if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
-				{
-					char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
-					unescaped += UTF<C>::FromCodepoint(strtol(charCode, nullptr, 16));
-					i += 5;
-					continue;
-				}
-				for (auto [original, value] : Array<char, char>{ { 'b', '\b' }, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'} }) if (ch == original)
-				{
-					unescaped.push_back(value);
-					goto replaced;
-				}
-				unescaped.push_back(ch);
-				replaced: i += 1;
-			}
-			else unescaped.push_back(ch);
-		}
-		return { unescaped, i };
-	}
-
-	template <typename C>
 	struct Value : private std::variant<std::monostate, std::nullopt_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>
 	{
 		using std::variant<std::monostate, std::nullopt_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>::variant;
@@ -102,6 +70,7 @@ namespace JSON
 		explicit operator bool() const { return index(); }
 		bool IsNull() const { return index() == 1; }
 		auto Boolean() const { return std::get_if<bool>(this); }
+		auto Number() const { return std::get_if<double>(this); }
 		auto String() const { return std::get_if<std::basic_string<C>>(this); }
 		auto Array() const { return std::get_if<std::vector<Value<C>>>(this); }
 		auto Object() const { return std::get_if<std::unordered_map<std::basic_string<C>, Value<C>>>(this); }
@@ -121,7 +90,7 @@ namespace JSON
 	};
 	
 	template <typename C, int maxDepth = 25>
-	Value<C> Parse(std::basic_string_view<C> text, int64_t& i, int depth)
+	Value<C> Parse(const std::basic_string<C>& text, int64_t& i, int depth)
 	{
 		if (depth > maxDepth) return {};
 		C ch;
@@ -134,10 +103,33 @@ namespace JSON
 		};
 		auto ExtractString = [&]
 		{
+			std::basic_string<C> unescaped;
 			i += 1;
-			auto [string, length] = Unescape(text.substr(i));
-			i += length;
-			return string;
+			for (; i < text.size(); ++i)
+			{
+				auto ch = text[i];
+				if (ch == '"') return i += 1, unescaped;
+				if (ch == '\\')
+				{
+					ch = text[i + 1];
+					if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
+					{
+						char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
+						unescaped += UTF<C>::FromCodepoint(strtol(charCode, nullptr, 16));
+						i += 5;
+						continue;
+					}
+					for (auto [original, value] : Array<char, char>{ { 'b', '\b' }, {'f', '\f'}, {'n', '\n'}, {'r', '\r'}, {'t', '\t'} }) if (ch == original)
+					{
+						unescaped.push_back(value);
+						goto replaced;
+					}
+					unescaped.push_back(ch);
+					replaced: i += 1;
+				}
+				else unescaped.push_back(ch);
+			}
+			return unescaped;
 		};
 
 		if (SkipWhitespace()) return {};
@@ -155,9 +147,10 @@ namespace JSON
 
 		if (ch == '-' || (ch >= '0' && ch <= '9'))
 		{
-			// no numbers currently used, add an actual parser when needed
-			while (i < text.size() && ((text[i] >= '0' && text[i] <= '9') || text[i] == '-' || text[i] == '+' || text[i] == 'e' || text[i] == 'E' || text[i] == '.')) ++i;
-			return 0.0;
+			std::string number;
+			for (; i < text.size() && ((text[i] >= '0' && text[i] <= '9') || text[i] == '-' || text[i] == '+' || text[i] == 'e' || text[i] == 'E' || text[i] == '.'); ++i)
+				number.push_back(text[i]);
+			return strtod(number.c_str(), NULL);
 		}
 
 		if (ch == '"') return ExtractString();
@@ -203,6 +196,6 @@ namespace JSON
 	Value<C> Parse(const std::basic_string<C>& text)
 	{
 		int64_t start = 0;
-		return Parse((std::basic_string_view<C>)text, start, 0);
+		return Parse(text, start, 0);
 	}
 }

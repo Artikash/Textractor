@@ -61,4 +61,4 @@ std::string Escape(const std::string& text)
 	return escaped;
 }
 
-//TEST(assert(JSON::Parse(LR"([{"string":"hello world","boolean":false,"number": 1.67e+4,"null": null,"array":[]},"hello world"])")))
+TEST(assert(JSON::Parse<wchar_t>(LR"([{"string":"hello world","boolean":false,"number":1.67e+4,"null":null,"array":[]},"hello world"])")))
