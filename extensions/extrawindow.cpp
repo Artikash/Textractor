@@ -46,6 +46,7 @@ struct PrettyWindow : QDialog
 {
 	PrettyWindow(const char* name)
 	{
+		localize();
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
@@ -76,7 +77,7 @@ struct PrettyWindow : QDialog
 
 protected:
 	QMenu menu{ ui.display };
-	QSettings settings{ openSettings(this) };
+	Settings settings{ this };
 
 private:
 	void RequestFont()
@@ -196,7 +197,7 @@ public:
 	void AddSentence(QString sentence)
 	{
 		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
-		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
+		if (!showOriginal && sentence.contains(u8"\x200b \n")) sentence = sentence.split(u8"\x200b \n")[1];
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);

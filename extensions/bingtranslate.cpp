@@ -91,12 +91,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			L"api.cognitive.microsofttranslator.com",
 			L"POST",
 			FormatString(L"/translate?api-version=3.0&to=%s", translateTo.Copy()).c_str(),
-			FormatString(R"([{"text":"%s"}])", JSON::Escape(text)),
+			FormatString(R"([{"text":"%s"}])", JSON::Escape(WideStringToString(text))),
 			FormatString(L"Content-Type: application/json; charset=UTF-8\r\nOcp-Apim-Subscription-Key:%s", apiKey.Copy()).c_str()
 		})
 		{
-			// Response formatted as JSON: translation starts with text":" and ends with ","to
-			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\",\""))) return { true, results[1] };
+			if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		}
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
@@ -107,8 +106,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		L"POST",
 		FormatString(L"/ttranslatev3?fromLang=auto-detect&to=%s&text=%s", translateTo.Copy(), Escape(text)).c_str()
 	})
-		// Response formatted as JSON: translation starts with text":" and ends with ","to
-		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\",\""))) return { true, results[1] };
+		if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

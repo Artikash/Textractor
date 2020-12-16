@@ -27,23 +27,15 @@ constexpr bool x64 = true;
 constexpr bool x64 = false;
 #endif
 
-template <typename T, typename... Xs>
-struct ArrayImpl { using Type = std::tuple<T, Xs...>[]; };
-template <typename T>
-struct ArrayImpl<T> { using Type = T[]; };
-template <typename... Ts>
-using Array = typename ArrayImpl<Ts...>::Type;
+template <typename T, typename... Xs> struct ArrayImpl { using Type = std::tuple<T, Xs...>[]; };
+template <typename T> struct ArrayImpl<T> { using Type = T[]; };
+template <typename... Ts> using Array = typename ArrayImpl<Ts...>::Type;
 
-template <auto F>
-using Functor = std::integral_constant<std::remove_reference_t<decltype(F)>, F>;
-
-template <typename V>
-struct Identity { V operator()(V v) const { return v; } };
+template <auto F> using Functor = std::integral_constant<std::remove_reference_t<decltype(F)>, F>; // shouldn't need remove_reference_t but MSVC is bugged
 
 struct PermissivePointer
 {
-	template <typename T>
-	operator T*() { return (T*)p; }
+	template <typename T> operator T*() { return (T*)p; }
 	void* p;
 };
 
@@ -77,29 +69,23 @@ public:
 
 	Locker Acquire() { return { std::unique_lock(m), contents }; }
 	Locker operator->() { return Acquire(); }
-
-	T Copy()
-	{
-		return Acquire().contents;
-	}
+	T Copy() { return Acquire().contents; }
 
 private:
 	T contents;
 	M m;
 };
 
-static struct
+static struct // should be inline but MSVC (linker) is bugged
 {
-	BYTE DUMMY[100];
-	template <typename T> 
-	operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
+	inline static BYTE DUMMY[100];
+	template <typename T> operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
 } DUMMY;
 
-template <typename T>
-inline auto FormatArg(T arg) { return arg; }
+template <typename T> std::optional<std::remove_cv_t<T>> Copy(T* ptr) { if (ptr) return *ptr; return {}; }
 
-template <typename C>
-inline auto FormatArg(const std::basic_string<C>& arg) { return arg.c_str(); }
+template <typename T> inline auto FormatArg(T arg) { return arg; }
+template <typename C> inline auto FormatArg(const std::basic_string<C>& arg) { return arg.c_str(); }
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -147,6 +133,8 @@ inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { Mes
 
 template <typename... Args>
 inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { std::thread([=] { TEXTRACTOR_MESSAGE(format, args...); }).detach(); }
+
+void localize();
 
 #ifdef _DEBUG
 #define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 

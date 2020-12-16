@@ -147,7 +147,7 @@ namespace
 	{
 		QMultiHash<QString, DWORD> allProcesses;
 		for (auto [processId, processName] : GetAllProcesses())
-			if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::wstring::npos))
+			if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::string::npos))
 				allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
 
 		QStringList processList(allProcesses.uniqueKeys());
@@ -165,7 +165,7 @@ namespace
 		std::wstring path = std::wstring(process).erase(process.rfind(L'\\'));
 
 		PROCESS_INFORMATION info = {};
-		auto useLocale = openSettings().value(CONFIG_JP_LOCALE, PROMPT).toInt();
+		auto useLocale = Settings().value(CONFIG_JP_LOCALE, PROMPT).toInt();
 		if (!x64 && (useLocale == ALWAYS || (useLocale == PROMPT && QMessageBox::question(This, SELECT_PROCESS, USE_JP_LOCALE) == QMessageBox::Yes)))
 		{
 			if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
@@ -202,7 +202,7 @@ namespace
 	{
 		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
 		{
-			std::wstring configFile = std::wstring(processName.value()).replace(last, std::wstring::npos, GAME_CONFIG_FILE);
+			std::wstring configFile = std::wstring(processName.value()).replace(last, std::string::npos, GAME_CONFIG_FILE);
 			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
 			if (std::filesystem::exists(configFile)) _wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
 			else QMessageBox::critical(This, GAME_CONFIG, QString(FAILED_TO_CREATE_CONFIG_FILE).arg(S(configFile)));
@@ -439,10 +439,10 @@ namespace
 		}).detach();
 	}
 
-	void Settings()
+	void OpenSettings()
 	{
 		QDialog dialog(This, Qt::WindowCloseButtonHint);
-		QSettings settings(CONFIG_FILE, QSettings::IniFormat, &dialog);
+		Settings settings(&dialog);
 		QFormLayout layout(&dialog);
 		QPushButton saveButton(SAVE_SETTINGS, &dialog);
 		for (auto [value, label] : Array<bool&, const char*>{
@@ -501,7 +501,7 @@ namespace
 		font.fromString(fontString);
 		font.setStyleStrategy(QFont::NoFontMerging);
 		ui.textOutput->setFont(font);
-		QSettings(CONFIG_FILE, QSettings::IniFormat).setValue(FONT, font.toString());
+		Settings().setValue(FONT, font.toString());
 	}
 
 	void ProcessConnected(DWORD processId)
@@ -605,7 +605,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 		{ REMOVE_HOOKS, RemoveHooks },
 		{ SAVE_HOOKS, SaveHooks },
 		{ SEARCH_FOR_HOOKS, FindHooks },
-		{ SETTINGS, Settings },
+		{ SETTINGS, OpenSettings },
 		{ EXTENSIONS, Extensions }
 	})
 	{
@@ -623,7 +623,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(ui.textOutput, &QPlainTextEdit::selectionChanged, this, CopyUnlessMouseDown);
 	connect(ui.textOutput, &QPlainTextEdit::customContextMenuRequested, this, OutputContextMenu);
 
-	QSettings settings(CONFIG_FILE, QSettings::IniFormat);
+	Settings settings;
 	if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().center())) setGeometry(settings.value(WINDOW).toRect());
 	SetOutputFont(settings.value(FONT, ui.textOutput->font().toString()).toString());
 	TextThread::filterRepetition = settings.value(FILTER_REPETITION, TextThread::filterRepetition).toBool();
@@ -649,7 +649,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 			if (arg[1] == L'p' || arg[1] == L'P')
 				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
 				else for (auto [processId, processName] : processes)
-					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::wstring::npos) Host::InjectProcess(processId);
+					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::string::npos) Host::InjectProcess(processId);
 
 	std::thread([]
 	{
@@ -672,7 +672,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-	openSettings().setValue(WINDOW, geometry());
+	Settings().setValue(WINDOW, geometry());
 	CleanupExtensions();
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
 	ExitProcess(0);

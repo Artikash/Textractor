@@ -16396,19 +16396,19 @@ bool InsertShinyDaysGameHook()
     0xff,0x83,0x70,0x03,0x00,0x00,0x33,0xf6,
     0xc6,0x84,0x24,0x90,0x02,0x00,0x00,0x02
   };
-  LPVOID addr = (LPVOID)0x42ad94;
-  if (::memcmp(addr, bytes, sizeof(bytes)) != 0) {
-    ConsoleOutput("vnreng:ShinyDays: only work for 1.00");
-    return false;
+
+  for (auto addr : Util::SearchMemory(bytes, sizeof(bytes))) {
+    HookParam hp = {};
+    hp.address = addr + 0x8;
+    hp.text_fun = SpecialGameHookShinyDays;
+    hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+    ConsoleOutput("Textractor: INSERT ShinyDays");
+    NewHook(hp, "ShinyDays");
+    return true;
   }
 
-  HookParam hp = {};
-  hp.address = 0x42ad9c;
-  hp.text_fun = SpecialGameHookShinyDays;
-  hp.type = USING_UNICODE|USING_STRING|NO_CONTEXT;
-  ConsoleOutput("vnreng: INSERT ShinyDays");
-  NewHook(hp, "ShinyDays 1.00");
-  return true;
+  ConsoleOutput("Textractor:ShinyDays: pattern not found");
+  return false;
 }
 
 #if 0 // disabled as lova does not allow module from being modified

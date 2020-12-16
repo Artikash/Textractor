@@ -50,13 +50,14 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			L"Content-Type: application/x-www-form-urlencoded"
 		})))
 			// Response formatted as JSON: translation starts with text":" and ends with "}]
-			if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"text\":\"(.+?)\"\\}\\]"))) return { true, results[1] };
+			if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"translations"][0][L"text"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 
 	// the following code was reverse engineered from the DeepL website; it's as close as I could make it but I'm not sure what parts of this could be removed and still have it work
 	int64_t r = _time64(nullptr), n = std::count(text.begin(), text.end(), L'i') + 1;
-	int id = 10000 * std::uniform_int_distribution(0, 9999)(std::mt19937(std::random_device()()));
+	thread_local auto generator = std::mt19937(std::random_device()());
+	int id = 10000 * std::uniform_int_distribution(0, 9999)(generator) + 1;
 	// user_preferred_langs? what should priority be? does timestamp do anything? other translation quality options?
 	auto body = FormatString(R"(
 {
@@ -80,21 +81,19 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		}]
 	}
 }
-	)", ++id, r + (n - r % n), translateTo.Copy(), JSON::Escape(text));
+	)", id, r + (n - r % n), translateTo.Copy(), JSON::Escape(WideStringToString(text)));
 	// missing accept-encoding header since it fucks up HttpRequest
-	std::wstring headers = L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: text/plain; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers";
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www2.deepl.com",
 		L"POST",
 		L"/jsonrpc",
 		body,
-		headers.c_str(),
+		L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: application/json; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers",
 		L"https://www.deepl.com/translator",
 		WINHTTP_FLAG_SECURE
 	})
-		// Response formatted as JSON: translation starts with preprocessed_sentence":" and ends with ","
-		if (std::wsmatch results; std::regex_search(httpRequest.response, results, std::wregex(L"postprocessed_sentence\":\"(.+?)\",\""))) return { true, results[1] };
+		if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"result"][L"translations"][0][L"beams"][0][L"postprocessed_sentence"].String())) return { true, translation.value() };
 		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }

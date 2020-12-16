@@ -17,6 +17,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
 
 		layout.addWidget(&linkList);
