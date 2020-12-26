@@ -61,7 +61,7 @@ public:
 private:
 	static bool Ignore(wchar_t ch)
 	{
-		return ch <= 0x20 || std::iswspace(ch);
+		return ch <= 0x20 || iswspace(ch);
 	}
 
 	template <typename Node>

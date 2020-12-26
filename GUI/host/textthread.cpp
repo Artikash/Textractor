@@ -70,6 +70,14 @@ void TextThread::Push(BYTE* data, int length)
 	}
 }
 
+void TextThread::Push(const wchar_t* data)
+{
+	std::scoped_lock lock(bufferMutex);
+	// not sure if this should filter repetition
+	lastPushTime = GetTickCount();
+	buffer += data;
+}
+
 void TextThread::Flush()
 {
 	{

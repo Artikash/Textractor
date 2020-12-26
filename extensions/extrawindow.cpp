@@ -46,6 +46,7 @@ struct PrettyWindow : QDialog
 {
 	PrettyWindow(const char* name)
 	{
+		localize();
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
@@ -76,7 +77,7 @@ struct PrettyWindow : QDialog
 
 protected:
 	QMenu menu{ ui.display };
-	QSettings settings{ openSettings(this) };
+	Settings settings{ this };
 
 private:
 	void RequestFont()
@@ -196,7 +197,7 @@ public:
 	void AddSentence(QString sentence)
 	{
 		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
-		if (!showOriginal) sentence = sentence.section('\n', sentence.count('\n') / 2 + 1);
+		if (!showOriginal && sentence.contains(u8"\x200b \n")) sentence = sentence.split(u8"\x200b \n")[1];
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);
@@ -302,7 +303,7 @@ private:
 	}
 
 	bool locked, showOriginal, useDictionary;
-	int maxSentenceSize = 500;
+	int maxSentenceSize = 1000;
 	QPoint oldPos;
 
 	class
@@ -444,8 +445,8 @@ private:
 			{
 				QStringList currentInflectionsUsed = inflectionsUsed;
 				currentInflectionsUsed.push_front(inflection.name);
-				QString root = inflection.root;
-				for (int i = 0; i < root.size(); ++i) if (root[i].isDigit()) root.replace(i, 1, match.captured(root[i].digitValue()));
+				QString root;
+				for (const auto& ch : inflection.root) root += ch.isDigit() ? match.captured(ch.digitValue()) : ch;
 				for (const auto& definition : LookupDefinitions(root, foundDefinitions, currentInflectionsUsed)) results.push_back(definition);
 			}
 			return results;

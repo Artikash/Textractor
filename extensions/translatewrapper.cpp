@@ -23,13 +23,13 @@ extern const char* GET_API_KEY_FROM;
 extern QStringList languages;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
 extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
-std::pair<bool, std::wstring> Translate(const std::wstring& text, SentenceInfo sentenceInfo);
+std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
 const char* LANGUAGE = u8"Language";
-const std::string TRANSLATION_CACHE_FILE = FormatString("%s Cache.txt", TRANSLATION_PROVIDER);
+const std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
-QSettings settings = openSettings();
+Settings settings;
 Synchronized<std::wstring> translateTo = L"en", apiKey;
 
 Synchronized<std::map<std::wstring, std::wstring>> translationCache;
@@ -50,6 +50,7 @@ public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		display = new QFormLayout(this);
 
 		settings.beginGroup(TRANSLATION_PROVIDER);
@@ -154,14 +155,14 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
 	}
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
-		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, sentenceInfo);
+		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence);
 		else translation = TOO_MANY_TRANS_REQUESTS;
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
-	JSON::Unescape(translation);
-	sentence += L"\n" + translation;
+	for (int i = 0; i < translation.size(); ++i) if (translation[i] == '\r' && translation[i + 1] == '\n') translation[i] = 0x200b; // for some reason \r appears as newline - no need to double
+	if (!translation.empty()) (sentence += L"\x200b \n") += translation;
 	return true;
 }
 
-TEST(assert(Translate(L"こんにちは").second.find(L"ello") != std::wstring::npos));
+TEST(assert(Translate(L"こんにちは").second.find(L"ello") != std::string::npos));

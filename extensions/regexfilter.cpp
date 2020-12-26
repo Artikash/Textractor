@@ -21,6 +21,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		ui.setupUi(this);
 
 		connect(ui.input, &QLineEdit::textEdited, this, &Window::setRegex);

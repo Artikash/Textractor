@@ -4,7 +4,6 @@
 // 8/23/2013 jichi
 // Branch: ITH/IHF_DLL.h, rev 66
 
-#include "common.h"
 #include "types.h"
 
 void TextOutput(ThreadParam tp, BYTE (*buffer)[PIPE_BUFFER_SIZE], int len);

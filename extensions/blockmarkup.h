@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include <istream>
 
 template <typename C, int delimiterCount, int blockSize = 0x1000 / sizeof(C)> // windows file block size

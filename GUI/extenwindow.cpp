@@ -33,10 +33,13 @@ namespace
 
 	bool Load(QString extenName)
 	{
-		// Extension is dll and exports "OnNewSentence"
-		if (QTextFile(extenName + ".dll", QIODevice::ReadOnly).readAll().contains("OnNewSentence"))
+		if (extenName.endsWith(".dll")) extenName.chop(4);
+		if (extenName.endsWith(".xdll")) extenName.chop(5);
+		if (!QFile::exists(extenName + ".xdll")) QFile::copy(extenName + ".dll", extenName + ".xdll");
+		// Extension must export "OnNewSentence"
+		if (QTextFile(extenName + ".xdll", QIODevice::ReadOnly).readAll().contains("OnNewSentence"))
 		{
-			if (HMODULE module = LoadLibraryW(S(extenName + ".dll").c_str()))
+			if (HMODULE module = LoadLibraryW(S(extenName + ".xdll").c_str()))
 			{
 				if (auto callback = (decltype(Extension::callback))GetProcAddress(module, "OnNewSentence"))
 				{
@@ -53,7 +56,7 @@ namespace
 	void Unload(int index)
 	{
 		std::scoped_lock writeLock(extenMutex);
-		FreeLibrary(GetModuleHandleW((extensions.at(index).name + L".dll").c_str()));
+		FreeLibrary(GetModuleHandleW((extensions.at(index).name + L".xdll").c_str()));
 		extensions.erase(extensions.begin() + index);
 	}
 
@@ -80,14 +83,14 @@ namespace
 
 	void Add(QFileInfo extenFile)
 	{
-		if (extenFile.suffix() == "dll")
+		if (extenFile.suffix() == "dll" || extenFile.suffix() == "xdll")
 		{
 			if (extenFile.absolutePath() != QDir::currentPath())
 			{
 				if (QFile::exists(extenFile.fileName()) && QMessageBox::question(This, EXTENSIONS, CONFIRM_EXTENSION_OVERWRITE) == QMessageBox::Yes) QFile::remove(extenFile.fileName());
 				if (!QFile::copy(extenFile.absoluteFilePath(), extenFile.fileName())) QMessageBox::warning(This, EXTENSIONS, EXTENSION_WRITE_ERROR);
 			}
-			if (Load(extenFile.completeBaseName())) return Sync();
+			if (Load(extenFile.fileName())) return Sync();
 		}
 		QMessageBox::information(This, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
 	}
@@ -96,7 +99,7 @@ namespace
 	{
 		QAction addExtension(ADD_EXTENSION);
 		if (QMenu::exec({ &addExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
-			if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+			if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll)\nLibraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
 	}
 }
 
@@ -115,7 +118,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 void CleanupExtensions()
 {
 	std::scoped_lock writeLock(extenMutex);
-	for (auto extension : extensions) FreeLibrary(GetModuleHandleW((extension.name + L".dll").c_str()));
+	for (auto extension : extensions) FreeLibrary(GetModuleHandleW((extension.name + L".xdll").c_str()));
 	extensions.clear();
 }
 

@@ -47,6 +47,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
+		localize();
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
 		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText(LUA_INTRO);
@@ -83,9 +84,9 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	thread_local static struct { std::unique_ptr<lua_State, Functor<lua_close>> L{ luaL_newstate() }; operator lua_State*() { return L.get(); } } L;
-	thread_local static auto _ = (luaL_openlibs(L), luaL_dostring(L, "function ProcessSentence() end"));
-	thread_local static int revCount = 0;
+	thread_local struct { std::unique_ptr<lua_State, Functor<lua_close>> L{ luaL_newstate() }; operator lua_State*() { return L.get(); } } L;
+	thread_local auto _ = (luaL_openlibs(L), luaL_dostring(L, "function ProcessSentence() end"));
+	thread_local int revCount = 0;
 
 	if (::revCount > revCount)
 	{

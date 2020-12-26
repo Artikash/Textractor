@@ -125,6 +125,7 @@ bool InsertNeXASHook();         // NeXAS: Thumbnail.pac
 bool InsertNextonHook();        // NEXTON: aInfo.db
 bool InsertNexton1Hook();
 bool InsertNitroplusHook();     // Nitroplus: *.npa
+bool InsertTokyoNecroHook();    // Nitroplus TokyoNecro: *.npk, resource string
 bool InsertPalHook();           // AMUSE CRAFT: *.pac
 bool InsertPensilHook();        // Pensil: PSetup.exe
 bool InsertPONScripterHook();
@@ -163,7 +164,7 @@ void InsertRyokuchaHook();      // Ryokucha: _checksum.exe
 void InsertRealliveHook();      // RealLive: RealLive*.exe
 void InsertStuffScriptHook();   // Stuff: *.mpk
 bool InsertTinkerBellHook();    // TinkerBell: arc00.dat
-void InsertWaffleHook();        // WAFFLE: cg.pak
+bool InsertWaffleHook();        // WAFFLE: cg.pak
 
 // CIRCUS: avdata/
 bool InsertCircusHook1();
