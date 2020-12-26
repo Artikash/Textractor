@@ -1,32 +1,45 @@
-include_directories(. util)
+cmake_minimum_required(VERSION 3.16)
+
+project(Textractor)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+add_compile_options(
+  /std:c++17
+  /MP
+  /wd4018 # signed/unsigned mismatch
+  /DVERSION="${VERSION}"
+  /DUNICODE # config.pri
+  /D_UNICODE
+)
 
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-set(texthook_src
-  main.cc
-  texthook.cc
-  hookfinder.cc
-  engine/match.cc
-  engine/match64.cc
-  engine/native/pchooks.cc
-  util/ithsys/ithsys.cc
-  util/util.cc
-)
+  set(CMAKE_FINAL_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/${CMAKE_BUILD_TYPE}_x64)
+  link_directories(x64libs)
 else()
-set(texthook_src
-  main.cc
-  texthook.cc
-  hookfinder.cc
-  engine/engine.cc
-  engine/match.cc
-  engine/match32.cc
-  engine/native/pchooks.cc
-  util/util.cc
-  util/ithsys/ithsys.cc
-  util/disasm/disasm.cc
-  util/memdbg/memsearch.cc
-)
+  set(CMAKE_FINAL_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/${CMAKE_BUILD_TYPE}_x86)
+  link_directories(x86libs)
 endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_FINAL_OUTPUT_DIRECTORY}>)
 
-add_library(texthook MODULE ${texthook_src})
-target_precompile_headers(texthook REUSE_FROM pch)
-target_link_libraries(texthook minhook)
+include_directories(include)
+add_library(pch text.cpp)
+target_precompile_headers(pch PUBLIC include/common.h)
+
+file(GLOB ASSETS assets/*)
+file(COPY ${ASSETS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
+
+add_library(text text.cpp)
+target_compile_definitions(text PRIVATE ${TEXT_LANGUAGE})
+link_libraries(text)
+
+add_subdirectory(GUI)
+add_subdirectory(texthook)
+add_subdirectory(extensions)
+add_subdirectory(test)
+if (DEFINED VERSION)
+  add_subdirectory(GUI/host)
+endif()
+#add_subdirectory(GUI/host)
+

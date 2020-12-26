@@ -107,14 +107,14 @@ namespace
 	{
 		void (*AddText)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* text)
 		{
-			QMetaObject::invokeMethod(This, [number, text = std::wstring(text)]{ if (TextThread* thread = Host::GetThread(number)) thread->Push(text.c_str()); });
+			QMetaObject::invokeMethod(This, [number, text = std::wstring(text)] { if (TextThread* thread = Host::GetThread(number)) thread->Push(text.c_str()); });
 		};
 		void (*AddSentence)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* sentence)
 		{
 			// pointer from Host::GetThread may not stay valid unless on main thread
-			QMetaObject::invokeMethod(This, [number, sentence = std::wstring(sentence)]{ if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(sentence); });
+			QMetaObject::invokeMethod(This, [number, sentence = std::wstring(sentence)] { if (TextThread* thread = Host::GetThread(number)) thread->AddSentence(sentence); });
 		};
-		DWORD(*GetSelectedProcessId)() = [] { return selectedProcessId.load(); };
+		DWORD (*GetSelectedProcessId)() = [] { return selectedProcessId.load(); };
 
 		return
 		{ {
@@ -234,10 +234,9 @@ namespace
 	void AddHook(QString hook)
 	{
 		if (QString hookCode = QInputDialog::getText(This, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, hook, &ok, Qt::WindowCloseButtonHint); ok)
-			if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks();
-			else if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); }
-		catch (std::out_of_range) {}
-			else Host::AddConsoleOutput(INVALID_CODE);
+		if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks();
+		else if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); } catch (std::out_of_range) {}
+		else Host::AddConsoleOutput(INVALID_CODE);
 	}
 
 	void AddHook()
@@ -262,14 +261,14 @@ namespace
 		for (auto [address, hp] : hooks)
 			new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
 		QObject::connect(hookList, &QListWidget::itemDoubleClicked, [processId, hookList](QListWidgetItem* item)
+		{
+			try
 			{
-				try
-				{
-					Host::RemoveHook(processId, item->text().split("@")[1].toULongLong(nullptr, 16));
-					delete item;
-				}
-				catch (std::out_of_range) { hookList->close(); }
-			});
+				Host::RemoveHook(processId, item->text().split("@")[1].toULongLong(nullptr, 16));
+				delete item;
+			}
+			catch (std::out_of_range) { hookList->close(); }
+		});
 		hookList->show();
 	}
 
@@ -313,11 +312,11 @@ namespace
 		confirm.button(QDialogButtonBox::Retry)->setText(SEARCH_FOR_TEXT);
 		confirm.button(QDialogButtonBox::Help)->setText(SETTINGS);
 		QObject::connect(&confirm, &QDialogButtonBox::clicked, [&](QAbstractButton* button)
-			{
-				if (button == confirm.button(QDialogButtonBox::Retry)) searchForText = true;
-				if (button == confirm.button(QDialogButtonBox::Help)) customSettings = true;
-				dialog.accept();
-			});
+		{
+			if (button == confirm.button(QDialogButtonBox::Retry)) searchForText = true;
+			if (button == confirm.button(QDialogButtonBox::Help)) customSettings = true;
+			dialog.accept();
+		});
 		dialog.setWindowTitle(SEARCH_FOR_HOOKS);
 		if (!dialog.exec()) return;
 
@@ -354,7 +353,7 @@ namespace
 				{ sp.offset, PATTERN_OFFSET },
 				{ sp.maxRecords, MAX_HOOK_SEARCH_RECORDS },
 				{ sp.codepage, CODEPAGE },
-				})
+			})
 			{
 				auto spinBox = new QSpinBox(&dialog);
 				spinBox->setMaximum(INT_MAX);
@@ -368,7 +367,7 @@ namespace
 				{ sp.minAddress, MIN_ADDRESS },
 				{ sp.maxAddress, MAX_ADDRESS },
 				{ sp.padding, STRING_OFFSET },
-				})
+			})
 			{
 				auto input = new QLineEdit(QString::number(value, 16), &dialog);
 				layout.addRow(label, input);
@@ -408,36 +407,36 @@ namespace
 		}
 		catch (std::out_of_range) { return; }
 		std::thread([hooks]
+		{
+			for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
+				lastSize = hooks->size();
+
+			QString saveFileName;
+			QMetaObject::invokeMethod(This, [&]
 			{
-				for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
-					lastSize = hooks->size();
-
-				QString saveFileName;
-				QMetaObject::invokeMethod(This, [&]
-					{
-						auto hookList = new QListView(This);
-						hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
-						hookList->setAttribute(Qt::WA_DeleteOnClose);
-						hookList->resize({ 750, 300 });
-						hookList->setWindowTitle(SEARCH_FOR_HOOKS);
-						if (hooks->size() > 5'000)
-						{
-							hookList->setUniformItemSizes(true); // they aren't actually uniform, but this improves performance
-							hooks->push_back(QString(2000, '-')); // dumb hack: with uniform item sizes, the last item is assumed to be the largest
-						}
-						hookList->setModel(new QStringListModel(*hooks, hookList));
-						QObject::connect(hookList, &QListView::clicked, [](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
-						hookList->show();
-
-						saveFileName = QFileDialog::getSaveFileName(This, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES);
-					}, Qt::BlockingQueuedConnection);
-				if (!saveFileName.isEmpty())
+				auto hookList = new QListView(This);
+				hookList->setWindowFlags(Qt::Window | Qt::WindowCloseButtonHint);
+				hookList->setAttribute(Qt::WA_DeleteOnClose);
+				hookList->resize({ 750, 300 });
+				hookList->setWindowTitle(SEARCH_FOR_HOOKS);
+				if (hooks->size() > 5'000)
 				{
-					QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
-					for (auto hook = hooks->cbegin(); hook != hooks->cend(); ++hook) saveFile.write(hook->toUtf8().append('\n')); // QStringList::begin() makes a copy
+					hookList->setUniformItemSizes(true); // they aren't actually uniform, but this improves performance
+					hooks->push_back(QString(2000, '-')); // dumb hack: with uniform item sizes, the last item is assumed to be the largest
 				}
-				hooks->clear();
-			}).detach();
+				hookList->setModel(new QStringListModel(*hooks, hookList));
+				QObject::connect(hookList, &QListView::clicked, [](QModelIndex i) { AddHook(i.data().toString().split(" => ")[0]); });
+				hookList->show();
+
+				saveFileName = QFileDialog::getSaveFileName(This, SAVE_SEARCH_RESULTS, "./results.txt", TEXT_FILES);
+			}, Qt::BlockingQueuedConnection);
+			if (!saveFileName.isEmpty())
+			{
+				QTextFile saveFile(saveFileName, QIODevice::WriteOnly | QIODevice::Truncate);
+				for (auto hook = hooks->cbegin(); hook != hooks->cend(); ++hook) saveFile.write(hook->toUtf8().append('\n')); // QStringList::begin() makes a copy
+			}
+			hooks->clear();
+		}).detach();
 	}
 
 	void OpenSettings()
@@ -451,7 +450,7 @@ namespace
 			{ autoAttach, AUTO_ATTACH },
 			{ autoAttachSavedOnly, ATTACH_SAVED_ONLY },
 			{ showSystemProcesses, SHOW_SYSTEM_PROCESSES },
-			})
+		})
 		{
 			auto checkBox = new QCheckBox(&dialog);
 			checkBox->setChecked(value);
@@ -463,7 +462,7 @@ namespace
 			{ TextThread::flushDelay, FLUSH_DELAY },
 			{ TextThread::maxHistorySize, MAX_HISTORY_SIZE },
 			{ Host::defaultCodepage, DEFAULT_CODEPAGE },
-			})
+		})
 		{
 			auto spinBox = new QSpinBox(&dialog);
 			spinBox->setMaximum(INT_MAX);
@@ -511,9 +510,9 @@ namespace
 
 		QString process = S(GetModuleFilename(processId).value_or(L"???"));
 		QMetaObject::invokeMethod(This, [process, processId]
-			{
-				ui.processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
-			});
+		{
+			ui.processCombo->addItem(QString::number(processId, 16).toUpper() + ": " + QFileInfo(process).fileName());
+		});
 		if (process == "???") return;
 
 		// This does add (potentially tons of) duplicates to the file, but as long as I don't perform Ω(N^2) operations it shouldn't be an issue
@@ -530,9 +529,9 @@ namespace
 	void ProcessDisconnected(DWORD processId)
 	{
 		QMetaObject::invokeMethod(This, [processId]
-			{
-				ui.processCombo->removeItem(ui.processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
-			}, Qt::BlockingQueuedConnection);
+		{
+			ui.processCombo->removeItem(ui.processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
+		}, Qt::BlockingQueuedConnection);
 	}
 
 	void ThreadAdded(TextThread& thread)
@@ -545,20 +544,20 @@ namespace
 			current = &thread;
 		}
 		QMetaObject::invokeMethod(This, [savedMatch, ttString = TextThreadString(thread) + S(FormatString(L" (%s)", threadCode))]
-			{
-				ui.ttCombo->addItem(ttString);
-				if (savedMatch) ViewThread(ui.ttCombo->count() - 1);
-			});
+		{
+			ui.ttCombo->addItem(ttString);
+			if (savedMatch) ViewThread(ui.ttCombo->count() - 1);
+		});
 	}
 
 	void ThreadRemoved(TextThread& thread)
 	{
 		QMetaObject::invokeMethod(This, [ttString = TextThreadString(thread)]
-			{
-				int threadIndex = ui.ttCombo->findText(ttString, Qt::MatchStartsWith);
-				if (threadIndex == ui.ttCombo->currentIndex())	ViewThread(0);
-				ui.ttCombo->removeItem(threadIndex);
-			}, Qt::BlockingQueuedConnection);
+		{
+			int threadIndex = ui.ttCombo->findText(ttString, Qt::MatchStartsWith);
+			if (threadIndex == ui.ttCombo->currentIndex())	ViewThread(0);
+			ui.ttCombo->removeItem(threadIndex);
+		}, Qt::BlockingQueuedConnection);
 	}
 
 	bool SentenceReceived(TextThread& thread, std::wstring& sentence)
@@ -591,7 +590,7 @@ namespace
 	}
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
 	This = this;
 	ui.setupUi(this);
@@ -608,7 +607,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 		{ SEARCH_FOR_HOOKS, FindHooks },
 		{ SETTINGS, OpenSettings },
 		{ EXTENSIONS, Extensions }
-		})
+	})
 	{
 		auto button = new QPushButton(text, ui.processFrame);
 		connect(button, &QPushButton::clicked, slot);
@@ -617,9 +616,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 	ui.processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 	connect(ui.processCombo, qOverload<const QString&>(&QComboBox::currentIndexChanged), [](QString process)
-		{
-			selectedProcessId = ui.processCombo->currentText().split(":")[0].toULong(nullptr, 16);
-		});
+	{
+		selectedProcessId = ui.processCombo->currentText().split(":")[0].toULong(nullptr, 16);
+	});
 	connect(ui.ttCombo, qOverload<int>(&QComboBox::activated), this, ViewThread);
 	connect(ui.textOutput, &QPlainTextEdit::selectionChanged, this, CopyUnlessMouseDown);
 	connect(ui.textOutput, &QPlainTextEdit::customContextMenuRequested, this, OutputContextMenu);
@@ -653,22 +652,22 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::string::npos) Host::InjectProcess(processId);
 
 	std::thread([]
+	{
+		for (; ; Sleep(10000))
 		{
-			for (; ; Sleep(10000))
-			{
-				std::unordered_set<std::wstring> attachTargets;
-				if (autoAttach)
-					for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
-						attachTargets.insert(S(process));
-				if (autoAttachSavedOnly)
-					for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
-						attachTargets.insert(S(process.split(" , ")[0]));
+			std::unordered_set<std::wstring> attachTargets;
+			if (autoAttach)
+				for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+					attachTargets.insert(S(process));
+			if (autoAttachSavedOnly)
+				for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+					attachTargets.insert(S(process.split(" , ")[0]));
 
-				if (!attachTargets.empty())
-					for (auto [processId, processName] : GetAllProcesses())
-						if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
-			}
-		}).detach();
+			if (!attachTargets.empty())
+				for (auto [processId, processName] : GetAllProcesses())
+					if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
+		}
+	}).detach();
 }
 
 MainWindow::~MainWindow()

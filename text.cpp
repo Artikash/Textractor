@@ -179,12 +179,16 @@ const char* OUTLINE_SIZE_INFO = u8"Size in pixels (recommended to stay below 20%
 const char* FONT = u8"Font";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
+
 Param sentence: sentence received by Textractor (UTF-8).
 Param sentenceInfo: table of miscellaneous info about the sentence.
+
 If you return a string, the sentence will be turned into that string.
 If you return nil, the sentence will be unmodified.
+
 This extension uses several copies of the Lua interpreter for thread safety.
 Modifications to global variables from ProcessSentence are not guaranteed to persist.
+
 Properties in sentenceInfo:
 "current select": 0 unless sentence is in the text thread currently selected by the user.
 "process id": process id that the sentence is coming from. 0 for console and clipboard.
@@ -619,12 +623,16 @@ Textractor отобразит конечный корневой термин, а
 	FONT = u8"Шрифт";
 	LUA_INTRO = u8R"(--[[
 ProcessSentence вызывается каждый раз, когда Textractor получает предложение с текстом.
+
 Param sentence: предложение полученое в Textractor (UTF-8).
 Param sentenceInfo: таблица различной информации о предложении.
+
 При возвращении строки предложение будет изменено на эту строку.
 При возвращении нуля, предложение останется без изменения.
+
 Это расширение использует несколько копий интерпретатора Lua для безопасности нити.
 Модификации глобальных переменных из ProcessSentence не обязательно сохраняется.
+
 Параметры в sentenceInfo:
 "current select": равно 0, если предложение не находится в текстовой нити, выбранной в данный момент пользователем.
 "process id": id процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
@@ -851,6 +859,7 @@ Dovresti cercare per un dizionario in questo formato online (https://github.com/
 In alternativa, se sei un progammatore, puoi scrivere uno script per convertire un dizionario da un'altro formato con le informazioni sottostanti.
 Una volta che hai il dizionario, cerca qualche testo in Extra Window, posizionaci sopra. Puoi scorrere fra tutte le definizioni corrispondenti.
 Le definizioni sono formattate cosi: |TERM|Hola<<ignored|TERM|hola|TERM|Bonjour|TERM|bonjour|DEFINITION|hello|END|
+
 Il termine e la definizione può includere rich text (https://doc.qt.io/qt-5/richtext-html-subset.html) che sarà formattato a dovere.
 Le inflessioni sono formattate cosi: |ROOT|1<<noun|INFLECTS TO|(\w*)s|NAME| plural|END|
 Textractor controllerà se un termine corrisponde il regex dell'inflessione e se cosi fosse, cercherà ricorsivamente per la radice.
@@ -874,12 +883,16 @@ Funziona solo se questa estenzione è usata direttamente dopo un'estensione di t
 	FONT = u8"Font";
 	LUA_INTRO = u8R"(--[[
 ProcessSentence è chiamato ogni volta che Textractor riceva una sentenza di testo.
+
 Param sentence: sentenza ricevuta da Textractor (UTF-8).
 Param sentenceInfo: tavola di informazioni miste sulla sentenza.
+
 Se fai il return di una stringa, la sentenza di trasformera in quella stringa.
 Se fai il return di nulla, la sentenza non sarà modificata.
+
 Questa estenzione utilizza diverse copie dell'interprete Lua per la sicurezza del thread.
 Modifiche alle variabili globali da ProcessSentence non sono garantite di persistere.
+
 Proprietà in sentenceInfo:
 "current select": 0 a meno che la sentenza è nel thread di testo attualmente scelto dall'utente.
 "process id": id del processo che da cui proviene la sentenza. 0 per console e per appunti.
@@ -1324,4 +1337,3 @@ Ce fichier doit être encodé en Unicode (UTF-16 Little Endian).)";
 };
 
 static auto _ = (localize(), 0);
-
