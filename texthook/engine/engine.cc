@@ -5985,39 +5985,8 @@ bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
  *  Sample game: 完全時間停止 体験版
  *  GDI text: TextOutA and GetTextExtentPoint32A
  */
-void InsertWaffleHook()
+bool InsertWaffleHook()
 {
-/* new waffle?  After 2018  need replace '\r\n' 
-   test on 俺の知らぬ間に彼女が… https://vndb.org/v27781
-   and 変態エルフ姉妹と真面目オーク https://vndb.org/v24215
-   and 母三人とアナあそび https://vndb.org/v24214
-*/
-    const BYTE bytes[] = { 0x6a, 0xff,   //005942C1   6Aff            push FFFFFFFF 
-        0x53,                            //005942C3   53              push ebx 
-        0x57,                            //005942C4   57              push edi
-        0x8d,0x4d,0x40,                  //005942C5   8D4D 40         lea ecx,dword ptr ss:[ebp+40]
-        0xe8,XX4,                        //005942C8   E8 430CEDFF     call mother3.464F10
-        0x8b,0x46,0x04,                  //005942CD   8B46 04         mov eax,dword ptr ds:[esi+4]
-        0x89,0x45,0x5c,                  //005942D0   8945 5C         mov dword ptr ss:[ebp+5C],eax 
-        0x8b,0x46,0x08,                  //005942D3   8B46 08         mov eax,dword ptr ds:[esi+8]
-        0x8b,0x75,0xe8,                  //005942D6   8B75 E8         mov esi,dword ptr ss:[ebp-18] 
-        0x89,0x45,0x60,                  //005942D9   8945 60         mov dword ptr ss : [ebp + 60] ,eax 
-        0x8b,0x46,0x08,                  //005942DC   8B46 08         mov eax,dword ptr ds:[esi+8]
-        0x8b,0x88,0x00,0x01,0x00,0x00,   //005942DF   8B88 00010000   mov ecx,dword ptr ds : [eax + 100] 
-        0x57                             //005942E5   57              push edi 
-    };
-    if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress)) 
-    {
-        HookParam hp = {};
-        hp.address = addr;
-        hp.offset = pusha_ebp_off - 4;
-        hp.index = 0x28;
-        hp.type = DATA_INDIRECT | USING_STRING;
-        ConsoleOutput("Textractor: INSERT WAFFLE");
-        NewHook(hp, "WAFFLE");
-        return;
-    }
-    
   for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 4; i++)
     if (*(DWORD *)i == 0xac68) {
       HookParam hp = {};
@@ -6029,10 +5998,39 @@ void InsertWaffleHook()
       hp.type = DATA_INDIRECT|USING_SPLIT;
       ConsoleOutput("vnreng: INSERT WAFFLE");
       NewHook(hp, "WAFFLE");
-      return;
+      found = true;
     }
+
+  /** new waffle? stolen from https://github.com/lgztx96
+*   test on 母三人とアナあそび https://vndb.org/v24214
+*   and 変態エルフ姉妹と真面目オーク https://vndb.org/v24215
+*   and いかにして俺の妻は孕んだか……  https://vndb.org/v26205
+*   and 俺の知らぬ間に彼女が… https://vndb.org/v27781
+*/
+  const BYTE bytes[] = {
+      0x50,                     //50         push eax
+      0x8b, 0xce,               //8BCE mov   ecx,esi
+      0xc6, 0x45, 0xfc, 0x01,   //C645 FC 01 move byte ptr ss:[ebp-4],1
+      0x89, 0x75, 0xd4,         //8975 D4    move dword ptr ss:[ebp-0x2c],esi
+      0xe8, XX4,                //E8 ??      call ??
+      0x8d, 0x45, 0xdc          //8D45 DC    lea eax,dword ptr ss:[ebp-0x24]
+  };
+  if (DWORD addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress))
+  {
+      HookParam hp = {};
+      hp.address = addr;
+      hp.offset = pusha_eax_off - 4;
+      hp.index = 0x00;
+      hp.split = 0x48;
+      hp.length_offset = 1;
+      hp.type = DATA_INDIRECT | USING_SPLIT;
+      ConsoleOutput("Textractor: INSERT WAFFLE2");
+      NewHook(hp, "WAFFLE2");
+      found = true;
+  }
   //ConsoleOutput("Probably Waffle. Wait for text.");
-  trigger_fun = InsertWaffleDynamicHook;
+  if (!found) trigger_fun = InsertWaffleDynamicHook;
+  return found;
   //ConsoleOutput("vnreng:WAFFLE: failed");
 }
 
@@ -6615,6 +6613,173 @@ bool InsertNitroplusHook()
   NewHook(hp, "Nitroplus");
   //RegisterEngineType(ENGINE_Nitroplus);
   return true;
+}
+
+/**
+ *  Jazzinghen 23/05/2020: Add TokyoNecro hook
+ *
+ *  [Nitroplus] 東京Necro 1.01 - Text boxes hook
+ *
+ *  Hook code: HS-14*8@B5420:TokyoNecro.exe
+ *
+ *  Debug method:
+ *  Found memory location where the text was written, then used hardware break on write.
+ *  After that found the function that writes the text in, found that the memory pointed
+ *  contains more than just the text. Followed the call stack "upwards" until a function
+ *  that handles only the text copy is found.
+ *
+ *  Disassembled code:
+ *  TokyoNecro.exe+B5420 - 55                - push ebp                  ; place to hook
+ *  TokyoNecro.exe+B5421 - 8B EC             - mov ebp,esp
+ *  TokyoNecro.exe+B5423 - 6A FF             - push -01
+ *  TokyoNecro.exe+B5425 - 68 E8613000       - push TokyoNecro.exe+1961E8
+ *  TokyoNecro.exe+B542A - 64 A1 00000000    - mov eax,fs:[00000000]
+ *  TokyoNecro.exe+B5430 - 50                - push eax
+ *  TokyoNecro.exe+B5431 - 64 89 25 00000000 - mov fs:[00000000],esp
+ *  TokyoNecro.exe+B5438 - 83 EC 1C          - sub esp,1C
+ *  TokyoNecro.exe+B543B - 8B 55 08          - mov edx,[ebp+08]
+ *  TokyoNecro.exe+B543E - 53                - push ebx
+ *  TokyoNecro.exe+B543F - 56                - push esi
+ *  TokyoNecro.exe+B5440 - 8B C2             - mov eax,edx
+ *  TokyoNecro.exe+B5442 - 57                - push edi
+ *  TokyoNecro.exe+B5443 - 8B D9             - mov ebx,ecx
+ *  TokyoNecro.exe+B5445 - C7 45 EC 0F000000 - mov [ebp-14],0000000F
+ *  TokyoNecro.exe+B544C - C7 45 E8 00000000 - mov [ebp-18],00000000
+ *  TokyoNecro.exe+B5453 - C6 45 D8 00       - mov byte ptr [ebp-28],00
+ *  TokyoNecro.exe+B5457 - 8D 70 01          - lea esi,[eax+01]
+ *  TokyoNecro.exe+B545A - 8D 9B 00000000    - lea ebx,[ebx+00000000]
+ *  TokyoNecro.exe+B5460 - 8A 08             - mov cl,[eax]
+ *  TokyoNecro.exe+B5462 - 40                - inc eax
+ *  TokyoNecro.exe+B5463 - 84 C9             - test cl,cl
+ *  TokyoNecro.exe+B5465 - 75 F9             - jne TokyoNecro.exe+B5460
+ *  TokyoNecro.exe+B5467 - 2B C6             - sub eax,esi
+ *  TokyoNecro.exe+B5469 - 52                - push edx
+ *  TokyoNecro.exe+B546A - 8B F8             - mov edi,eax                ▷ Search
+ *  TokyoNecro.exe+B546C - 8D 75 D8          - lea esi,[ebp-28]           |
+ *  TokyoNecro.exe+B546F - E8 6CE1F4FF       - call TokyoNecro.exe+35E0   ▷
+ *
+ *  Notes:
+ * 
+ *  There's more data above due to the fact that the start of the function is very
+ *  common and it was hooking a wrong function.
+ *
+ *  The text is contained into the memory location at [esp+04] when hooking the
+ *  code at TokyoNecro.exe+B5420
+ * 
+ *  If the game is hooked right at the main menu it will also catch the real time clock
+ *  rendered there.
+ */
+
+namespace TokyoNecro {
+
+const BYTE funcSig[] = { 0x55, 0x8b, 0xec };
+
+bool TextHook() {
+
+  const BYTE bytecodes[] = {
+      0x8B, 0xF8,                               // 8B F8             - mov edi,eax
+      0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
+      0xE8, 0x6C, 0xE1, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
+  };
+  ULONG addr = MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress, processStopAddress);
+  if (addr == 0) {
+    ConsoleOutput("Textractor:TokyoNecro: pattern not found");
+    return false;
+  }
+
+  // Look for the start of the function
+  const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
+  if (memcmp((void*)function_start, funcSig, sizeof(funcSig)) != 0) {
+      ConsoleOutput("Textractor: TokyoNecro: function start not found");
+      return false;
+  }
+  
+  HookParam hp = {};
+  hp.address = function_start;
+  // The memory address is held at [ebp+08] at TokyoNecro.exe+B543B, meaning that at
+  // the start of the function it's right above the stack pointer. Since there's no
+  // way to do an operation on the value of a register BEFORE dereferencing (e.g.
+  // (void*)(esp+4) instead of ((void*)esp)+4) we have to go up the stack instead of
+  // using the data in the registers
+  hp.offset = 0x4;
+  hp.type = USING_STRING;
+  ConsoleOutput("Textractor: INSERT TokyoNecroText");
+  NewHook(hp, "TokyoNecroText");
+  return true;
+}
+
+/**
+ * [Nitroplus] 東京Necro 1.01 - Database/Encyclopedia hook
+ *
+ * Hook code: HS4*@B5380:tokyonecro.exe
+ *
+ * TokyoNecro.exe+B5380 - 55                - push ebp                  ; Location to hook
+ * TokyoNecro.exe+B5381 - 8B EC             - mov ebp,esp
+ * TokyoNecro.exe+B5383 - 6A FF             - push -01
+ * TokyoNecro.exe+B5385 - 68 E8618E00       - push TokyoNecro.exe+1961E8
+ * TokyoNecro.exe+B538A - 64 A1 00000000    - mov eax,fs:[00000000]
+ * TokyoNecro.exe+B5390 - 50                - push eax
+ * TokyoNecro.exe+B5391 - 64 89 25 00000000 - mov fs:[00000000],esp
+ * TokyoNecro.exe+B5398 - 83 EC 1C          - sub esp,1C
+ * TokyoNecro.exe+B539B - 8B 55 08          - mov edx,[ebp+08]
+ * TokyoNecro.exe+B539E - 53                - push ebx
+ * TokyoNecro.exe+B539F - 56                - push esi
+ * TokyoNecro.exe+B53A0 - 8B C2             - mov eax,edx
+ * TokyoNecro.exe+B53A2 - 57                - push edi
+ * TokyoNecro.exe+B53A3 - 8B D9             - mov ebx,ecx
+ * TokyoNecro.exe+B53A5 - C7 45 EC 0F000000 - mov [ebp-14],0000000F
+ * TokyoNecro.exe+B53AC - C7 45 E8 00000000 - mov [ebp-18],00000000
+ * TokyoNecro.exe+B53B3 - C6 45 D8 00       - mov byte ptr [ebp-28],00
+ * TokyoNecro.exe+B53B7 - 8D 70 01          - lea esi,[eax+01]
+ * TokyoNecro.exe+B53BA - 8D 9B 00000000    - lea ebx,[ebx+00000000]
+ * TokyoNecro.exe+B53C0 - 8A 08             - mov cl,[eax]
+ * TokyoNecro.exe+B53C2 - 40                - inc eax
+ * TokyoNecro.exe+B53C3 - 84 C9             - test cl,cl
+ * TokyoNecro.exe+B53C5 - 75 F9             - jne TokyoNecro.exe+B53C0
+ * TokyoNecro.exe+B53C7 - 2B C6             - sub eax,esi
+ * TokyoNecro.exe+B53C9 - 52                - push edx
+ * TokyoNecro.exe+B53CA - 8B F8             - mov edi,eax               ▷ Search
+ * TokyoNecro.exe+B53CC - 8D 75 D8          - lea esi,[ebp-28]          |
+ * TokyoNecro.exe+B53CF - E8 0CE2F4FF       - call TokyoNecro.exe+35E0  ▷
+ *
+ *
+ */
+
+bool DatabaseHook()
+{
+  const BYTE bytecodes[] = {
+      0x8B, 0xF8,                               // 8B F8             - mov edi,eax
+      0x8D, 0x75, 0xD8,                         // 8D 75 D8          - lea esi,[ebp-28]
+      0xE8, 0x0C, 0xE2, 0xF4, 0xFF,             // E8 6CE1F4FF       - call TokyoNecro.exe+35E0
+  };
+  ULONG addr = MemDbg::findBytes(bytecodes, sizeof(bytecodes), processStartAddress, processStopAddress);
+  if (addr == 0) {
+    ConsoleOutput("vnreng:TokyoNecro: pattern not found");
+    return false;
+  }
+
+  // Look for the start of the function
+  const ULONG function_start = MemDbg::findEnclosingAlignedFunction(addr);
+  if (memcmp((void*)function_start, funcSig, sizeof(funcSig)) != 0) {
+    ConsoleOutput("Textractor: TokyoNecro: function start not found");
+    return false;
+  }
+  
+  HookParam hp = {};
+  hp.address = function_start;
+  hp.offset = 0x4;
+  hp.type = USING_STRING;
+  NewHook(hp, "TokyoNecroDatabase");
+  ConsoleOutput("vnreng: INSERT TokyoNecroDatabase");
+  return true;
+}
+
+} // namespace TokyoNecro
+
+bool InsertTokyoNecroHook()
+{
+    TokyoNecro::DatabaseHook();
+    return TokyoNecro::TextHook();
 }
 
 // jichi 6/21/2015
@@ -9441,7 +9606,32 @@ static bool InsertNewWillPlusHook()
 		NewHook(hp, "WillPlus2");
 		found = true;
 	}
-	if (!found) ConsoleOutput("Textractor: WillPlus2: failed to find instructions");
+    /*
+    stolen from https://github.com/lgztx96
+    hook cmp esi,0x3000
+    Sample games:
+    https://vndb.org/r54549
+    https://vndb.org/v22705
+    https://vndb.org/v24852
+    https://vndb.org/v25719
+    https://vndb.org/v27227
+    https://vndb.org/v27385
+    */
+    const BYTE pattern[] =
+    {
+        0x81,0xfe,0x00,0x30,0x00,0x00   //81FE 00300000  cmp esi,0x3000
+    };
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.type = USING_UNICODE;
+        hp.offset = pusha_esi_off - 4;
+        hp.length_offset = 1;
+        NewHook(hp, "WillPlus3");
+        found = true;
+    }
+	if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
 	return found;
 }
 
@@ -9905,7 +10095,7 @@ BYTE JIS_tableL[0x80] = {
   0x98,0x99,0x9a,0x9b,0x9c,0x9d,0x9e,0x00,
 };
 
-void SpecialHookAnex86(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
+void SpecialHookAnex86(DWORD esp_base, HookParam*, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
   __asm
   {
@@ -9944,19 +10134,28 @@ _fin:
 } // unnamed namespace
 bool InsertAnex86Hook()
 {
-  const DWORD dwords[] = {0x618ac033,0x0d418a0c}; // jichi 12/25/2013: Remove static keyword
-  for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 8; i++)
-    if (*(DWORD *)i == dwords[0])
-      if (*(DWORD *)(i + 4) == dwords[1]) {
+    const BYTE bytes[] = {
+        0x8a, XX, 0x0c, // mov ??,[ecx+0C]
+        0x8a, XX, 0x0d  // mov ??,[ecx+0D]
+    };
+    bool found = false;
+    for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStopAddress)) {
+  //const DWORD dwords[] = {0x618ac033,0x0d418a0c}; // jichi 12/25/2013: Remove static keyword
+  //for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 8; i++)
+    //if (*(DWORD *)i == dwords[0])
+      //if (*(DWORD *)(i + 4) == dwords[1]) {
         HookParam hp = {};
-        hp.address = i;
+        if (*(BYTE*)(addr - 2) == 0x33 || *(BYTE*)(addr - 2) == 0x31) addr = addr - 2;
+        hp.address = addr;
+        hp.offset = pusha_ecx_off - 4;
         hp.text_fun = SpecialHookAnex86;
         //hp.type = EXTERN_HOOK;
         hp.length_offset = 1;
         ConsoleOutput("vnreng: INSERT Anex86");
         NewHook(hp, "Anex86");
-        return true;
+        found = true;
       }
+    if (found) return true;
   ConsoleOutput("vnreng:Anex86: failed");
   return false;
 }
@@ -16197,19 +16396,19 @@ bool InsertShinyDaysGameHook()
     0xff,0x83,0x70,0x03,0x00,0x00,0x33,0xf6,
     0xc6,0x84,0x24,0x90,0x02,0x00,0x00,0x02
   };
-  LPVOID addr = (LPVOID)0x42ad94;
-  if (::memcmp(addr, bytes, sizeof(bytes)) != 0) {
-    ConsoleOutput("vnreng:ShinyDays: only work for 1.00");
-    return false;
+
+  for (auto addr : Util::SearchMemory(bytes, sizeof(bytes))) {
+    HookParam hp = {};
+    hp.address = addr + 0x8;
+    hp.text_fun = SpecialGameHookShinyDays;
+    hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+    ConsoleOutput("Textractor: INSERT ShinyDays");
+    NewHook(hp, "ShinyDays");
+    return true;
   }
 
-  HookParam hp = {};
-  hp.address = 0x42ad9c;
-  hp.text_fun = SpecialGameHookShinyDays;
-  hp.type = USING_UNICODE|USING_STRING|NO_CONTEXT;
-  ConsoleOutput("vnreng: INSERT ShinyDays");
-  NewHook(hp, "ShinyDays 1.00");
-  return true;
+  ConsoleOutput("Textractor:ShinyDays: pattern not found");
+  return false;
 }
 
 #if 0 // disabled as lova does not allow module from being modified

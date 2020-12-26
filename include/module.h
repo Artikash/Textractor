@@ -1,4 +1,3 @@
-#include "common.h"
 #include <Psapi.h>
 
 inline std::optional<std::wstring> GetModuleFilename(DWORD processId, HMODULE module = NULL)

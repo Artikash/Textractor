@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include "types.h"
 
 class TextThread
@@ -20,6 +19,7 @@ public:
 	void Stop();
 	void AddSentence(std::wstring sentence);
 	void Push(BYTE* data, int length);
+	void Push(const wchar_t* data);
 
 	Synchronized<std::wstring> storage;
 	const int64_t handle;

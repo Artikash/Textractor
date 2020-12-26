@@ -1,5 +1,4 @@
-﻿#include "common.h"
-#include "resource.h"
+﻿#include "resource.h"
 #include <fstream>
 #include <sstream>
 #include <QApplication>

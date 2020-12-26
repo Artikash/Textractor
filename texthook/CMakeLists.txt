@@ -28,5 +28,5 @@ set(texthook_src
 endif()
 
 add_library(texthook MODULE ${texthook_src})
-
+target_precompile_headers(texthook REUSE_FROM pch)
 target_link_libraries(texthook minhook)

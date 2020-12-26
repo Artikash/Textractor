@@ -13,7 +13,7 @@ namespace Engine
 	WCHAR* processName, // cached
 		processPath[MAX_PATH]; // cached
 
-	char configFileData[1000];
+	char configFileData[1000]{};
 
 	bool UnsafeDetermineEngineType();
 
@@ -44,14 +44,15 @@ namespace Engine
 			wcscpy_s(wcsrchr(configFilename, L'\\') + 1, std::size(GAME_CONFIG_FILE), GAME_CONFIG_FILE);
 			if (AutoHandle<> configFile = CreateFileW(configFilename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 			{
-				if (ReadFile(configFile, configFileData, sizeof(configFileData) - 1, DUMMY, nullptr)) ConsoleOutput("Textractor: game configuration loaded");
+				ReadFile(configFile, configFileData, sizeof(configFileData) - 1, DUMMY, nullptr);
 				if (strncmp(configFileData, "Engine:", 7) == 0)
 				{
 					if (loadedConfig = strchr(configFileData, '\n')) *(char*)loadedConfig++ = 0;
 					ConsoleOutput("Textractor: Engine = %s", requestedEngine = configFileData + 7);
 				}
 				else loadedConfig = configFileData;
-				if (loadedConfig && !*loadedConfig) loadedConfig = nullptr;
+				if ((loadedConfig && !*loadedConfig) || strstr(configFileData, "https://")) loadedConfig = nullptr;
+				else ConsoleOutput("Textractor: game configuration loaded");
 			}
 
 			processStartAddress = processStopAddress = (uintptr_t)GetModuleHandleW(nullptr);
