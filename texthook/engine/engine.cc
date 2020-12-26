@@ -6001,7 +6001,7 @@ bool InsertWaffleHook()
       found = true;
     }
 
-  /** new waffle? stolen from https://github.com/lgztx96
+/** new waffle? 
 *   test on 母三人とアナあそび https://vndb.org/v24214
 *   and 変態エルフ姉妹と真面目オーク https://vndb.org/v24215
 *   and いかにして俺の妻は孕んだか……  https://vndb.org/v26205
@@ -6010,7 +6010,7 @@ bool InsertWaffleHook()
   const BYTE bytes[] = {
       0x50,                     //50         push eax
       0x8b, 0xce,               //8BCE mov   ecx,esi
-      0xc6, 0x45, 0xfc, 0x01,   //C645 FC 01 move byte ptr ss:[ebp-4],1
+      0xc6, 0x45, 0xfc, XX,     //C645 FC 01 move byte ptr ss:[ebp-4],?
       0x89, 0x75, 0xd4,         //8975 D4    move dword ptr ss:[ebp-0x2c],esi
       0xe8, XX4,                //E8 ??      call ??
       0x8d, 0x45, 0xdc          //8D45 DC    lea eax,dword ptr ss:[ebp-0x24]
@@ -6021,9 +6021,8 @@ bool InsertWaffleHook()
       hp.address = addr;
       hp.offset = pusha_eax_off - 4;
       hp.index = 0x00;
-      hp.split = 0x48;
       hp.length_offset = 1;
-      hp.type = DATA_INDIRECT | USING_SPLIT;
+      hp.type = DATA_INDIRECT;
       ConsoleOutput("Textractor: INSERT WAFFLE2");
       NewHook(hp, "WAFFLE2");
       found = true;
@@ -9607,7 +9606,6 @@ static bool InsertNewWillPlusHook()
 		found = true;
 	}
     /*
-    stolen from https://github.com/lgztx96
     hook cmp esi,0x3000
     Sample games:
     https://vndb.org/r54549
