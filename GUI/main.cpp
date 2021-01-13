@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "module.h"
 #include <winhttp.h>
 #include <QApplication>
@@ -28,5 +28,16 @@ int main(int argc, char *argv[])
 
 	QApplication app(argc, argv);
 	app.setFont(QFont("MS Shell Dlg 2", 10));
+
+    if (QFile::exists("normalStyle.css"))
+    {
+        QFile styleFile("normalStyle.css");
+        if(styleFile.open(QIODevice::ReadOnly))
+        {
+            app.setStyleSheet(styleFile.readAll());
+            styleFile.close();
+        }
+
+    }
 	return MainWindow().show(), app.exec();
 }
