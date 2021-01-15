@@ -17,6 +17,7 @@ add_library(Remove\ Repeated\ Phrases MODULE removerepeatphrase.cpp extensionimp
 add_library(Remove\ Repeated\ Phrases\ 2 MODULE removerepeatphrase2.cpp extensionimpl.cpp)
 add_library(Remove\ 30\ Repeated\ Sentences MODULE removerepeatsentence.cpp extensionimpl.cpp)
 add_library(Replacer MODULE replacer.cpp extensionimpl.cpp)
+add_library(Styler MODULE styler.cpp extensionimpl.cpp)
 add_library(Thread\ Linker MODULE threadlinker.cpp extensionimpl.cpp)
 
 target_precompile_headers(Bing\ Translate REUSE_FROM pch)
@@ -33,6 +34,7 @@ target_precompile_headers(Remove\ Repeated\ Phrases REUSE_FROM pch)
 target_precompile_headers(Remove\ Repeated\ Phrases\ 2 REUSE_FROM pch)
 target_precompile_headers(Remove\ 30\ Repeated\ Sentences REUSE_FROM pch)
 target_precompile_headers(Replacer REUSE_FROM pch)
+target_precompile_headers(Styler REUSE_FROM pch)
 target_precompile_headers(Thread\ Linker REUSE_FROM pch)
 
 target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
@@ -42,6 +44,7 @@ target_link_libraries(Extra\ Window Qt5::Widgets)
 target_link_libraries(Google\ Translate winhttp Qt5::Widgets)
 target_link_libraries(Lua lua53 Qt5::Widgets)
 target_link_libraries(Regex\ Filter Qt5::Widgets)
+target_link_libraries(Styler Qt5::Widgets)
 target_link_libraries(Thread\ Linker Qt5::Widgets)
 
 if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSockets.dll AND NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSocketsd.dll)

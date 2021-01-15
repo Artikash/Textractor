@@ -4,7 +4,7 @@
 #include <QPlainTextEdit>
 
 extern const char* LUA_INTRO;
-extern const char* LOAD_LUA_SCRIPT;
+extern const char* LOAD_SCRIPT;
 extern const wchar_t* LUA_ERROR;
 
 constexpr auto LUA_SAVE_FILE = u8"Textractor.lua";
@@ -81,7 +81,7 @@ private:
 
 	QHBoxLayout layout{ this };
 	QPlainTextEdit scriptEditor{ QTextFile(LUA_SAVE_FILE, QIODevice::ReadOnly).readAll(), this };
-	QPushButton loadButton{ LOAD_LUA_SCRIPT, this };
+	QPushButton loadButton{ LOAD_SCRIPT, this };
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)

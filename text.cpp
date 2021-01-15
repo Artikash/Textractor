@@ -204,7 +204,7 @@ Properties in sentenceInfo:
 function ProcessSentence(sentence, sentenceInfo)
   --Your code here...
 end)";
-const char* LOAD_LUA_SCRIPT = u8"Load script";
+const char* LOAD_SCRIPT = u8"Load script";
 const wchar_t* LUA_ERROR = L"Lua error: %s";
 const char* REGEX_FILTER = u8"Regex Filter";
 const char* INVALID_REGEX = u8"Invalid regex";
@@ -454,7 +454,7 @@ sentenceInfo有以下成员:
 function ProcessSentence(sentence, sentenceInfo)
   --在此处添加你的代码...
 end)";
-	LOAD_LUA_SCRIPT = u8"加载脚本";
+	LOAD_SCRIPT = u8"加载脚本";
 	LUA_ERROR = L"Lua 错误";
 	REGEX_FILTER = u8"正则表达式过滤器";
 	INVALID_REGEX = u8"无效的正则表达式";
@@ -648,7 +648,7 @@ Param sentenceInfo: таблица различной информации о п
 function ProcessSentence(sentence, sentenceInfo)
   --Ваш код здесь...
 end)";
-	LOAD_LUA_SCRIPT = u8"Загрузить скрипт";
+	LOAD_SCRIPT = u8"Загрузить скрипт";
 	LUA_ERROR = L"Ошибка Lua: %s";
 	REGEX_FILTER = u8"Фильтр Regex";
 	INVALID_REGEX = u8"Неверный regex";
@@ -908,7 +908,7 @@ Proprietà in sentenceInfo:
 function ProcessSentence(sentence, sentenceInfo)
   --Tuo codice qui...
 end)";
-	LOAD_LUA_SCRIPT = u8"Carica script";
+	LOAD_SCRIPT = u8"Carica script";
 	LUA_ERROR = L"Errore Lua: %s";
 	REGEX_FILTER = u8"Filtro regex";
 	INVALID_REGEX = u8"Regex non valido";
@@ -1323,7 +1323,7 @@ Properties in sentenceInfo:
 function ProcessSentence(sentence, sentenceInfo)
   --Your code here...
 end)";
-	LOAD_LUA_SCRIPT = u8"Charger le script";
+	LOAD_SCRIPT = u8"Charger le script";
 	LUA_ERROR = L"Erreur Lua: %s";
 	REGEX_FILTER = u8"Filtre regex";
 	INVALID_REGEX = u8"Regex invalide";
