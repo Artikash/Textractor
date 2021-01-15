@@ -17,7 +17,7 @@
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
-extern const char* GAME_CONFIG;
+extern const char* CONFIG;
 extern const char* DETACH;
 extern const char* FORGET;
 extern const char* ADD_HOOK;
@@ -198,14 +198,14 @@ namespace
 		CloseHandle(info.hThread);
 	}
 
-	void OpenProcessConfig()
+	void ConfigureProcess()
 	{
 		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
 		{
 			std::wstring configFile = std::wstring(processName.value()).replace(last, std::string::npos, GAME_CONFIG_FILE);
 			if (!std::filesystem::exists(configFile)) QTextFile(S(configFile), QFile::WriteOnly).write("see https://github.com/Artikash/Textractor/wiki/Game-configuration-file");
 			if (std::filesystem::exists(configFile)) _wspawnlp(_P_DETACH, L"notepad", L"notepad", configFile.c_str(), NULL);
-			else QMessageBox::critical(This, GAME_CONFIG, QString(FAILED_TO_CREATE_CONFIG_FILE).arg(S(configFile)));
+			else QMessageBox::critical(This, CONFIG, QString(FAILED_TO_CREATE_CONFIG_FILE).arg(S(configFile)));
 		}
 	}
 
@@ -258,8 +258,7 @@ namespace
 		hookList->setAttribute(Qt::WA_DeleteOnClose);
 		hookList->setMinimumSize({ 300, 50 });
 		hookList->setWindowTitle(DOUBLE_CLICK_TO_REMOVE_HOOK);
-		for (auto [address, hp] : hooks)
-			new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
+		for (auto [address, hp] : hooks) new QListWidgetItem(QString(hp.name) + "@" + QString::number(address, 16), hookList);
 		QObject::connect(hookList, &QListWidget::itemDoubleClicked, [processId, hookList](QListWidgetItem* item)
 		{
 			try
@@ -335,8 +334,7 @@ namespace
 			layout.addRow(&confirm);
 			if (!dialog.exec()) return;
 			wcsncpy_s(sp.text, S(textInput.text()).c_str(), PATTERN_SIZE - 1);
-			try { Host::FindHooks(selectedProcessId, sp); }
-			catch (std::out_of_range) {}
+			try { Host::FindHooks(selectedProcessId, sp); } catch (std::out_of_range) {}
 			return;
 		}
 
@@ -408,8 +406,7 @@ namespace
 		catch (std::out_of_range) { return; }
 		std::thread([hooks]
 		{
-			for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000))
-				lastSize = hooks->size();
+			for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
 
 			QString saveFileName;
 			QMetaObject::invokeMethod(This, [&]
@@ -562,6 +559,7 @@ namespace
 
 	bool SentenceReceived(TextThread& thread, std::wstring& sentence)
 	{
+		for (int i = 0; i < sentence.size(); ++i) if (sentence[i] == '\r' && sentence[i + 1] == '\n') sentence[i] = 0x200b; // for some reason \r appears as newline - no need to double
 		if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 		sentence += L'\n';
 		if (&thread == current) QMetaObject::invokeMethod(This, [sentence = S(sentence)]() mutable
@@ -598,7 +596,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	for (auto [text, slot] : Array<const char*, void(&)()>{
 		{ ATTACH, AttachProcess },
 		{ LAUNCH, LaunchProcess },
-		{ GAME_CONFIG, OpenProcessConfig },
+		{ CONFIG, ConfigureProcess },
 		{ DETACH, DetachProcess },
 		{ FORGET, ForgetProcess },
 		{ ADD_HOOK, AddHook },
@@ -647,7 +645,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	for (int i = 0; i < argc; ++i)
 		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
 			if (arg[1] == L'p' || arg[1] == L'P')
-				if (DWORD processId = _wtoi(arg.substr(2).c_str())) Host::InjectProcess(processId);
+				if (DWORD processId = wcstoul(arg.substr(2).c_str(), nullptr, 0)) Host::InjectProcess(processId);
 				else for (auto [processId, processName] : processes)
 					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::string::npos) Host::InjectProcess(processId);
 

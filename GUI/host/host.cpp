@@ -32,8 +32,7 @@ namespace
 		{
 			if (!view) return {};
 			std::scoped_lock lock(viewMutex);
-			for (auto hook : view)
-				if (hook.address == addr) return hook;
+			for (auto hook : view) if (hook.address == addr) return hook;
 			return {};
 		}
 
@@ -69,8 +68,7 @@ namespace
 	void RemoveThreads(std::function<bool(ThreadParam)> removeIf)
 	{
 		std::vector<TextThread*> threadsToRemove;
-		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents)
-			if (removeIf(tp)) threadsToRemove.push_back(&thread);
+		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents) if (removeIf(tp)) threadsToRemove.push_back(&thread);
 		for (auto thread : threadsToRemove)
 		{
 			OnDestroy(*thread);
@@ -250,8 +248,7 @@ namespace Host
 
 	TextThread* GetThread(int64_t handle)
 	{
-		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents)
-			if (thread.handle == handle) return &thread;
+		for (auto& [tp, thread] : textThreadsByParams.Acquire().contents) if (thread.handle == handle) return &thread;
 		return nullptr;	
 	}
 

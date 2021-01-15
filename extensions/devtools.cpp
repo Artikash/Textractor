@@ -1,310 +1,154 @@
 #include "devtools.h"
+#include <QWebSocket>
+#include <QMetaEnum>
+#include <ppltasks.h>
 
-DevTools::DevTools(QObject* parent) :
-	QObject(parent),
-	idCounter(0),
-	idMethod(0),
-	status("Stopped"),
-	session(0)
+namespace
 {
-	connect(&webSocket, &QWebSocket::stateChanged, this, &DevTools::stateChanged);
-	connect(&webSocket, &QWebSocket::textMessageReceived, this, &DevTools::onTextMessageReceived);
+	std::function<void(QString)> OnStatusChanged = Swallow;
+	PROCESS_INFORMATION processInfo = {};
+	std::atomic<int> idCounter = 0, idMethod = 0;
+	std::mutex devToolsMutex;
+	QWebSocket webSocket;
+	std::unordered_map<int, concurrency::task_completion_event<JSON::Value<wchar_t>>> mapQueue;
+	std::unordered_map<std::wstring, std::vector<JSON::Value<wchar_t>>> mapMethod;
+	auto _ = ([]
+	{
+		QObject::connect(&webSocket, &QWebSocket::stateChanged,
+			[](QAbstractSocket::SocketState state) { OnStatusChanged(QMetaEnum::fromType<QAbstractSocket::SocketState>().valueToKey(state)); }
+		);
+		QObject::connect(&webSocket, &QWebSocket::textMessageReceived, [](QString message)
+		{
+			auto result = JSON::Parse(S(message));
+			std::scoped_lock lock(devToolsMutex);
+			if (auto method = result[L"method"].String())
+				for (auto& [listenTo, results] : mapMethod) if (*method == listenTo) results.push_back(result[L"params"]);
+			if (auto id = result[L"id"].Number())
+				if (auto request = mapQueue.find((int)*id); request != mapQueue.end())
+					request->second.set(result), mapQueue.erase(request);
+		});
+	}(), 0);
 }
 
-void DevTools::startDevTools(QString path, bool headless, int port)
+namespace DevTools
 {
-	if (startChrome(path, headless, port))
+	void Start(const std::wstring& path, std::function<void(QString)> statusChanged, bool headless, int port)
 	{
-		QJsonDocument doc;
-		QString webSocketDebuggerUrl;
-		if (GetJsonfromHTTP(doc, "/json/list", port))
+		OnStatusChanged = statusChanged;
+		DWORD exitCode = 0;
+		auto args = FormatString(
+			L"%s --proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir=%s\\devtoolscache --remote-debugging-port=%d",
+			path,
+			std::filesystem::current_path().wstring(),
+			port
+		);
+		if (headless) args += L"--headless";
+		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
+		if ((GetExitCodeProcess(processInfo.hProcess, &exitCode) && exitCode == STILL_ACTIVE) ||
+			CreateProcessW(NULL, args.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &DUMMY, &processInfo)
+		)
 		{
-			for (const auto obj : doc.array())
-				if (obj.toObject().value("type") == "page")
+			if (HttpRequest httpRequest{
+				L"Mozilla/5.0 Textractor",
+				L"127.0.0.1",
+				L"POST",
+				L"/json/list",
+				"",
+				NULL,
+				(DWORD)port,
+				NULL,
+				WINHTTP_FLAG_ESCAPE_DISABLE
+			})
+			{
+				if (auto list = Copy(JSON::Parse(httpRequest.response).Array())) if (auto it = std::find_if(
+					list->begin(),
+					list->end(),
+					[](const JSON::Value<wchar_t>& object) { return object[L"type"].String() && *object[L"type"].String() == L"page" && object[L"webSocketDebuggerUrl"].String(); }
+				); it != list->end())
 				{
-					webSocketDebuggerUrl.append(obj.toObject().value("webSocketDebuggerUrl").toString());
-					break;
+					std::scoped_lock lock(devToolsMutex);
+					webSocket.open(S(*(*it)[L"webSocketDebuggerUrl"].String()));
+					if (HttpRequest httpRequest{
+						L"Mozilla/5.0 Textractor",
+						L"127.0.0.1",
+						L"POST",
+						L"/json/version",
+						"",
+						NULL,
+						(DWORD)port,
+						NULL,
+						WINHTTP_FLAG_ESCAPE_DISABLE
+					})
+						if (auto userAgent = Copy(JSON::Parse(httpRequest.response)[L"User-Agent"].String()))
+							if (userAgent->find(L"Headless") != std::string::npos)
+								SendRequest(L"Network.setUserAgentOverride", FormatString(LR"({"userAgent":"%s"})", userAgent->replace(userAgent->find(L"Headless"), 8, L"")));
+					return;
 				}
-			if (!webSocketDebuggerUrl.isEmpty())
-			{
-				if (GetJsonfromHTTP(doc, "/json/version", port))
-				{
-					userAgent = doc.object().value("User-Agent").toString();
-				}	
-				webSocket.open(webSocketDebuggerUrl);
-				session += 1;
-				return;
 			}
+			OnStatusChanged("Failed Connection");
 		}
-		status = "Failed to find Chrome debug port!";
-		emit statusChanged(status);
-	}
-	else
-	{
-		status = "Failed to start Chrome!";
-		emit statusChanged(status);
-	}
-}
-
-int DevTools::getSession()
-{
-	return session;
-}
-
-QString DevTools::getStatus()
-{
-	return status;
-}
-
-QString DevTools::getUserAgent()
-{
-	return userAgent;
-}
-
-DevTools::~DevTools()
-{
-	closeDevTools();
-}
-
-bool DevTools::startChrome(QString path, bool headless, int port)
-{
-	if (!std::filesystem::exists(path.toStdWString()))
-		return false;
-	DWORD exitCode = 0;
-	if (GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE && exitCode == STILL_ACTIVE)
-		return false;
-	QString args = "--proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir="
-					+ QString::fromStdWString(std::filesystem::current_path())
-					+ "\\devtoolscache --remote-debugging-port="
-					+ QString::number(port);
-	if (headless)
-		args += " --headless";
-	STARTUPINFOW dummy = { sizeof(dummy) };
-	if (!CreateProcessW(NULL, (wchar_t*)(path + " " + args).utf16(), nullptr, nullptr,
-		FALSE, 0, nullptr, nullptr, &dummy, &processInfo))
-		return false;
-	else
-		return true;
-}
-
-bool DevTools::GetJsonfromHTTP(QJsonDocument& doc, QString object, int port)
-{
-	if (HttpRequest httpRequest{
-		L"Mozilla/5.0 Textractor",
-		L"127.0.0.1",
-		L"POST",
-		object.toStdWString().c_str(),
-		"",
-		NULL,
-		NULL,
-		WINHTTP_FLAG_ESCAPE_DISABLE,
-		NULL,
-		NULL,
-		DWORD(port)
-		})
-	{
-		QString qtString = QString::fromStdWString(httpRequest.response);
-		doc = QJsonDocument::fromJson(qtString.toUtf8());
-		if (!doc.isEmpty())
-			return true;
 		else
-			return false;
-	}
-	else
-		return false;
-
-}
-
-void DevTools::stateChanged(QAbstractSocket::SocketState state)
-{
-	QMetaEnum metaenum = QMetaEnum::fromType<QAbstractSocket::SocketState>();
-	status = metaenum.valueToKey(state);
-	emit statusChanged(status);
-}
-
-bool DevTools::SendRequest(QString method, QJsonObject params, QJsonObject& root)
-{
-	if (!isConnected())
-		return false;
-	root = QJsonObject();
-	QJsonObject json;
-	task_completion_event<QJsonObject> response;
-	long id = idIncrement();
-	json.insert("id", id);
-	json.insert("method", method);
-	json.insert("params", params);
-	QJsonDocument doc(json);
-	QString message(doc.toJson(QJsonDocument::Compact));
-	mutex.lock();
-	mapQueue.insert(std::make_pair(id, response));
-	mutex.unlock();
-	webSocket.sendTextMessage(message);
-	webSocket.flush();
-	try
-	{
-		root = create_task(response).get();
-	}
-	catch (const std::exception& ex)
-	{
-		response.set_exception(ex);
-		return false;
-	}
-	if (!root.isEmpty())
-	{
-		if (root.contains("error"))
 		{
-			return false;
-		}
-		else if (root.contains("result"))
-			return true;
-		else
-			return false;
-	}
-	else
-		return false;
-}
-
-long DevTools::methodToReceive(QString method, QJsonObject params)
-{
-	QJsonObject json;
-	long id = idmIncrement();
-	json.insert("method", method);
-	json.insert("params", params);
-	mutex.lock();
-	mapMethod.insert(std::make_pair(id, json));
-	mutex.unlock();
-	return id;
-}
-
-long DevTools::idIncrement()
-{
-	return ++idCounter;
-}
-
-long DevTools::idmIncrement()
-{
-	return ++idMethod;
-}
-
-bool DevTools::isConnected()
-{
-	if (webSocket.state() == QAbstractSocket::ConnectedState)
-		return true;
-	else
-		return false;
-}
-
-bool DevTools::compareJson(QJsonValue stored, QJsonValue params)
-{
-	if (stored.isObject())
-	{
-		foreach(const QString & key, stored.toObject().keys())
-		{
-			QJsonValue storedvalue = stored.toObject().value(key);
-			QJsonValue value = params.toObject().value(key);
-			if (!compareJson(storedvalue, value))
-				return false;
+			OnStatusChanged("Failed Startup");
 		}
 	}
-	else if (stored.isArray())
-	{
-		for (int i = 0; i < stored.toArray().size(); i++)
-			if (!compareJson(stored.toArray()[i], params.toArray()[i]))
-				return false;
-	}
-	else if (stored.isString())
-	{
-		if (!stored.toString().contains(params.toString()))
-			return false;
-	}
-	else if (stored.toVariant() != params.toVariant())
-		return false;
 
-	return true;
-}
-
-bool DevTools::checkMethod(long id)
-{
-	MapMethod::iterator iter = mapMethod.find(id);
-	if (iter == mapMethod.end())
-		return true;
-	else
-		return false;
-}
-
-void DevTools::onTextMessageReceived(QString message)
-{
-	QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
-	if (doc.isObject())
+	void Close()
 	{
-		QJsonObject root = doc.object();
-		if (root.contains("method"))
-		{
-			for (auto iter = mapMethod.cbegin(); iter != mapMethod.cend();)
-			{
-				if (iter->second.value("method") == root.value("method")
-					&& compareJson(iter->second.value("params"), root.value("params")))
-				{
-					mutex.lock();
-					mapMethod.erase(iter++);
-					mutex.unlock();
-				}
-				++iter;
-			}
-			return;
-		}
-		if (root.contains("id"))
-		{
-			long id = root.value("id").toInt();
-			MapResponse::iterator request = mapQueue.find(id);
-			if (request != mapQueue.end())
-			{
-				request->second.set(root);
-				mutex.lock();
-				mapQueue.erase(request);
-				mutex.unlock();
-			}
-			return;
-		}
-	}
-}
-
-void DevTools::closeDevTools()
-{
-	if (this->mapQueue.size() > 0)
-	{
-		MapResponse::iterator iter = mapQueue.begin();
-		MapResponse::iterator iend = mapQueue.end();
-		for (; iter != iend; iter++)
-		{
-			iter->second.set_exception("exception");
-		}
-	}
-	webSocket.close();
-	mapMethod.clear();
-	mapQueue.clear();
-	idCounter = 0;
-	idMethod = 0;
-	DWORD exitCode = 0;
-	if (GetExitCodeProcess(processInfo.hProcess, &exitCode) != FALSE)
-	{
-		if (exitCode == STILL_ACTIVE)
+		std::scoped_lock lock(devToolsMutex);
+		for (const auto& [_, task] : mapQueue) task.set_exception(std::runtime_error("closed"));
+		webSocket.close();
+		mapMethod.clear();
+		mapQueue.clear();
+		DWORD exitCode = 0;
+		if (GetExitCodeProcess(processInfo.hProcess, &exitCode) && exitCode == STILL_ACTIVE)
 		{
 			TerminateProcess(processInfo.hProcess, 0);
 			WaitForSingleObject(processInfo.hProcess, 100);
 			CloseHandle(processInfo.hProcess);
 			CloseHandle(processInfo.hThread);
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		try
-		{
-			std::filesystem::remove_all(L"devtoolscache");
-		}
-		catch (const std::exception&)
-		{
-
-		}
+		try { std::filesystem::remove_all(L"devtoolscache"); } catch (std::filesystem::filesystem_error) {}
+		OnStatusChanged("Stopped");
 	}
-	status = "Stopped";
-	emit statusChanged(status);
+
+	bool Connected()
+	{
+		std::scoped_lock lock(devToolsMutex);
+		return webSocket.state() == QAbstractSocket::ConnectedState;
+	}
+
+	JSON::Value<wchar_t> SendRequest(const std::wstring& method, const std::wstring& params)
+	{
+		if (webSocket.state() != QAbstractSocket::ConnectedState) return {};
+		concurrency::task_completion_event<JSON::Value<wchar_t>> response;
+		int id = idCounter +=1;
+		auto message = FormatString(LR"({"id":%d,"method":"%s","params":%s})", id, method, params);
+		{
+			std::scoped_lock lock(devToolsMutex);
+			mapQueue.try_emplace(id, response);
+			webSocket.sendTextMessage(S(message));
+			webSocket.flush();
+		}
+		try { if (auto result = create_task(response).get()[L"result"]) return result; } catch (...) {}
+		return {};
+	}
+
+	void StartListening(const std::wstring& method)
+	{
+		std::scoped_lock lock(devToolsMutex);
+		mapMethod.try_emplace(method);
+	}
+
+	std::vector<JSON::Value<wchar_t>> ListenResults(const std::wstring& method)
+	{
+		std::scoped_lock lock(devToolsMutex);
+		return mapMethod[method];
+	}
+
+	void StopListening(const std::wstring& method)
+	{
+		std::scoped_lock lock(devToolsMutex);
+		mapMethod.erase(method);
+	}
 }

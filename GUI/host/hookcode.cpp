@@ -129,8 +129,7 @@ namespace
 		{
 			size_t size = 0;
 			int value = 0;
-			try { value = std::stoi(HCode, &size, 16); }
-			catch (std::invalid_argument) {}
+			try { value = std::stoi(HCode, &size, 16); } catch (std::invalid_argument) {}
 			HCode.erase(0, size);
 			return value;
 		};

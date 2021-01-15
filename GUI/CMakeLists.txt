@@ -14,10 +14,10 @@ add_executable(Textractor WIN32
 	Textractor.ico
 )
 target_precompile_headers(Textractor REUSE_FROM pch)
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets shell32 winhttp)
+target_link_libraries(Textractor Qt5::Widgets shell32 winhttp)
 
 if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Core.dll)
 	if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Cored.dll)
-		install_qt5_libs(${PROJECT_NAME})
+		install_qt5_libs(Textractor)
 	endif()
 endif()

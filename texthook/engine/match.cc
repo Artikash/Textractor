@@ -35,7 +35,7 @@ namespace Engine
 
 	void Hijack()
 	{
-		static auto _ = []
+		static auto _ = ([]
 		{
 			GetModuleFileNameW(nullptr, processPath, MAX_PATH);
 			processName = wcsrchr(processPath, L'\\') + 1;
@@ -68,8 +68,7 @@ namespace Engine
 			ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 
 			DetermineEngineType();
-			return NULL;
-		}();
+		}(), 0);
 	}
 
 	bool ShouldMonoHook(const char* name)

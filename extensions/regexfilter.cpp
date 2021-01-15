@@ -21,7 +21,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		localize();
+		Localize();
 		ui.setupUi(this);
 
 		connect(ui.input, &QLineEdit::textEdited, this, &Window::setRegex);
@@ -34,7 +34,7 @@ public:
 	void setRegex(QString regex)
 	{
 		ui.input->setText(regex);
-		std::lock_guard l(m);
+		std::scoped_lock lock(m);
 		if (!regex.isEmpty()) try { ::regex = S(regex); }
 		catch (std::regex_error) { return ui.output->setText(INVALID_REGEX); }
 		else ::regex = std::nullopt;

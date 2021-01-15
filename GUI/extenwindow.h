@@ -20,7 +20,6 @@ class ExtenWindow : public QMainWindow
 {
 public:
 	explicit ExtenWindow(QWidget* parent = nullptr);
-	~ExtenWindow();
 
 private:
 	bool eventFilter(QObject* target, QEvent* event) override;

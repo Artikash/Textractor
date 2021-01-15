@@ -1,5 +1,4 @@
 ﻿#include "qtcommon.h"
-#include "extension.h"
 #include "network.h"
 #include <ctime>
 
@@ -123,7 +122,7 @@ QStringList languages
 };
 
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
+int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
@@ -153,9 +152,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			if (auto blob = Copy(JSON::Parse(httpRequest.response.substr(start))[0][2].String())) if (auto translations = Copy(JSON::Parse(blob.value())[1][0].Array()))
 			{
 				std::wstring translation;
-				if (translations->size() == 1 && (translations = Copy(translations.value()[0][5].Array())))
+				if (translations->size() == 1)
 				{
-					for (const auto& sentence : translations.value()) if (sentence[0].String()) (translation += *sentence[0].String()) += L" ";
+					if (translations = Copy(translations.value()[0][5].Array()))
+						for (const auto& sentence : translations.value())
+							if (sentence[0].String()) (translation += *sentence[0].String()) += L" ";
 				}
 				else
 				{

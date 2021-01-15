@@ -7,11 +7,11 @@ HttpRequest::HttpRequest(
 	const wchar_t* objectName,
 	std::string body,
 	const wchar_t* headers,
+	DWORD port,
 	const wchar_t* referrer,
 	DWORD requestFlags,
 	const wchar_t* httpVersion,
-	const wchar_t** acceptTypes,
-	DWORD port
+	const wchar_t** acceptTypes
 )
 {
 	static std::atomic<HINTERNET> internet = NULL;

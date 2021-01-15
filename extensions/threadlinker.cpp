@@ -17,7 +17,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		localize();
+		Localize();
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
 
 		layout.addWidget(&linkList);
@@ -35,7 +35,7 @@ private:
 		int to = QInputDialog::getText(this, THREAD_LINK_TO, HEXADECIMAL, QLineEdit::Normal, "", &ok3, Qt::WindowCloseButtonHint).toInt(&ok4, 16);
 		if (ok1 && ok2 && ok3 && ok4)
 		{
-			std::lock_guard l(m);
+			std::scoped_lock lock(m);
 			linkedTextHandles[from].insert(to);
 			linkList.addItem(QString::number(from, 16) + "->" + QString::number(to, 16));
 		}
@@ -47,7 +47,7 @@ private:
 		{
 			QStringList link = linkList.currentItem()->text().split("->");
 			linkList.takeItem(linkList.currentRow());
-			std::lock_guard l(m);
+			std::scoped_lock lock(m);
 			linkedTextHandles[link[0].toInt(nullptr, 16)].erase(link[1].toInt(nullptr, 16));
 		}
 	}

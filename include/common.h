@@ -82,6 +82,8 @@ static struct // should be inline but MSVC (linker) is bugged
 	template <typename T> operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
 } DUMMY;
 
+inline auto Swallow = [](auto&&...) {};
+
 template <typename T> std::optional<std::remove_cv_t<T>> Copy(T* ptr) { if (ptr) return *ptr; return {}; }
 
 template <typename T> inline auto FormatArg(T arg) { return arg; }
@@ -134,7 +136,7 @@ inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { Mes
 template <typename... Args>
 inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { std::thread([=] { TEXTRACTOR_MESSAGE(format, args...); }).detach(); }
 
-void localize();
+void Localize();
 
 #ifdef _DEBUG
 #define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
