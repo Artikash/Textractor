@@ -46,7 +46,7 @@ struct PrettyWindow : QDialog
 {
 	PrettyWindow(const char* name)
 	{
-		localize();
+		Localize();
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
@@ -439,8 +439,7 @@ private:
 		{
 			std::vector<LookupResult> results;
 			for (auto [it, end] = std::equal_range(dictionary.begin(), dictionary.end(), DictionaryEntry{ term.toUtf8() }); it != end; ++it)
-				if (foundDefinitions.emplace(it->definition).second)
-					results.push_back({ term, it->definition, inflectionsUsed });
+				if (foundDefinitions.emplace(it->definition).second) results.push_back({ term, it->definition, inflectionsUsed });
 			for (const auto& inflection : inflections) if (auto match = inflection.inflectsTo.match(term); match.hasMatch())
 			{
 				QStringList currentInflectionsUsed = inflectionsUsed;

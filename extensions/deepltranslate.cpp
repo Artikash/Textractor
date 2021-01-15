@@ -1,5 +1,4 @@
 #include "qtcommon.h"
-#include "extension.h"
 #include "network.h"
 #include <random>
 
@@ -26,7 +25,7 @@ QStringList languages
 };
 
 bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true;
-int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 500;
+int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 enum KeyType { CAT, REST };
 int keyType = CAT;
@@ -90,6 +89,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		L"/jsonrpc",
 		body,
 		L"Host: www2.deepl.com\r\nAccept-Language: en-US,en;q=0.5\r\nContent-type: application/json; charset=utf-8\r\nOrigin: https://www.deepl.com\r\nTE: Trailers",
+		INTERNET_DEFAULT_PORT,
 		L"https://www.deepl.com/translator",
 		WINHTTP_FLAG_SECURE
 	})

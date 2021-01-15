@@ -87,7 +87,7 @@ void UpdateReplacements()
 	try
 	{
 		if (replaceFileLastWrite.exchange(std::filesystem::last_write_time(REPLACE_SAVE_FILE)) == std::filesystem::last_write_time(REPLACE_SAVE_FILE)) return;
-		std::scoped_lock l(m);
+		std::scoped_lock lock(m);
 		trie = Trie(std::ifstream(REPLACE_SAVE_FILE, std::ios::binary));
 	}
 	catch (std::filesystem::filesystem_error) { replaceFileLastWrite.store({}); }
@@ -103,7 +103,8 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		if (trie.Empty())
 		{
 			auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
-			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS)) file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
+			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS))
+				file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
 			_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
 		}
 	}

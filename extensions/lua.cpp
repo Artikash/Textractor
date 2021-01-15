@@ -47,7 +47,7 @@ public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		localize();
+		Localize();
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
 		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText(LUA_INTRO);
@@ -57,6 +57,8 @@ public:
 		resize(800, 600);
 		setWindowTitle("Lua");
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+
+		LoadScript();
 	}
 
 	~Window()

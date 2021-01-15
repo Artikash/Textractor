@@ -14,6 +14,7 @@ struct HttpRequest
 		const wchar_t* objectName,
 		std::string body = "",
 		const wchar_t* headers = NULL,
+		DWORD port = INTERNET_DEFAULT_PORT,
 		const wchar_t* referrer = NULL,
 		DWORD requestFlags = WINHTTP_FLAG_SECURE | WINHTTP_FLAG_ESCAPE_DISABLE,
 		const wchar_t* httpVersion = NULL,
@@ -37,7 +38,7 @@ namespace JSON
 	std::basic_string<C> Escape(std::basic_string<C> text)
 	{
 		int oldSize = text.size();
-		text.resize(text.size() + std::count_if(text.begin(), text.end(), [](auto ch) { return ch == '\n' || ch == '\r' || ch == '\t' || ch == '\\' || ch == '"'; }));
+		text.resize(text.size() + std::count_if(text.begin(), text.end(), [](C ch) { return ch == '\n' || ch == '\r' || ch == '\t' || ch == '\\' || ch == '"'; }));
 		auto out = text.rbegin();
 		for (int i = oldSize - 1; i >= 0; --i)
 		{
@@ -59,13 +60,13 @@ namespace JSON
 	template <typename C> struct UTF {};
 	template <> struct UTF<wchar_t>
 	{
-		inline static std::wstring FromCodepoint(int codepoint) { return { (wchar_t)codepoint }; } // TODO: surrogate pairs
+		inline static std::wstring FromCodepoint(unsigned codepoint) { return { (wchar_t)codepoint }; } // TODO: surrogate pairs
 	};
 
 	template <typename C>
-	struct Value : private std::variant<std::monostate, std::nullopt_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>
+	struct Value : private std::variant<std::monostate, std::nullptr_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>
 	{
-		using std::variant<std::monostate, std::nullopt_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>::variant;
+		using std::variant<std::monostate, std::nullptr_t, bool, double, std::basic_string<C>, std::vector<Value<C>>, std::unordered_map<std::basic_string<C>, Value<C>>>::variant;
 
 		explicit operator bool() const { return index(); }
 		bool IsNull() const { return index() == 1; }
@@ -77,17 +78,18 @@ namespace JSON
 
 		const Value<C>& operator[](std::basic_string<C> key) const
 		{
-			static const Value<C> failure;
 			if (auto object = Object()) if (auto it = object->find(key); it != object->end()) return it->second;
 			return failure;
 		}
 		const Value<C>& operator[](int i) const
 		{
-			static const Value<C> failure;
 			if (auto array = Array()) if (i < array->size()) return array->at(i);
 			return failure;
 		}
+
+		static const Value<C> failure;
 	};
+	template <typename C> const Value<C> Value<C>::failure;
 	
 	template <typename C, int maxDepth = 25>
 	Value<C> Parse(const std::basic_string<C>& text, int64_t& i, int depth)
@@ -115,7 +117,7 @@ namespace JSON
 					if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
 					{
 						char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
-						unescaped += UTF<C>::FromCodepoint(strtol(charCode, nullptr, 16));
+						unescaped += UTF<C>::FromCodepoint(strtoul(charCode, nullptr, 16));
 						i += 5;
 						continue;
 					}
@@ -136,7 +138,7 @@ namespace JSON
 
 		static C nullStr[] = { 'n', 'u', 'l', 'l' }, trueStr[] = { 't', 'r', 'u', 'e' }, falseStr[] = { 'f', 'a', 'l', 's', 'e' };
 		if (ch == nullStr[0])
-			if (std::char_traits<C>::compare(text.data() + i, nullStr, std::size(nullStr)) == 0) return i += std::size(nullStr), std::nullopt;
+			if (std::char_traits<C>::compare(text.data() + i, nullStr, std::size(nullStr)) == 0) return i += std::size(nullStr), nullptr;
 			else return {};
 		if (ch == trueStr[0])
 			if (std::char_traits<C>::compare(text.data() + i, trueStr, std::size(trueStr)) == 0) return i += std::size(trueStr), true;

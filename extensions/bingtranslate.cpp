@@ -1,5 +1,4 @@
-﻿#include "extension.h"
-#include "network.h"
+﻿#include "network.h"
 #include <QStringList>
 
 extern const wchar_t* TRANSLATION_ERROR;
@@ -81,7 +80,7 @@ QStringList languages
 };
 
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 500;
+int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
@@ -94,10 +93,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 			FormatString(R"([{"text":"%s"}])", JSON::Escape(WideStringToString(text))),
 			FormatString(L"Content-Type: application/json; charset=UTF-8\r\nOcp-Apim-Subscription-Key:%s", apiKey.Copy()).c_str()
 		})
-		{
 			if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
-		}
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 
 	if (HttpRequest httpRequest{

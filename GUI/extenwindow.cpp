@@ -138,8 +138,6 @@ ExtenWindow::ExtenWindow(QWidget* parent) :
 	Sync();
 }
 
-ExtenWindow::~ExtenWindow() = default;
-
 bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 {
 	// See https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215

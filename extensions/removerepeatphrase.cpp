@@ -59,14 +59,12 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		{
 			std::wstring substring(sentence, suffixArray[i], commonPrefixLength);
 			bool substringCharMap[0x10000] = {};
-			for (auto ch : substring)
-				substringCharMap[ch] = true;
+			for (auto ch : substring) substringCharMap[ch] = true;
 
 			for (int regionSize = 0, j = 0; j <= sentence.size(); ++j)
 				if (substringCharMap[sentence[j]]) regionSize += 1;
 				else if (regionSize >= commonPrefixLength * 2)
-					while (regionSize > 0)
-						sentence[j - regionSize--] = ERASED;
+					while (regionSize > 0) sentence[j - regionSize--] = ERASED;
 				else regionSize = 0;
 
 			if (!wcsstr(sentence.c_str(), substring.c_str())) std::copy(substring.begin(), substring.end(), sentence.begin() + max(suffixArray[i], suffixArray[i + 1]));

@@ -87,23 +87,3 @@ macro(find_qt5)
         message(FATAL_ERROR "Cannot find QT5!")
     endif()
 endmacro(find_qt5)
-
-# Copies required DLLs to directory with target
-# Optionally can provide QML directory as second argument
-function(install_qt5_libs target)
-    if(TARGET Qt5::windeployqt)
-        set(EXTRA "")
-        if(EXISTS ${ARGV1})
-            message("QML directory to be scanned=${ARGV1}")
-            list(APPEND EXTRA --qmldir ${ARGV1})
-        endif()
-
-        # execute windeployqt in a tmp directory after build
-        add_custom_command(TARGET ${target}
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
-            COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
-            COMMAND Qt5::windeployqt --dir $<TARGET_FILE_DIR:${target}> "$<TARGET_FILE_DIR:${target}>/$<TARGET_FILE_NAME:${target}>" ${EXTRA}
-        )
-    endif()
-endfunction(install_qt5_libs)

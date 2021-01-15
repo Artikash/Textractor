@@ -22,7 +22,7 @@
 const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
-const char* GAME_CONFIG = u8"Configure game";
+const char* CONFIG = u8"Configure game";
 const char* DETACH = u8"Detach from game";
 const char* FORGET = u8"Forget game";
 const char* ADD_HOOK = u8"Add hook";
@@ -144,6 +144,13 @@ const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Rate limit exceeded: refuse to make m
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* USE_PREV_SENTENCE_CONTEXT = u8"Use previous sentence as context";
 const char* API_KEY = u8"API key";
+const char* CHROME_LOCATION = "Google Chrome location";
+const char* START_DEVTOOLS = u8"Start DevTools";
+const char* STOP_DEVTOOLS = u8"Stop DevTools";
+const char* HEADLESS_MODE = u8"Headless mode";
+const char* DEVTOOLS_STATUS = u8"DevTools status";
+const char* AUTO_START = u8"Start automatically";
+const wchar_t* ERROR_START_CHROME = L"failed to start Chrome or to connect to it";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* SENTENCE_TOO_BIG = u8"Sentence too large to display";
@@ -215,7 +222,7 @@ const char* THREAD_LINK_FROM = u8"Thread number to link from";
 const char* THREAD_LINK_TO = u8"Thread number to link to";
 const char* HEXADECIMAL = u8"Hexadecimal";
 
-void localize()
+void Localize()
 {
 #ifdef TURKISH
 	NATIVE_LANGUAGE = "Turkish";
@@ -316,7 +323,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	NATIVE_LANGUAGE = "Chinese (simplified)";
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
-	GAME_CONFIG = u8"配置游戏";
+	CONFIG = u8"配置游戏";
 	DETACH = u8"从游戏分离";
 	FORGET = u8"移除游戏";
 	ADD_HOOK = u8"添加钩子";
@@ -469,7 +476,7 @@ end)";
 	NATIVE_LANGUAGE = "Russian";
 	ATTACH = u8"Присоединить к игре";
 	LAUNCH = u8"Запустить игру";
-	GAME_CONFIG = u8"Настройки игры";
+	CONFIG = u8"Настройки игры";
 	DETACH = u8"Отсоединить от игры";
 	FORGET = u8"Забыть игру";
 	ADD_HOOK = u8"Добавить хук";
@@ -725,7 +732,7 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	NATIVE_LANGUAGE = "Italian";
 	ATTACH = u8"Collega al gioco";
 	LAUNCH = u8"Avvia gioco";
-	GAME_CONFIG = u8"Configura gioco";
+	CONFIG = u8"Configura gioco";
 	DETACH = u8"Scollega dal gioco";
 	FORGET = u8"Dimentica gioco";
 	ADD_HOOK = u8"Aggiungi gancio";
@@ -1145,7 +1152,7 @@ original_text의 빈공간은 무시되지만, replacement_text는 공백과 엔
 	NATIVE_LANGUAGE = "French";
 	ATTACH = u8"Attacher le jeu";
 	LAUNCH = u8"Lancer le jeu";
-	GAME_CONFIG = u8"Configure le jeu";
+	CONFIG = u8"Configure le jeu";
 	DETACH = u8"Detacher du jeu";
 	FORGET = u8"Oublier le jeu";
 	ADD_HOOK = u8"Ajouter un hook";
@@ -1336,4 +1343,4 @@ Ce fichier doit être encodé en Unicode (UTF-16 Little Endian).)";
 #endif // FRENCH
 };
 
-static auto _ = (localize(), 0);
+static auto _ = (Localize(), 0);

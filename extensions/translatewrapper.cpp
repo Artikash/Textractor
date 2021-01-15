@@ -32,16 +32,18 @@ QFormLayout* display;
 Settings settings;
 Synchronized<std::wstring> translateTo = L"en", apiKey;
 
-Synchronized<std::map<std::wstring, std::wstring>> translationCache;
-int savedSize;
-
-void SaveCache()
+namespace
 {
-	std::wstring allTranslations(L"\xfeff");
-	for (const auto& [sentence, translation] : translationCache.Acquire().contents)
-		allTranslations.append(L"|SENTENCE|").append(sentence).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
-	std::ofstream(TRANSLATION_CACHE_FILE, std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
-	savedSize = translationCache->size();
+	Synchronized<std::map<std::wstring, std::wstring>> translationCache;
+	int savedSize;
+	void SaveCache()
+	{
+		std::wstring allTranslations(L"\xfeff");
+		for (const auto& [sentence, translation] : translationCache.Acquire().contents)
+			allTranslations.append(L"|SENTENCE|").append(sentence).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
+		std::ofstream(TRANSLATION_CACHE_FILE, std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
+		savedSize = translationCache->size();
+	}
 }
 
 class Window : public QDialog
@@ -50,7 +52,7 @@ public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		localize();
+		Localize();
 		display = new QFormLayout(this);
 
 		settings.beginGroup(TRANSLATION_PROVIDER);
@@ -93,7 +95,7 @@ public:
 		}
 		if (GET_API_KEY_FROM)
 		{
-			auto keyInput = new QLineEdit(settings.value(API_KEY).toString());
+			auto keyInput = new QLineEdit(settings.value(API_KEY).toString(), this);
 			apiKey->assign(S(keyInput->text()));
 			QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(apiKey->assign(S(key)))); });
 			auto keyLabel = new QLabel(QString("<a href=\"%1\">%2</a>").arg(GET_API_KEY_FROM, API_KEY), this);
@@ -147,8 +149,15 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		Synchronized<std::vector<DWORD>> tokens;
 	} rateLimiter;
 
+	auto StripWhitespace = [](std::wstring& text)
+	{
+		text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
+		text.erase(std::find_if_not(text.rbegin(), text.rend(), iswspace).base(), text.end());
+	};
+
 	bool cache = false;
 	std::wstring translation;
+	StripWhitespace(sentence);
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
@@ -157,6 +166,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
 		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence);
 		else translation = TOO_MANY_TRANS_REQUESTS;
+	StripWhitespace(translation);
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 
