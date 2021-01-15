@@ -10,7 +10,7 @@ extern Settings settings;
 const char* TRANSLATION_PROVIDER = "DevTools DeepL Translate";
 const char* GET_API_KEY_FROM = nullptr;
 bool translateSelectedOnly = true, rateLimitAll = false, rateLimitSelected = false, useCache = true;
-int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 10000;
+int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 2500;
 
 extern const char* CHROME_LOCATION;
 extern const char* START_DEVTOOLS;
@@ -54,31 +54,50 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		display->addRow(CHROME_LOCATION, chromePathEdit);
 		auto statusLabel = new QLabel("Stopped");
 		auto startButton = new QPushButton(START_DEVTOOLS), stopButton = new QPushButton(STOP_DEVTOOLS);
-		auto headlessCheckBox = new QCheckBox(HEADLESS_MODE);
+		auto headlessCheckBox = new QCheckBox();
 		headlessCheckBox->setChecked(settings.value(HEADLESS_MODE, true).toBool());
 		QObject::connect(headlessCheckBox, &QCheckBox::clicked, [](bool headless) { settings.setValue(HEADLESS_MODE, headless); });
 		QObject::connect(startButton, &QPushButton::clicked, [statusLabel, chromePathEdit, headlessCheckBox] {
 			DevTools::Start(
 				S(chromePathEdit->text()),
-				[statusLabel](QString status) { QMetaObject::invokeMethod(statusLabel, std::bind(&QLabel::setText, statusLabel, status)); },
-				headlessCheckBox->isChecked(),
-				9222
+				[statusLabel](QString status)
+				{
+					QMetaObject::invokeMethod(statusLabel, std::bind(&QLabel::setText, statusLabel, status));
+					if (status == "ConnectedState") std::thread([]
+					{
+						if (HttpRequest httpRequest{
+							L"Mozilla/5.0 Textractor",
+							L"127.0.0.1",
+							L"POST",
+							L"/json/version",
+							"",
+							NULL,
+							9222,
+							NULL,
+							WINHTTP_FLAG_ESCAPE_DISABLE
+						})
+							if (auto userAgent = Copy(JSON::Parse(httpRequest.response)[L"User-Agent"].String()))
+								if (userAgent->find(L"Headless") != std::string::npos)
+									DevTools::SendRequest(L"Network.setUserAgentOverride",
+										FormatString(LR"({"userAgent":"%s"})", userAgent->replace(userAgent->find(L"Headless"), 8, L"")));
+					}).detach();
+				},
+				headlessCheckBox->isChecked()
 			);
-			if (!DevTools::SendRequest(L"Network.enable")) DevTools::Close();
 		});
 		QObject::connect(stopButton, &QPushButton::clicked, &DevTools::Close);
 		auto buttons = new QHBoxLayout();
 		buttons->addWidget(startButton);
 		buttons->addWidget(stopButton);
-		display->addRow(buttons);
-		display->addRow(headlessCheckBox);
-		auto autoStartButton = new QCheckBox(AUTO_START);
+		display->addRow(HEADLESS_MODE, headlessCheckBox);
+		auto autoStartButton = new QCheckBox();
 		autoStartButton->setChecked(settings.value(AUTO_START, false).toBool());
-		QObject::connect(autoStartButton, &QCheckBox::clicked, [](bool autoStart) {settings.setValue(AUTO_START, autoStart); });
-		display->addRow(autoStartButton);
+		QObject::connect(autoStartButton, &QCheckBox::clicked, [](bool autoStart) { settings.setValue(AUTO_START, autoStart); });
+		display->addRow(AUTO_START, autoStartButton);
+		display->addRow(buttons);
 		statusLabel->setFrameStyle(QFrame::Panel | QFrame::Sunken);
 		display->addRow(DEVTOOLS_STATUS, statusLabel);
-		if (autoStartButton->isChecked()) startButton->click();
+		if (autoStartButton->isChecked()) QMetaObject::invokeMethod(startButton, &QPushButton::click, Qt::QueuedConnection);
 	}
 	break;
 	case DLL_PROCESS_DETACH:
@@ -93,39 +112,13 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!DevTools::Connected()) return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, ERROR_START_CHROME) };
-
 	// DevTools can't handle concurrent translations yet
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
-
-	// Navigate to site and wait until it is loaded
-	DevTools::StartListening(L"Network.responseReceived");
 	DevTools::SendRequest(L"Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/translator#any/%s/%s"})", translateTo.Copy(), Escape(text)));
-	for (int retry = 0; ++retry < 50; Sleep(100))
-		for (const auto& result : DevTools::ListenResults(L"Network.responseReceived"))
-			if (auto URL = result[L"response"][L"url"].String())
-				if (URL->find(L"deepl.com/jsonrpc") != std::string::npos) break;
-	DevTools::StopListening(L"Network.responseReceived");
-
-	// Extract translation from site
-	auto RemoveTags = [](const std::wstring& HTML)
-	{
-		std::wstring result;
-		for (unsigned i = 0; i < HTML.size(); ++i)
-			if (HTML[i] == '<') i = HTML.find('>', i);
-			else result.push_back(HTML[i]);
-		return result;
-	};
-	if (auto document = Copy(DevTools::SendRequest(L"DOM.getDocument")[L"root"][L"nodeId"].Number()))
-		if (auto target = Copy(DevTools::SendRequest(
-			L"DOM.querySelector", FormatString(LR"({"nodeId":%d,"selector":"#target-dummydiv"})", (int)document.value())
-		)[L"nodeId"].Number()))
-			if (auto outerHTML = Copy(DevTools::SendRequest(L"DOM.getOuterHTML", FormatString(LR"({"nodeId":%d})", (int)target.value()))[L"outerHTML"].String()))
-				if (auto translation = RemoveTags(outerHTML.value()); !translation.empty()) return { true, translation };
-				else if (target = Copy(DevTools::SendRequest(
-					L"DOM.querySelector", FormatString(LR"({"nodeId":%d,"selector":"div.lmt__system_notification"})", (int)document.value())
-				)[L"nodeId"].Number()))
-					if (outerHTML = Copy(DevTools::SendRequest(L"DOM.getOuterHTML", FormatString(LR"({"nodeId":%d})", (int)target.value()))[L"outerHTML"].String()))
-						return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, RemoveTags(outerHTML.value())) };
+	for (int retry = 0; ++retry < 100; Sleep(100))
+		if (auto translation = Copy(DevTools::SendRequest(
+			L"Runtime.evaluate", LR"({"expression":"document.querySelector('#target-dummydiv').innerHTML","returnByValue":true})")[L"result"][L"value"].String())
+		) if (!translation->empty()) return { true, translation.value() };
 	return { false, TRANSLATION_ERROR };
 }

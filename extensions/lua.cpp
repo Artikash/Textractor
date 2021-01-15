@@ -57,6 +57,8 @@ public:
 		resize(800, 600);
 		setWindowTitle("Lua");
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+
+		LoadScript();
 	}
 
 	~Window()
