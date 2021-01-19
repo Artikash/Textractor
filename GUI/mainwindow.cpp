@@ -303,8 +303,8 @@ namespace
 
 		QDialog dialog(This, Qt::WindowCloseButtonHint);
 		QFormLayout layout(&dialog);
-		QCheckBox cjkCheckBox(&dialog);
-		layout.addRow(SEARCH_CJK, &cjkCheckBox);
+		QCheckBox CJKCheck(&dialog);
+		layout.addRow(SEARCH_CJK, &CJKCheck);
 		QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help | QDialogButtonBox::Retry, &dialog);
 		layout.addRow(&confirm);
 		confirm.button(QDialogButtonBox::Ok)->setText(START_HOOK_SEARCH);
@@ -323,29 +323,29 @@ namespace
 		{
 			QDialog dialog(This, Qt::WindowCloseButtonHint);
 			QFormLayout layout(&dialog);
-			QLineEdit textInput(&dialog);
-			layout.addRow(TEXT, &textInput);
-			QSpinBox codepageInput(&dialog);
-			codepageInput.setMaximum(INT_MAX);
-			codepageInput.setValue(sp.codepage);
-			layout.addRow(CODEPAGE, &codepageInput);
+			QLineEdit textEdit(&dialog);
+			layout.addRow(TEXT, &textEdit);
+			QSpinBox codepageSpin(&dialog);
+			codepageSpin.setMaximum(INT_MAX);
+			codepageSpin.setValue(sp.codepage);
+			layout.addRow(CODEPAGE, &codepageSpin);
 			QDialogButtonBox confirm(QDialogButtonBox::Ok);
 			QObject::connect(&confirm, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
 			layout.addRow(&confirm);
 			if (!dialog.exec()) return;
-			wcsncpy_s(sp.text, S(textInput.text()).c_str(), PATTERN_SIZE - 1);
+			wcsncpy_s(sp.text, S(textEdit.text()).c_str(), PATTERN_SIZE - 1);
 			try { Host::FindHooks(selectedProcessId, sp); } catch (std::out_of_range) {}
 			return;
 		}
 
-		filter.setPattern(cjkCheckBox.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
+		filter.setPattern(CJKCheck.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 		if (customSettings)
 		{
 			QDialog dialog(This, Qt::WindowCloseButtonHint);
 			QFormLayout layout(&dialog);
-			QLineEdit patternInput(x64 ? "CC CC 48 89" : "55 8B EC", &dialog);
-			assert(QByteArray::fromHex(patternInput.text().toUtf8()) == QByteArray((const char*)sp.pattern, sp.length));
-			layout.addRow(SEARCH_PATTERN, &patternInput);
+			QLineEdit patternEdit(x64 ? "CC CC 48 89" : "55 8B EC", &dialog);
+			assert(QByteArray::fromHex(patternEdit.text().toUtf8()) == QByteArray((const char*)sp.pattern, sp.length));
+			layout.addRow(SEARCH_PATTERN, &patternEdit);
 			for (auto [value, label] : Array<int&, const char*>{
 				{ sp.searchTime, SEARCH_DURATION },
 				{ sp.offset, PATTERN_OFFSET },
@@ -359,36 +359,36 @@ namespace
 				layout.addRow(label, spinBox);
 				QObject::connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [&value](int newValue) { value = newValue; });
 			}
-			QLineEdit boundInput(QFileInfo(S(GetModuleFilename(selectedProcessId).value_or(L""))).fileName(), &dialog);
-			layout.addRow(SEARCH_MODULE, &boundInput);
+			QLineEdit boundEdit(QFileInfo(S(GetModuleFilename(selectedProcessId).value_or(L""))).fileName(), &dialog);
+			layout.addRow(SEARCH_MODULE, &boundEdit);
 			for (auto [value, label] : Array<uintptr_t&, const char*>{
 				{ sp.minAddress, MIN_ADDRESS },
 				{ sp.maxAddress, MAX_ADDRESS },
 				{ sp.padding, STRING_OFFSET },
 			})
 			{
-				auto input = new QLineEdit(QString::number(value, 16), &dialog);
-				layout.addRow(label, input);
-				QObject::connect(input, &QLineEdit::textEdited, [&value](QString text) { if (uintptr_t newValue = text.toULongLong(&ok, 16); ok) value = newValue; });
+				auto edit = new QLineEdit(QString::number(value, 16), &dialog);
+				layout.addRow(label, edit);
+				QObject::connect(edit, &QLineEdit::textEdited, [&value](QString text) { if (uintptr_t newValue = text.toULongLong(&ok, 16); ok) value = newValue; });
 			}
-			QLineEdit filterInput(filter.pattern(), &dialog);
-			layout.addRow(HOOK_SEARCH_FILTER, &filterInput);
+			QLineEdit filterEdit(filter.pattern(), &dialog);
+			layout.addRow(HOOK_SEARCH_FILTER, &filterEdit);
 			QPushButton startButton(START_HOOK_SEARCH, &dialog);
 			layout.addWidget(&startButton);
 			QObject::connect(&startButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 			if (!dialog.exec()) return;
-			if (patternInput.text().contains('.'))
+			if (patternEdit.text().contains('.'))
 			{
-				wcsncpy_s(sp.exportModule, S(patternInput.text()).c_str(), MAX_MODULE_SIZE - 1);
+				wcsncpy_s(sp.exportModule, S(patternEdit.text()).c_str(), MAX_MODULE_SIZE - 1);
 				sp.length = 1;
 			}
 			else
 			{
-				QByteArray pattern = QByteArray::fromHex(patternInput.text().replace("??", QString::number(XX, 16)).toUtf8());
+				QByteArray pattern = QByteArray::fromHex(patternEdit.text().replace("??", QString::number(XX, 16)).toUtf8());
 				memcpy(sp.pattern, pattern.data(), sp.length = min(pattern.size(), PATTERN_SIZE));
 			}
-			wcsncpy_s(sp.boundaryModule, S(boundInput.text()).c_str(), MAX_MODULE_SIZE - 1);
-			filter.setPattern(filterInput.text());
+			wcsncpy_s(sp.boundaryModule, S(boundEdit.text()).c_str(), MAX_MODULE_SIZE - 1);
+			filter.setPattern(filterEdit.text());
 			if (!filter.isValid()) filter.setPattern(".");
 		}
 		else
@@ -467,12 +467,12 @@ namespace
 			layout.addRow(label, spinBox);
 			QObject::connect(&saveButton, &QPushButton::clicked, [spinBox, label, &settings, &value] { settings.setValue(label, value = spinBox->value()); });
 		}
-		QComboBox localeComboBox(&dialog);
+		QComboBox localeCombo(&dialog);
 		assert(PROMPT == 0 && ALWAYS == 1 && NEVER == 2);
-		localeComboBox.addItems({ { "Prompt", "Always", "Never" } });
-		localeComboBox.setCurrentIndex(settings.value(CONFIG_JP_LOCALE, PROMPT).toInt());
-		layout.addRow(CONFIG_JP_LOCALE, &localeComboBox);
-		QObject::connect(&localeComboBox, qOverload<int>(&QComboBox::activated), [&settings](int i) { settings.setValue(CONFIG_JP_LOCALE, i); });
+		localeCombo.addItems({ { "Prompt", "Always", "Never" } });
+		localeCombo.setCurrentIndex(settings.value(CONFIG_JP_LOCALE, PROMPT).toInt());
+		layout.addRow(CONFIG_JP_LOCALE, &localeCombo);
+		QObject::connect(&localeCombo, qOverload<int>(&QComboBox::activated), [&settings](int i) { settings.setValue(CONFIG_JP_LOCALE, i); });
 		layout.addWidget(&saveButton);
 		QObject::connect(&saveButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 		dialog.setWindowTitle(SETTINGS);

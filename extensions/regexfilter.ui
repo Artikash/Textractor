@@ -6,13 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>350</width>
-    <height>105</height>
+    <width>500</width>
+    <height>107</height>
    </rect>
   </property>
   <layout class="QVBoxLayout">
    <item>
-    <widget class="QLineEdit" name="input"/>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLineEdit" name="regexEdit"/>
+     </item>
+     <item>
+      <widget class="QLabel">
+       <property name="text">
+        <string>=></string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="replaceEdit"/>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QLabel" name="output">
@@ -25,7 +39,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="save">
+    <widget class="QPushButton" name="saveButton">
      <property name="text">
       <string>Save</string>
      </property>

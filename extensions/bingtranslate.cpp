@@ -3,7 +3,7 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
-extern Synchronized<std::wstring> translateTo, apiKey;
+extern Synchronized<std::wstring> translateTo, authKey;
 
 const char* TRANSLATION_PROVIDER = "Bing Translate";
 const char* GET_API_KEY_FROM = "https://www.microsoft.com/en-us/translator/business/trial/#get-started";
@@ -84,14 +84,14 @@ int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
-	if (!apiKey->empty())
+	if (!authKey->empty())
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"api.cognitive.microsofttranslator.com",
 			L"POST",
 			FormatString(L"/translate?api-version=3.0&to=%s", translateTo.Copy()).c_str(),
 			FormatString(R"([{"text":"%s"}])", JSON::Escape(WideStringToString(text))),
-			FormatString(L"Content-Type: application/json; charset=UTF-8\r\nOcp-Apim-Subscription-Key:%s", apiKey.Copy()).c_str()
+			FormatString(L"Content-Type: application/json; charset=UTF-8\r\nOcp-Apim-Subscription-Key:%s", authKey.Copy()).c_str()
 		})
 			if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };

@@ -55,14 +55,14 @@ struct PrettyWindow : QDialog
 		settings.beginGroup(name);
 		QFont font = ui.display->font();
 		if (font.fromString(settings.value(FONT, font.toString()).toString())) ui.display->setFont(font);
-		setBgColor(settings.value(BG_COLOR, bgColor).value<QColor>());
-		setTextColor(settings.value(TEXT_COLOR, textColor()).value<QColor>());
+		SetBackgroundColor(settings.value(BG_COLOR, backgroundColor).value<QColor>());
+		SetTextColor(settings.value(TEXT_COLOR, TextColor()).value<QColor>());
 		outliner.color = settings.value(OUTLINE_COLOR, outliner.color).value<QColor>();
 		outliner.size = settings.value(OUTLINE_SIZE, outliner.size).toDouble();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
-		menu.addAction(BG_COLOR, [this] { setBgColor(colorPrompt(this, bgColor, BG_COLOR)); });
-		menu.addAction(TEXT_COLOR, [this] { setTextColor(colorPrompt(this, textColor(), TEXT_COLOR)); });
-		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::setOutline);
+		menu.addAction(BG_COLOR, [this] { SetBackgroundColor(colorPrompt(this, backgroundColor, BG_COLOR)); });
+		menu.addAction(TEXT_COLOR, [this] { SetTextColor(colorPrompt(this, TextColor(), TEXT_COLOR)); });
+		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::SetOutline);
 		outlineAction->setCheckable(true);
 		outlineAction->setChecked(outliner.size >= 0);
 		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
@@ -89,28 +89,28 @@ private:
 		}
 	};
 
-	void setBgColor(QColor color)
+	void SetBackgroundColor(QColor color)
 	{
 		if (!color.isValid()) return;
 		if (color.alpha() == 0) color.setAlpha(1);
-		bgColor = color;
+		backgroundColor = color;
 		repaint();
 		settings.setValue(BG_COLOR, color.name(QColor::HexArgb));
 	};
 
-	QColor textColor()
+	QColor TextColor()
 	{
 		return ui.display->palette().color(QPalette::WindowText);
 	}
 
-	void setTextColor(QColor color)
+	void SetTextColor(QColor color)
 	{
 		if (!color.isValid()) return;
 		ui.display->setPalette(QPalette(color, {}, {}, {}, {}, {}, {}));
 		settings.setValue(TEXT_COLOR, color.name(QColor::HexArgb));
 	};
 
-	void setOutline(bool enable)
+	void SetOutline(bool enable)
 	{
 		if (enable)
 		{
@@ -125,10 +125,10 @@ private:
 
 	void paintEvent(QPaintEvent*) override
 	{
-		QPainter(this).fillRect(rect(), bgColor);
+		QPainter(this).fillRect(rect(), backgroundColor);
 	}
 
-	QColor bgColor{ palette().window().color() };
+	QColor backgroundColor{ palette().window().color() };
 	struct : QGraphicsEffect
 	{
 		void draw(QPainter* painter) override
@@ -163,10 +163,10 @@ public:
 		maxSentenceSize = settings.value(MAX_SENTENCE_SIZE, maxSentenceSize).toInt();
 
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
-			{ TOPMOST, false, &ExtraWindow::setTopmost },
-			{ SIZE_LOCK, false, &ExtraWindow::setLock },
-			{ SHOW_ORIGINAL, true, &ExtraWindow::setShowOriginal },
-			{ DICTIONARY, false, &ExtraWindow::setUseDictionary },
+			{ TOPMOST, false, &ExtraWindow::SetTopmost },
+			{ SIZE_LOCK, false, &ExtraWindow::SetLock },
+			{ SHOW_ORIGINAL, true, &ExtraWindow::SetShowOriginal },
+			{ DICTIONARY, false, &ExtraWindow::SetUseDictionary },
 		})
 		{
 			// delay processing anything until Textractor has finished initializing
@@ -206,26 +206,26 @@ public:
 	}
 
 private:
-	void setTopmost(bool topmost)
+	void SetTopmost(bool topmost)
 	{
 		for (auto window : { winId(), dictionaryWindow.winId() })
 			SetWindowPos((HWND)window, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 		settings.setValue(TOPMOST, topmost);
 	};
 
-	void setLock(bool locked)
+	void SetLock(bool locked)
 	{
 		setSizeGripEnabled(!locked);
 		settings.setValue(SIZE_LOCK, this->locked = locked);
 	};
 
-	void setShowOriginal(bool showOriginal)
+	void SetShowOriginal(bool showOriginal)
 	{
 		if (!showOriginal && settings.value(SHOW_ORIGINAL, false).toBool()) QMessageBox::information(this, SHOW_ORIGINAL, SHOW_ORIGINAL_INFO);
 		settings.setValue(SHOW_ORIGINAL, this->showOriginal = showOriginal);
 	};
 
-	void setUseDictionary(bool useDictionary)
+	void SetUseDictionary(bool useDictionary)
 	{
 		if (useDictionary)
 		{
@@ -239,11 +239,11 @@ private:
 		settings.setValue(DICTIONARY, this->useDictionary = useDictionary);
 	}
 
-	void computeDictionaryPosition(QPoint mouse)
+	void ComputeDictionaryPosition(QPoint mouse)
 	{
 		QString sentence = ui.display->text();
 		const QFont& font = ui.display->font();
-		if (cachedDisplayInfo.compareExchange(ui.display))
+		if (cachedDisplayInfo.CompareExchange(ui.display))
 		{
 			QFontMetrics fontMetrics(font, ui.display);
 			textPositionMap.clear();
@@ -269,7 +269,7 @@ private:
 		if (i == textPositionMap.size() || (mouse - textPositionMap[i]).manhattanLength() > font.pointSize() * 3) return dictionaryWindow.hide();
 		if (sentence.mid(i) == dictionaryWindow.term) return dictionaryWindow.ShowDefinition();
 		dictionaryWindow.ui.display->setFixedWidth(ui.display->width() * 3 / 4);
-		dictionaryWindow.setTerm(sentence.mid(i));
+		dictionaryWindow.SetTerm(sentence.mid(i));
 		int left = i == 0 ? 0 : textPositionMap[i - 1].x(), right = textPositionMap[i].x(),
 			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4, y = 0;
 		for (auto point : textPositionMap) if (point.y() > y && point.y() < textPositionMap[i].y()) y = point.y();
@@ -278,7 +278,7 @@ private:
 
 	bool eventFilter(QObject*, QEvent* event) override
 	{
-		if (useDictionary && event->type() == QEvent::MouseMove) computeDictionaryPosition(((QMouseEvent*)event)->localPos().toPoint());
+		if (useDictionary && event->type() == QEvent::MouseMove) ComputeDictionaryPosition(((QMouseEvent*)event)->localPos().toPoint());
 		if (event->type() == QEvent::MouseButtonPress) dictionaryWindow.hide();
 		return false;
 	}
@@ -309,7 +309,7 @@ private:
 	class
 	{
 	public:
-		bool compareExchange(QLabel* display)
+		bool CompareExchange(QLabel* display)
 		{
 			if (display->text() == text && display->font() == font && display->width() == width) return false;
 			text = display->text();
@@ -389,7 +389,7 @@ private:
 			}
 		}
 
-		void setTerm(QString term)
+		void SetTerm(QString term)
 		{
 			this->term = term;
 			UpdateDictionary();

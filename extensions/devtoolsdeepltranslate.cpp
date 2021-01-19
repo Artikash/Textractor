@@ -54,10 +54,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		display->addRow(CHROME_LOCATION, chromePathEdit);
 		auto statusLabel = new QLabel("Stopped");
 		auto startButton = new QPushButton(START_DEVTOOLS), stopButton = new QPushButton(STOP_DEVTOOLS);
-		auto headlessCheckBox = new QCheckBox();
-		headlessCheckBox->setChecked(settings.value(HEADLESS_MODE, true).toBool());
-		QObject::connect(headlessCheckBox, &QCheckBox::clicked, [](bool headless) { settings.setValue(HEADLESS_MODE, headless); });
-		QObject::connect(startButton, &QPushButton::clicked, [statusLabel, chromePathEdit, headlessCheckBox] {
+		auto headlessCheck = new QCheckBox();
+		headlessCheck->setChecked(settings.value(HEADLESS_MODE, true).toBool());
+		QObject::connect(headlessCheck, &QCheckBox::clicked, [](bool headless) { settings.setValue(HEADLESS_MODE, headless); });
+		QObject::connect(startButton, &QPushButton::clicked, [statusLabel, chromePathEdit, headlessCheck] {
 			DevTools::Start(
 				S(chromePathEdit->text()),
 				[statusLabel](QString status)
@@ -82,14 +82,14 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 										FormatString(LR"({"userAgent":"%s"})", userAgent->replace(userAgent->find(L"Headless"), 8, L"")));
 					}).detach();
 				},
-				headlessCheckBox->isChecked()
+				headlessCheck->isChecked()
 			);
 		});
 		QObject::connect(stopButton, &QPushButton::clicked, &DevTools::Close);
 		auto buttons = new QHBoxLayout();
 		buttons->addWidget(startButton);
 		buttons->addWidget(stopButton);
-		display->addRow(HEADLESS_MODE, headlessCheckBox);
+		display->addRow(HEADLESS_MODE, headlessCheck);
 		auto autoStartButton = new QCheckBox();
 		autoStartButton->setChecked(settings.value(AUTO_START, false).toBool());
 		QObject::connect(autoStartButton, &QCheckBox::clicked, [](bool autoStart) { settings.setValue(AUTO_START, autoStart); });

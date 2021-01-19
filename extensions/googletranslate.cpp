@@ -4,7 +4,7 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
-extern Synchronized<std::wstring> translateTo, apiKey;
+extern Synchronized<std::wstring> translateTo, authKey;
 
 const char* TRANSLATION_PROVIDER = "Google Translate";
 const char* GET_API_KEY_FROM = "https://codelabs.developers.google.com/codelabs/cloud-translation-intro";
@@ -126,12 +126,12 @@ int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
-	if (!apiKey->empty())
+	if (!authKey->empty())
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"translation.googleapis.com",
 			L"POST",
-			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s", translateTo.Copy(), apiKey.Copy()).c_str(),
+			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s", translateTo.Copy(), authKey.Copy()).c_str(),
 			FormatString(R"({"q":["%s"]})", JSON::Escape(WideStringToString(text)))
 		})
 			if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"data"][L"translations"][0][L"translatedText"].String())) return { true, translation.value() };

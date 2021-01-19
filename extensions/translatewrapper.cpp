@@ -30,7 +30,7 @@ const std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.tx
 
 QFormLayout* display;
 Settings settings;
-Synchronized<std::wstring> translateTo = L"en", apiKey;
+Synchronized<std::wstring> translateTo = L"en", authKey;
 
 namespace
 {
@@ -57,16 +57,16 @@ public:
 
 		settings.beginGroup(TRANSLATION_PROVIDER);
 
-		auto languageBox = new QComboBox(this);
-		languageBox->addItems(languages);
+		auto languageCombo = new QComboBox(this);
+		languageCombo->addItems(languages);
 		int language = -1;
-		if (settings.contains(LANGUAGE)) language = languageBox->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = languageBox->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
-		if (language < 0) language = languageBox->findText("English", Qt::MatchStartsWith);
-		languageBox->setCurrentIndex(language);
-		saveLanguage(languageBox->currentText());
-		display->addRow(TRANSLATE_TO, languageBox);
-		connect(languageBox, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+		if (settings.contains(LANGUAGE)) language = languageCombo->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
+		if (language < 0) language = languageCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (language < 0) language = languageCombo->findText("English", Qt::MatchStartsWith);
+		languageCombo->setCurrentIndex(language);
+		saveLanguage(languageCombo->currentText());
+		display->addRow(TRANSLATE_TO, languageCombo);
+		connect(languageCombo, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
 		for (auto [value, label] : Array<bool&, const char*>{
 			{ translateSelectedOnly, TRANSLATE_SELECTED_THREAD_ONLY },
 			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
@@ -95,12 +95,12 @@ public:
 		}
 		if (GET_API_KEY_FROM)
 		{
-			auto keyInput = new QLineEdit(settings.value(API_KEY).toString(), this);
-			apiKey->assign(S(keyInput->text()));
-			QObject::connect(keyInput, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(apiKey->assign(S(key)))); });
+			auto keyEdit = new QLineEdit(settings.value(API_KEY).toString(), this);
+			authKey->assign(S(keyEdit->text()));
+			QObject::connect(keyEdit, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(authKey->assign(S(key)))); });
 			auto keyLabel = new QLabel(QString("<a href=\"%1\">%2</a>").arg(GET_API_KEY_FROM, API_KEY), this);
 			keyLabel->setOpenExternalLinks(true);
-			display->addRow(keyLabel, keyInput);
+			display->addRow(keyLabel, keyEdit);
 		}
 
 		setWindowTitle(TRANSLATION_PROVIDER);
