@@ -41,13 +41,12 @@ bool logErrors = true;
 Synchronized<std::string> script;
 std::atomic<int> revCount = 0;
 
-class Window : public QDialog
+class Window : public QDialog, Localizer
 {
 public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		Localize();
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
 		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText(LUA_INTRO);

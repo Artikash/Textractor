@@ -4,7 +4,7 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 
-extern Synchronized<std::wstring> translateTo, authKey;
+extern Synchronized<std::wstring> translateTo, translateFrom, authKey;
 
 const char* TRANSLATION_PROVIDER = "Google Translate";
 const char* GET_API_KEY_FROM = "https://codelabs.developers.google.com/codelabs/cloud-translation-intro";
@@ -120,6 +120,7 @@ QStringList languages
 	"Yoruba: yo",
 	"Zulu: zu"
 };
+std::wstring autoDetectLanguage = L"auto";
 
 bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
 int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
@@ -127,23 +128,28 @@ int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!authKey->empty())
+	{
+		std::wstring translateFromComponent = translateFrom.Copy() == autoDetectLanguage ? L"" : L"&source=" + translateFrom.Copy();
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"translation.googleapis.com",
 			L"POST",
-			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s", translateTo.Copy(), authKey.Copy()).c_str(),
+			FormatString(L"/language/translate/v2?format=text&target=%s&key=%s%s", translateTo.Copy(), authKey.Copy(), translateFromComponent).c_str(),
 			FormatString(R"({"q":["%s"]})", JSON::Escape(WideStringToString(text)))
 		})
 			if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"data"][L"translations"][0][L"translatedText"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
+	}
 
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"translate.google.com",
 		L"POST",
 		L"/_/TranslateWebserverUi/data/batchexecute?rpcids=MkEWBc",
-		"f.req=" + Escape(WideStringToString(FormatString(LR"([[["MkEWBc","[[\"%s\",\"auto\",\"%s\",true],[null]]",null,"generic"]]])", JSON::Escape((JSON::Escape(text))), translateTo.Copy()))),
+		"f.req=" + Escape(WideStringToString(
+			FormatString(LR"([[["MkEWBc","[[\"%s\",\"%s\",\"%s\",true],[null]]",null,"generic"]]])", JSON::Escape((JSON::Escape(text))), translateFrom.Copy(), translateTo.Copy())
+		)),
 		L"Content-Type: application/x-www-form-urlencoded"
 	})
 	{

@@ -11,13 +11,12 @@ extern const char* HEXADECIMAL;
 std::unordered_map<int64_t, std::unordered_multiset<int64_t>> linkedTextHandles;
 std::shared_mutex m;
 
-class Window : public QDialog
+class Window : public QDialog, Localizer
 {
 public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		Localize();
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
 
 		layout.addWidget(&linkList);

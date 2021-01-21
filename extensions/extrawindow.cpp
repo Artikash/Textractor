@@ -42,11 +42,10 @@ QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool c
 	return color;
 }
 
-struct PrettyWindow : QDialog
+struct PrettyWindow : QDialog, Localizer
 {
 	PrettyWindow(const char* name)
 	{
-		Localize();
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(&outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
@@ -159,7 +158,7 @@ public:
 		PrettyWindow("Extra Window")
 	{
 		ui.display->setTextFormat(Qt::PlainText);
-		if (settings.contains(WINDOW) && QGuiApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
+		if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
 		maxSentenceSize = settings.value(MAX_SENTENCE_SIZE, maxSentenceSize).toInt();
 
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{

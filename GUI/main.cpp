@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "module.h"
 #include <winhttp.h>
-#include <QApplication>
 
 extern const wchar_t* UPDATE_AVAILABLE;
 

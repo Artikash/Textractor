@@ -16,13 +16,12 @@ std::wstring replace;
 std::shared_mutex m;
 DWORD (*GetSelectedProcessId)() = nullptr;
 
-class Window : public QDialog
+class Window : public QDialog, Localizer
 {
 public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		Localize();
 		ui.setupUi(this);
 
 		connect(ui.regexEdit, &QLineEdit::textEdited, this, &Window::SetRegex);

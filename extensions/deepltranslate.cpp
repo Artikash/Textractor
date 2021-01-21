@@ -5,7 +5,7 @@
 extern const wchar_t* TRANSLATION_ERROR;
 extern const char* USE_PREV_SENTENCE_CONTEXT;
 
-extern Synchronized<std::wstring> translateTo, authKey;
+extern Synchronized<std::wstring> translateTo, translateFrom, authKey;
 
 const char* TRANSLATION_PROVIDER = "DeepL Translate";
 const char* GET_API_KEY_FROM = "https://www.deepl.com/pro.html";
@@ -23,6 +23,7 @@ QStringList languages
 	"Russian: RU",
 	"Spanish: ES",
 };
+std::wstring autoDetectLanguage = L"auto";
 
 bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true;
 int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
@@ -33,25 +34,28 @@ int keyType = CAT;
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
 	if (!authKey->empty())
+	{
+		std::string translateFromComponent = translateFrom.Copy() == autoDetectLanguage ? "" : "&source_lang=" + WideStringToString(translateFrom.Copy());
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"api.deepl.com",
 			L"POST",
 			keyType == CAT ? L"/v1/translate" : L"/v2/translate",
-			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()),
+			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()) + translateFromComponent,
 			L"Content-Type: application/x-www-form-urlencoded"
 		}; httpRequest && (!httpRequest.response.empty() || (httpRequest = HttpRequest{
 			L"Mozilla/5.0 Textractor",
 			L"api.deepl.com",
 			L"POST",
 			(keyType = !keyType) == CAT ? L"/v1/translate" : L"/v2/translate",
-			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()),
+			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()) + translateFromComponent,
 			L"Content-Type: application/x-www-form-urlencoded"
 		})))
 			// Response formatted as JSON: translation starts with text":" and ends with "}]
 			if (auto translation = Copy(JSON::Parse(httpRequest.response)[L"translations"][0][L"text"].String())) return { true, translation.value() };
 			else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
+	}
 
 	// the following code was reverse engineered from the DeepL website; it's as close as I could make it but I'm not sure what parts of this could be removed and still have it work
 	int64_t r = _time64(nullptr), n = std::count(text.begin(), text.end(), L'i') + 1;
@@ -68,7 +72,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		"timestamp": %lld,
 		"lang": {
 			"target_lang": "%S",
-			"source_lang_user_selected": "auto"
+			"source_lang_user_selected": "%S"
 		},
 		"jobs": [{
 			"raw_en_sentence": "%s",
@@ -80,7 +84,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		}]
 	}
 }
-	)", id, r + (n - r % n), translateTo.Copy(), JSON::Escape(WideStringToString(text)));
+	)", id, r + (n - r % n), translateTo.Copy(), translateFrom.Copy(), JSON::Escape(WideStringToString(text)));
 	// missing accept-encoding header since it fucks up HttpRequest
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",

@@ -1,20 +1,18 @@
 #include "qtcommon.h"
 #include "extension.h"
 #include <fstream>
-#include <QApplication>
 #include <QPlainTextEdit>
 
 extern const char* LOAD_SCRIPT;
 
 constexpr auto STYLE_SAVE_FILE = u8"Textractor.css";
 
-class Window : public QDialog
+class Window : public QDialog, Localizer
 {
 public:
 	Window()
 		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		Localize();
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
 		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText("/*https://doc.qt.io/qt-5/stylesheet-syntax.html*/");

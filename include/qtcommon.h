@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QMainWindow>
 #include <QDialog>
+#include <QApplication>
 #include <QLayout>
 #include <QFormLayout>
 #include <QLabel>
@@ -26,6 +27,7 @@ constexpr auto WINDOW = u8"Window";
 
 struct Settings : QSettings { Settings(QObject* parent = nullptr) : QSettings(CONFIG_FILE, QSettings::IniFormat, parent) {} };
 struct QTextFile : QFile { QTextFile(QString name, QIODevice::OpenMode mode) : QFile(name) { open(mode | QIODevice::Text); } };
+struct Localizer { Localizer() { Localize(); } };
 inline std::wstring S(const QString& s) { return { s.toStdWString() }; }
 inline QString S(const std::string& s) { return QString::fromStdString(s); }
 inline QString S(const std::wstring& s) { return QString::fromStdWString(s); }

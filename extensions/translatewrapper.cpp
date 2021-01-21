@@ -8,6 +8,7 @@
 
 extern const char* NATIVE_LANGUAGE;
 extern const char* TRANSLATE_TO;
+extern const char* TRANSLATE_FROM;
 extern const char* TRANSLATE_SELECTED_THREAD_ONLY;
 extern const char* RATE_LIMIT_ALL_THREADS;
 extern const char* RATE_LIMIT_SELECTED_THREAD;
@@ -21,16 +22,18 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
 extern QStringList languages;
+extern std::wstring autoDetectLanguage;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
 extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
+// backwards compatibility
 const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
 Settings settings;
-Synchronized<std::wstring> translateTo = L"en", authKey;
+Synchronized<std::wstring> translateTo = L"en", translateFrom = L"auto", authKey;
 
 namespace
 {
@@ -46,27 +49,38 @@ namespace
 	}
 }
 
-class Window : public QDialog
+class Window : public QDialog, Localizer
 {
 public:
 	Window() :
 		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		Localize();
 		display = new QFormLayout(this);
 
 		settings.beginGroup(TRANSLATION_PROVIDER);
 
-		auto languageCombo = new QComboBox(this);
-		languageCombo->addItems(languages);
+		auto translateToCombo = new QComboBox(this);
+		translateToCombo->addItems(languages);
 		int language = -1;
-		if (settings.contains(LANGUAGE)) language = languageCombo->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = languageCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
-		if (language < 0) language = languageCombo->findText("English", Qt::MatchStartsWith);
-		languageCombo->setCurrentIndex(language);
-		saveLanguage(languageCombo->currentText());
-		display->addRow(TRANSLATE_TO, languageCombo);
-		connect(languageCombo, &QComboBox::currentTextChanged, this, &Window::saveLanguage);
+		if (settings.contains(LANGUAGE)) language = translateToCombo->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
+		if (settings.contains(TRANSLATE_TO)) language = translateToCombo->findText(settings.value(TRANSLATE_TO).toString(), Qt::MatchEndsWith);
+		if (language < 0) language = translateToCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (language < 0) language = translateToCombo->findText("English", Qt::MatchStartsWith);
+		translateToCombo->setCurrentIndex(language);
+		SaveTranslateTo(translateToCombo->currentText());
+		display->addRow(TRANSLATE_TO, translateToCombo);
+		connect(translateToCombo, &QComboBox::currentTextChanged, this, &Window::SaveTranslateTo);
+		languages.push_front("?: " + S(autoDetectLanguage));
+		auto translateFromCombo = new QComboBox(this);
+		translateFromCombo->addItems(languages);
+		language = -1;
+		if (settings.contains(TRANSLATE_FROM)) language = translateFromCombo->findText(settings.value(TRANSLATE_FROM).toString(), Qt::MatchEndsWith);
+		if (language < 0) language = translateFromCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (language < 0) language = translateFromCombo->findText("?", Qt::MatchStartsWith);
+		translateFromCombo->setCurrentIndex(language);
+		SaveTranslateFrom(translateFromCombo->currentText());
+		display->addRow(TRANSLATE_FROM, translateFromCombo);
+		connect(translateFromCombo, &QComboBox::currentTextChanged, this, &Window::SaveTranslateFrom);
 		for (auto [value, label] : Array<bool&, const char*>{
 			{ translateSelectedOnly, TRANSLATE_SELECTED_THREAD_ONLY },
 			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
@@ -123,9 +137,13 @@ public:
 	}
 
 private:
-	void saveLanguage(QString language)
+	void SaveTranslateTo(QString language)
 	{
-		settings.setValue(LANGUAGE, S(translateTo->assign(S(language.split(": ")[1]))));
+		settings.setValue(TRANSLATE_TO, S(translateTo->assign(S(language.split(": ")[1]))));
+	}
+	void SaveTranslateFrom(QString language)
+	{
+		settings.setValue(TRANSLATE_FROM, S(translateFrom->assign(S(language.split(": ")[1]))));
 	}
 } window;
 

@@ -3,7 +3,7 @@
 #include <ShlObj.h>
 
 extern const wchar_t* TRANSLATION_ERROR;
-extern Synchronized<std::wstring> translateTo;
+extern Synchronized<std::wstring> translateTo, translateFrom;
 extern QFormLayout* display;
 extern Settings settings;
 
@@ -34,6 +34,7 @@ QStringList languages
 	"Russian: ru",
 	"Spanish: es",
 };
+std::wstring autoDetectLanguage = L"auto";
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -115,10 +116,16 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	// DevTools can't handle concurrent translations yet
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
-	DevTools::SendRequest(L"Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/translator#any/%s/%s"})", translateTo.Copy(), Escape(text)));
+	DevTools::SendRequest(L"Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/translator#%s/%s/%s"})", translateFrom.Copy(), translateTo.Copy(), Escape(text)));
 	for (int retry = 0; ++retry < 100; Sleep(100))
-		if (auto translation = Copy(DevTools::SendRequest(
-			L"Runtime.evaluate", LR"({"expression":"document.querySelector('#target-dummydiv').innerHTML","returnByValue":true})")[L"result"][L"value"].String())
-		) if (!translation->empty()) return { true, translation.value() };
+		if (auto translation = Copy(
+			DevTools::SendRequest(L"Runtime.evaluate", LR"({"expression":"document.querySelector('#target-dummydiv').innerHTML","returnByValue":true})")[L"result"][L"value"].String()
+		)) if (!translation->empty()) return { true, translation.value() };
+	if (auto errorMessage = Copy(
+		DevTools::SendRequest(
+			L"Runtime.evaluate",
+			LR"({"expression":"document.querySelector('div.lmt__system_notification').innerHTML","returnByValue":true})"
+		)[L"result"][L"value"].String()
+	)) return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, errorMessage.value()) };
 	return { false, TRANSLATION_ERROR };
 }
