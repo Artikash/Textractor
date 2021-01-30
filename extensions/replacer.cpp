@@ -121,7 +121,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 {
 	UpdateReplacements();
 
-	std::shared_lock l(m);
+	std::shared_lock lock(m);
 	sentence = trie.Replace(sentence);
 	return true;
 }

@@ -57,7 +57,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	std::shared_lock l(m);
+	std::shared_lock lock(m);
 	int64_t textHandle = sentenceInfo["text number"];
 
 	for (auto linkedHandle : linkedTextHandles[textHandle])
