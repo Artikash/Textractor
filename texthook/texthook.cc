@@ -86,7 +86,7 @@ namespace { // unnamed
 		0x5b, // pop rbx
 		0x58, // pop rax
 		0x9d, // pop rflags
-		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [rip] ; relative to next instruction (i.e. jmp @original)
+		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [rip]
 		0,0,0,0,0,0,0,0 // @original
 	};
 	int this_offset = 50, send_offset = 60, original_offset = 126;

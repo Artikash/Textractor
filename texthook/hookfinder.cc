@@ -97,7 +97,7 @@ namespace
 		0x5b, // pop rbx
 		0x58, // pop rax
 		0x9d, // pop rflags
-		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [0] ; relative to next instruction (i.e. jmp @original)
+		0xff, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ptr [rip]
 		0,0,0,0,0,0,0,0 // @original
 	};
 	constexpr int addr_offset = 50, send_offset = 60, original_offset = 126, registers = 16;

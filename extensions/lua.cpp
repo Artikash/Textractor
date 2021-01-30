@@ -1,6 +1,5 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
-#include <fstream>
 #include <QPlainTextEdit>
 
 extern const char* LUA_INTRO;
@@ -44,8 +43,7 @@ std::atomic<int> revCount = 0;
 class Window : public QDialog, Localizer
 {
 public:
-	Window()
-		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
+	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 

@@ -52,8 +52,7 @@ namespace
 class Window : public QDialog, Localizer
 {
 public:
-	Window() :
-		QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
+	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		display = new QFormLayout(this);
 
@@ -75,7 +74,6 @@ public:
 		translateFromCombo->addItems(languages);
 		language = -1;
 		if (settings.contains(TRANSLATE_FROM)) language = translateFromCombo->findText(settings.value(TRANSLATE_FROM).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = translateFromCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
 		if (language < 0) language = translateFromCombo->findText("?", Qt::MatchStartsWith);
 		translateFromCombo->setCurrentIndex(language);
 		SaveTranslateFrom(translateFromCombo->currentText());

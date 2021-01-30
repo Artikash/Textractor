@@ -1,6 +1,5 @@
 #include "qtcommon.h"
 #include "extension.h"
-#include <fstream>
 #include <QPlainTextEdit>
 
 extern const char* LOAD_SCRIPT;
@@ -10,8 +9,7 @@ constexpr auto STYLE_SAVE_FILE = u8"Textractor.css";
 class Window : public QDialog, Localizer
 {
 public:
-	Window()
-		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
+	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
@@ -28,6 +26,7 @@ public:
 
 	~Window()
 	{
+		qApp->setStyleSheet("");
 		Save();
 	}
 

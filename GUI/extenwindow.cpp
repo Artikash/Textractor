@@ -122,8 +122,7 @@ void CleanupExtensions()
 	extensions.clear();
 }
 
-ExtenWindow::ExtenWindow(QWidget* parent) :
-	QMainWindow(parent, Qt::WindowCloseButtonHint)
+ExtenWindow::ExtenWindow(QWidget* parent) : QMainWindow(parent, Qt::WindowCloseButtonHint)
 {
 	This = this;
 	ui.setupUi(this);

@@ -14,8 +14,7 @@ std::shared_mutex m;
 class Window : public QDialog, Localizer
 {
 public:
-	Window()
-		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
+	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
 

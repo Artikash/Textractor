@@ -6,8 +6,7 @@ template <typename C, int delimiterCount, int blockSize = 0x1000 / sizeof(C)> //
 class BlockMarkupIterator
 {
 public:
-	BlockMarkupIterator(const std::istream& stream, const std::basic_string_view<C>(&delimiters)[delimiterCount]) :
-		streambuf(*stream.rdbuf())
+	BlockMarkupIterator(const std::istream& stream, const std::basic_string_view<C>(&delimiters)[delimiterCount]) : streambuf(*stream.rdbuf())
 	{
 		std::copy_n(delimiters, delimiterCount, this->delimiters.begin());
 	}

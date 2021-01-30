@@ -19,8 +19,7 @@ DWORD (*GetSelectedProcessId)() = nullptr;
 class Window : public QDialog, Localizer
 {
 public:
-	Window()
-		: QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
+	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		ui.setupUi(this);
 

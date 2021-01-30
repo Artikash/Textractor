@@ -303,8 +303,8 @@ namespace
 
 		QDialog dialog(This, Qt::WindowCloseButtonHint);
 		QFormLayout layout(&dialog);
-		QCheckBox CJKCheck(&dialog);
-		layout.addRow(SEARCH_CJK, &CJKCheck);
+		QCheckBox asianCheck(&dialog);
+		layout.addRow(SEARCH_CJK, &asianCheck);
 		QDialogButtonBox confirm(QDialogButtonBox::Ok | QDialogButtonBox::Help | QDialogButtonBox::Retry, &dialog);
 		layout.addRow(&confirm);
 		confirm.button(QDialogButtonBox::Ok)->setText(START_HOOK_SEARCH);
@@ -338,7 +338,7 @@ namespace
 			return;
 		}
 
-		filter.setPattern(CJKCheck.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
+		filter.setPattern(asianCheck.isChecked() ? "[\\x{3000}-\\x{a000}]{4,}" : "[\\x{0020}-\\x{1000}]{4,}");
 		if (customSettings)
 		{
 			QDialog dialog(This, Qt::WindowCloseButtonHint);
@@ -678,5 +678,5 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent*)
 {
-	QCoreApplication::quit(); // Need to do this to kill any windows that might've been made by extensions
+	QApplication::quit(); // Need to do this to kill any windows that might've been made by extensions
 }

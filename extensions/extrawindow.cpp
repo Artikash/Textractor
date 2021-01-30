@@ -154,8 +154,7 @@ private:
 class ExtraWindow : public PrettyWindow
 {
 public:
-	ExtraWindow() :
-		PrettyWindow("Extra Window")
+	ExtraWindow() : PrettyWindow("Extra Window")
 	{
 		ui.display->setTextFormat(Qt::PlainText);
 		if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
@@ -330,8 +329,7 @@ private:
 	class DictionaryWindow : public PrettyWindow
 	{
 	public:
-		DictionaryWindow() :
-			PrettyWindow("Dictionary Window")
+		DictionaryWindow() : PrettyWindow("Dictionary Window")
 		{
 			ui.display->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Minimum });
 		}
