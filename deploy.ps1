@@ -44,6 +44,7 @@ foreach ($language in @{
 			"Bing Translate",
 			"Copy to Clipboard",
 			"DeepL Translate",
+			"DevTools DeepL Translate",
 			"Extra Newlines",
 			"Extra Window",
 			"Google Translate",
@@ -54,6 +55,7 @@ foreach ($language in @{
 			"Remove Repeated Phrases 2",
 			"Remove 30 Repeated Sentences",
 			"Replacer",
+			"Styler",
 			"Thread Linker"
 		))
 		{
@@ -74,6 +76,8 @@ foreach ($arch in @("x86", "x64"))
 		"LocaleEmulator.dll",
 		"Qt5Core.dll",
 		"Qt5Gui.dll",
+		"Qt5Network.dll",
+		"Qt5WebSockets.dll",
 		"Qt5Widgets.dll",
 		"platforms",
 		"styles"
