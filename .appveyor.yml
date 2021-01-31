@@ -1,66 +1,35 @@
 version: '{branch}-{build}'
-# build Configuration
-configuration: Release
-# clone directory
+configuration: RelWithDebInfo
 clone_folder: C:\Textractor
-# Do not build feature branch with open Pull Requests
 skip_branch_with_pr: false
-# environment variables
+
 environment:
   matrix:
-#  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#    platform: x64
-#    msvc_name: Visual Studio 15 2017 Win64
-#    suffix: Win64
-#  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#    platform: Win32
-#    msvc_name: Visual Studio 15 2017
-#    suffix: Win32
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    arch: x64
     msvc_name: Visual Studio 16 2019
     platform: x64
     qtbin: msvc2017_64
-    suffix: x64
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    arch: x86
     msvc_name: Visual Studio 16 2019
     platform: Win32
     qtbin: msvc2017
-    suffix: x86
 
 before_build:
   - cd C:\
-  - mkdir %suffix%
-  - cd %suffix%
+  - mkdir %arch%
+  - cd %arch%
   - cmake -G "%msvc_name%" -A "%platform%" -DQt5_DIR="C:\Qt\5.13\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" ../Textractor
 
 build:
-  project: C:\%suffix%\Textractor.sln
+  project: C:\%arch%\Textractor.sln
   parallel: true
   verbosity: normal
 
 after_build:
-  - 7z a Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%suffix%.zip C:\Textractor\builds\RelWithDebInfo_%suffix%\*
-  - appveyor PushArtifact Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%suffix%.zip
-
-#after_test:
-#  - ps: if($env:APPVEYOR_REPO_BRANCH -eq "release" -and $env:packaging -eq "true") { $env:PUBLISH_BINARY = 'true' }
-#  - ps: if($env:APPVEYOR_REPO_COMMIT_MESSAGE.contains('[publish]') -and $env:packaging -eq "true") { $env:PUBLISH_BINARY = 'true' }
-#  - if [%PUBLISH_BINARY%]==[true] cmake --build c:\stellarium\build-%qtver%-%qtbin%\ --config %configuration% --target install
-#  - if [%PUBLISH_BINARY%]==[true] appveyor DownloadFile https://github.com/Stellarium/stellarium-data/releases/download/qt-5.6/libGLES-%suffix%.zip -FileName c:\stellarium\build-%qtver%-%qtbin%\libGLES.zip
-#  - if [%PUBLISH_BINARY%]==[true] 7z e c:\stellarium\build-%qtver%-%qtbin%\libGLES.zip -aoa -oc:\stellarium-%qtver%-%qtbin%\qt5stuff
-#  - if [%PUBLISH_BINARY%]==[true] cmake --build c:\stellarium\build-%qtver%-%qtbin%\ --config %configuration% --target stellarium-installer
-#  - if [%PUBLISH_BINARY%]==[true] cd c:\stellarium\installers
-#  - if [%PUBLISH_BINARY%]==[true] for %%i in (*.exe) do appveyor PushArtifact %%i
-#
-## deployment
-#deploy:
-#- provider: Webhook
-#  url: https://app.signpath.io/API/v1/a6a9173a-feb5-41ae-8973-8ca75af5e233/Integrations/AppVeyor?ProjectKey=stellarium&SigningPolicyKey=release-signing
-#  authorization:
-#    secure: k9Hka8MA6UONiSbKZeAv5koMEljPXgEZ7o1FbvEHRlPFFHMGzQcS6MQsvy53VxeTpG4Kw98FU0VXusbXoKLzug==
-#  on:
-#    branch: release
-#    packaging: true
+  - 7z a Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%arch%.zip C:\Textractor\builds\RelWithDebInfo_%arch%\*
+  - appveyor PushArtifact Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%arch%.zip
 
 notifications:
 - provider: Email
