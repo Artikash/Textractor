@@ -16,6 +16,16 @@
      <item>
       <widget class="QLineEdit" name="regexEdit"/>
      </item>
+     <item>
+      <widget class="QLabel">
+       <property name="text">
+        <string>=></string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="replaceEdit"/>
+     </item>
     </layout>
    </item>
    <item>
