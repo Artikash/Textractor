@@ -39,8 +39,8 @@ build:
   verbosity: normal
 
 after_build:
-  - 7z a Textractor-Alpha.zip C:\Textractor\builds\*
-  - appveyor PushArtifact Textractor-Alpha.zip
+  - 7z a Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%suffix%.zip C:\Textractor\builds\RelWithDebInfo_%suffix%\*
+  - appveyor PushArtifact Textractor-Alpha%APPVEYOR_BUILD_NUMBER%-%suffix%.zip
 
 #after_test:
 #  - ps: if($env:APPVEYOR_REPO_BRANCH -eq "release" -and $env:packaging -eq "true") { $env:PUBLISH_BINARY = 'true' }
