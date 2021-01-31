@@ -31,12 +31,16 @@ before_build:
   - cd C:\
   - mkdir %suffix%
   - cd %suffix%
-  - cmake -G "%msvc_name%" -A "%platform%" -DQt5_DIR="C:\Qt\5.13\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="Release" ../Textractor
+  - cmake -G "%msvc_name%" -A "%platform%" -DQt5_DIR="C:\Qt\5.13\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" ../Textractor
 
 build:
   project: C:\%suffix%\Textractor.sln
   parallel: true
   verbosity: normal
+
+after_build:
+  - 7z a Textractor-Alpha.zip C:\Textractor\builds\*
+  - appveyor PushArtifact Textractor-Alpha.zip
 
 #after_test:
 #  - ps: if($env:APPVEYOR_REPO_BRANCH -eq "release" -and $env:packaging -eq "true") { $env:PUBLISH_BINARY = 'true' }
