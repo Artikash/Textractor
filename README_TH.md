@@ -5,7 +5,7 @@
 [English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** 
-(หรือ NextHooker) คือโปรแกรมโอเพนซอร์ซสำหรับปฏิบัติการที่มีหน้าที่เพื่อเชื่อมกับตัวอักษรกับเกมจากที่มาจากระบบปฏิบัติการ Window/Wine โดยมีแบบดังเดิมมาจาก [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+(หรือ NextHooker) คือโปรแกรมโอเพนซอร์ซสำหรับปฏิบัติการที่มีหน้าที่เพื่อเชื่อมกับตัวอักษรกับเกมจากที่มาจากระบบปฏิบัติการ Window/Wine โดยมีแบบดังเดิมมาจาก [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 สามารถดูตัวอย่างวิธีการใช้งาน [วีดีโอตัวอย่างการใช้งาน](https://tinyurl.com/textractor-tutorial) เพื่อที่จะแสดงความเข้าใจคร่าวๆเกี่ยวกับโปรแกรม.
 
 ## ดาวน์โหลด

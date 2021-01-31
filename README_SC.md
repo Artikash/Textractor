@@ -4,7 +4,7 @@
 
 ## 概述
 
-**Textractor** (曾用名: NextHooker) 是一个基于 [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine), 为 Windows/Wine 开发的开源 x86/x64 文本提取器.<br>
+**Textractor** (曾用名: NextHooker) 是一个基于 [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine), 为 Windows/Wine 开发的开源 x86/x64 文本提取器.<br>
 
 ![它工作起来的样子](screenshot.png)
 

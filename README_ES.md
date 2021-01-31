@@ -6,7 +6,7 @@
 
 ## Descripción general
 
-**Textractor** (también conocido como NextHooker) es un extractor y traductor de texto de código abierto x86/x64 para Windows/Wine bassado en [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+**Textractor** (también conocido como NextHooker) es un extractor y traductor de texto de código abierto x86/x64 para Windows/Wine bassado en [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 
 ![Cómo se ve](screenshot.png)
 

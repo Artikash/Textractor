@@ -2,12 +2,14 @@
 
 If you're on this list and want your link changed let me know.
 - Textractor mainly made by [Me](https://github.com/Artikash) with the help of
-  - [DoumanAsh](https://github.com/DoumanAsh)
-  - [Niakr1s](https://github.com/Niakr1s)
-  - [tinyAdapter](https://github.com/tinyAdapter)
-  - [lgztx96](https://github.com/lgztx96)
-  - [Jazzinghen](https://github.com/Jazzinghen)
-  - [luojunyuan](https://github.com/luojunyuan)
+  - [DoumanAsh](https://github.com/DoumanAsh) - build system improvements
+  - [Niakr1s](https://github.com/Niakr1s) - original text removal in Extra Window
+  - [tinyAdapter](https://github.com/tinyAdapter) - CLI bugfixes
+  - [lgztx96](https://github.com/lgztx96) - hook codes for WAFFLE and WillPlus
+  - [Jazzinghen](https://github.com/Jazzinghen) - hook codes for TokyoNecro
+  - [luojunyuan](https://github.com/luojunyuan) - hook codes for ShinyDays
+  - [zeheyler](https://github.com/zeheyler) - Chrome DevTools integration
+  - [silas1037](https://github.com/silas1037) - AppVeyor setup
 - French translation by Racky and [Gratusfr](https://github.com/Gratusfr)
 - Spanish translation by [scese250](https://github.com/scese250)
 - Turkish translation by [niisokusu](https://reddit.com/u/niisokusu)
@@ -19,7 +21,7 @@ If you're on this list and want your link changed let me know.
 - Korean translation by O SK
 - Italian translation by [StarFang208](https://github.com/StarFang208)
 - ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
-- ITHVNR originally made by [Stomp](http://www.hongfire.com/forum/member/325894-stomp)
+- ITHVNR originally made by [Stomp](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)
 - VNR engine made by [jichi](https://github.com/jichifly)
 - ITH updated by [Andys](https://github.com/AndyScull)
 - ITH originally made by [kaosu](https://code.google.com/archive/p/interactive-text-hooker)

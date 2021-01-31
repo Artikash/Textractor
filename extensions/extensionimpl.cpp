@@ -17,12 +17,12 @@ extern "C" __declspec(dllexport) wchar_t* OnNewSentence(wchar_t* sentence, const
 {
 	try
 	{
-		std::wstring sentenceStr(sentence);
-		int origLength = sentenceStr.size();
-		if (ProcessSentence(sentenceStr, SentenceInfo{ sentenceInfo }))
+		std::wstring sentenceCopy(sentence);
+		int oldSize = sentenceCopy.size();
+		if (ProcessSentence(sentenceCopy, SentenceInfo{ sentenceInfo }))
 		{
-			if (sentenceStr.size() > origLength) sentence = (wchar_t*)HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sentence, (sentenceStr.size() + 1) * sizeof(wchar_t));
-			wcscpy_s(sentence, sentenceStr.size() + 1, sentenceStr.c_str());
+			if (sentenceCopy.size() > oldSize) sentence = (wchar_t*)HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sentence, (sentenceCopy.size() + 1) * sizeof(wchar_t));
+			wcscpy_s(sentence, sentenceCopy.size() + 1, sentenceCopy.c_str());
 		}
 	}
 	catch (SKIP)

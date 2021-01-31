@@ -4,12 +4,13 @@
 
 [English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
 
-**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows/Wine based off of [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Watch the [tutorial video](https://tinyurl.com/textractor-tutorial) for a quick rundown on using it.
 
 ## Download
 
-Releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
+Official stable releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
+Experimental builds of Textractor from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
 Try running vcredist if you get an error when starting Textractor.
 
@@ -18,7 +19,7 @@ Try running vcredist if you get an error when starting Textractor.
 - Highly extensible and customizable
 - Auto hook many game engines (including some not supported by VNR!)
 - Hook text using /H "hook" codes (most AGTH codes supported)
-- Directly extract text using /R "read" codes
+- Automatically search for possible hook codes
 
 ## Support
 
@@ -38,8 +39,7 @@ Contributing a translation is easy: just translate the strings in text.cpp as we
 
 ## Compiling
 
-Before compiling *Textractor*, you should get Visual Studio with CMake support, as well as Qt version 5.13<br>
-You should then be able to simply open the folder in Visual Studio, and build. Run Textractor.exe.
+Before compiling Textractor, you should get Qt version 5.13 and Visual Studio with CMake support. You should then hopefully be able to just open the source folder in Visual Studio and build.
 
 ## Project Architecture
 

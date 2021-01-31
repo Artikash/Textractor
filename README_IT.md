@@ -4,7 +4,7 @@
 
 [English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
 
-**Textractor** (a.k.a. NextHooker) è un agganciatore di testi di videogiochi open-source per Windows/Wine basato su[ITHVNR](http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+**Textractor** (a.k.a. NextHooker) è un agganciatore di testi di videogiochi open-source per Windows/Wine basato su[ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Guarda il [video tutorial](https://tinyurl.com/textractor-tutorial) per una sintesi veloce sul suo utilizzo.
 
 ## Scarica
