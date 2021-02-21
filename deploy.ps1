@@ -62,9 +62,9 @@ foreach ($language in @{
 			copy -Force -Recurse -Verbose -Destination "$folder/$arch/$extension.xdll" -Path "Release_$arch/$extension.dll";
 		}
 	}
+	&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 @(dir "$folder\**\*");
 }
 
-&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 @(dir "Textractor-*-$version\**\*");
 
 rm -Force -Recurse -Verbose "Runtime";
 mkdir -Force -Verbose "Runtime";

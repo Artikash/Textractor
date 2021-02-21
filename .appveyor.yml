@@ -24,7 +24,7 @@ before_build:
 
 build:
   project: C:\%arch%\Textractor.sln
-  parallel: true
+  parallel: false
   verbosity: normal
 
 after_build:

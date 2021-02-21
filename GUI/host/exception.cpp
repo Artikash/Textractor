@@ -21,12 +21,11 @@ namespace
 
 	__declspec(noreturn) void Terminate()
 	{
-		CreateThread(nullptr, 0, [](void* lastError) -> DWORD
+		WaitForSingleObject(CreateThread(nullptr, 0, [](void* lastError) -> DWORD
 		{
 			MessageBoxW(NULL, (wchar_t*)lastError, L"Textractor ERROR", MB_ICONERROR); // might fail to display if called in main thread and exception was in main event loop
 			abort();
-		}, lastError.data(), 0, nullptr);
-		Sleep(MAXDWORD);
+		}, lastError.data(), 0, nullptr), INFINITE);
 	}
 
 	LONG WINAPI ExceptionLogger(EXCEPTION_POINTERS* exception)

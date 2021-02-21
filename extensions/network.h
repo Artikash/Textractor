@@ -116,7 +116,7 @@ namespace JSON
 					ch = text[i + 1];
 					if (ch == 'u' && isxdigit(text[i + 2]) && isxdigit(text[i + 3]) && isxdigit(text[i + 4]) && isxdigit(text[i + 5]))
 					{
-						char charCode[] = { text[i + 2], text[i + 3], text[i + 4], text[i + 5], 0 };
+						char charCode[] = { (char)text[i + 2], (char)text[i + 3], (char)text[i + 4], (char)text[i + 5], 0 };
 						unescaped += UTF<C>::FromCodepoint(strtoul(charCode, nullptr, 16));
 						i += 5;
 						continue;

@@ -613,10 +613,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	}
 	ui.processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
-	connect(ui.processCombo, qOverload<const QString&>(&QComboBox::currentIndexChanged), [](QString process)
-	{
-		selectedProcessId = ui.processCombo->currentText().split(":")[0].toULong(nullptr, 16);
-	});
+	connect(ui.processCombo, qOverload<int>(&QComboBox::currentIndexChanged), [] { selectedProcessId = ui.processCombo->currentText().split(":")[0].toULong(nullptr, 16); });
 	connect(ui.ttCombo, qOverload<int>(&QComboBox::activated), this, ViewThread);
 	connect(ui.textOutput, &QPlainTextEdit::selectionChanged, this, CopyUnlessMouseDown);
 	connect(ui.textOutput, &QPlainTextEdit::customContextMenuRequested, this, OutputContextMenu);
