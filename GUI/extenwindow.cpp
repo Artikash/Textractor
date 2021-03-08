@@ -10,6 +10,7 @@
 
 extern const char* EXTENSIONS;
 extern const char* ADD_EXTENSION;
+extern const char* REMOVE_EXTENSION;
 extern const char* INVALID_EXTENSION;
 extern const char* CONFIRM_EXTENSION_OVERWRITE;
 extern const char* EXTENSION_WRITE_ERROR;
@@ -95,11 +96,21 @@ namespace
 		QMessageBox::information(This, EXTENSIONS, QString(INVALID_EXTENSION).arg(extenFile.fileName()));
 	}
 
-	void OpenMenu(QPoint point)
+	void Delete()
 	{
-		QAction addExtension(ADD_EXTENSION);
-		if (QMenu::exec({ &addExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
-			if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll)\nLibraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+		if (ui.extenList->currentItem())
+		{
+			Unload(ui.extenList->currentIndex().row());
+			Sync();
+		}
+	}
+
+	void ContextMenu(QPoint point)
+	{
+		QAction addExtension(ADD_EXTENSION), removeExtension(REMOVE_EXTENSION);
+		if (auto action = QMenu::exec({ &addExtension, &removeExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
+			if (action == &removeExtension) Delete();
+			else if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll)\nLibraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
 	}
 }
 
@@ -109,7 +120,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 	wcscpy_s(sentenceBuffer, sentence.size() + 1, sentence.c_str());
 	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 	for (const auto& extension : extensions)
-		if (*(sentenceBuffer = extension.callback(sentenceBuffer, sentenceInfo)) == L'\0') break;
+		if (!*(sentenceBuffer = extension.callback(sentenceBuffer, sentenceInfo))) break;
 	sentence = sentenceBuffer;
 	HeapFree(GetProcessHeap(), 0, sentenceBuffer);
 	return !sentence.empty();
@@ -129,7 +140,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) : QMainWindow(parent, Qt::WindowCloseB
 	ui.vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
 	setWindowTitle(EXTENSIONS);
 
-	connect(ui.extenList, &QListWidget::customContextMenuRequested, OpenMenu);
+	connect(ui.extenList, &QListWidget::customContextMenuRequested, ContextMenu);
 	ui.extenList->installEventFilter(this);
 
 	if (!QFile::exists(EXTEN_SAVE_FILE)) QTextFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly).write(DEFAULT_EXTENSIONS);
@@ -139,7 +150,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) : QMainWindow(parent, Qt::WindowCloseB
 
 bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 {
-	// See https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215
+	// https://stackoverflow.com/questions/1224432/how-do-i-respond-to-an-internal-drag-and-drop-operation-using-a-qlistwidget/1528215
 	if (event->type() == QEvent::ChildRemoved)
 	{
 		QStringList extenNames;
@@ -152,11 +163,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 
 void ExtenWindow::keyPressEvent(QKeyEvent* event)
 {
-	if (event->key() == Qt::Key_Delete && ui.extenList->currentItem())
-	{
-		Unload(ui.extenList->currentIndex().row());
-		Sync();
-	}
+	if (event->key() == Qt::Key_Delete) Delete();
 }
 
 void ExtenWindow::dragEnterEvent(QDragEnterEvent* event)

@@ -57,12 +57,11 @@ Negatives for data_offset/split_offset refer to registers
 -C for RAX, -14 for RBX, -1C for RCX, -24 for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
 const char* SAVE_SETTINGS = u8"Save settings";
-const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(To add an extension, right click the extension list
-Alternatively, drag and drop the extension file from your computer
-To reorder extensions, drag and drop them within the list
-(Extensions are used from top to bottom: order DOES matter)
-To remove an extension, select it and press delete)";
+const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Right click the list to add/remove extensions
+Drag and drop extensions within the list to reorder them
+(Extensions are used from top to bottom: order DOES matter))";
 const char* ADD_EXTENSION = u8"Add extension";
+const char* REMOVE_EXTENSION = u8"Remove extension";
 const char* INVALID_EXTENSION = u8"%1 is an invalid extension";
 const char* CONFIRM_EXTENSION_OVERWRITE = u8"Another version of this extension already exists, do you want to delete and overwrite it?";
 const char* EXTENSION_WRITE_ERROR = u8"Failed to save extension";
