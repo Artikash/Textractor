@@ -35,6 +35,7 @@ extern const char* PROCESSES;
 extern const char* CODE_INFODUMP;
 extern const char* FAILED_TO_CREATE_CONFIG_FILE;
 extern const char* HOOK_SEARCH_UNSTABLE_WARNING;
+extern const char* HOOK_SEARCH_STARTING_VIEW_CONSOLE;
 extern const char* SEARCH_CJK;
 extern const char* SEARCH_PATTERN;
 extern const char* SEARCH_DURATION;
@@ -99,7 +100,7 @@ namespace
 
 	ThreadParam ParseTextThreadString(QString ttString)
 	{
-		QStringList threadParam = ttString.split(":");
+		auto threadParam = ttString.splitRef(":");
 		return { threadParam[1].toUInt(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16), threadParam[4].toULongLong(nullptr, 16) };
 	}
 
@@ -143,6 +144,13 @@ namespace
 		return {};
 	}
 
+	void ViewThread(int index)
+	{
+		ui.ttCombo->setCurrentIndex(index);
+		ui.textOutput->setPlainText(sanitize(S((current = &Host::GetThread(ParseTextThreadString(ui.ttCombo->itemText(index))))->storage->c_str())));
+		ui.textOutput->moveCursor(QTextCursor::End);
+	}
+
 	void AttachProcess()
 	{
 		QMultiHash<QString, DWORD> allProcesses;
@@ -170,7 +178,7 @@ namespace
 		{
 			if (HMODULE localeEmulator = LoadLibraryW(L"LoaderDll"))
 			{
-				// see https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
+				// https://github.com/xupefei/Locale-Emulator/blob/aa99dec3b25708e676c90acf5fed9beaac319160/LEProc/LoaderWrapper.cs#L252
 				struct
 				{
 					ULONG AnsiCodePage = SHIFT_JIS;
@@ -229,14 +237,11 @@ namespace
 		}
 	}
 
-	void FindHooks();
-
 	void AddHook(QString hook)
 	{
 		if (QString hookCode = QInputDialog::getText(This, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, hook, &ok, Qt::WindowCloseButtonHint); ok)
-		if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks();
-		else if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); } catch (std::out_of_range) {}
-		else Host::AddConsoleOutput(INVALID_CODE);
+			if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); } catch (std::out_of_range) {}
+			else Host::AddConsoleOutput(INVALID_CODE);
 	}
 
 	void AddHook()
@@ -334,7 +339,11 @@ namespace
 			layout.addRow(&confirm);
 			if (!dialog.exec()) return;
 			wcsncpy_s(sp.text, S(textEdit.text()).c_str(), PATTERN_SIZE - 1);
-			try { Host::FindHooks(selectedProcessId, sp); } catch (std::out_of_range) {}
+			try
+			{
+				Host::FindHooks(selectedProcessId, sp);
+				ViewThread(0);
+			} catch (std::out_of_range) {}
 			return;
 		}
 
@@ -404,6 +413,7 @@ namespace
 				[hooks, filter](HookParam hp, std::wstring text) { if (filter.match(S(text)).hasMatch()) *hooks << sanitize(S(HookCode::Generate(hp) + L" => " + text)); });
 		}
 		catch (std::out_of_range) { return; }
+		ViewThread(0);
 		std::thread([hooks]
 		{
 			for (int lastSize = 0; hooks->size() == 0 || hooks->size() != lastSize; Sleep(2000)) lastSize = hooks->size();
@@ -434,6 +444,7 @@ namespace
 			}
 			hooks->clear();
 		}).detach();
+		QMessageBox::information(This, SEARCH_FOR_HOOKS, HOOK_SEARCH_STARTING_VIEW_CONSOLE);
 	}
 
 	void OpenSettings()
@@ -483,13 +494,6 @@ namespace
 	{
 		extenWindow->activateWindow();
 		extenWindow->showNormal();
-	}
-
-	void ViewThread(int index)
-	{
-		ui.ttCombo->setCurrentIndex(index);
-		ui.textOutput->setPlainText(sanitize(S((current = &Host::GetThread(ParseTextThreadString(ui.ttCombo->itemText(index))))->storage->c_str())));
-		ui.textOutput->moveCursor(QTextCursor::End);
 	}
 
 	void SetOutputFont(QString fontString)

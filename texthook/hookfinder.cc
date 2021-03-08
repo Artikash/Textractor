@@ -3,7 +3,8 @@
 #include "main.h"
 #include "util.h"
 
-extern const char* STARTING_SEARCH;
+extern const char* HOOK_SEARCH_STARTING;
+extern const char* HOOK_SEARCH_INITIALIZING;
 extern const char* HOOK_SEARCH_INITIALIZED;
 extern const char* MAKE_GAME_PROCESS_TEXT;
 extern const char* HOOK_SEARCH_FINISHED;
@@ -200,12 +201,12 @@ void SearchForHooks(SearchParam spUser)
 
 		sp = spUser.length == 0 ? spDefault : spUser;
 
+		ConsoleOutput(HOOK_SEARCH_INITIALIZING, 0.);
 		do
 			try { records = std::make_unique<HookRecord[]>(recordsAvailable = sp.maxRecords); }
 			catch (std::bad_alloc) { ConsoleOutput("Textractor: SearchForHooks ERROR: out of memory, retrying to allocate %d", sp.maxRecords /= 2); }
 		while (!records && sp.maxRecords);
 
-		ConsoleOutput(STARTING_SEARCH);
 		std::vector<uint64_t> addresses;
 		if (*sp.boundaryModule) std::tie(sp.minAddress, sp.maxAddress) = Util::QueryModuleLimits(GetModuleHandleW(sp.boundaryModule));
 		if (*sp.exportModule) addresses = GetFunctions((uintptr_t)GetModuleHandleW(sp.exportModule));
@@ -222,11 +223,13 @@ void SearchForHooks(SearchParam spUser)
 			MH_CreateHook((void*)addresses[i], trampolines[i], &original);
 			MH_QueueEnableHook((void*)addresses[i]);
 			memcpy(trampolines[i], trampoline, sizeof(trampoline));
-			*(uintptr_t*)(trampolines[i] + addr_offset) = addresses[i]; 
+			*(uintptr_t*)(trampolines[i] + addr_offset) = addresses[i];
 			*(void**)(trampolines[i] + original_offset) = original;
+			if (i % 2500 == 0) ConsoleOutput(HOOK_SEARCH_INITIALIZING, 1 + 98. * i / addresses.size());
 		}
 		ConsoleOutput(HOOK_SEARCH_INITIALIZED, addresses.size());
 		MH_ApplyQueued();
+		ConsoleOutput(HOOK_SEARCH_STARTING);
 		ConsoleOutput(MAKE_GAME_PROCESS_TEXT, sp.searchTime / 1000);
 		Sleep(sp.searchTime);
 		for (auto addr : addresses) MH_QueueDisableHook((void*)addr);
@@ -261,7 +264,7 @@ void SearchForText(wchar_t* text, UINT codepage)
 	char codepageText[PATTERN_SIZE * 4] = {};
 	WideCharToMultiByte(codepage, 0, text, PATTERN_SIZE, codepageText, PATTERN_SIZE * 4, nullptr, nullptr);
 	if (strlen(utf8Text) < 4 || strlen(codepageText) < 4 || wcslen(text) < 4) return ConsoleOutput(NOT_ENOUGH_TEXT);
-	ConsoleOutput(STARTING_SEARCH);
+	ConsoleOutput(HOOK_SEARCH_STARTING);
 	auto GenerateHooks = [&](std::vector<uint64_t> addresses, HookParamType type)
 	{
 		for (auto addr : addresses)
