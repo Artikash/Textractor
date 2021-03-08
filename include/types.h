@@ -62,7 +62,7 @@ struct SearchParam
 	BYTE pattern[PATTERN_SIZE] = { x64 ? 0xcc : 0x55, x64 ? 0xcc : 0x8b, x64 ? 0x48 : 0xec, 0x89 }; // pattern in memory to search for
 	int length = x64 ? 4 : 3, // length of pattern (zero means this SearchParam is invalid and the default should be used)
 		offset = x64 ? 2 : 0, // offset from start of pattern to add hook
-		searchTime = 20000, // ms
+		searchTime = 30000, // ms
 		maxRecords = 100000,
 		codepage = SHIFT_JIS;
 	uintptr_t padding = 0, // same as hook param padding

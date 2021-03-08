@@ -68,6 +68,7 @@ namespace Engine
 			ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 
 			DetermineEngineType();
+			if (processStartAddress + 0x40000 > processStopAddress) ConsoleOutput("Textractor: WARNING injected process is very small, possibly a dummy!");
 		}(), 0);
 	}
 

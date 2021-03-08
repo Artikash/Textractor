@@ -58,7 +58,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	static auto _ = GetSelectedProcessId = (DWORD(*)())sentenceInfo["DWORD (*GetSelectedProcessId)()"];
 	if (sentenceInfo["text number"] == 0) return false;
-	if (sentenceInfo["current select"] && !regex) if (auto processName = GetModuleFilename(sentenceInfo["process id"]))
+	if (/*sentenceInfo["current select"] && */!regex) if (auto processName = GetModuleFilename(sentenceInfo["process id"]))
 	{
 		std::ifstream stream(REGEX_SAVE_FILE, std::ios::binary);
 		BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|PROCESS|", L"|FILTER|" });

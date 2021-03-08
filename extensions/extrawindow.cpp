@@ -47,7 +47,7 @@ struct PrettyWindow : QDialog, Localizer
 	PrettyWindow(const char* name)
 	{
 		ui.setupUi(this);
-		ui.display->setGraphicsEffect(&outliner);
+		ui.display->setGraphicsEffect(outliner = new Outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
 
@@ -56,14 +56,14 @@ struct PrettyWindow : QDialog, Localizer
 		if (font.fromString(settings.value(FONT, font.toString()).toString())) ui.display->setFont(font);
 		SetBackgroundColor(settings.value(BG_COLOR, backgroundColor).value<QColor>());
 		SetTextColor(settings.value(TEXT_COLOR, TextColor()).value<QColor>());
-		outliner.color = settings.value(OUTLINE_COLOR, outliner.color).value<QColor>();
-		outliner.size = settings.value(OUTLINE_SIZE, outliner.size).toDouble();
+		outliner->color = settings.value(OUTLINE_COLOR, outliner->color).value<QColor>();
+		outliner->size = settings.value(OUTLINE_SIZE, outliner->size).toDouble();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
 		menu.addAction(BG_COLOR, [this] { SetBackgroundColor(colorPrompt(this, backgroundColor, BG_COLOR)); });
 		menu.addAction(TEXT_COLOR, [this] { SetTextColor(colorPrompt(this, TextColor(), TEXT_COLOR)); });
 		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::SetOutline);
 		outlineAction->setCheckable(true);
-		outlineAction->setChecked(outliner.size >= 0);
+		outlineAction->setChecked(outliner->size >= 0);
 		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
 	}
 
@@ -113,13 +113,13 @@ private:
 	{
 		if (enable)
 		{
-			QColor color = colorPrompt(this, outliner.color, OUTLINE_COLOR);
-			if (color.isValid()) outliner.color = color;
-			outliner.size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, 0.5, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
+			QColor color = colorPrompt(this, outliner->color, OUTLINE_COLOR);
+			if (color.isValid()) outliner->color = color;
+			outliner->size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, 0.5, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
 		}
-		else outliner.size = -1;
-		settings.setValue(OUTLINE_COLOR, outliner.color.name(QColor::HexArgb));
-		settings.setValue(OUTLINE_SIZE, outliner.size);
+		else outliner->size = -1;
+		settings.setValue(OUTLINE_COLOR, outliner->color.name(QColor::HexArgb));
+		settings.setValue(OUTLINE_SIZE, outliner->size);
 	}
 
 	void paintEvent(QPaintEvent*) override
@@ -128,7 +128,7 @@ private:
 	}
 
 	QColor backgroundColor{ palette().window().color() };
-	struct : QGraphicsEffect
+	struct Outliner : QGraphicsEffect
 	{
 		void draw(QPainter* painter) override
 		{
@@ -148,7 +148,7 @@ private:
 		}
 		QColor color{ Qt::black };
 		double size = -1;
-	} outliner;
+	}* outliner;
 };
 
 class ExtraWindow : public PrettyWindow

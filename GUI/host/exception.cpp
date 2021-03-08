@@ -5,7 +5,7 @@ namespace
 {
 	char* GetCppExceptionInfo(EXCEPTION_POINTERS* exception)
 	{
-		// See https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
+		// https://blogs.msdn.microsoft.com/oldnewthing/20100730-00/?p=13273
 		// Not very reliable so use __try
 		__try { return ((char****)exception->ExceptionRecord->ExceptionInformation[2])[3][1][1] + 8; }
 		__except (EXCEPTION_EXECUTE_HANDLER) { return "Could not find"; }
