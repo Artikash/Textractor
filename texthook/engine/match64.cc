@@ -154,6 +154,48 @@ namespace Engine
 		return false;
 	}
 
+	/** Artikash 8/10/2018: Ren'py
+	*
+	*  Sample games: https://vndb.org/v19843 https://vndb.org/v12038 and many more OELVNs
+	*
+	*  Uses CPython, and links to python27.dll. PyUicodeUCS2_Format is the function used to process text.
+	*  first argument. offset 0x18 from that is a wchar_t* to the actual string
+	*  ebx seems to work well as the split param, not sure why
+	*/
+	bool InsertRenpyHook()
+	{
+		wchar_t python[] = L"python2X.dll", libpython[] = L"libpython2.X.dll";
+		for (wchar_t* name : { python, libpython })
+		{
+			wchar_t* pos = wcschr(name, L'X');
+			for (int pythonMinorVersion = 0; pythonMinorVersion <= 8; ++pythonMinorVersion)
+			{
+				*pos = L'0' + pythonMinorVersion;
+				if (HMODULE module = GetModuleHandleW(name))
+				{
+					wcscpy_s(spDefault.exportModule, name);
+					HookParam hp = {};
+					hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Format");
+					if (!hp.address)
+					{
+						ConsoleOutput("Textractor: Ren'py failed: failed to find PyUnicodeUCS2_Format");
+						return false;
+					}
+					hp.offset = -0x20; // rcx
+					hp.index = 0x18;
+					hp.length_offset = 0;
+					//hp.split = pusha_ebx_off - 4;
+					hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT /* | USING_SPLIT*/;
+					//hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
+					NewHook(hp, "Ren'py");
+					return true;
+				}
+			}
+		}
+		ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
+		return false;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
@@ -167,6 +209,8 @@ namespace Engine
 			spDefault.padding = 20;
 			return true;
 		}
+
+		if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
 
 		for (const wchar_t* monoName : { L"mono.dll", L"mono-2.0-bdwgc.dll" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 

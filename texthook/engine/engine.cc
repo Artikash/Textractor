@@ -16896,30 +16896,34 @@ bool InsertAdobeFlash10Hook()
 */
 bool InsertRenpyHook()
 {
-	for (int pythonMinorVersion = 0; pythonMinorVersion <= 8; ++pythonMinorVersion)
-	{
-		wchar_t python[] = L"python2X.dll";
-		python[7] = L'0' + pythonMinorVersion;
-		if (HMODULE module = GetModuleHandleW(python))
-		{
-			wcscpy_s(spDefault.exportModule, python);
-			HookParam hp = {};
-			hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Format");
-			if (!hp.address)
-			{
-				ConsoleOutput("Textractor: Ren'py failed: failed to find PyUnicodeUCS2_Format");
-				return false;
-			}
-			hp.offset = 4;
-			hp.index = 0xc;
-			hp.length_offset = 0;
-			hp.split = pusha_ebx_off - 4;
-			hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
-			//hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
-			NewHook(hp, "Ren'py");
-			return true;
-		}
-	}
+    wchar_t python[] = L"python2X.dll", libpython[] = L"libpython2.X.dll";
+    for (wchar_t* name : { python, libpython })
+    {
+        wchar_t* pos = wcschr(name, L'X');
+        for (int pythonMinorVersion = 0; pythonMinorVersion <= 8; ++pythonMinorVersion)
+        {
+            *pos = L'0' + pythonMinorVersion;
+            if (HMODULE module = GetModuleHandleW(name))
+            {
+                wcscpy_s(spDefault.exportModule, name);
+                HookParam hp = {};
+                hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Format");
+                if (!hp.address)
+                {
+                    ConsoleOutput("Textractor: Ren'py failed: failed to find PyUnicodeUCS2_Format");
+                    return false;
+                }
+                hp.offset = 4;
+                hp.index = 0xc;
+                hp.length_offset = 0;
+                hp.split = pusha_ebx_off - 4;
+                hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
+                //hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
+                NewHook(hp, "Ren'py");
+                return true;
+            }
+        }
+    }
 	ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
 	return false;
 }
