@@ -47,6 +47,8 @@ target_link_libraries(Regex\ Filter Qt5::Widgets)
 target_link_libraries(Styler Qt5::Widgets)
 target_link_libraries(Thread\ Linker Qt5::Widgets)
 
+add_custom_target(Cleaner ALL COMMAND del *.xdll WORKING_DIRECTORY ${CMAKE_FINAL_OUTPUT_DIRECTORY})
+
 if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSockets.dll AND NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSocketsd.dll)
     add_custom_command(TARGET DevTools\ DeepL\ Translate
         POST_BUILD

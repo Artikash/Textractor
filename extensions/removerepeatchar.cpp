@@ -6,7 +6,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	std::vector<int> repeatNumbers(sentence.size() + 1, 0);
 	int repeatNumber = 1;
-	wchar_t prevChar = L'\0';
+	wchar_t prevChar = 0;
 	for (auto nextChar : sentence)
 	{
 		if (nextChar == prevChar)

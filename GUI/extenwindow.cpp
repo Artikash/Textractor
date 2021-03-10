@@ -110,7 +110,7 @@ namespace
 		QAction addExtension(ADD_EXTENSION), removeExtension(REMOVE_EXTENSION);
 		if (auto action = QMenu::exec({ &addExtension, &removeExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
 			if (action == &removeExtension) Delete();
-			else if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll)\nLibraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+			else if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll);;Libraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
 	}
 }
 

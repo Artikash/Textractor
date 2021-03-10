@@ -122,7 +122,7 @@ QStringList languages
 };
 std::wstring autoDetectLanguage = L"auto";
 
-bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
+bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
@@ -145,34 +145,12 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"translate.google.com",
-		L"POST",
-		L"/_/TranslateWebserverUi/data/batchexecute?rpcids=MkEWBc",
-		"f.req=" + Escape(WideStringToString(
-			FormatString(LR"([[["MkEWBc","[[\"%s\",\"%s\",\"%s\",true],[null]]",null,"generic"]]])", JSON::Escape((JSON::Escape(text))), translateFrom.Copy(), translateTo.Copy())
-		)),
-		L"Content-Type: application/x-www-form-urlencoded"
+		L"GET",
+		FormatString(L"/m?sl=%s&tl=%s&q=%s", translateFrom.Copy(), translateTo.Copy(), Escape(text)).c_str()
 	})
 	{
-		if (auto start = httpRequest.response.find(L"[["); start != std::string::npos)
-		{
-			if (auto blob = Copy(JSON::Parse(httpRequest.response.substr(start))[0][2].String())) if (auto translations = Copy(JSON::Parse(blob.value())[1][0].Array()))
-			{
-				std::wstring translation;
-				if (translations->size() == 1)
-				{
-					if (translations = Copy(translations.value()[0][5].Array()))
-						for (const auto& sentence : translations.value())
-							if (sentence[0].String()) (translation += *sentence[0].String()) += L" ";
-				}
-				else
-				{
-					for (const auto& conjugation : translations.value())
-						if (auto sentence = conjugation[0].String()) if (auto gender = conjugation[2].String()) translation += FormatString(L"%s %s\n", *sentence, *gender);
-				}
-				if (!translation.empty()) return { true, translation };
-				return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, blob.value()) };
-			}
-		}
+		auto start = httpRequest.response.find(L"result-container\">") + 18, end = httpRequest.response.find(L'<', start);
+		if (start != end) return { true, HTML::Unescape(httpRequest.response.substr(start, end - start)) };
 		return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };

@@ -32,6 +32,36 @@ struct HttpRequest
 std::wstring Escape(const std::wstring& text);
 std::string Escape(const std::string& text);
 
+namespace HTML
+{
+	template <typename C>
+	std::basic_string<C> Unescape(std::basic_string<C> text)
+	{
+		constexpr C
+			lt[] = { '&', 'l', 't', ';' },
+			gt[] = { '&', 'g', 't', ';' },
+			apos1[] = { '&', 'a', 'p', 'o', 's', ';' },
+			apos2[] = { '&', '#', '3', '9', ';' },
+			apos3[] = { '&', '#', 'x', '2', '7', ';' },
+			apos4[] = { '&', '#', 'X', '2', '7', ';' },
+			quot[] = { '&', 'q', 'u', 'o', 't', ';' },
+			amp[] = { '&', 'a', 'm', 'p', ';' };
+		for (int i = 0; i < text.size(); ++i)
+			if (text[i] == '&')
+				for (auto [original, length, replacement] : Array<const C*, size_t, C>{
+					{ lt, std::size(lt), '<' },
+					{ gt, std::size(gt), '>' },
+					{ apos1, std::size(apos1), '\'' },
+					{ apos2, std::size(apos2), '\'' },
+					{ apos3, std::size(apos3), '\'' },
+					{ apos4, std::size(apos4), '\'' },
+					{ quot, std::size(quot), '"' },
+					{ amp, std::size(amp), '&' }
+				}) if (std::char_traits<C>::compare(text.data() + i, original, length) == 0) text.replace(i, length, 1, replacement);
+		return text;
+	}
+}
+
 namespace JSON
 {
 	template <typename C>
@@ -136,7 +166,7 @@ namespace JSON
 
 		if (SkipWhitespace()) return {};
 
-		static C nullStr[] = { 'n', 'u', 'l', 'l' }, trueStr[] = { 't', 'r', 'u', 'e' }, falseStr[] = { 'f', 'a', 'l', 's', 'e' };
+		constexpr C nullStr[] = { 'n', 'u', 'l', 'l' }, trueStr[] = { 't', 'r', 'u', 'e' }, falseStr[] = { 'f', 'a', 'l', 's', 'e' };
 		if (ch == nullStr[0])
 			if (std::char_traits<C>::compare(text.data() + i, nullStr, std::size(nullStr)) == 0) return i += std::size(nullStr), nullptr;
 			else return {};

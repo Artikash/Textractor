@@ -57,7 +57,7 @@ Negatives for data_offset/split_offset refer to registers
 -C for RAX, -14 for RBX, -1C for RCX, -24 for RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
 const char* SAVE_SETTINGS = u8"Save settings";
-const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Right click the list to add/remove extensions
+const char* EXTEN_WINDOW_INSTRUCTIONS = u8R"(Right click the list to add or remove extensions
 Drag and drop extensions within the list to reorder them
 (Extensions are used from top to bottom: order DOES matter))";
 const char* ADD_EXTENSION = u8"Add extension";
@@ -97,14 +97,14 @@ const char* MAX_HISTORY_SIZE = u8"Max history size";
 const char* CONFIG_JP_LOCALE = u8"Launch with JP locale";
 const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
-const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by me: Artikash (email: akashmozumdar@gmail.com)
+const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by Artikash (email: akashmozumdar@gmail.com)
 Project homepage: https://github.com/Artikash/Textractor
 Tutorial video: https://tinyurl.com/textractor-tutorial
 FAQ: https://github.com/Artikash/Textractor/wiki/FAQ
-Please contact me with any problems, feature requests, or questions relating to Textractor
+Please contact Artikash with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
-If you like this project, please tell everyone about it :))";
+If you like this project, please tell everyone it's time to put down AGTH :))";
 const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
 example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
@@ -136,6 +136,7 @@ const char* HIJACK_ERROR = u8"Textractor: Hijack ERROR";
 const char* COULD_NOT_FIND = u8"Textractor: could not find text";
 const char* TRANSLATE_TO = u8"Translate to";
 const char* TRANSLATE_FROM = u8"Translate from";
+const char* FILTER_GARBAGE = u8"Filter garbage characters";
 const char* TRANSLATE_SELECTED_THREAD_ONLY = u8"Translate selected text thread only";
 const char* RATE_LIMIT_ALL_THREADS = u8"Rate limit all text threads";
 const char* RATE_LIMIT_SELECTED_THREAD = u8"Rate limit selected text thread";
@@ -146,7 +147,7 @@ const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Rate limit exceeded: refuse to make m
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* USE_PREV_SENTENCE_CONTEXT = u8"Use previous sentence as context";
 const char* API_KEY = u8"API key";
-const char* CHROME_LOCATION = "Google Chrome file location";
+const char* CHROME_LOCATION = u8"Google Chrome file location";
 const char* START_DEVTOOLS = u8"Start DevTools";
 const char* STOP_DEVTOOLS = u8"Stop DevTools";
 const char* HEADLESS_MODE = u8"Headless mode";

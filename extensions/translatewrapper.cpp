@@ -13,6 +13,7 @@ extern const char* TRANSLATE_SELECTED_THREAD_ONLY;
 extern const char* RATE_LIMIT_ALL_THREADS;
 extern const char* RATE_LIMIT_SELECTED_THREAD;
 extern const char* USE_TRANS_CACHE;
+extern const char* FILTER_GARBAGE;
 extern const char* RATE_LIMIT_TOKEN_COUNT;
 extern const char* RATE_LIMIT_TOKEN_RESTORE_DELAY;
 extern const char* MAX_SENTENCE_SIZE;
@@ -23,7 +24,7 @@ extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
 extern QStringList languages;
 extern std::wstring autoDetectLanguage;
-extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache;
+extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text);
 
@@ -84,6 +85,7 @@ public:
 			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
 			{ rateLimitSelected, RATE_LIMIT_SELECTED_THREAD },
 			{ useCache, USE_TRANS_CACHE },
+			{ useFilter, FILTER_GARBAGE }
 		})
 		{
 			value = settings.value(label, value).toBool();
@@ -165,7 +167,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		Synchronized<std::vector<DWORD>> tokens;
 	} rateLimiter;
 
-	auto StripWhitespace = [](std::wstring& text)
+	auto Trim = [](std::wstring& text)
 	{
 		text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
 		text.erase(std::find_if_not(text.rbegin(), text.rend(), iswspace).base(), text.end());
@@ -173,7 +175,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 
 	bool cache = false;
 	std::wstring translation;
-	StripWhitespace(sentence);
+	if (useFilter)
+	{
+		Trim(sentence);
+		sentence.erase(std::find_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
+	}
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
@@ -182,7 +188,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
 		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence);
 		else translation = TOO_MANY_TRANS_REQUESTS;
-	StripWhitespace(translation);
+	if (useFilter) Trim(translation);
 	if (cache) translationCache->try_emplace(sentence, translation);
 	if (cache && translationCache->size() > savedSize + 50) SaveCache();
 

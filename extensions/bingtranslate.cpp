@@ -80,7 +80,7 @@ QStringList languages
 };
 std::wstring autoDetectLanguage = L"auto-detect";
 
-bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true;
+bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)

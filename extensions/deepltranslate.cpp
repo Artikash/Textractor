@@ -11,7 +11,7 @@ const char* TRANSLATION_PROVIDER = "DeepL Translate";
 const char* GET_API_KEY_FROM = "https://www.deepl.com/pro.html";
 QStringList languages
 {
-	"Chinese (simplified): ZH",
+	"Chinese: ZH",
 	"Dutch: NL",
 	"English: EN",
 	"French: FR",
@@ -25,7 +25,7 @@ QStringList languages
 };
 std::wstring autoDetectLanguage = L"auto";
 
-bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true;
+bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true, useFilter = true;
 int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 enum KeyType { CAT, REST };

@@ -14,8 +14,7 @@ namespace
 	auto _ = ([]
 	{
 		QObject::connect(&webSocket, &QWebSocket::stateChanged,
-			[](QAbstractSocket::SocketState state) { OnStatusChanged(QMetaEnum::fromType<QAbstractSocket::SocketState>().valueToKey(state)); }
-		);
+			[](QAbstractSocket::SocketState state) { OnStatusChanged(QMetaEnum::fromType<QAbstractSocket::SocketState>().valueToKey(state)); });
 		QObject::connect(&webSocket, &QWebSocket::textMessageReceived, [](QString message)
 		{
 			auto result = JSON::Parse(S(message));
@@ -84,7 +83,7 @@ namespace DevTools
 		if (GetExitCodeProcess(processInfo.hProcess, &exitCode) && exitCode == STILL_ACTIVE)
 		{
 			TerminateProcess(processInfo.hProcess, 0);
-			WaitForSingleObject(processInfo.hProcess, 100);
+			WaitForSingleObject(processInfo.hProcess, 2000);
 			CloseHandle(processInfo.hProcess);
 			CloseHandle(processInfo.hThread);
 		}
@@ -98,11 +97,11 @@ namespace DevTools
 		return webSocket.state() == QAbstractSocket::ConnectedState;
 	}
 
-	JSON::Value<wchar_t> SendRequest(const std::wstring& method, const std::wstring& params)
+	JSON::Value<wchar_t> SendRequest(const char* method, const std::wstring& params)
 	{
 		concurrency::task_completion_event<JSON::Value<wchar_t>> response;
 		int id = idCounter += 1;
-		auto message = FormatString(LR"({"id":%d,"method":"%s","params":%s})", id, method, params);
+		auto message = FormatString(LR"({"id":%d,"method":"%S","params":%s})", id, method, params);
 		{
 			std::scoped_lock lock(devToolsMutex);
 			if (webSocket.state() != QAbstractSocket::ConnectedState) return {};
