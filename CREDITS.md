@@ -1,7 +1,7 @@
 # Developers
 
 If you're on this list and want your link changed let me know.
-- Textractor mainly made by [Me](https://github.com/Artikash) with the contributions of
+- Textractor mainly made by [Artikash](https://github.com/Artikash) with the contributions of
   - Build system improvements by [DoumanAsh](https://github.com/DoumanAsh)
   - Original text removal in Extra Window by [Niakr1s](https://github.com/Niakr1s)
   - CLI bugfixes by [tinyAdapter](https://github.com/tinyAdapter)

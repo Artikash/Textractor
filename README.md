@@ -10,7 +10,7 @@ Watch the [tutorial video](https://tinyurl.com/textractor-tutorial) for a quick 
 ## Download
 
 Official stable releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
-Experimental builds of Textractor from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history).<br>
+Experimental builds of Textractor from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) (in the 'Artifacts' section of a job).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
 Try running vcredist if you get an error when starting Textractor.
 
@@ -35,11 +35,11 @@ See the extensions folder for examples of what extensions can do.
 
 All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).<br>
-Contributing a translation is easy: just translate the strings in text.cpp as well as this README.
+Contributing a translation is easy: just translate the strings in text.cpp as well as this README and the subtitles of the tutorial video.
 
 ## Compiling
 
-Before compiling Textractor, you should get Qt version 5.13 and Visual Studio with CMake support. You should then hopefully be able to just open the source folder in Visual Studio and build.
+Before compiling Textractor, you should get Qt version 5.13 and Visual Studio with CMake support. You should then be able to just open the source folder in Visual Studio and build.
 
 ## Project Architecture
 
