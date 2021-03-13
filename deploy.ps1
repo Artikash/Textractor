@@ -1,8 +1,8 @@
 ﻿param([string]$version)
 
 cd $PSScriptRoot;
-mkdir -Force -Verbose Builds;
-cd Builds;
+mkdir -Force -Verbose builds;
+cd builds;
 mkdir -Force -Verbose x86;
 mkdir -Force -Verbose x64;
 
@@ -85,6 +85,7 @@ foreach ($arch in @("x86", "x64"))
 	{
 		copy -Force -Recurse -Verbose -Destination "Runtime/$arch/$file" -Path "Release_$arch/$file";
 	}
+	copy -Force -Recurse -Verbose -Destination "$arch" -Path "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/**/$arch/Microsoft.VC142.CRT/*"
 }
 
 rm -Force -Recurse -Verbose "Textractor";

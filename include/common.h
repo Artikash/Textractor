@@ -139,7 +139,7 @@ inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { std::
 void Localize();
 
 #ifdef _DEBUG
-#define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr); 
+#define TEST(...) static auto _ = CreateThread(nullptr, 0, [](auto) { __VA_ARGS__; return 0UL; }, NULL, 0, nullptr)
 #else
 #define TEST(...)
 #endif
