@@ -4494,7 +4494,8 @@ bool InsertRUGP1Hook()
  */
 bool InsertRUGP2Hook()
 {
-  if (!Util::CheckFile(L"vm60.dll") /*|| !SafeFillRange(L"vm60.dll", &low, &high)*/) {
+    auto module = GetModuleHandleW(L"vm60.dll");
+  if (!module /*|| !SafeFillRange(L"vm60.dll", &low, &high)*/) {
     ConsoleOutput("vnreng:rUGP2: vm60.dll does not exist");
     return false;
   }
@@ -4508,7 +4509,7 @@ bool InsertRUGP2Hook()
     0x89,0x75, 0x0c             // 1001e527   8975 0c          mov dword ptr ss:[ebp+0xc],esi
   };
   enum { addr_offset = 0x1001e51d - 0x1001e515 };
-  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), (DWORD)module, Util::QueryModuleLimits(module).second);
   //GROWL_DWORD(addr);
   if (!addr) {
     ConsoleOutput("vnreng:rUGP2: pattern not found");
@@ -4631,20 +4632,15 @@ static void InsertAliceHook2(DWORD addr)
 // jichi 5/13/2015: Looking for function entries in StoatSpriteEngine.dll
 bool InsertAliceHook()
 {
-  DWORD addr;
-  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"SACT2.dll"), "SP_TextDraw")) {
+  if (auto addr = Util::FindFunction("SP_TextDraw")) {
     InsertAliceHook1(addr);
     return true;
-  }
-  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"SACTDX.dll"), "SP_TextDraw")) {
-	  InsertAliceHook1(addr);
-	  return true;
   }
   //if (GetFunctionAddr("SP_SetTextSprite", &addr, &low, &high, 0) && addr) {
 	 // InsertAliceHook2(addr);
 	 // return true;
   //}
-  if (addr = (DWORD)GetProcAddress(GetModuleHandleW(L"StoatSpriteEngine.dll"), "SP_SetTextSprite")) { // Artikash 6/27/2018 not sure if this works
+  if (auto addr = Util::FindFunction("SP_SetTextSprite")) { // Artikash 6/27/2018 not sure if this works
     InsertAliceHook2(addr);
     return true;
   }
