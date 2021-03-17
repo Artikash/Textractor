@@ -6,6 +6,7 @@
 #include "util/util.h"
 #include "ithsys/ithsys.h"
 #include "main.h"
+#include <Psapi.h>
 
 namespace { // unnamed
 
@@ -345,6 +346,15 @@ std::vector<uint64_t> SearchMemory(const void* bytes, short length, DWORD protec
 
 	return ret;
 }
+
+uintptr_t FindFunction(const char* function)
+{
+    static HMODULE modules[300] = {};
+    static auto _ = EnumProcessModules(GetCurrentProcess(), modules, sizeof(modules), DUMMY);
+    for (auto module : modules) if (auto addr = GetProcAddress(module, function)) return (uintptr_t)addr;
+    return 0;
+}
+
 }
 
 // EOF
