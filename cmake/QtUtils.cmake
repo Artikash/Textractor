@@ -1,5 +1,5 @@
 macro(msvc_registry_search)
-	if(NOT DEFINED Qt5_DIR AND MSVC)
+	if(NOT EXISTS Qt5_DIR AND MSVC)
 		# look for user-registry pointing to qtcreator
 		get_filename_component(QT_BIN [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.pro\\shell\\Open\\Command] PATH)
 
@@ -52,7 +52,7 @@ macro(find_qt5)
 	set(CMAKE_INCLUDE_CURRENT_DIR ON)
 	#set(CMAKE_AUTOMOC ON)
 	set(CMAKE_AUTOUIC ON)
-	add_definitions(-DQT_DEPRECATED_WARNINGS -DQT_DISABLE_DEPRECATED_BEFORE=0x060000)
+	#add_definitions(-DQT_DEPRECATED_WARNINGS -DQT_DISABLE_DEPRECATED_BEFORE=0x060000)
 	find_package(Qt5 COMPONENTS ${ARGN})
 
 	if(Qt5_FOUND)

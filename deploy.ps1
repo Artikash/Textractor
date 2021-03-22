@@ -85,7 +85,7 @@ foreach ($arch in @("x86", "x64"))
 	{
 		copy -Force -Recurse -Verbose -Destination "Runtime/$arch/$file" -Path "Release_$arch/$file";
 	}
-	copy -Force -Recurse -Verbose -Destination "$arch" -Path "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/**/$arch/Microsoft.VC142.CRT/*"
+	copy -Force -Recurse -Verbose -Destination "Runtime/$arch" -Path "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/**/$arch/Microsoft.VC142.CRT/*"
 }
 
 rm -Force -Recurse -Verbose "Textractor";

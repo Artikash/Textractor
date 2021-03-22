@@ -133,12 +133,12 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	// DevTools can't handle concurrent translations yet
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
-	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/translator#any/%s/%s"})", translateTo.Copy(), Escape(text)));
+	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#any/%s/%s"})", translateTo.Copy(), Escape(text)));
 
 	if (translateFrom.Copy() != autoDetectLanguage)
 		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
-			document.querySelector('.lmt__language_select--source').querySelector('button').click(),
-			document.evaluate(`//button[contains(text(),'%s')]`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click()
+			document.querySelector('.lmt__language_select--source').querySelector('button').click();
+			document.evaluate(`//button[contains(text(),'%s')]`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
 		"})", S(std::find_if(languages.begin(), languages.end(), [end = S(translateFrom.Copy())](const QString& language) { return language.endsWith(end); })->split(":")[0])));
 
 	for (int retry = 0; ++retry < 100; Sleep(100))

@@ -3,7 +3,6 @@
 #include <random>
 
 extern const wchar_t* TRANSLATION_ERROR;
-extern const char* USE_PREV_SENTENCE_CONTEXT;
 
 extern Synchronized<std::wstring> translateTo, translateFrom, authKey;
 
