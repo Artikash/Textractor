@@ -149,8 +149,8 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		FormatString(L"/m?sl=%s&tl=%s&q=%s", translateFrom.Copy(), translateTo.Copy(), Escape(text)).c_str()
 	})
 	{
-		auto start = httpRequest.response.find(L"result-container\">") + 18, end = httpRequest.response.find(L'<', start);
-		if (start != end) return { true, HTML::Unescape(httpRequest.response.substr(start, end - start)) };
+		auto start = httpRequest.response.find(L"result-container\">"), end = httpRequest.response.find(L'<', start);
+		if (end != std::string::npos) return { true, HTML::Unescape(httpRequest.response.substr(start + 18, end - start - 18)) };
 		return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	}
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
