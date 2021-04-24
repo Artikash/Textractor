@@ -1,5 +1,5 @@
 macro(msvc_registry_search)
-	if(NOT EXISTS Qt5_DIR AND MSVC)
+	if(NOT DEFINED Qt5_DIR)
 		# look for user-registry pointing to qtcreator
 		get_filename_component(QT_BIN [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.pro\\shell\\Open\\Command] PATH)
 
