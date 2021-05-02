@@ -5,6 +5,9 @@
 #include "extenwindow.h"
 #include "host/host.h"
 #include "host/hookcode.h"
+#include "attachtoprocessdialog.h"
+#include "utils/windowshelpers.h"
+
 #include <shellapi.h>
 #include <process.h>
 #include <QRegularExpression>
@@ -14,6 +17,7 @@
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFontDialog>
+#include <QHash>
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
@@ -79,6 +83,7 @@ namespace
 	Ui::MainWindow ui;
 	std::atomic<DWORD> selectedProcessId = 0;
 	ExtenWindow* extenWindow = nullptr;
+	AttachToProcessDialog* attachDialog = nullptr;
 	std::unordered_set<DWORD> alreadyAttached;
 	bool autoAttach = false, autoAttachSavedOnly = true;
 	bool showSystemProcesses = false;
@@ -152,17 +157,51 @@ namespace
 	}
 
 	void AttachProcess()
-	{
-		QMultiHash<QString, DWORD> allProcesses;
-		for (auto [processId, processName] : GetAllProcesses())
+	{        
+		auto processes = GetAllProcesses();
+		QMultiHash<QString, DWORD> processesMap;
+		QVector<QPair<QString, HICON>> dialogData;
+		dialogData.reserve(processes.size());
+		for (auto [processId, processName] : processes)
+		{
 			if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::string::npos))
-				allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
+			{
+				const auto& value = processName.value();
+				const QFileInfo& fileInfo = QFileInfo(S(value));
+				const QString& fileName = fileInfo.fileName();
+				if (!processesMap.contains(fileName))
+				{
+					const auto icon = WindowsHepers::GetIconHandlerFromExe(value.c_str());
+					dialogData.push_back({fileName, icon});
+				}
+				processesMap.insert(fileName, processId);
+			}
+		}
+		dialogData.shrink_to_fit();
+		processes.clear();
 
-		QStringList processList(allProcesses.uniqueKeys());
-		processList.sort(Qt::CaseInsensitive);
-		if (QString process = QInputDialog::getItem(This, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint); ok)
-			if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
-			else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
+		attachDialog->setWindowTitle(SELECT_PROCESS);
+		attachDialog->setLabelText(ATTACH_INFO);
+
+		attachDialog->setData(std::move(dialogData));
+		const bool hasChosenData = attachDialog->exec() != 0;
+
+		if (hasChosenData)
+		{
+			const QString& process = attachDialog->getSelectedData();
+			const int pid = process.toInt(nullptr, 0);
+			if (pid)
+			{
+				Host::InjectProcess(pid);
+			}
+			else
+			{
+				for (const auto& processId : processesMap.values(process))
+				{
+					Host::InjectProcess(processId);
+				}
+			}
+		}
 	}
 
 	void LaunchProcess()
@@ -597,6 +636,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	This = this;
 	ui.setupUi(this);
 	extenWindow = new ExtenWindow(this);
+	attachDialog = new AttachToProcessDialog(this);
 	for (auto [text, slot] : Array<const char*, void(&)()>{
 		{ ATTACH, AttachProcess },
 		{ LAUNCH, LaunchProcess },
