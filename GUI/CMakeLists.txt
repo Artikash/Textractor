@@ -10,6 +10,7 @@ add_executable(Textractor WIN32
 	main.cpp
 	mainwindow.cpp
 	extenwindow.cpp
+	attachtoprocessdialog.cpp
 	host/exception.cpp
 	host/host.cpp
 	host/textthread.cpp
