@@ -22,6 +22,8 @@ extern const char* OPACITY;
 extern const char* SHOW_ORIGINAL;
 extern const char* SHOW_ORIGINAL_INFO;
 extern const char* SIZE_LOCK;
+extern const char* AUTO_RESIZE_WINDOW_HEIGHT;
+extern const char* CLICK_THROUGH;
 extern const char* DICTIONARY;
 extern const char* DICTIONARY_INSTRUCTIONS;
 extern const char* BG_COLOR;
@@ -163,8 +165,10 @@ public:
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
 			{ TOPMOST, false, &ExtraWindow::SetTopmost },
 			{ SIZE_LOCK, false, &ExtraWindow::SetLock },
+			{ AUTO_RESIZE_WINDOW_HEIGHT, false, &ExtraWindow::SetAutoResizeHeight },
 			{ SHOW_ORIGINAL, true, &ExtraWindow::SetShowOriginal },
 			{ DICTIONARY, false, &ExtraWindow::SetUseDictionary },
+			{ CLICK_THROUGH, false, &ExtraWindow::SetClickThrough },
 		})
 		{
 			// delay processing anything until Textractor has finished initializing
@@ -172,6 +176,12 @@ public:
 			auto action = menu.addAction(name, this, slot);
 			action->setCheckable(true);
 			action->setChecked(default);
+			if (slot == &ExtraWindow::SetClickThrough)
+			{
+				action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_T));
+				action->setShortcutContext(Qt::ApplicationShortcut);
+				addAction(action);
+			}
 		}
 		menu.addAction(MAX_SENTENCE_SIZE, this, [this]
 		{
@@ -201,6 +211,8 @@ public:
 		sentenceHistory.push_back(sentence);
 		historyIndex = sentenceHistory.size() - 1;
 		ui.display->setText(sentence);
+
+		AutoResize(sentence);
 	}
 
 private:
@@ -215,6 +227,49 @@ private:
 	{
 		setSizeGripEnabled(!locked);
 		settings.setValue(SIZE_LOCK, this->locked = locked);
+	};
+
+	void SetAutoResizeHeight(bool autoResizeHeight)
+	{
+		settings.setValue(AUTO_RESIZE_WINDOW_HEIGHT, this->autoResizeHeight = autoResizeHeight);
+
+		// If we disable this then we need to reset window to a default height. For now we will just use value from settings
+		if (!autoResizeHeight && settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().bottomRight()))
+		{
+			setGeometry(settings.value(WINDOW).toRect());
+		}
+	};
+
+	void AutoResize(QString sentence)
+	{
+		if (!autoResizeHeight) return;
+
+		QFontMetrics fontMetrics(ui.display->font(), ui.display);
+		auto boundingRect = fontMetrics.boundingRect(0, 0, width(), INT_MAX, Qt::TextWordWrap, sentence);
+		int newHeight = boundingRect.height() + 30;
+		int currHeight = height();
+
+		if (newHeight != currHeight) {
+			QSize s = size();
+			s.setWidth(width());
+			s.setHeight(newHeight);
+			resize(s);
+		}
+	}
+
+	void SetClickThrough(bool clickThrough)
+	{
+		if (clickThrough)
+		{
+			setAttribute(Qt::WA_TransparentForMouseEvents, true);
+			setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+		} else {
+			setAttribute(Qt::WA_TransparentForMouseEvents , false);
+			//setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);  // doesn't work
+			setWindowFlags(Qt::FramelessWindowHint);
+			SetTopmost(settings.value(TOPMOST, false).toBool());
+		}
+		show();
 	};
 
 	void SetShowOriginal(bool showOriginal)
@@ -298,9 +353,10 @@ private:
 		int scroll = event->angleDelta().y();
 		if (scroll > 0 && historyIndex > 0) ui.display->setText(sentenceHistory[--historyIndex]);
 		if (scroll < 0 && historyIndex + 1 < sentenceHistory.size()) ui.display->setText(sentenceHistory[++historyIndex]);
+		AutoResize(sentenceHistory[historyIndex]);
 	}
 
-	bool locked, showOriginal, useDictionary;
+	bool locked, autoResizeHeight, showOriginal, useDictionary, clickThrough;
 	int maxSentenceSize = 1000;
 	QPoint oldPos;
 
