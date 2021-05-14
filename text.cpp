@@ -179,6 +179,8 @@ const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size lock";
+const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+const char* CLICK_THROUGH = u8"Click Through";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
@@ -434,6 +436,8 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 仅当此扩展置于翻译扩展之后使用时才有效)";
 	OPACITY = u8"透明度";
 	SIZE_LOCK = u8"锁定窗口大小";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	BG_COLOR = u8"背景颜色";
 	TEXT_COLOR = u8"文本颜色";
 	TEXT_OUTLINE = u8"文字边框";
@@ -623,6 +627,8 @@ Textractor отобразит конечный корневой термин, а
 	SHOW_ORIGINAL_INFO = u8R"(Исходный текст будет скрыт
 Работает только если это расширение используется после расширения перевода)";
 	SIZE_LOCK = u8"Фиксированный размер";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	OPACITY = u8"Прозрачность";
 	BG_COLOR = u8"Цвет заднего фона";
 	TEXT_COLOR = u8"Цвет текста";
@@ -883,6 +889,8 @@ Questo file deve essere codificato in UTF-8.)";
 	SHOW_ORIGINAL_INFO = u8R"(Testo originale non sarà mostrato
 Funziona solo se questa estenzione è usata direttamente dopo un'estensione di traduzione)";
 	SIZE_LOCK = u8"Lock delle dimensione";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
+	CLICK_THROUGH = u8"Clicca attraverso";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
@@ -997,6 +1005,8 @@ Clique e arraste nas beiradas da janela para mover, ou no canto inferior direito
 	SHOW_ORIGINAL_INFO = u8R"(Texto original não será mostrado
 Apenas funciona se essa extensão for usada diretamente após uma extensão de tradução)";
 	SIZE_LOCK = u8"Travar o Tamanho";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	BG_COLOR = u8"Cor de fundo";
 	TEXT_COLOR = u8"Cor do Texto";
 	FONT = u8"Fonte";
@@ -1072,6 +1082,8 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	TOPMOST = u8"หน้าต่างอยู่บนโปรแกรมอื่น";
 	SHOW_ORIGINAL = u8"ข้อความดังเดิมก่อนแปลภาษา";
 	SIZE_LOCK = u8"ปรับให้ไม่สามารถเปลี่ยนขนาดได้";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	FONT = u8"ฟ้อนต์";
 #endif // THAI
 
@@ -1137,6 +1149,8 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	SHOW_ORIGINAL_INFO = u8R"(원문이 출력되지 않음
 이 확장기능이 번역확장기능 이후에 사용될때만 동작함)";
 	SIZE_LOCK = u8"사이즈 고정";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	BG_COLOR = u8"배경색";
 	TEXT_COLOR = u8"글씨색";
 	FONT = u8"폰트";
@@ -1302,6 +1316,8 @@ Ce fichier doit être encodé en UTF-8.)";
 	SHOW_ORIGINAL_INFO = u8R"(Le texte d'origine ne sera pas affiché
 Fonctionne uniquement si cette extension est utilisée directement après une extension de traduction)";
 	SIZE_LOCK = u8"Verouiller la taille";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+	CLICK_THROUGH = u8"Click Through";
 	OPACITY = u8"Opacité";
 	BG_COLOR = u8"Couleur d'arrière-plan";
 	TEXT_COLOR = u8"Couleur du texte";
