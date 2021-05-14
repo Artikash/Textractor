@@ -45,6 +45,8 @@ foreach ($language in @{
 			"Copy to Clipboard",
 			"DeepL Translate",
 			"DevTools DeepL Translate",
+			"DevTools Google Translate",
+			"DevTools Systran Translate",
 			"Extra Newlines",
 			"Extra Window",
 			"Google Translate",
