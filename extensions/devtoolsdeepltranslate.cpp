@@ -133,7 +133,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 	// DevTools can't handle concurrent translations yet
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
-	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#any/%s/%s"})", translateTo.Copy(), Escape(text)));
+	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", translateFrom.Copy(), translateTo.Copy(), Escape(text)));
+	for (int retry = 0; ++retry < 100; Sleep(100))
+		if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
+			LR"({"expression":"document.querySelector('#target-dummydiv').innerHTML.trim() ","returnByValue":true})"
+		)[L"result"][L"value"].String())) if (!translation->empty()) break;
 
 	if (translateFrom.Copy() != autoDetectLanguage)
 		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
