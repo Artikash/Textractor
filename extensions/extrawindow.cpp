@@ -245,7 +245,7 @@ private:
 		if (!autoResizeHeight) return;
 
 		QFontMetrics fontMetrics(ui.display->font(), ui.display);
-		auto boundingRect = fontMetrics.boundingRect(0, 0, width(), INT_MAX, Qt::TextWordWrap, sentence);
+		auto boundingRect = fontMetrics.boundingRect(0, 0, width()-20, INT_MAX, Qt::TextWordWrap, sentence);
 		int newHeight = boundingRect.height() + 30;
 		int currHeight = height();
 
