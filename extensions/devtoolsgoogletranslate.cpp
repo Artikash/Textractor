@@ -137,6 +137,12 @@ QStringList languages
 };
 std::wstring autoDetectLanguage = L"auto";
 
+void Close()
+{
+	firstTranslation = true;
+	DevTools::Close();
+}
+
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	switch (ul_reason_for_call)
@@ -202,7 +208,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 				headlessCheck->isChecked()
 			);
 		});
-		QObject::connect(stopButton, &QPushButton::clicked, &DevTools::Close);
+		QObject::connect(stopButton, &QPushButton::clicked, &Close);
 		auto buttons = new QHBoxLayout();
 		buttons->addWidget(startButton);
 		buttons->addWidget(stopButton);
@@ -237,7 +243,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://translate.google.com"})"));
 		for (int retry = 0; ++retry < 100; Sleep(100))
 			if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
-				LR"({"expression":"document.querySelector('#yDmH0d [class=Qhg5gf]').innerHTML.trim() ","returnByValue":true})"
+				LR"({"expression":"document.querySelector('#yDmH0d button').innerHTML.trim() ","returnByValue":true})"
 			)[L"result"][L"value"].String())) if (!translation->empty()) break;
 
 		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
