@@ -10,7 +10,7 @@ extern const char* THREAD_LINK_TO;
 extern const char* HEXADECIMAL;
 
 std::unordered_map<int64_t, std::unordered_set<int64_t>> linkedTextHandles;
-std::shared_mutex m;
+concurrency::reader_writer_lock m;
 
 class Window : public QDialog, Localizer
 {
@@ -68,7 +68,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	std::shared_lock lock(m);
+	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
 	auto links = linkedTextHandles.find(sentenceInfo["text number"]);
 	if (links != linkedTextHandles.end()) for (auto link : links->second)
 		((void(*)(int64_t, const wchar_t*))sentenceInfo["void (*AddText)(int64_t number, const wchar_t* text)"])(link, sentence.c_str());
