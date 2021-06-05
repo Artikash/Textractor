@@ -59,10 +59,4 @@ if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSockets.dll AND NOT EXISTS 
         COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
         COMMAND Qt5::windeployqt --dir ${CMAKE_FINAL_OUTPUT_DIRECTORY} "${CMAKE_FINAL_OUTPUT_DIRECTORY}/DevTools\ DeepL\ Translate.dll"
     )
-    add_custom_command(TARGET DevTools\ Systran\ Translate
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
-        COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
-        COMMAND Qt5::windeployqt --dir ${CMAKE_FINAL_OUTPUT_DIRECTORY} "${CMAKE_FINAL_OUTPUT_DIRECTORY}/DevTools\ Systran\ Translate.dll"
-    )
 endif() 
