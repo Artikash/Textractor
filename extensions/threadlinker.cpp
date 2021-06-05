@@ -4,12 +4,13 @@
 
 extern const char* THREAD_LINKER;
 extern const char* LINK;
+extern const char* UNLINK;
 extern const char* THREAD_LINK_FROM;
 extern const char* THREAD_LINK_TO;
 extern const char* HEXADECIMAL;
 
-std::unordered_map<int64_t, std::unordered_multiset<int64_t>> linkedTextHandles;
-std::shared_mutex m;
+std::unordered_map<int64_t, std::unordered_set<int64_t>> linkedTextHandles;
+concurrency::reader_writer_lock m;
 
 class Window : public QDialog, Localizer
 {
@@ -17,9 +18,14 @@ public:
 	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
 		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
+		connect(&unlinkButton, &QPushButton::clicked, this, &Window::Unlink);
 
 		layout.addWidget(&linkList);
-		layout.addWidget(&linkButton);
+		layout.addLayout(&buttons);
+		buttons.addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+		buttons.addWidget(&linkButton);
+		buttons.addWidget(&unlinkButton);
+		buttons.addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
 		setWindowTitle(THREAD_LINKER);
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
@@ -34,14 +40,13 @@ private:
 		if (ok1 && ok2 && ok3 && ok4)
 		{
 			std::scoped_lock lock(m);
-			linkedTextHandles[from].insert(to);
-			linkList.addItem(QString::number(from, 16) + "->" + QString::number(to, 16));
+			if (linkedTextHandles[from].insert(to).second) linkList.addItem(QString::number(from, 16) + "->" + QString::number(to, 16));
 		}
 	}
 
-	void keyPressEvent(QKeyEvent* event) override
+	void Unlink()
 	{
-		if (event->key() == Qt::Key_Delete && linkList.currentItem())
+		if (linkList.currentItem())
 		{
 			QStringList link = linkList.currentItem()->text().split("->");
 			linkList.takeItem(linkList.currentRow());
@@ -50,18 +55,22 @@ private:
 		}
 	}
 
+	void keyPressEvent(QKeyEvent* event) override
+	{
+		if (event->key() == Qt::Key_Delete) Unlink();
+	}
+
 	QHBoxLayout layout{ this };
+	QVBoxLayout buttons;
 	QListWidget linkList{ this };
-	QPushButton linkButton{ LINK, this };
+	QPushButton linkButton{ LINK, this }, unlinkButton{ UNLINK, this };
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	std::shared_lock lock(m);
-	int64_t textHandle = sentenceInfo["text number"];
-
-	for (auto linkedHandle : linkedTextHandles[textHandle])
-		((void(*)(int64_t, const wchar_t*))sentenceInfo["void (*AddText)(int64_t number, const wchar_t* text)"])(linkedHandle, sentence.c_str());
-
+	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
+	auto links = linkedTextHandles.find(sentenceInfo["text number"]);
+	if (links != linkedTextHandles.end()) for (auto link : links->second)
+		((void(*)(int64_t, const wchar_t*))sentenceInfo["void (*AddText)(int64_t number, const wchar_t* text)"])(link, sentence.c_str());
 	return false;
 }

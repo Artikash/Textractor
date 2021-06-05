@@ -10,7 +10,7 @@ extern const wchar_t* REPLACER_INSTRUCTIONS;
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacements.txt";
 
 std::atomic<std::filesystem::file_time_type> replaceFileLastWrite = {};
-std::shared_mutex m;
+concurrency::reader_writer_lock m;
 
 class Trie
 {
@@ -121,7 +121,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo)
 {
 	UpdateReplacements();
 
-	std::shared_lock lock(m);
+	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
 	sentence = trie.Replace(sentence);
 	return true;
 }

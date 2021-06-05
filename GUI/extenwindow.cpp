@@ -1,6 +1,5 @@
 #include "extenwindow.h"
 #include "ui_extenwindow.h"
-#include <concrt.h>
 #include <QMenu>
 #include <QFileDialog>
 #include <QDragEnterEvent>
@@ -19,7 +18,7 @@ extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 namespace
 {
 	constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
-	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Bing Translate>Extra Window>Extra Newlines>Styler";
+	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Remove Repeated Phrases>Regex Filter>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines>Styler";
 
 	struct Extension
 	{
@@ -44,7 +43,7 @@ namespace
 			{
 				if (auto callback = (decltype(Extension::callback))GetProcAddress(module, "OnNewSentence"))
 				{
-					std::scoped_lock writeLock(extenMutex);
+					std::scoped_lock lock(extenMutex);
 					extensions.push_back({ S(extenName), callback });
 					return true;
 				}
@@ -63,7 +62,7 @@ namespace
 
 	void Reorder(QStringList extenNames)
 	{
-		std::scoped_lock writeLock(extenMutex);
+		std::scoped_lock lock(extenMutex);
 		std::vector<Extension> extensions;
 		for (auto extenName : extenNames)
 			extensions.push_back(*std::find_if(::extensions.begin(), ::extensions.end(), [&](Extension extension) { return extension.name == S(extenName); }));
@@ -128,7 +127,7 @@ bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension
 
 void CleanupExtensions()
 {
-	std::scoped_lock writeLock(extenMutex);
+	std::scoped_lock lock(extenMutex);
 	for (auto extension : extensions) FreeLibrary(GetModuleHandleW((extension.name + L".xdll").c_str()));
 	extensions.clear();
 }

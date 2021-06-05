@@ -101,11 +101,16 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 	}
 
+	static Synchronized<std::wstring> token;
+	if (token->empty()) if (HttpRequest httpRequest{ L"Mozilla/5.0 Textractor", L"www.bing.com", L"GET", L"translator" })
+		if (auto tokenPos = httpRequest.response.find(L"[" + std::to_wstring(time(nullptr) / 10)); tokenPos != std::string::npos)
+			token->assign(FormatString(L"&key=%s&token=%s", httpRequest.response.substr(tokenPos + 1, 13), httpRequest.response.substr(tokenPos + 16, 32)));
+	if (token->empty()) return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, L"token missing") };
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		L"www.bing.com",
 		L"POST",
-		FormatString(L"/ttranslatev3?fromLang=%s&to=%s&text=%s", translateFrom.Copy(), translateTo.Copy(), Escape(text)).c_str()
+		FormatString(L"/ttranslatev3?fromLang=%s&to=%s&text=%s%s", translateFrom.Copy(), translateTo.Copy(), Escape(text), token.Copy()).c_str()
 	})
 		if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
