@@ -2,20 +2,15 @@ include(QtUtils)
 msvc_registry_search()
 find_qt5(Core Widgets WinExtras)
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
 add_executable(Textractor WIN32 
 	main.cpp
 	mainwindow.cpp
 	extenwindow.cpp
-	attachtoprocessdialog.cpp
+	attachprocessdialog.cpp
 	host/exception.cpp
 	host/host.cpp
 	host/textthread.cpp
 	host/hookcode.cpp
-	utils/windowshelpers.cpp
 	Textractor.rc
 	Textractor.ico
 )
