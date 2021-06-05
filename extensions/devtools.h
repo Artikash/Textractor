@@ -3,7 +3,7 @@
 
 namespace DevTools
 {
-	void Start(const std::wstring& path, std::function<void(QString)> statusChanged, bool headless);
+	void Start();
 	void Close();
 	bool Connected();
 	JSON::Value<wchar_t> SendRequest(const char* method, const std::wstring& params = L"{}");
