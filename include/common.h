@@ -2,6 +2,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <concrt.h>
 #include <string>
 #include <vector>
 #include <deque>
@@ -15,7 +16,6 @@
 #include <optional>
 #include <thread>
 #include <mutex>
-#include <shared_mutex>
 #include <atomic>
 #include <filesystem>
 #include <cstdint>

@@ -16912,8 +16912,14 @@ bool InsertRenpyHook()
                 hp.offset = 4;
                 hp.index = 0xc;
                 hp.length_offset = 0;
-                hp.split = pusha_ebx_off - 4;
-                hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT | USING_SPLIT;
+                //hp.split = pusha_ebx_off - 4;
+                hp.text_fun = [](auto, auto, auto, DWORD* data, DWORD* split, DWORD* count)
+                {
+                    *data = *(DWORD*)(*data + 0xc);
+                    *count = wcslen((wchar_t*)*data) * sizeof(wchar_t);
+                    *split = wcschr((wchar_t*)*data, L'%') == nullptr;
+                };
+                hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT/* | USING_SPLIT*/;
                 //hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
                 NewHook(hp, "Ren'py");
                 return true;
