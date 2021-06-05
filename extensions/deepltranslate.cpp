@@ -10,17 +10,30 @@ const char* TRANSLATION_PROVIDER = "DeepL Translate";
 const char* GET_API_KEY_FROM = "https://www.deepl.com/pro.html";
 QStringList languages
 {
+	"Bulgarian: BG",
 	"Chinese: ZH",
+	"Czech: CS",
+	"Danish: DA",
 	"Dutch: NL",
 	"English: EN",
+	"Estonian: ET",
+	"Finnish: FI",
 	"French: FR",
 	"German: DE",
+	"Greek: EL",
+	"Hungarian: HU",
 	"Italian: IT",
 	"Japanese: JA",
+	"Latvian: LV",
+	"Lithuanian: LT",
 	"Polish: PL",
 	"Portuguese: PT",
+	"Romanian: RO",
 	"Russian: RU",
+	"Slovak: SK",
+	"Slovenian: SL",
 	"Spanish: ES",
+	"Swedish: SV"
 };
 std::wstring autoDetectLanguage = L"auto";
 
@@ -28,7 +41,9 @@ bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true
 int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
 
 enum KeyType { CAT, REST };
-int keyType = CAT;
+int keyType = REST;
+enum PlanLevel { FREE, PAID };
+int planLevel = PAID;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text)
 {
@@ -37,16 +52,23 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		std::string translateFromComponent = translateFrom.Copy() == autoDetectLanguage ? "" : "&source_lang=" + WideStringToString(translateFrom.Copy());
 		if (HttpRequest httpRequest{
 			L"Mozilla/5.0 Textractor",
-			L"api.deepl.com",
+			planLevel == PAID ? L"api.deepl.com" : L"api-free.deepl.com",
 			L"POST",
 			keyType == CAT ? L"/v1/translate" : L"/v2/translate",
 			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()) + translateFromComponent,
 			L"Content-Type: application/x-www-form-urlencoded"
 		}; httpRequest && (!httpRequest.response.empty() || (httpRequest = HttpRequest{
 			L"Mozilla/5.0 Textractor",
-			L"api.deepl.com",
+			planLevel == PAID ? L"api.deepl.com" : L"api-free.deepl.com",
 			L"POST",
 			(keyType = !keyType) == CAT ? L"/v1/translate" : L"/v2/translate",
+			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()) + translateFromComponent,
+			L"Content-Type: application/x-www-form-urlencoded"
+		})) && (httpRequest.response.find(L"Wrong endpoint. Use") == std::string::npos || (httpRequest = HttpRequest{
+			L"Mozilla/5.0 Textractor",
+			(planLevel = !planLevel) == PAID ? L"api.deepl.com" : L"api-free.deepl.com",
+			L"POST",
+			keyType == CAT ? L"/v1/translate" : L"/v2/translate",
 			FormatString("text=%S&auth_key=%S&target_lang=%S", Escape(text), authKey.Copy(), translateTo.Copy()) + translateFromComponent,
 			L"Content-Type: application/x-www-form-urlencoded"
 		})))
