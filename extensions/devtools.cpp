@@ -149,6 +149,12 @@ namespace DevTools
 			CloseHandle(processInfo.hProcess);
 			CloseHandle(processInfo.hThread);
 		}
+		for (int retry = 0; ++retry < 20; Sleep(100))
+    {
+			try { std::filesystem::remove_all(L"devtoolscache"); break; }
+			catch (std::filesystem::filesystem_error) { continue; }
+		} 
+		OnStatusChanged("Stopped");
 		try { std::filesystem::remove_all(L"devtoolscache"); } catch (std::filesystem::filesystem_error) {}
 		StatusChanged("Stopped");
 	}
