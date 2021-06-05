@@ -2,11 +2,6 @@
 
 #include "qtcommon.h"
 
-namespace Ui
-{
-	class ExtenWindow;
-}
-
 struct InfoForExtension
 {
 	const char* name;
