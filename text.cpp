@@ -221,6 +221,7 @@ Whitespace in original_text is ignored, but replacement_text can contain spaces,
 This file must be encoded in Unicode (UTF-16 Little Endian).)";
 const char* THREAD_LINKER = u8"Thread Linker";
 const char* LINK = u8"Link";
+const char* UNLINK = u8"Unlink";
 const char* THREAD_LINK_FROM = u8"Thread number to link from";
 const char* THREAD_LINK_TO = u8"Thread number to link to";
 const char* HEXADECIMAL = u8"Hexadecimal";

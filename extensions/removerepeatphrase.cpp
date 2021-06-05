@@ -16,10 +16,10 @@ std::vector<int> GenerateSuffixArray(const std::wstring& text)
 		eqClasses[suffixArray[0]] = 0;
 		for (int i = 1; i < text.size(); ++i)
 		{
-			int currentSuffix = suffixArray[i];
-			int lastSuffix = suffixArray[i - 1];
+			int currentSuffix = suffixArray[i], lastSuffix = suffixArray[i - 1];
 			if (currentSuffix + length < text.size() && prevEqClasses[currentSuffix] == prevEqClasses[lastSuffix] &&
-				prevEqClasses[currentSuffix + length / 2] == prevEqClasses.at(lastSuffix + length / 2)) // not completely certain that this will stay in range
+				prevEqClasses[currentSuffix + length / 2] == prevEqClasses[lastSuffix + length / 2]
+			)
 				eqClasses[currentSuffix] = eqClasses[lastSuffix];
 			else eqClasses[currentSuffix] = i;
 		}
