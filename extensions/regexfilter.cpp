@@ -12,7 +12,7 @@ extern const char* CURRENT_FILTER;
 const char* REGEX_SAVE_FILE = "SavedRegexFilters.txt";
 
 std::optional<std::wregex> regex;
-std::wstring replace;
+std::wstring replace = L"$1";
 std::shared_mutex m;
 DWORD (*GetSelectedProcessId)() = nullptr;
 
