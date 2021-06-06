@@ -10,9 +10,9 @@ Watch the [tutorial video](https://tinyurl.com/textractor-tutorial) for a quick 
 ## Download
 
 Official stable releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
-Experimental builds of Textractor from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) (in the 'Artifacts' section of a job).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Try running vcredist if you get an error when starting Textractor.
+Experimental builds of Textractor (with debug info) from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) in the 'Artifacts' section of each job.<br>
+Try running vcredist if you get an error when starting Textractor or if nothing happens when you try attaching to a game.
 
 ## Features
 

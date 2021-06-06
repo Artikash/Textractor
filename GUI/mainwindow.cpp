@@ -5,6 +5,7 @@
 #include "extenwindow.h"
 #include "host/host.h"
 #include "host/hookcode.h"
+#include "attachprocessdialog.h"
 #include <shellapi.h>
 #include <process.h>
 #include <QRegularExpression>
@@ -14,6 +15,7 @@
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFontDialog>
+#include <QHash>
 
 extern const char* ATTACH;
 extern const char* LAUNCH;
@@ -28,7 +30,6 @@ extern const char* SETTINGS;
 extern const char* EXTENSIONS;
 extern const char* FONT;
 extern const char* SELECT_PROCESS;
-extern const char* ATTACH_INFO;
 extern const char* SELECT_PROCESS_INFO;
 extern const char* FROM_COMPUTER;
 extern const char* PROCESSES;
@@ -153,16 +154,31 @@ namespace
 
 	void AttachProcess()
 	{
-		QMultiHash<QString, DWORD> allProcesses;
+		QMultiHash<QString, DWORD> processesMap;
+		std::vector<std::pair<QString, HICON>> processIcons;
 		for (auto [processId, processName] : GetAllProcesses())
+		{
 			if (processName && (showSystemProcesses || processName->find(L":\\Windows\\") == std::string::npos))
-				allProcesses.insert(QFileInfo(S(processName.value())).fileName(), processId);
+			{
+				QString fileName = QFileInfo(S(processName.value())).fileName();
+				if (!processesMap.contains(fileName))
+				{
+					HICON bigIcon, smallIcon;
+					ExtractIconExW(processName->c_str(), 0, &bigIcon, &smallIcon, 1);
+					processIcons.push_back({ fileName, bigIcon ? bigIcon : smallIcon });
+				}
+				processesMap.insert(fileName, processId);
+			}
+		}
+		std::sort(processIcons.begin(), processIcons.end());
 
-		QStringList processList(allProcesses.uniqueKeys());
-		processList.sort(Qt::CaseInsensitive);
-		if (QString process = QInputDialog::getItem(This, SELECT_PROCESS, ATTACH_INFO, processList, 0, true, &ok, Qt::WindowCloseButtonHint); ok)
-			if (process.toInt(nullptr, 0)) Host::InjectProcess(process.toInt(nullptr, 0));
-			else for (auto processId : allProcesses.values(process)) Host::InjectProcess(processId);
+		AttachProcessDialog attachProcessDialog(This, processIcons);
+		if (attachProcessDialog.exec())
+		{
+			QString process = attachProcessDialog.SelectedProcess();
+			if (int processId = process.toInt(nullptr, 0)) Host::InjectProcess(processId);
+			else for (int processId : processesMap.values(process)) Host::InjectProcess(processId);
+		}
 	}
 
 	void LaunchProcess()

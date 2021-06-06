@@ -8,6 +8,7 @@ add_library(Copy\ to\ Clipboard MODULE copyclipboard.cpp extensionimpl.cpp)
 add_library(DeepL\ Translate MODULE deepltranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 add_library(DevTools\ DeepL\ Translate MODULE devtoolsdeepltranslate.cpp devtools.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 add_library(DevTools\ Papago\ Translate MODULE devtoolspapagotranslate.cpp devtools.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
+add_library(DevTools\ Systran\ Translate MODULE devtoolssystrantranslate.cpp devtools.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 add_library(Extra\ Newlines MODULE extranewlines.cpp extensionimpl.cpp)
 add_library(Extra\ Window MODULE extrawindow.cpp extensionimpl.cpp)
 add_library(Google\ Translate MODULE googletranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
@@ -26,6 +27,7 @@ target_precompile_headers(Copy\ to\ Clipboard REUSE_FROM pch)
 target_precompile_headers(DeepL\ Translate REUSE_FROM pch)
 target_precompile_headers(DevTools\ DeepL\ Translate REUSE_FROM pch)
 target_precompile_headers(DevTools\ Papago\ Translate REUSE_FROM pch)
+target_precompile_headers(DevTools\ Systran\ Translate REUSE_FROM pch)
 target_precompile_headers(Extra\ Newlines REUSE_FROM pch)
 target_precompile_headers(Extra\ Window REUSE_FROM pch)
 target_precompile_headers(Google\ Translate REUSE_FROM pch)
@@ -43,6 +45,7 @@ target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
 target_link_libraries(DeepL\ Translate winhttp Qt5::Widgets)
 target_link_libraries(DevTools\ DeepL\ Translate shell32 winhttp Qt5::Widgets Qt5::WebSockets)
 target_link_libraries(DevTools\ Papago\ Translate shell32 winhttp Qt5::Widgets Qt5::WebSockets)
+target_link_libraries(DevTools\ Systran\ Translate shell32 winhttp Qt5::Widgets Qt5::WebSockets)
 target_link_libraries(Extra\ Window Qt5::Widgets)
 target_link_libraries(Google\ Translate winhttp Qt5::Widgets)
 target_link_libraries(Lua lua53 Qt5::Widgets)
@@ -58,11 +61,5 @@ if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5WebSockets.dll AND NOT EXISTS 
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
         COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
         COMMAND Qt5::windeployqt --dir ${CMAKE_FINAL_OUTPUT_DIRECTORY} "${CMAKE_FINAL_OUTPUT_DIRECTORY}/DevTools\ DeepL\ Translate.dll"
-    )
-    add_custom_command(TARGET DevTools\ Papago\ Translate
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
-        COMMAND set PATH=%PATH%$<SEMICOLON>${qt5_install_prefix}/bin
-        COMMAND Qt5::windeployqt --dir ${CMAKE_FINAL_OUTPUT_DIRECTORY} "${CMAKE_FINAL_OUTPUT_DIRECTORY}/DevTools\ Papago\ Translate.dll"
     )
 endif() 

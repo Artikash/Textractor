@@ -46,6 +46,7 @@ foreach ($language in @{
 			"DeepL Translate",
 			"DevTools DeepL Translate",
 			"DevTools Papago Translate",
+			"DevTools Systran Translate",
 			"Extra Newlines",
 			"Extra Window",
 			"Google Translate",
@@ -66,7 +67,6 @@ foreach ($language in @{
 	&"C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" sign /a /v /t "http://timestamp.digicert.com"  /fd SHA256 @(dir "$folder\**\*");
 }
 
-
 rm -Force -Recurse -Verbose "Runtime";
 mkdir -Force -Verbose "Runtime";
 foreach ($arch in @("x86", "x64"))
@@ -79,6 +79,7 @@ foreach ($arch in @("x86", "x64"))
 		"Qt5Gui.dll",
 		"Qt5Network.dll",
 		"Qt5WebSockets.dll",
+		"Qt5WinExtras.dll"
 		"Qt5Widgets.dll",
 		"platforms",
 		"styles"
