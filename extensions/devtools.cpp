@@ -21,7 +21,7 @@ extern Settings settings;
 namespace
 {
 	QLabel* statusLabel;
-	AutoHandle<> process;
+	AutoHandle<> process = NULL;
 	QWebSocket webSocket;
 	std::atomic<int> idCounter = 0;
 	Synchronized<std::unordered_map<int, concurrency::task_completion_event<JSON::Value<wchar_t>>>> mapQueue;
@@ -161,7 +161,7 @@ namespace DevTools
 		int id = idCounter += 1;
 		if (!Connected()) return {};
 		mapQueue->try_emplace(id, response);
-		QMetaObject::invokeMethod(&webSocket, std::bind(&QWebSocket::sendTextMessage, webSocket, S(FormatString(LR"({"id":%d,"method":"%S","params":%s})", id, method, params))));
+		QMetaObject::invokeMethod(&webSocket, std::bind(&QWebSocket::sendTextMessage, &webSocket, S(FormatString(LR"({"id":%d,"method":"%S","params":%s})", id, method, params))));
 		try { if (auto result = create_task(response).get()[L"result"]) return result; } catch (...) {}
 		return {};
 	}

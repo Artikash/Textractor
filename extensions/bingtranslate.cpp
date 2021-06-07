@@ -113,6 +113,6 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text)
 		FormatString(L"/ttranslatev3?fromLang=%s&to=%s&text=%s%s", translateFrom.Copy(), translateTo.Copy(), Escape(text), token.Copy()).c_str()
 	})
 		if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
-		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
+		else return { false, FormatString(L"%s (token=%s): %s", TRANSLATION_ERROR, std::exchange(token.Acquire().contents, L""), httpRequest.response) };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
