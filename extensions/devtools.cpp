@@ -20,17 +20,53 @@ extern Settings settings;
 
 namespace
 {
-	auto statusLabel = new QLabel("Stopped");
-	PROCESS_INFORMATION processInfo = {};
-	std::atomic<int> idCounter = 0;
-	std::mutex devToolsMutex;
+	QLabel* statusLabel;
+	AutoHandle<> process;
 	QWebSocket webSocket;
-	std::unordered_map<int, concurrency::task_completion_event<JSON::Value<wchar_t>>> mapQueue;
+	std::atomic<int> idCounter = 0;
+	Synchronized<std::unordered_map<int, concurrency::task_completion_event<JSON::Value<wchar_t>>>> mapQueue;
 
 	void StatusChanged(QString status)
 	{
 		QMetaObject::invokeMethod(statusLabel, std::bind(&QLabel::setText, statusLabel, status));
 	}
+	void Start(std::wstring chromePath, bool headless)
+	{
+		if (process) DevTools::Close();
+
+		auto args = FormatString(
+			L"%s --proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir=%s\\devtoolscache --remote-debugging-port=9222",
+			chromePath,
+			std::filesystem::current_path().wstring()
+		);
+		if (headless) args += L" --headless";
+		DWORD exitCode = 0;
+		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
+		PROCESS_INFORMATION processInfo = {};
+		if (!CreateProcessW(NULL, args.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &DUMMY, &processInfo)) return StatusChanged("StartupFailed");
+		CloseHandle(processInfo.hThread);
+		process = processInfo.hProcess;
+
+		if (HttpRequest httpRequest{
+			L"Mozilla/5.0 Textractor",
+			L"127.0.0.1",
+			L"POST",
+			L"/json/list",
+			"",
+			NULL,
+			9222,
+			NULL,
+			WINHTTP_FLAG_ESCAPE_DISABLE
+		})
+			if (auto list = Copy(JSON::Parse(httpRequest.response).Array())) if (auto it = std::find_if(
+				list->begin(),
+				list->end(),
+				[](const JSON::Value<wchar_t>& object) { return object[L"type"].String() && *object[L"type"].String() == L"page" && object[L"webSocketDebuggerUrl"].String(); }
+			); it != list->end()) return webSocket.open(S(*(*it)[L"webSocketDebuggerUrl"].String()));
+
+		StatusChanged("ConnectingFailed");
+	}
+
 	auto _ = ([]
 	{
 		QObject::connect(&webSocket, &QWebSocket::stateChanged,
@@ -38,11 +74,11 @@ namespace
 		QObject::connect(&webSocket, &QWebSocket::textMessageReceived, [](QString message)
 		{
 			auto result = JSON::Parse(S(message));
-			std::scoped_lock lock(devToolsMutex);
-			if (auto id = result[L"id"].Number()) if (auto request = mapQueue.find((int)*id); request != mapQueue.end())
+			auto mapQueue = ::mapQueue.Acquire();
+			if (auto id = result[L"id"].Number()) if (auto request = mapQueue->find((int)*id); request != mapQueue->end())
 			{
 				request->second.set(result);
-				mapQueue.erase(request);
+				mapQueue->erase(request);
 			}
 		});
 	}(), 0);
@@ -50,7 +86,7 @@ namespace
 
 namespace DevTools
 {
-	void Start()
+	void Initialize()
 	{		
 		QString chromePath = settings.value(CHROME_LOCATION).toString();
 		wchar_t programFiles[MAX_PATH + 100] = {};
@@ -79,47 +115,7 @@ namespace DevTools
 		auto startButton = new QPushButton(START_DEVTOOLS), stopButton = new QPushButton(STOP_DEVTOOLS);
 		headlessCheck->setChecked(settings.value(HEADLESS_MODE, true).toBool());
 		QObject::connect(headlessCheck, &QCheckBox::clicked, [](bool headless) { settings.setValue(HEADLESS_MODE, headless); });
-		QObject::connect(startButton, &QPushButton::clicked, [chromePathEdit, headlessCheck]
-		{
-			DWORD exitCode = 0;
-			auto args = FormatString(
-				L"%s --proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir=%s\\devtoolscache --remote-debugging-port=9222",
-				S(chromePathEdit->text()),
-				std::filesystem::current_path().wstring()
-			);
-			if (headlessCheck->isChecked()) args += L" --headless";
-			STARTUPINFOW DUMMY = { sizeof(DUMMY) };
-			if ((GetExitCodeProcess(processInfo.hProcess, &exitCode) && exitCode == STILL_ACTIVE) ||
-				CreateProcessW(NULL, args.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &DUMMY, &processInfo)
-			)
-			{
-				if (HttpRequest httpRequest{
-					L"Mozilla/5.0 Textractor",
-					L"127.0.0.1",
-					L"POST",
-					L"/json/list",
-					"",
-					NULL,
-					9222,
-					NULL,
-					WINHTTP_FLAG_ESCAPE_DISABLE
-				})
-				{
-					if (auto list = Copy(JSON::Parse(httpRequest.response).Array())) if (auto it = std::find_if(
-						list->begin(),
-						list->end(),
-						[](const JSON::Value<wchar_t>& object) { return object[L"type"].String() && *object[L"type"].String() == L"page" && object[L"webSocketDebuggerUrl"].String(); }
-					); it != list->end())
-					{
-						std::scoped_lock lock(devToolsMutex);
-						webSocket.open(S(*(*it)[L"webSocketDebuggerUrl"].String()));
-						return;
-					}
-				}
-				StatusChanged("Failed Connection");
-			}
-			else StatusChanged("Failed Startup");
-		});
+		QObject::connect(startButton, &QPushButton::clicked, [chromePathEdit, headlessCheck] { Start(S(chromePathEdit->text()), headlessCheck->isChecked()); });
 		QObject::connect(stopButton, &QPushButton::clicked, &Close);
 		auto buttons = new QHBoxLayout();
 		buttons->addWidget(startButton);
@@ -130,6 +126,7 @@ namespace DevTools
 		QObject::connect(autoStartCheck, &QCheckBox::clicked, [](bool autoStart) { settings.setValue(AUTO_START, autoStart); });
 		display->addRow(AUTO_START, autoStartCheck);
 		display->addRow(buttons);
+		statusLabel = new QLabel("Stopped");
 		statusLabel->setFrameStyle(QFrame::Panel | QFrame::Sunken);
 		display->addRow(DEVTOOLS_STATUS, statusLabel);
 		if (autoStartCheck->isChecked()) QMetaObject::invokeMethod(startButton, &QPushButton::click, Qt::QueuedConnection);
@@ -137,29 +134,24 @@ namespace DevTools
 
 	void Close()
 	{
-		std::scoped_lock lock(devToolsMutex);
-		for (const auto& [_, task] : mapQueue) task.set_exception(std::runtime_error("closed"));
 		webSocket.close();
-		mapQueue.clear();
-		DWORD exitCode = 0;
-		if (GetExitCodeProcess(processInfo.hProcess, &exitCode) && exitCode == STILL_ACTIVE)
+		for (const auto& [_, task] : mapQueue.Acquire().contents) task.set_exception(std::runtime_error("closed"));
+		mapQueue->clear();
+
+		if (process)
 		{
-			TerminateProcess(processInfo.hProcess, 0);
-			WaitForSingleObject(processInfo.hProcess, 2000);
-			CloseHandle(processInfo.hProcess);
-			CloseHandle(processInfo.hThread);
+			TerminateProcess(process, 0);
+			WaitForSingleObject(process, 1000);
+			for (int retry = 0; ++retry < 20; Sleep(100))
+				try { std::filesystem::remove_all(L"devtoolscache"); break; }
+				catch (std::filesystem::filesystem_error) { continue; }
 		}
-		for (int retry = 0; ++retry < 20; Sleep(100))
-		{
-			try { std::filesystem::remove_all(L"devtoolscache"); break; }
-			catch (std::filesystem::filesystem_error) { continue; }
-		}
+		process = NULL;
 		StatusChanged("Stopped");
 	}
 
 	bool Connected()
 	{
-		std::scoped_lock lock(devToolsMutex);
 		return webSocket.state() == QAbstractSocket::ConnectedState;
 	}
 
@@ -167,14 +159,9 @@ namespace DevTools
 	{
 		concurrency::task_completion_event<JSON::Value<wchar_t>> response;
 		int id = idCounter += 1;
-		auto message = FormatString(LR"({"id":%d,"method":"%S","params":%s})", id, method, params);
-		{
-			std::scoped_lock lock(devToolsMutex);
-			if (webSocket.state() != QAbstractSocket::ConnectedState) return {};
-			mapQueue.try_emplace(id, response);
-			webSocket.sendTextMessage(S(message));
-			webSocket.flush();
-		}
+		if (!Connected()) return {};
+		mapQueue->try_emplace(id, response);
+		QMetaObject::invokeMethod(&webSocket, std::bind(&QWebSocket::sendTextMessage, webSocket, S(FormatString(LR"({"id":%d,"method":"%S","params":%s})", id, method, params))));
 		try { if (auto result = create_task(response).get()[L"result"]) return result; } catch (...) {}
 		return {};
 	}

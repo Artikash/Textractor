@@ -133,6 +133,21 @@ namespace
 		} };
 	}
 
+	void AttachSavedProcesses()
+	{
+		std::unordered_set<std::wstring> attachTargets;
+		if (autoAttach)
+			for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+				attachTargets.insert(S(process));
+		if (autoAttachSavedOnly)
+			for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+				attachTargets.insert(S(process.split(" , ")[0]));
+
+		if (!attachTargets.empty())
+			for (auto [processId, processName] : GetAllProcesses())
+				if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
+	}
+
 	std::optional<std::wstring> UserSelectedProcess()
 	{
 		QStringList savedProcesses = QString::fromUtf8(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
@@ -666,23 +681,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 				else for (auto [processId, processName] : processes)
 					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::string::npos) Host::InjectProcess(processId);
 
-	std::thread([]
-	{
-		for (; ; Sleep(10000))
-		{
-			std::unordered_set<std::wstring> attachTargets;
-			if (autoAttach)
-				for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
-					attachTargets.insert(S(process));
-			if (autoAttachSavedOnly)
-				for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
-					attachTargets.insert(S(process.split(" , ")[0]));
-
-			if (!attachTargets.empty())
-				for (auto [processId, processName] : GetAllProcesses())
-					if (processName && attachTargets.count(processName.value()) > 0 && alreadyAttached.count(processId) == 0) Host::InjectProcess(processId);
-		}
-	}).detach();
+	std::thread([] { for (; ; Sleep(10000)) AttachSavedProcesses(); }).detach();
 }
 
 MainWindow::~MainWindow()
