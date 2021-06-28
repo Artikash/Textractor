@@ -30,7 +30,7 @@ int main()
 	{
 		wchar_t command[500] = {};
 		DWORD processId = 0;
-		if (swscanf(input, L"%500s -P%d", command, &processId) != 2) ExitProcess(0);
+		if (swscanf(input, L"%500ls -P%d", command, &processId) != 2) ExitProcess(0);
 		if (_wcsicmp(command, L"attach") == 0) Host::InjectProcess(processId);
 		else if (_wcsicmp(command, L"detach") == 0) Host::DetachProcess(processId);
 		else if (auto hp = HookCode::Parse(command)) Host::InsertHook(processId, hp.value());
