@@ -1,5 +1,6 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
+#include "translatewrapper.h"
 #include "blockmarkup.h"
 #include "network.h"
 #include <map>
@@ -22,22 +23,19 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
-extern QStringList languages;
-extern std::wstring autoDetectLanguage;
+extern const QStringList languagesTo, languagesFrom;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
-std::pair<bool, std::wstring> Translate(const std::wstring& text);
+std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp);
 
-// backwards compatibility
-const char* LANGUAGE = u8"Language";
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
 Settings settings;
-Synchronized<std::wstring> translateTo = L"en", translateFrom = L"auto", authKey;
 
 namespace
 {
+	Synchronized<TranslationParam> tlp;
 	Synchronized<std::map<std::wstring, std::wstring>> translationCache;
 	int savedSize;
 	void SaveCache()
@@ -60,23 +58,22 @@ public:
 		settings.beginGroup(TRANSLATION_PROVIDER);
 
 		auto translateToCombo = new QComboBox(this);
-		translateToCombo->addItems(languages);
-		int language = -1;
-		if (settings.contains(LANGUAGE)) language = translateToCombo->findText(settings.value(LANGUAGE).toString(), Qt::MatchEndsWith);
-		if (settings.contains(TRANSLATE_TO)) language = translateToCombo->findText(settings.value(TRANSLATE_TO).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = translateToCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
-		if (language < 0) language = translateToCombo->findText("English", Qt::MatchStartsWith);
-		translateToCombo->setCurrentIndex(language);
+		translateToCombo->addItems(languagesTo);
+		int i = -1;
+		if (settings.contains(TRANSLATE_TO)) i = translateToCombo->findText(settings.value(TRANSLATE_TO).toString());
+		if (i < 0) i = translateToCombo->findText(NATIVE_LANGUAGE, Qt::MatchStartsWith);
+		if (i < 0) i = translateToCombo->findText("English", Qt::MatchStartsWith);
+		translateToCombo->setCurrentIndex(i);
 		SaveTranslateTo(translateToCombo->currentText());
 		display->addRow(TRANSLATE_TO, translateToCombo);
 		connect(translateToCombo, &QComboBox::currentTextChanged, this, &Window::SaveTranslateTo);
-		languages.push_front("?: " + S(autoDetectLanguage));
 		auto translateFromCombo = new QComboBox(this);
-		translateFromCombo->addItems(languages);
-		language = -1;
-		if (settings.contains(TRANSLATE_FROM)) language = translateFromCombo->findText(settings.value(TRANSLATE_FROM).toString(), Qt::MatchEndsWith);
-		if (language < 0) language = translateFromCombo->findText("?", Qt::MatchStartsWith);
-		translateFromCombo->setCurrentIndex(language);
+		translateFromCombo->addItem("?");
+		translateFromCombo->addItems(languagesFrom);
+		i = -1;
+		if (settings.contains(TRANSLATE_FROM)) i = translateFromCombo->findText(settings.value(TRANSLATE_FROM).toString());
+		if (i < 0) i = 0;
+		translateFromCombo->setCurrentIndex(i);
 		SaveTranslateFrom(translateFromCombo->currentText());
 		display->addRow(TRANSLATE_FROM, translateFromCombo);
 		connect(translateFromCombo, &QComboBox::currentTextChanged, this, &Window::SaveTranslateFrom);
@@ -110,8 +107,8 @@ public:
 		if (GET_API_KEY_FROM)
 		{
 			auto keyEdit = new QLineEdit(settings.value(API_KEY).toString(), this);
-			authKey->assign(S(keyEdit->text()));
-			QObject::connect(keyEdit, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(authKey->assign(S(key)))); });
+			tlp->authKey = S(keyEdit->text());
+			QObject::connect(keyEdit, &QLineEdit::textChanged, [](QString key) { settings.setValue(API_KEY, S(tlp->authKey = S(key))); });
 			auto keyLabel = new QLabel(QString("<a href=\"%1\">%2</a>").arg(GET_API_KEY_FROM, API_KEY), this);
 			keyLabel->setOpenExternalLinks(true);
 			display->addRow(keyLabel, keyEdit);
@@ -139,11 +136,11 @@ public:
 private:
 	void SaveTranslateTo(QString language)
 	{
-		settings.setValue(TRANSLATE_TO, S(translateTo->assign(S(language.split(": ")[1]))));
+		settings.setValue(TRANSLATE_TO, S(tlp->translateTo = S(language)));
 	}
 	void SaveTranslateFrom(QString language)
 	{
-		settings.setValue(TRANSLATE_FROM, S(translateFrom->assign(S(language.split(": ")[1]))));
+		settings.setValue(TRANSLATE_FROM, S(tlp->translateFrom = S(language)));
 	}
 } window;
 
@@ -186,7 +183,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
 	}
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
-		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence);
+		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, tlp.Copy());
 		else translation = TOO_MANY_TRANS_REQUESTS;
 	if (useFilter) Trim(translation);
 	if (cache) translationCache->try_emplace(sentence, translation);
@@ -197,4 +194,13 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	return true;
 }
 
-TEST(assert(Translate(L"こんにちは").second.find(L"ello") != std::string::npos));
+extern const std::unordered_map<std::wstring, std::wstring> codes;
+TEST(
+	{
+		assert(Translate(L"こんにちは", { L"English", L"?", L"" }).second.find(L"ello") == 1 || strstr(TRANSLATION_PROVIDER, "DevTools"));
+
+		for (auto languages : { languagesFrom, languagesTo }) for (auto language : languages)
+			assert(codes.count(S(language)));
+		assert(codes.count(L"?"));
+	}
+);

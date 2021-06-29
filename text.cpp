@@ -324,7 +324,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 #endif // SPANISH
 
 #ifdef SIMPLIFIED_CHINESE
-	NATIVE_LANGUAGE = "Chinese (simplified)";
+	NATIVE_LANGUAGE = "Chinese (Simplified)";
 	ATTACH = u8"附加到游戏";
 	LAUNCH = u8"启动游戏";
 	CONFIG = u8"配置游戏";
