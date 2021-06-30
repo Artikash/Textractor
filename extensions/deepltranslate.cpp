@@ -98,7 +98,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 };
 
 bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true, useFilter = true;
-int tokenCount = 10, tokenRestoreDelay = 60000, maxSentenceSize = 1000;
+int tokenCount = 10, rateLimitTimespan = 60000, maxSentenceSize = 1000;
 
 enum KeyType { CAT, REST };
 int keyType = REST;

@@ -3,6 +3,7 @@
 #include "translatewrapper.h"
 #include "blockmarkup.h"
 #include "network.h"
+#include <concurrent_priority_queue.h>
 #include <map>
 #include <fstream>
 #include <QComboBox>
@@ -15,8 +16,8 @@ extern const char* RATE_LIMIT_ALL_THREADS;
 extern const char* RATE_LIMIT_SELECTED_THREAD;
 extern const char* USE_TRANS_CACHE;
 extern const char* FILTER_GARBAGE;
-extern const char* RATE_LIMIT_TOKEN_COUNT;
-extern const char* RATE_LIMIT_TOKEN_RESTORE_DELAY;
+extern const char* MAX_TRANSLATIONS_IN_TIMESPAN;
+extern const char* TIMESPAN;
 extern const char* MAX_SENTENCE_SIZE;
 extern const char* API_KEY;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
@@ -25,7 +26,7 @@ extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
 extern const QStringList languagesTo, languagesFrom;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache, useFilter;
-extern int tokenCount, tokenRestoreDelay, maxSentenceSize;
+extern int tokenCount, rateLimitTimespan, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp);
 
 const std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.txt", TRANSLATION_PROVIDER);
@@ -92,8 +93,8 @@ public:
 			connect(checkBox, &QCheckBox::clicked, [label, &value](bool checked) { settings.setValue(label, value = checked); });
 		}
 		for (auto [value, label] : Array<int&, const char*>{
-			{ tokenCount, RATE_LIMIT_TOKEN_COUNT },
-			{ tokenRestoreDelay, RATE_LIMIT_TOKEN_RESTORE_DELAY },
+			{ tokenCount, MAX_TRANSLATIONS_IN_TIMESPAN },
+			{ rateLimitTimespan, TIMESPAN },
 			{ maxSentenceSize, MAX_SENTENCE_SIZE },
 		})
 		{
@@ -153,15 +154,18 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	public:
 		bool Request()
 		{
-			auto tokens = this->tokens.Acquire();
-			tokens->push_back(GetTickCount());
-			if (tokens->size() > tokenCount * 5) tokens->erase(tokens->begin(), tokens->begin() + tokenCount * 3);
-			tokens->erase(std::remove_if(tokens->begin(), tokens->end(), [](DWORD token) { return GetTickCount() - token > tokenRestoreDelay; }), tokens->end());
-			return tokens->size() < tokenCount;
+			DWORD current = GetTickCount(), token;
+			while (tokens.try_pop(token)) if (token > current - rateLimitTimespan)
+			{
+				tokens.push(token); // popped one too many
+				break;
+			}
+			tokens.push(current);
+			return tokens.size() < tokenCount;
 		}
 
 	private:
-		Synchronized<std::vector<DWORD>> tokens;
+		concurrency::concurrent_priority_queue<DWORD, std::greater<DWORD>> tokens;
 	} rateLimiter;
 
 	auto Trim = [](std::wstring& text)
