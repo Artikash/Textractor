@@ -132,26 +132,44 @@ namespace Engine
 	// sample game https://www.freem.ne.jp/dl/win/18963
 	bool InsertV8Hook(HMODULE module)
 	{
-		if (uint64_t addr = (uint64_t)GetProcAddress(module, "?Write@String@v8@@QEBAHPEAGHHH@Z"))
+		auto getV8Length =  [](uintptr_t, uintptr_t data)
+		{
+			int len = *(int*)(data - 4);
+			return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
+		};
+
+		uint64_t addr1 = (uint64_t)GetProcAddress(module, "?Write@String@v8@@QEBAHPEAGHHH@Z"),
+			// Artikash 6/7/2021: Add new hook for new version of V8 used by RPG Maker MZ
+			addr2 = (uint64_t)GetProcAddress(module, "??$WriteToFlat@G@String@internal@v8@@SAXV012@PEAGHH@Z");
+
+		if (addr1 || addr2)
 		{
 			std::tie(spDefault.minAddress, spDefault.maxAddress) = Util::QueryModuleLimits(module);
 			spDefault.maxRecords = Util::SearchMemory(spDefault.pattern, spDefault.length, PAGE_EXECUTE, spDefault.minAddress, spDefault.maxAddress).size() * 20;
 			ConsoleOutput("Textractor: JavaScript hook is known to be low quality: try searching for hooks if you don't like it");
+		}
+		if (addr1)
+		{
 			HookParam hp = {};
 			hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT;
-			hp.address = addr;
+			hp.address = addr1;
 			hp.offset = -0x20; // rcx
 			hp.index = 0;
 			hp.padding = 23;
-			hp.length_fun = [](uintptr_t, uintptr_t data)
-			{
-				int len = *(int*)(data - 4);
-				return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
-			};
+			hp.length_fun = getV8Length;
 			NewHook(hp, "JavaScript");
-			return true;
 		}
-		return false;
+		if (addr2)
+		{
+			HookParam hp = {};
+			hp.type = USING_STRING | USING_UNICODE;
+			hp.address = addr2;
+			hp.offset = -0x20; // rcx
+			hp.padding = 11;
+			hp.length_fun = getV8Length;
+			NewHook(hp, "JavaScript");
+		}
+		return addr1 || addr2;
 	}
 
 	/** Artikash 8/10/2018: Ren'py
