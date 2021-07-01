@@ -185,7 +185,7 @@ namespace
 				processesMap.insert(fileName, processId);
 			}
 		}
-		std::sort(processIcons.begin(), processIcons.end());
+		std::sort(processIcons.begin(), processIcons.end(), [](auto one, auto two) { return QString::compare(one.first, two.first, Qt::CaseInsensitive) < 0; });
 
 		AttachProcessDialog attachProcessDialog(This, processIcons);
 		if (attachProcessDialog.exec())
