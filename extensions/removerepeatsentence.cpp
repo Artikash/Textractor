@@ -30,7 +30,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	static std::mutex m;
 	m.lock();
 	if (textNumber + 1 > cache.size()) cache.resize(textNumber + 1);
-	auto prevSentences = cache.at(textNumber).Acquire();
+	auto prevSentences = cache[textNumber].Acquire();
 	m.unlock();
 	auto& inserted = prevSentences->emplace_back(sentence);
 	auto firstLocation = std::find(prevSentences->begin(), prevSentences->end(), sentence);
