@@ -154,7 +154,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	public:
 		bool Request()
 		{
-			DWORD current = GetTickCount(), token;
+			DWORD64 current = GetTickCount64(), token;
 			while (tokens.try_pop(token)) if (token > current - rateLimitTimespan)
 			{
 				tokens.push(token); // popped one too many
@@ -165,7 +165,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		}
 
 	private:
-		concurrency::concurrent_priority_queue<DWORD, std::greater<DWORD>> tokens;
+		concurrency::concurrent_priority_queue<DWORD64, std::greater<DWORD64>> tokens;
 	} rateLimiter;
 
 	auto Trim = [](std::wstring& text)

@@ -63,7 +63,7 @@ void TextThread::Push(BYTE* data, int length)
 	else if (auto converted = StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());
 	else Host::AddConsoleOutput(INVALID_CODEPAGE);
 	if (hp.type & FULL_STRING) buffer.push_back(L'\n');
-	lastPushTime = GetTickCount();
+	lastPushTime = GetTickCount64();
 	
 	if (filterRepetition)
 	{
@@ -87,7 +87,7 @@ void TextThread::Push(const wchar_t* data)
 {
 	std::scoped_lock lock(bufferMutex);
 	// not sure if this should filter repetition
-	lastPushTime = GetTickCount();
+	lastPushTime = GetTickCount64();
 	buffer += data;
 }
 
@@ -110,7 +110,7 @@ void TextThread::Flush()
 
 	std::scoped_lock lock(bufferMutex);
 	if (buffer.empty()) return;
-	if (buffer.size() > maxBufferSize || GetTickCount() - lastPushTime > flushDelay)
+	if (buffer.size() > maxBufferSize || GetTickCount64() - lastPushTime > flushDelay)
 	{
 		AddSentence(std::move(buffer));
 		buffer.clear();
