@@ -1,10 +1,10 @@
 #include "devtools.h"
+#include <ppltasks.h>
+#include <ShlObj.h>
 #include <QWebSocket>
 #include <QMetaEnum>
 #include <QFileDialog>
 #include <QMouseEvent>
-#include <ppltasks.h>
-#include <ShlObj.h>
 
 extern const char* CHROME_LOCATION;
 extern const char* START_DEVTOOLS;
