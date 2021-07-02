@@ -2,9 +2,7 @@
 #include "extension.h"
 #include "translatewrapper.h"
 #include "blockmarkup.h"
-#include "network.h"
 #include <concurrent_priority_queue.h>
-#include <map>
 #include <fstream>
 #include <QComboBox>
 
@@ -25,12 +23,9 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
 extern const QStringList languagesTo, languagesFrom;
-extern const std::unordered_map<std::wstring, std::wstring> codes;
 extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, rateLimitTimespan, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp);
-
-std::string TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache.txt", TRANSLATION_PROVIDER);
 
 QFormLayout* display;
 Settings settings;
@@ -38,20 +33,25 @@ Settings settings;
 namespace
 {
 	Synchronized<TranslationParam> tlp;
-	Synchronized<std::map<std::wstring, std::wstring>> translationCache;
-	int savedSize;
+	Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
+	int savedSize = 0;
+
+	std::string CacheFile()
+	{
+		return FormatString("%s Cache (%S).txt", TRANSLATION_PROVIDER, tlp->translateTo);
+	}
 	void SaveCache()
 	{
 		std::wstring allTranslations(L"\xfeff");
 		for (const auto& [sentence, translation] : translationCache.Acquire().contents)
 			allTranslations.append(L"|SENTENCE|").append(sentence).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
-		std::ofstream(TRANSLATION_CACHE_FILE, std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
+		std::ofstream(CacheFile(), std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
 		savedSize = translationCache->size();
 	}
 	void LoadCache()
 	{
 		translationCache->clear();
-		std::ifstream stream(TRANSLATION_CACHE_FILE, std::ios::binary);
+		std::ifstream stream(CacheFile(), std::ios::binary);
 		BlockMarkupIterator savedTranslations(stream, Array<std::wstring_view>{ L"|SENTENCE|", L"|TRANSLATION|" });
 		auto translationCache = ::translationCache.Acquire();
 		while (auto read = savedTranslations.Next())
@@ -141,9 +141,8 @@ public:
 private:
 	void SaveTranslateTo(QString language)
 	{
-		settings.setValue(TRANSLATE_TO, S(tlp->translateTo = S(language)));
 		if (translationCache->size() > savedSize) SaveCache();
-		TRANSLATION_CACHE_FILE = FormatString("%s Translation Cache (%ls).txt", TRANSLATION_PROVIDER, codes.at(S(language)));
+		settings.setValue(TRANSLATE_TO, S(tlp->translateTo = S(language)));
 		LoadCache();
 	}
 	void SaveTranslateFrom(QString language)
