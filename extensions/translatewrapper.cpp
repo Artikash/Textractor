@@ -23,7 +23,7 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
 extern const QStringList languagesTo, languagesFrom;
-extern bool translateSelectedOnly, rateLimitAll, rateLimitSelected, useCache, useFilter;
+extern bool translateSelectedOnly, useRateLimiter, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, rateLimitTimespan, maxSentenceSize;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp);
 
@@ -94,7 +94,7 @@ public:
 		connect(translateFromCombo, &QComboBox::currentTextChanged, this, &Window::SaveTranslateFrom);
 		for (auto [value, label] : Array<bool&, const char*>{
 			{ translateSelectedOnly, TRANSLATE_SELECTED_THREAD_ONLY },
-			{ rateLimitAll, RATE_LIMIT_ALL_THREADS },
+			{ useRateLimiter, RATE_LIMIT_ALL_THREADS },
 			{ rateLimitSelected, RATE_LIMIT_SELECTED_THREAD },
 			{ useCache, USE_TRANS_CACHE },
 			{ useFilter, FILTER_GARBAGE }
@@ -167,7 +167,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 				break;
 			}
 			tokens.push(current);
-			return tokens.size() < tokenCount;
+			return tokens.size() <= tokenCount;
 		}
 
 	private:
@@ -193,7 +193,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
 	}
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
-		if (rateLimiter.Request() || !rateLimitAll || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, tlp.Copy());
+		if (rateLimiter.Request() || !useRateLimiter || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, tlp.Copy());
 		else translation = TOO_MANY_TRANS_REQUESTS;
 	if (useFilter) Trim(translation);
 	if (cache) translationCache->try_emplace(sentence, translation);

@@ -112,7 +112,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"?" }, { L"autodetect" } }
 };
 
-bool translateSelectedOnly = true, rateLimitAll = false, rateLimitSelected = false, useCache = true, useFilter = true;
+bool translateSelectedOnly = true, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 2500;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

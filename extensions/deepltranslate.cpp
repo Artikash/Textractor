@@ -6,7 +6,7 @@
 extern const wchar_t* TRANSLATION_ERROR;
 
 const char* TRANSLATION_PROVIDER = "DeepL Translate";
-const char* GET_API_KEY_FROM = "https://www.deepl.com/pro.html";
+const char* GET_API_KEY_FROM = "https://www.deepl.com/pro.html#developer";
 extern const QStringList languagesTo
 {
 	"Bulgarian",
@@ -97,7 +97,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"?" }, { L"auto" } }
 };
 
-bool translateSelectedOnly = true, rateLimitAll = true, rateLimitSelected = true, useCache = true, useFilter = true;
+bool translateSelectedOnly = true, useRateLimiter = true, rateLimitSelected = true, useCache = true, useFilter = true;
 int tokenCount = 10, rateLimitTimespan = 60000, maxSentenceSize = 1000;
 
 enum KeyType { CAT, REST };

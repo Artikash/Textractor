@@ -5,7 +5,7 @@
 extern const wchar_t* TRANSLATION_ERROR;
 
 const char* TRANSLATION_PROVIDER = "Google Translate";
-const char* GET_API_KEY_FROM = "https://codelabs.developers.google.com/codelabs/cloud-translation-intro";
+const char* GET_API_KEY_FROM = "https://console.cloud.google.com/marketplace/product/google/translate.googleapis.com";
 extern const QStringList languagesTo
 {
    "Afrikaans",
@@ -232,7 +232,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"?" }, { L"auto" } }
 };
 
-bool translateSelectedOnly = false, rateLimitAll = true, rateLimitSelected = false, useCache = true, useFilter = true;
+bool translateSelectedOnly = false, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 1000;
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp)
