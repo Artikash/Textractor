@@ -1,5 +1,6 @@
 #include "qtcommon.h"
 #include "extension.h"
+#include "ui_threadlinker.h"
 #include <QKeyEvent>
 
 extern const char* THREAD_LINKER;
@@ -9,7 +10,9 @@ extern const char* THREAD_LINK_FROM;
 extern const char* THREAD_LINK_TO;
 extern const char* HEXADECIMAL;
 
-std::unordered_map<int64_t, std::unordered_set<int64_t>> linkedTextHandles;
+std::unordered_map<int64_t, std::unordered_set<int64_t>> links;
+std::unordered_set<int64_t> universalLinks, empty;
+bool separateSentences = true; // allow user to change?
 concurrency::reader_writer_lock m;
 
 class Window : public QDialog, Localizer
@@ -17,15 +20,11 @@ class Window : public QDialog, Localizer
 public:
 	Window() : QDialog(nullptr, Qt::WindowMinMaxButtonsHint)
 	{
-		connect(&linkButton, &QPushButton::clicked, this, &Window::Link);
-		connect(&unlinkButton, &QPushButton::clicked, this, &Window::Unlink);
-
-		layout.addWidget(&linkList);
-		layout.addLayout(&buttons);
-		buttons.addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-		buttons.addWidget(&linkButton);
-		buttons.addWidget(&unlinkButton);
-		buttons.addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+		ui.setupUi(this);
+		ui.linkButton->setText(LINK);
+		ui.unlinkButton->setText(UNLINK);
+		connect(ui.linkButton, &QPushButton::clicked, this, &Window::Link);
+		connect(ui.unlinkButton, &QPushButton::clicked, this, &Window::Unlink);
 
 		setWindowTitle(THREAD_LINKER);
 		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
@@ -35,23 +34,25 @@ private:
 	void Link()
 	{
 		bool ok1, ok2, ok3, ok4;
-		int from = QInputDialog::getText(this, THREAD_LINK_FROM, HEXADECIMAL, QLineEdit::Normal, "", &ok1, Qt::WindowCloseButtonHint).toInt(&ok2, 16);
-		int to = QInputDialog::getText(this, THREAD_LINK_TO, HEXADECIMAL, QLineEdit::Normal, "", &ok3, Qt::WindowCloseButtonHint).toInt(&ok4, 16);
-		if (ok1 && ok2 && ok3 && ok4)
+		QString fromInput = QInputDialog::getText(this, THREAD_LINK_FROM, HEXADECIMAL, QLineEdit::Normal, "X", &ok1, Qt::WindowCloseButtonHint);
+		int from = fromInput.toInt(&ok2, 16),
+			to = QInputDialog::getText(this, THREAD_LINK_TO, HEXADECIMAL, QLineEdit::Normal, "", &ok3, Qt::WindowCloseButtonHint).toInt(&ok4, 16);
+		if (ok1 && (ok2 || fromInput == "X") && ok3 && ok4)
 		{
 			std::scoped_lock lock(m);
-			if (linkedTextHandles[from].insert(to).second) linkList.addItem(QString::number(from, 16) + "->" + QString::number(to, 16));
+			if ((ok2 ? links[from] : universalLinks).insert(to).second)
+				ui.linkList->addItem((ok2 ? QString::number(from, 16) : "X") + "->" + QString::number(to, 16));
 		}
 	}
 
 	void Unlink()
 	{
-		if (linkList.currentItem())
+		if (ui.linkList->currentItem())
 		{
-			QStringList link = linkList.currentItem()->text().split("->");
-			linkList.takeItem(linkList.currentRow());
+			QStringList link = ui.linkList->currentItem()->text().split("->");
+			ui.linkList->takeItem(ui.linkList->currentRow());
 			std::scoped_lock lock(m);
-			linkedTextHandles[link[0].toInt(nullptr, 16)].erase(link[1].toInt(nullptr, 16));
+			(link[0] == "X" ? universalLinks : links[link[0].toInt(nullptr, 16)]).erase(link[1].toInt(nullptr, 16));
 		}
 	}
 
@@ -60,17 +61,16 @@ private:
 		if (event->key() == Qt::Key_Delete) Unlink();
 	}
 
-	QHBoxLayout layout{ this };
-	QVBoxLayout buttons;
-	QListWidget linkList{ this };
-	QPushButton linkButton{ LINK, this }, unlinkButton{ UNLINK, this };
+	Ui::LinkWindow ui;
 } window;
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
-	auto links = linkedTextHandles.find(sentenceInfo["text number"]);
-	if (links != linkedTextHandles.end()) for (auto link : links->second)
-		((void(*)(int64_t, const wchar_t*))sentenceInfo["void (*AddText)(int64_t number, const wchar_t* text)"])(link, sentence.c_str());
+	auto action = separateSentences ? sentenceInfo["add sentence"] : sentenceInfo["add text"];
+	auto it = links.find(sentenceInfo["text number"]);
+	for (const auto& linkSet : { it != links.end() ? it->second : empty, universalLinks })
+		for (auto link : linkSet)
+			((void(*)(int64_t, const wchar_t*))action)(link, sentence.c_str());
 	return false;
 }

@@ -105,7 +105,7 @@ namespace
 		return { threadParam[1].toUInt(nullptr, 16), threadParam[2].toULongLong(nullptr, 16), threadParam[3].toULongLong(nullptr, 16), threadParam[4].toULongLong(nullptr, 16) };
 	}
 
-	std::array<InfoForExtension, 10> GetSentenceInfo(TextThread& thread)
+	std::array<InfoForExtension, 20> GetSentenceInfo(TextThread& thread)
 	{
 		void (*AddText)(int64_t, const wchar_t*) = [](int64_t number, const wchar_t* text)
 		{
@@ -126,6 +126,9 @@ namespace
 		{ "hook address", (int64_t)thread.tp.addr },
 		{ "text handle", thread.handle },
 		{ "text name", (int64_t)thread.name.c_str() },
+		{ "add sentence", (int64_t)AddSentence },
+		{ "add text", (int64_t)AddText },
+		{ "get selected process id", (int64_t)GetSelectedProcessId },
 		{ "void (*AddSentence)(int64_t number, const wchar_t* sentence)", (int64_t)AddSentence },
 		{ "void (*AddText)(int64_t number, const wchar_t* text)", (int64_t)AddText },
 		{ "DWORD (*GetSelectedProcessId)()", (int64_t)GetSelectedProcessId },

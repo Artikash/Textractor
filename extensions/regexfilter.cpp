@@ -56,7 +56,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	static auto _ = GetSelectedProcessId = (DWORD(*)())sentenceInfo["DWORD (*GetSelectedProcessId)()"];
+	static auto _ = GetSelectedProcessId = (DWORD(*)())sentenceInfo["get selected process id"];
 	if (sentenceInfo["text number"] == 0) return false;
 	if (/*sentenceInfo["current select"] && */!regex) if (auto processName = GetModuleFilename(sentenceInfo["process id"]))
 	{
