@@ -155,7 +155,7 @@ namespace
 		savedProcesses.removeDuplicates();
 		savedProcesses.insert(1, FROM_COMPUTER);
 		QString process = QInputDialog::getItem(This, SELECT_PROCESS, SELECT_PROCESS_INFO, savedProcesses, 0, true, &ok, Qt::WindowCloseButtonHint);
-		if (process == FROM_COMPUTER) process = QDir::toNativeSeparators(QFileDialog::getOpenFileName(This, SELECT_PROCESS, "C:\\", PROCESSES));
+		if (process == FROM_COMPUTER) process = QDir::toNativeSeparators(QFileDialog::getOpenFileName(This, SELECT_PROCESS, "/", PROCESSES));
 		if (ok && process.contains('\\')) return S(process);
 		return {};
 	}
