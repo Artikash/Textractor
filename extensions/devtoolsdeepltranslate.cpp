@@ -130,9 +130,9 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 
 	DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
 		document.querySelector('.lmt__language_select--source').querySelector('button').click();
-		document.evaluate(`//button[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
+		document.evaluate(`//*[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
 		document.querySelector('.lmt__language_select--target').querySelector('button').click();
-		document.evaluate(`//button[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
+		document.evaluate(`//*[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
 	"})", codes.at(tlp.translateFrom), codes.at(tlp.translateTo)));
 
 	for (int retry = 0; ++retry < 100; Sleep(100))
