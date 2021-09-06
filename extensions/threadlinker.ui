@@ -24,11 +24,11 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="unlinkButton">
+      <widget class="QPushButton" name="linkButton">
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="linkButton">
+      <widget class="QPushButton" name="unlinkButton">
       </widget>
      </item>
      <item>
