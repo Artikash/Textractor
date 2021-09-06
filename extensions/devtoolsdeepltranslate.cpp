@@ -124,7 +124,9 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	// DevTools can't handle concurrent translations yet
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
-	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#en/en/%s"})", Escape(text)));
+	std::wstring escaped; // DeepL breaks with slash in input
+	for (auto ch : text) ch == '/' ? escaped += L"\\/" : escaped += ch;
+	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#en/en/%s"})", Escape(escaped)));
 	for (int retry = 0; ++retry < 20; Sleep(100))
 		if (Copy(DevTools::SendRequest("Runtime.evaluate", LR"({"expression":"document.readyState"})")[L"result"][L"value"].String()) == L"complete") break;
 
