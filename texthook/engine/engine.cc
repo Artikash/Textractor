@@ -14011,6 +14011,9 @@ bool InsertHorkEyeHook()
 	  return true;
   }
 
+  memcpy(spDefault.pattern, Array<BYTE>{ 0xcc, 0xcc, 0xcc, XX, 0xec }, spDefault.length = 5);
+  spDefault.offset = 3;
+
   const BYTE bytes2[] =
   {
 	  0x83, 0xec, XX, // sub esp,??
