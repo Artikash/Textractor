@@ -166,7 +166,8 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 				tokens.push(token); // popped one too many
 				break;
 			}
-			tokens.push(current);
+			if (tokens.size() < tokenCount) tokens.push(current);
+			else return false;
 			return tokens.size() <= tokenCount;
 		}
 
