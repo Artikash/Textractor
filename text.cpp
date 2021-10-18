@@ -219,6 +219,12 @@ All text in this file outside of a replacement command is ignored.
 A caret (^) acts as a wildcard that matches any other single character.
 Whitespace in original_text is ignored, but replacement_text can contain spaces, newlines, etc.
 This file must be encoded in Unicode (UTF-16 Little Endian).)";
+const wchar_t* REGEX_REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Regex Replacer" extension is used.
+Replacement commands must be formatted like this:
+|REGEX|regular_expression|BECOMES|replacement_text|END|
+All text in this file outside of a replacement command is ignored.
+This file must be encoded in Unicode (UTF-16 Little Endian).
+Learn, build, & test Regular Expressions: https://regexr.com/)";
 const char* THREAD_LINKER = u8"Thread Linker";
 const char* LINK = u8"Link";
 const char* UNLINK = u8"Unlink";
@@ -923,6 +929,12 @@ I comandi di rimpiazzo devono essere formattati cosi:
 Tutto il testo in questo file all'infuori di un comando di rimpiazzo è ignorato.
 La spaziatura nel testo_originale è ignorato, ma testo_sostituito può contenere spaziature, ritorni a capo, ecc.
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).)";
+	REGEX_REPLACER_INSTRUCTIONS = LR"(Questo file fa qualcosa solo quando l'estenzione "Regex Replacer" è utilizzata.
+I comandi di sostituzione devono essere formattati cosi:
+|ORIG|espressione_regolare|BECOMES|testo_sostituito|END|
+Tutto il testo in questo file all'infuori di un comando di sostituzione è ignorato.
+Questo file deve essere codificato in Unicode (UTF-16 Little Endian).
+Apprendere, creare e testare Espressioni Regolari: https://regexr.com/)";
 	THREAD_LINKER = u8"Collegatore di thread";
 	LINK = u8"Collegamento";
 	THREAD_LINK_FROM = u8"Numero di thread da cui collegarsi";
