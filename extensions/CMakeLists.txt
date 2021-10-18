@@ -21,6 +21,7 @@ add_library(Remove\ 30\ Repeated\ Sentences MODULE removerepeatsentence.cpp exte
 add_library(Replacer MODULE replacer.cpp extensionimpl.cpp)
 add_library(Styler MODULE styler.cpp extensionimpl.cpp)
 add_library(Thread\ Linker MODULE threadlinker.cpp extensionimpl.cpp)
+add_library(Regex\ Replacer MODULE regexreplacer.cpp extensionimpl.cpp)
 
 target_precompile_headers(Bing\ Translate REUSE_FROM pch)
 target_precompile_headers(Copy\ to\ Clipboard REUSE_FROM pch)
@@ -40,6 +41,7 @@ target_precompile_headers(Remove\ 30\ Repeated\ Sentences REUSE_FROM pch)
 target_precompile_headers(Replacer REUSE_FROM pch)
 target_precompile_headers(Styler REUSE_FROM pch)
 target_precompile_headers(Thread\ Linker REUSE_FROM pch)
+target_precompile_headers(Regex\ Replacer REUSE_FROM pch)
 
 target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
 target_link_libraries(DeepL\ Translate winhttp Qt5::Widgets)
