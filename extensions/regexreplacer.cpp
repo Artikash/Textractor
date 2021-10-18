@@ -35,12 +35,10 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	//if (!sentenceInfo["current select"] || sentenceInfo["text number"] == 0 || sentence == L"") return false;
 	if (!sentenceInfo["current select"] || sentenceInfo["text number"] == 0) return false;
 
 	std::ifstream stream(REGEX_REPLACEMENTS_SAVE_FILE, std::ios::binary);
 	BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|REGEX|", L"|BECOMES|" });
-	//std::vector<std::wstring> regexes;
 	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
 	while (auto read = savedFilters.Next()) {
 		const auto& [regex, replacement] = read.value();
