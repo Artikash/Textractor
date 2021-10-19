@@ -931,7 +931,7 @@ La spaziatura nel testo_originale è ignorato, ma testo_sostituito può contener
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).)";
 	REGEX_REPLACER_INSTRUCTIONS = LR"(Questo file fa qualcosa solo quando l'estenzione "Regex Replacer" è utilizzata.
 I comandi di sostituzione devono essere formattati cosi:
-|ORIG|espressione_regolare|BECOMES|testo_sostituito|END|
+|REGEX|espressione_regolare|BECOMES|testo_sostituito|END|
 Tutto il testo in questo file all'infuori di un comando di sostituzione è ignorato.
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).
 Apprendere, creare e testare Espressioni Regolari: https://regexr.com/)";
