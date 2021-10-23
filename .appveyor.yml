@@ -8,11 +8,11 @@ environment:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     arch: x64
     platform: x64
-    qtbin: msvc2017_64
+    qtbin: msvc2019_64
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     arch: x86
     platform: Win32
-    qtbin: msvc2017
+    qtbin: msvc2019
 
 before_build:
   - cd C:\
