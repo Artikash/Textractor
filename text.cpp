@@ -221,7 +221,9 @@ Whitespace in original_text is ignored, but replacement_text can contain spaces,
 This file must be encoded in Unicode (UTF-16 Little Endian).)";
 const wchar_t* REGEX_REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Regex Replacer" extension is used.
 Replacement commands must be formatted like this:
-|REGEX|regular_expression|BECOMES|replacement_text|END|
+|REGEX|regular_expression|BECOMES|replacement_text|MODIFIER|i|END|
+If the "MODIFIER" parameter is set to "i" the replacement ignores the case.
+Any other value is not considered and the replacement is case sensitive.
 All text in this file outside of a replacement command is ignored.
 This file must be encoded in Unicode (UTF-16 Little Endian).
 Learn, build, & test Regular Expressions: https://regexr.com/)";
@@ -931,7 +933,9 @@ La spaziatura nel testo_originale è ignorato, ma testo_sostituito può contener
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).)";
 	REGEX_REPLACER_INSTRUCTIONS = LR"(Questo file fa qualcosa solo quando l'estenzione "Regex Replacer" è utilizzata.
 I comandi di sostituzione devono essere formattati cosi:
-|REGEX|espressione_regolare|BECOMES|testo_sostituito|END|
+|REGEX|espressione_regolare|BECOMES|testo_sostituito|MODIFIER|i|END|
+Se il parametro "MODIFIER" è impostato a "i" la sostituzione ignora maiuscole/minuscole
+Qualsiasi altro valore non è considerato e la sostituzione è case sensitive.
 Tutto il testo in questo file all'infuori di un comando di sostituzione è ignorato.
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).
 Apprendere, creare e testare Espressioni Regolari: https://regexr.com/)";

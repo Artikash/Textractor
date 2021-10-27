@@ -38,12 +38,12 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (!sentenceInfo["current select"] || sentenceInfo["text number"] == 0) return false;
 
 	std::ifstream stream(REGEX_REPLACEMENTS_SAVE_FILE, std::ios::binary);
-	BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|REGEX|", L"|BECOMES|" });
+	BlockMarkupIterator savedFilters(stream, Array<std::wstring_view>{ L"|REGEX|", L"|BECOMES|", L"|MODIFIER|" });
 	concurrency::reader_writer_lock::scoped_lock_read readLock(m);
 	while (auto read = savedFilters.Next()) {
-		const auto& [regex, replacement] = read.value();
-		if (regex == L"") continue;
-		try { ::regex = regex; }
+		const auto& [regex, replacement, modifier] = read.value();
+		std::wregex regexp(regex, (modifier == L"i") ? std::regex::ECMAScript | std::regex::icase : std::regex::ECMAScript);
+		try { ::regex = regexp; }
 		catch (std::regex_error) { continue; }
 		sentence = std::regex_replace(sentence, ::regex.value(), replacement);
 	}
