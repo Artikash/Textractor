@@ -227,10 +227,11 @@ This file must be encoded in Unicode (UTF-16 Little Endian).)";
 const wchar_t* REGEX_REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Regex Replacer" extension is used.
 Replacement commands must be formatted like this:
 |REGEX|regular_expression|BECOMES|replacement_text|MODIFIER|modifiers|END|
-The "MODIFIER" parameter can contain the following modifiers:
+replacement_text can reference capture groups with a $ followed by their number (e.g. $1 references first capture group).
+modifiers can contain the following:
 "g" the replacement is global.
 "i" the replacement ignores the case.
-If the modifier is empty the replacement is only the first match and case sensitive.
+If empty the replacement is only for the first match and case sensitive.
 All text in this file outside of a replacement command is ignored.
 This file must be encoded in Unicode (UTF-16 Little Endian).
 Learn, build, & test Regular Expressions: https://regexr.com/)";
