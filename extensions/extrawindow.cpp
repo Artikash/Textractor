@@ -329,7 +329,7 @@ private:
 		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, y - dictionaryWindow.height())));
 	}
 
-	bool nativeEventFilter(const QByteArray&, void* message, LRESULT* result) override
+	bool nativeEventFilter(const QByteArray&, void* message, long* result) override
 	{
 		auto msg = (MSG*)message;
 		if (msg->message != WM_HOTKEY || msg->wParam != CLICK_THROUGH_HOTKEY) return false;
