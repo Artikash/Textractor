@@ -180,7 +180,7 @@ const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
 const char* SIZE_LOCK = u8"Size lock";
 const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
-const char* CLICK_THROUGH = u8"Click Through";
+const char* CLICK_THROUGH = u8"Click through";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";

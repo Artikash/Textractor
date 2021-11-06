@@ -13,6 +13,7 @@
 #include <QFontMetrics>
 #include <QMouseEvent>
 #include <QWheelEvent>
+#include <QAbstractNativeEventFilter>
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* SENTENCE_TOO_BIG;
@@ -36,6 +37,7 @@ extern const char* FONT;
 extern const char* SAVE_SETTINGS;
 
 constexpr auto DICTIONARY_SAVE_FILE = u8"SavedDictionary.txt";
+constexpr int CLICK_THROUGH_HOTKEY = 0xc0d0;
 
 QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool customOpacity = true)
 {
@@ -153,7 +155,7 @@ private:
 	}* outliner;
 };
 
-class ExtraWindow : public PrettyWindow
+class ExtraWindow : public PrettyWindow, QAbstractNativeEventFilter
 {
 public:
 	ExtraWindow() : PrettyWindow("Extra Window")
@@ -168,7 +170,6 @@ public:
 			{ AUTO_RESIZE_WINDOW_HEIGHT, false, &ExtraWindow::SetAutoResizeHeight },
 			{ SHOW_ORIGINAL, true, &ExtraWindow::SetShowOriginal },
 			{ DICTIONARY, false, &ExtraWindow::SetUseDictionary },
-			{ CLICK_THROUGH, false, &ExtraWindow::SetClickThrough },
 		})
 		{
 			// delay processing anything until Textractor has finished initializing
@@ -176,22 +177,21 @@ public:
 			auto action = menu.addAction(name, this, slot);
 			action->setCheckable(true);
 			action->setChecked(default);
-			if (slot == &ExtraWindow::SetClickThrough)
-			{
-				action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_T));
-				action->setShortcutContext(Qt::ApplicationShortcut);
-				addAction(action);
-			}
 		}
+
+		menu.addAction(CLICK_THROUGH, this, &ExtraWindow::ToggleClickThrough);
+
 		menu.addAction(MAX_SENTENCE_SIZE, this, [this]
 		{
 			settings.setValue(MAX_SENTENCE_SIZE, maxSentenceSize = QInputDialog::getInt(this, MAX_SENTENCE_SIZE, "", maxSentenceSize, 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint));
 		});
 		ui.display->installEventFilter(this);
 		ui.display->setMouseTracking(true);
+		qApp->installNativeEventFilter(this);
 
 		QMetaObject::invokeMethod(this, [this]
 		{
+			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_SHIFT | MOD_NOREPEAT, 0x58);
 			show();
 			AddSentence(EXTRA_WINDOW_INFO);
 		}, Qt::QueuedConnection);
@@ -257,9 +257,9 @@ private:
 		}
 	}
 
-	void SetClickThrough(bool clickThrough)
+	void ToggleClickThrough()
 	{
-		if (clickThrough)
+		if (clickThrough = !clickThrough)
 		{
 			setAttribute(Qt::WA_TransparentForMouseEvents, true);
 			setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
@@ -327,6 +327,14 @@ private:
 			x = textPositionMap[i].x() > ui.display->width() / 2 ? -dictionaryWindow.width() + (right * 3 + left) / 4 : (left * 3 + right) / 4, y = 0;
 		for (auto point : textPositionMap) if (point.y() > y && point.y() < textPositionMap[i].y()) y = point.y();
 		dictionaryWindow.move(ui.display->mapToGlobal(QPoint(x, y - dictionaryWindow.height())));
+	}
+
+	bool nativeEventFilter(const QByteArray&, void* message, LRESULT* result) override
+	{
+		auto msg = (MSG*)message;
+		if (msg->message != WM_HOTKEY || msg->wParam != CLICK_THROUGH_HOTKEY) return false;
+		ToggleClickThrough();
+		return true;
 	}
 
 	bool eventFilter(QObject*, QEvent* event) override
