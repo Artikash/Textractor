@@ -55,7 +55,7 @@ namespace
 
 	void Unload(int index)
 	{
-		std::scoped_lock writeLock(extenMutex);
+		std::scoped_lock lock(extenMutex);
 		FreeLibrary(GetModuleHandleW((extensions.at(index).name + L".xdll").c_str()));
 		extensions.erase(extensions.begin() + index);
 	}
