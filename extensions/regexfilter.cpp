@@ -14,7 +14,7 @@ const char* REGEX_SAVE_FILE = "SavedRegexFilters.txt";
 std::optional<std::wregex> regex;
 std::wstring replace = L"$1";
 concurrency::reader_writer_lock m;
-DWORD (*GetSelectedProcessId)() = nullptr;
+DWORD (*GetSelectedProcessId)() = [] { return 0UL; };
 
 class Window : public QDialog, Localizer
 {
