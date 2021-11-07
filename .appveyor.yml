@@ -15,6 +15,7 @@ environment:
     qtbin: msvc2019
 
 before_build:
+  - git submodule update --init
   - cd C:\
   - mkdir %arch%
   - cd %arch%

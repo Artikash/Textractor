@@ -27,7 +27,5 @@ If you're on this list and want your link changed let me know.
 - VNR engine made by [jichi](https://github.com/jichifly)
 - ITH updated by [Andys](https://github.com/AndyScull)
 - ITH originally made by [kaosu](https://code.google.com/archive/p/interactive-text-hooker)
-- Locale Emulator library made by [xupefei](https://github.com/xupefei)
-- MinHook library made by [TsudaKageyu](https://github.com/TsudaKageyu)
 
 # THANK YOU!!

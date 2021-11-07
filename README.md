@@ -33,13 +33,14 @@ See the extensions folder for examples of what extensions can do.
 
 ## Contributing
 
-All contributions are appreciated! Please email (no, I'm not busy!) me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
+All contributions are appreciated! Email me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).<br>
 Contributing a translation is easy: just translate the strings in text.cpp as well as this README and the subtitles of the tutorial video.
 
 ## Compiling
-
-Before compiling Textractor, you should get Qt version 5.13 and Visual Studio with CMake support. You should then be able to just open the source folder in Visual Studio and build.
+Before compiling Textractor, you need Qt version 5.13 and Visual Studio with CMake support.
+Clone Textractor's source and initialize submodules with `git clone https://github.com/Artikash/Textractor.git` and `git submodule update --init`.
+You should then be able to just open the source folder in Visual Studio and build.
 
 ## Project Architecture
 
