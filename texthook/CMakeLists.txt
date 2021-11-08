@@ -41,8 +41,9 @@ endif()
 
 add_library(minhook ${minhook_src})
 add_library(texthook MODULE ${texthook_src})
+# isn't there a better way to do this?
 target_precompile_headers(texthook PRIVATE ../include/common.h)
-if(NOT CMAKE_BUILD_TYPE MATCHES DEBUG)
+if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
 	target_compile_options(minhook PRIVATE /MT)
 	target_compile_options(texthook PRIVATE /MT)
 	target_link_options(texthook PRIVATE /NODEFAULTLIB:MSVCRT)
