@@ -12,7 +12,7 @@ If you're on this list and want your link changed let me know.
   - AppVeyor setup by [silas1037](https://github.com/silas1037)
   - Improved attach dialog by [tera8m4](https://github.com/tera8m4)
   - DevTools bugfixes and Papago/Systran translate integration by [Blu3train](https://github.com/Blu3train)
-  - French translation by Racky and [Gratusfr](https://github.com/Gratusfr)
+  - French translation by [Racky](mailto:maitrenoah@gmail.com) and [Gratusfr](https://github.com/Gratusfr)
   - Spanish translation by [scese250](https://github.com/scese250)
   - Turkish translation by [niisokusu](https://reddit.com/u/niisokusu)
   - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter) and [lgztx96](https://github.com/lgztx96)
@@ -20,7 +20,7 @@ If you're on this list and want your link changed let me know.
   - Indonesian translation by [Hawxone](https://github.com/Hawxone)
   - Portuguese translation by [TsumiHokiro](https://github.com/TsumiHokiro)
   - Thai translation by [azmadoppler](https://github.com/azmadoppler)
-  - Korean translation by O SK
+  - Korean translation by [O SK](mailto:afkl11@outlook.kr)
   - Italian translation by [StarFang208](https://github.com/StarFang208)
 - ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
 - ITHVNR originally made by [Stomp](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)
