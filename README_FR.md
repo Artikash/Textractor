@@ -31,7 +31,7 @@ Voir le dossier des extensions pour des exemples de ce que les extensions peuven
 
 ## Contribution
 
-Toutes les contributions sont appréciées! Veuillez m'envoyer un e-mail (non, je ne suis pas occupé!) À akashmozumdar@gmail.com si vous avez des questions sur la base de code. <br>
+Toutes les contributions sont appréciées! Veuillez m'envoyer un e-mail À akashmozumdar@gmail.com si vous avez des questions sur la base de code. <br>
 Vous devez utiliser le processus standard de création d'une demande d'extraction (fork, branch, commit changes, make PR from your branch to my master). <br>
 Contribuer à une traduction est simple: il suffit de traduire les chaînes dans text.cpp ainsi que ce fichier README.
 

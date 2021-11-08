@@ -24,7 +24,7 @@ Try running vcredist if you get an error when starting Textractor or if nothing 
 ## Support
 
 Please let me know of any bugs, games that Textractor has trouble hooking, feature requests, or other suggestions.<br>
-If you have trouble hooking a game please email me a place where I can freely download it, or gift it to me on [Steam](https://steamcommunity.com/profiles/76561198097566313/).
+If you have trouble hooking a game, give me a place where I can freely download it, or gift it to me on [Steam](https://steamcommunity.com/profiles/76561198097566313/).
 
 ## Extensions
 
@@ -33,7 +33,7 @@ See the extensions folder for examples of what extensions can do.
 
 ## Contributing
 
-All contributions are appreciated! Email me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
+All contributions are appreciated! Please email me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
 You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).<br>
 Contributing a translation is easy: just translate the strings in text.cpp as well as this README and the subtitles of the tutorial video.
 

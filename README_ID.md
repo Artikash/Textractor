@@ -35,7 +35,7 @@ Lihat folder extensions untuk melihat sampel ekstensi.
 
 ## Kontribusi
 
-Seluruh kontribusi diapresiasi! Tolong email (tidak, saya tidak sibuk!) saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai codebase nya.<br>
+Seluruh kontribusi diapresiasi! Tolong email saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai codebase nya.<br>
 Kamu harus menggunakan proses standar dalam membuat permintaan pull(fork, branch, commit changes, membuat PR dari branch kamu ke master saya).<br>
 Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari text.cpp lalu terjemahkan README ini.
 
