@@ -105,7 +105,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 			auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
 			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS))
 				file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
-			_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
+			SpawnThread([] { _spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); }); // show file to user
 		}
 	}
 	break;
