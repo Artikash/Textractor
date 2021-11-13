@@ -23,7 +23,7 @@ If you're on this list and want your link changed let me know.
   - Korean translation by [O SK](mailto:afkl11@outlook.kr)
   - Italian translation by [StarFang208](https://github.com/StarFang208)
 - ITHVNR updated by [mireado](https://github.com/mireado), [Eguni](https://github.com/Eguni), and [IJEMIN](https://github.com/IJEMIN)
-- ITHVNR originally made by [Stomp](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)
+- ITHVNR originally made by [Stomp](mailto:zorkzero@hotmail.com)
 - VNR engine made by [jichi](https://github.com/jichifly)
 - ITH updated by [Andys](https://github.com/AndyScull)
 - ITH originally made by [kaosu](https://code.google.com/archive/p/interactive-text-hooker)

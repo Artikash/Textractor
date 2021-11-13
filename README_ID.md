@@ -47,7 +47,7 @@ Lalu kamu dapat membuka folder di Visual Studio, dan build. Run Textractor.exe.
 
 ## Arsitektur Project
 
-Host (lihat folder GUI/host) menginject texthook.dll (dibuat dari folder texthook) kedalam target process dan disambungkan lewat 2 file pipe.<br>
+Host (lihat folder host) menginject texthook.dll (dibuat dari folder texthook) kedalam target process dan disambungkan lewat 2 file pipe.<br>
 Host menulis ke hostPipe, texthook menulis ke hookPipe.<br>
 texthook menunggu pipe tersambung, lalu menginject beberapa instruksi ke teks yang menghasilkan fungsi (contoh: TextOut, GetGlyphOutline) yang membuat input dikirim melewati pipa.<br>
 Informasi tambahan tentang hook dipindahkan melewati shared memory.<br>

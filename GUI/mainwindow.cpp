@@ -3,8 +3,8 @@
 #include "defs.h"
 #include "module.h"
 #include "extenwindow.h"
-#include "host/host.h"
-#include "host/hookcode.h"
+#include "../host/host.h"
+#include "../host/hookcode.h"
 #include "attachprocessdialog.h"
 #include <shellapi.h>
 #include <process.h>

@@ -43,7 +43,7 @@ Dovresti essere in grado di aprire la cartella in Visual Studio, e costruire. Av
 
 ## Architettura del progetto
 
-L'host (guarda la cartella GUI/host) innietta texthook.dll (creato dalla cartella texthook) nel processo e lo connette attraverso due file pipe.<br>
+L'host (guarda la cartella host) innietta texthook.dll (creato dalla cartella texthook) nel processo e lo connette attraverso due file pipe.<br>
 L'host scrive a hostPipe, texthook scrive a hookPipe.<br>
 Texthook aspetta per il pipe di essere connesso, poi innietta alcune istruzione in qualunque funzione di immissione del testo (es. TextOut, GetGlyphOutline) che causa il loro input di essere inviato attraverso il pipe.<br>
 Informazioni aggiuntive sui ganci soo scambiati attraverso la memorio condivisa.<br>

@@ -43,7 +43,7 @@ Você deverá então ser capaz de simplesmente abrir uma pasta no Visual Studio 
 
 ## Arquitetura do Projeto
 
-O host (veja a pasta GUI/host) injeta o texthook.dll (criado a partir da pasta texthook) dentro do processo-alvo e se conecta a ele por meio de 2 arquivos pipe.<br>
+O host (veja a pasta host) injeta o texthook.dll (criado a partir da pasta texthook) dentro do processo-alvo e se conecta a ele por meio de 2 arquivos pipe.<br>
 O Host escreve para hostPipe, o texthook escreve para hookPipe.<br>
 O texthook espera pelo pipe estar conectado e então injeta algumas intruções dentro de quaisquer funções que produzam texto (por exemplo: TextOut, GetGlyphOutline) o que faz com que seu produto seja mandado por meio do pipe.<br>
 Informação adicional sobre os hooks é trocada por meio da memória compartilhada.<br>

@@ -41,7 +41,7 @@ Textractor 실행오류를 겪는다면 vcredist를 실행해 보시기 바랍�
 
 ## 프로젝트 아키텍쳐
 
-The host (see GUI/host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
+The host (see host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
 Host writes to hostPipe, texthook writes to hookPipe.<br>
 texthook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
 Additional information about hooks is exchanged via shared memory.<br>

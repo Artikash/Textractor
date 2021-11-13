@@ -7,15 +7,11 @@ add_executable(Textractor WIN32
 	mainwindow.cpp
 	extenwindow.cpp
 	attachprocessdialog.cpp
-	host/exception.cpp
-	host/host.cpp
-	host/textthread.cpp
-	host/hookcode.cpp
 	Textractor.rc
 	Textractor.ico
 )
 target_precompile_headers(Textractor REUSE_FROM pch)
-target_link_libraries(Textractor Qt5::Widgets Qt5::WinExtras shell32 winhttp)
+target_link_libraries(Textractor host Qt5::Widgets Qt5::WinExtras shell32 winhttp)
 
 if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Core.dll AND NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Cored.dll)
 	add_custom_command(TARGET Textractor
