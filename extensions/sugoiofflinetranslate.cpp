@@ -4,6 +4,7 @@
 
 extern const wchar_t* TRANSLATION_ERROR;
 extern const char* SUGOI_HOST;
+extern const char* SUGOI_PORT;
 extern QFormLayout* display;
 extern Settings settings;
 
@@ -20,7 +21,7 @@ languagesFrom
 
 bool translateSelectedOnly = false, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 1000;
-QString sugoiHost;
+QString sugoiHost, sugoiPort;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
@@ -31,8 +32,14 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		sugoiHost = settings.value(SUGOI_HOST).toString();
 		if (sugoiHost.isEmpty()) sugoiHost = "localhost";
 		auto sugoiHostEdit = new QLineEdit(sugoiHost);
-		QObject::connect(sugoiHostEdit, &QLineEdit::textChanged, [sugoiHostEdit](QString host) { settings.setValue(SUGOI_HOST, sugoiHost =  host); });
+		QObject::connect(sugoiHostEdit, &QLineEdit::textChanged, [sugoiHostEdit](QString newValue) { settings.setValue(SUGOI_HOST, sugoiHost =  newValue); });
 		display->addRow(SUGOI_HOST, sugoiHostEdit);
+
+		sugoiPort = settings.value(SUGOI_PORT).toString();
+		if (sugoiPort.isEmpty()) sugoiPort = "14366";
+		auto sugoiPortEdit = new QLineEdit(sugoiPort);
+		QObject::connect(sugoiPortEdit, &QLineEdit::textChanged, [sugoiPortEdit](QString newValue) { settings.setValue(SUGOI_PORT, sugoiPort =  newValue); });
+		display->addRow(SUGOI_PORT, sugoiPortEdit);
 	}
 	break;
 	}
@@ -48,7 +55,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 		NULL,
 		FormatString(R"({"content":"%s","message":"translate sentences"})", JSON::Escape(WideStringToString(text))),
 		L"Content-type: application/json",
-		14366,
+		sugoiPort.toUInt(),
 		NULL,
 		0
 		})

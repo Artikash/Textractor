@@ -153,7 +153,8 @@ const char* STOP_DEVTOOLS = u8"Stop DevTools";
 const char* HEADLESS_MODE = u8"Headless mode";
 const char* DEVTOOLS_STATUS = u8"DevTools status";
 const char* AUTO_START = u8"Start automatically";
-const char* SUGOI_HOST = u8"Sugoi Host";
+const char* SUGOI_HOST = u8"Sugoi Host (def:localhost)";
+const char* SUGOI_PORT = u8"Sugoi Port (def:14366)";
 const wchar_t* ERROR_START_CHROME = L"failed to start Chrome or to connect to it";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
