@@ -76,6 +76,18 @@ private:
 	M m;
 };
 
+template <typename F>
+void SpawnThread(const F& f) // works in DllMain unlike std thread
+{
+	F* copy = new F(f);
+	CloseHandle(CreateThread(nullptr, 0, [](void* copy)
+	{
+		(*(F*)copy)();
+		delete (F*)copy;
+		return 0UL;
+	}, copy, 0, nullptr));
+}
+
 static struct // should be inline but MSVC (linker) is bugged
 {
 	inline static BYTE DUMMY[100];
@@ -134,7 +146,7 @@ template <typename... Args>
 inline void TEXTRACTOR_MESSAGE(const wchar_t* format, const Args&... args) { MessageBoxW(NULL, FormatString(format, args...).c_str(), L"Textractor", MB_OK); }
 
 template <typename... Args>
-inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { std::thread([=] { TEXTRACTOR_MESSAGE(format, args...); }).detach(); }
+inline void TEXTRACTOR_DEBUG(const wchar_t* format, const Args&... args) { SpawnThread([=] { TEXTRACTOR_MESSAGE(format, args...); }); }
 
 void Localize();
 
