@@ -52,7 +52,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 		NULL,
 		0
 		})
-		if (auto translation = Copy(JSON::Parse(httpRequest.response).String())) return { true, std::regex_replace(translation.value(), std::wregex(L"<unk>"), L"") };
+		if (auto translation = Copy(JSON::Parse(httpRequest.response).String())) return { true, std::regex_replace(translation.value(), std::wregex(L"<unk>"), L" ") };
 		else return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, httpRequest.response) };
 	else return { false, FormatString(L"%s (code=%u)", TRANSLATION_ERROR, httpRequest.errorCode) };
 }
