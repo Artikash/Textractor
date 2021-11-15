@@ -38,6 +38,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		sugoiPort = settings.value(SUGOI_PORT).toString();
 		if (sugoiPort.isEmpty()) sugoiPort = "14366";
 		auto sugoiPortEdit = new QLineEdit(sugoiPort);
+		sugoiPortEdit->setValidator(new QIntValidator(0, 99999));
 		QObject::connect(sugoiPortEdit, &QLineEdit::textChanged, [sugoiPortEdit](QString newValue) { settings.setValue(SUGOI_PORT, sugoiPort =  newValue); });
 		display->addRow(SUGOI_PORT, sugoiPortEdit);
 	}
