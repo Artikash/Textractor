@@ -54,7 +54,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 		sugoiHost.toStdWString().c_str(),
 		L"POST",
 		NULL,
-		FormatString(R"({"content":"%s","message":"translate sentences"})", JSON::Escape(WideStringToString(text))),
+		FormatString(R"({"content":"%s","message":"translate sentences"})", JSON::Escape(WideStringToString(std::regex_replace(text, std::wregex(L"\u200b\n"), L" ")))),
 		L"Content-type: application/json",
 		sugoiPort.toUInt(),
 		NULL,
