@@ -156,7 +156,6 @@ const char* AUTO_START = u8"Start automatically";
 const wchar_t* ERROR_START_CHROME = L"failed to start Chrome or to connect to it";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
-const char* SENTENCE_TOO_BIG = u8"Sentence too large to display";
 const char* MAX_SENTENCE_SIZE = u8"Max sentence size";
 const char* TOPMOST = u8"Always on top";
 const char* DICTIONARY = u8"Dictionary";
@@ -178,21 +177,19 @@ This file must be encoded in UTF-8.)";
 const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
-const char* SHOW_ORIGINAL_AFTER_TRANSLATION = u8"Show original text after translation";
+const char* ORIGINAL_AFTER_TRANSLATION = u8"Original text after translation";
 const char* SIZE_LOCK = u8"Size lock";
 const char* POSITION_LOCK = u8"Position lock";
 const char* CENTERED_TEXT = u8"Centered text";
 const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
-const char* CLICK_THROUGH = u8"Click through\tAlt+Shift+T";
-const char* HIDE_TEXT_MOUSEOVER = u8"Hide text mouseover";
-const char* HIDE_TEXT = u8"Hide text\tAlt+Shift+H";
+const char* CLICK_THROUGH = u8"Click through\tShift+X";
+const char* HIDE_MOUSEOVER = u8"Hide while mouse on top";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
 const char* TEXT_OUTLINE = u8"Text outline";
 const char* OUTLINE_COLOR = u8"Outline color";
 const char* OUTLINE_SIZE = u8"Outline size";
-const char* OUTLINE_LAST_SIZE = u8"Last used outline size";
 const char* OUTLINE_SIZE_INFO = u8"Size in pixels (recommended to stay below 20% of the font size)";
 const char* FONT = u8"Font";
 const char* LUA_INTRO = u8R"(--[[
@@ -433,7 +430,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	API_KEY = u8"API key";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
 在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
-	SENTENCE_TOO_BIG = u8"文本过长无法显示";
 	MAX_SENTENCE_SIZE = u8"最大文本长度";
 	TOPMOST = u8"窗口总是置顶";
 	DICTIONARY = u8"字典";
@@ -608,7 +604,6 @@ padding: длина добавочных данных перед строкой 
 	API_KEY = u8"Ключ API";
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
 Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
-	SENTENCE_TOO_BIG = u8"Предложение слишком длинное для отображения";
 	MAX_SENTENCE_SIZE = u8"Максимальная длина предложения";
 	TOPMOST = u8"Поверх всех окон";
 	DICTIONARY = u8"Словарь";
@@ -867,7 +862,6 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	API_KEY = u8"Chiave API";
 	EXTRA_WINDOW_INFO = u8R"(Tasto destro per cambiare le impostazioni
 Clicca e trascina i bordi della finestra per muoverla, oppure nell'angolo in basso a destra per ridimensionare)";
-	SENTENCE_TOO_BIG = u8"Sentenza troppo grande da visualizzare";
 	MAX_SENTENCE_SIZE = u8"Dimensione massima sentenza";
 	TOPMOST = u8"Sempre in primo piano";
 	DICTIONARY = u8"Dizionario";
@@ -890,21 +884,19 @@ Questo file deve essere codificato in UTF-8.)";
 	SHOW_ORIGINAL = u8"Testo originale";
 	SHOW_ORIGINAL_INFO = u8R"(Testo originale non sarà mostrato
 Funziona solo se questa estenzione è usata direttamente dopo un'estensione di traduzione)";
-	SHOW_ORIGINAL_AFTER_TRANSLATION = u8"Mostra testo originale dopo traduzione";
+	ORIGINAL_AFTER_TRANSLATION = u8"Mostra testo originale dopo traduzione";
 	SIZE_LOCK = u8"Lock delle dimensione";
 	POSITION_LOCK = u8"Lock delle posizione";
 	CENTERED_TEXT = u8"Testo centrato";
 	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
 	CLICK_THROUGH = u8"Clicca attraverso\tAlt+Shift+T";
-	HIDE_TEXT_MOUSEOVER = u8"Nascondi testo mouseover";
-	HIDE_TEXT = u8"Nascondi testo\tAlt+Shift+H";
+	HIDE_MOUSEOVER = u8"Nascondi testo mouseover";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
 	TEXT_OUTLINE = u8"Contorno del testo";
 	OUTLINE_COLOR = u8"Colore del contorno";
 	OUTLINE_SIZE = u8"Dimensione del contorno";
-	OUTLINE_LAST_SIZE = u8"Ultima dimensione del contorno utilizzata";
 	OUTLINE_SIZE_INFO = u8"Dimensione in pixel (consigliato di rimanere sotto il 20% della dimensione del font)";
 	FONT = u8"Font";
 	LUA_INTRO = u8R"(--[[
@@ -1295,7 +1287,6 @@ example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 446
 	API_KEY = u8"API key";
 	EXTRA_WINDOW_INFO = u8R"(Clic droit pour modifier les paramètres
 Cliquez et faites glisser sur les bords de la fenêtre pour vous déplacer ou dans le coin inférieur droit pour redimensionner)";
-	SENTENCE_TOO_BIG = u8"Phrase trop grande pour être affichée";
 	MAX_SENTENCE_SIZE = u8"Taille maximale de la phrase";
 	TOPMOST = u8"Toujours au dessus";
 	DICTIONARY = u8"Dictionnaire";
