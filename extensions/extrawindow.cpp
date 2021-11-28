@@ -17,20 +17,16 @@
 #include <QAbstractNativeEventFilter>
 
 extern const char* EXTRA_WINDOW_INFO;
-extern const char* SENTENCE_TOO_BIG;
-extern const char* MAX_SENTENCE_SIZE;
 extern const char* TOPMOST;
 extern const char* OPACITY;
 extern const char* SHOW_ORIGINAL;
-extern const char* SHOW_ORIGINAL_INFO;
-extern const char* SHOW_ORIGINAL_AFTER_TRANSLATION;
+extern const char* ORIGINAL_AFTER_TRANSLATION;
 extern const char* SIZE_LOCK;
 extern const char* POSITION_LOCK;
 extern const char* CENTERED_TEXT;
 extern const char* AUTO_RESIZE_WINDOW_HEIGHT;
 extern const char* CLICK_THROUGH;
-extern const char* HIDE_TEXT_MOUSEOVER;
-extern const char* HIDE_TEXT;
+extern const char* HIDE_MOUSEOVER;
 extern const char* DICTIONARY;
 extern const char* DICTIONARY_INSTRUCTIONS;
 extern const char* BG_COLOR;
@@ -38,15 +34,11 @@ extern const char* TEXT_COLOR;
 extern const char* TEXT_OUTLINE;
 extern const char* OUTLINE_COLOR;
 extern const char* OUTLINE_SIZE;
-extern const char* OUTLINE_LAST_SIZE;
 extern const char* OUTLINE_SIZE_INFO;
 extern const char* FONT;
-extern const char* SAVE_SETTINGS;
 
 constexpr auto DICTIONARY_SAVE_FILE = u8"SavedDictionary.txt";
-const qreal COLOR_ALFAF_HIDE_WINDOW = 0.05;
 constexpr int CLICK_THROUGH_HOTKEY = 0xc0d0;
-constexpr int HIDE_TEXT_HOTKEY = 0xc0d1;
 
 QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool customOpacity = true)
 {
@@ -57,9 +49,6 @@ QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool c
 
 struct PrettyWindow : QDialog, Localizer
 {
-	QString savedSentence = "";
-	bool hideTextMouseover=false, hideText=false;
-
 	PrettyWindow(const char* name)
 	{
 		ui.setupUi(this);
@@ -74,13 +63,19 @@ struct PrettyWindow : QDialog, Localizer
 		SetTextColor(settings.value(TEXT_COLOR, TextColor()).value<QColor>());
 		outliner->color = settings.value(OUTLINE_COLOR, outliner->color).value<QColor>();
 		outliner->size = settings.value(OUTLINE_SIZE, outliner->size).toDouble();
+		autoHide = settings.value(HIDE_MOUSEOVER, autoHide).toBool();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
 		menu.addAction(BG_COLOR, [this] { SetBackgroundColor(colorPrompt(this, backgroundColor, BG_COLOR)); });
 		menu.addAction(TEXT_COLOR, [this] { SetTextColor(colorPrompt(this, TextColor(), TEXT_COLOR)); });
 		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::SetOutline);
 		outlineAction->setCheckable(true);
 		outlineAction->setChecked(outliner->size >= 0);
-		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
+		QAction* autoHideAction = menu.addAction(HIDE_MOUSEOVER, this, [this](bool autoHide) { settings.setValue(HIDE_MOUSEOVER, this->autoHide = autoHide); });
+		autoHideAction->setCheckable(true);
+		autoHideAction->setChecked(autoHide);
+		connect(this, &QDialog::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
+		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(ui.display->mapToGlobal(point)); });
+		startTimer(50);
 	}
 
 	~PrettyWindow()
@@ -90,30 +85,27 @@ struct PrettyWindow : QDialog, Localizer
 
 	Ui::ExtraWindow ui;
 
-
-	void SetBackgroundColorHideText()
+protected:
+	void timerEvent(QTimerEvent*) override
 	{
-		if (hideText)
+		if (autoHide && !hidden && geometry().contains(QCursor::pos()))
 		{
-			QColor color = settings.value(BG_COLOR, backgroundColor).value<QColor>();
-			if (!color.isValid()) return;
-			color.setAlphaF(COLOR_ALFAF_HIDE_WINDOW);
-			backgroundColor = color;
-			repaint();
-			ui.display->setText("");
+			if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
+			if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
+			QColor hiddenTextColor = TextColor();
+			if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
+			ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
+			hidden = true;
 		}
-		else
+		else if (hidden)
 		{
-			QColor color = settings.value(BG_COLOR, backgroundColor).value<QColor>();
-			if (!color.isValid()) return;
-			if (color.alpha() == 0) color.setAlpha(1);
-			backgroundColor = color;
-			repaint();
-			ui.display->setText(savedSentence);
+			backgroundColor.setAlpha(settings.value(BG_COLOR).value<QColor>().alpha());
+			outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
+			ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
+			hidden = false;
 		}
 	}
 
-protected:
 	QMenu menu{ ui.display };
 	Settings settings{ this };
 
@@ -157,13 +149,9 @@ private:
 		{
 			QColor color = colorPrompt(this, outliner->color, OUTLINE_COLOR);
 			if (color.isValid()) outliner->color = color;
-			outliner->size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, settings.value(OUTLINE_LAST_SIZE, outliner->size).toDouble(), 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
+			outliner->size = QInputDialog::getDouble(this, OUTLINE_SIZE, OUTLINE_SIZE_INFO, -outliner->size, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
 		}
-		else
-		{			
-			settings.setValue(OUTLINE_LAST_SIZE, outliner->size);
-			outliner->size = -1;
-		}
+		else outliner->size = -outliner->size;
 		settings.setValue(OUTLINE_COLOR, outliner->color.name(QColor::HexArgb));
 		settings.setValue(OUTLINE_SIZE, outliner->size);
 	}
@@ -173,6 +161,7 @@ private:
 		QPainter(this).fillRect(rect(), backgroundColor);
 	}
 
+	bool autoHide = false, hidden = false;
 	QColor backgroundColor{ palette().window().color() };
 	struct Outliner : QGraphicsEffect
 	{
@@ -193,29 +182,8 @@ private:
 			painter->drawPixmap(offset, pixmap);
 		}
 		QColor color{ Qt::black };
-		double size = -1;
+		double size = -0.5;
 	}* outliner;
-
-	void enterEvent(QEvent* event)
-	{
-		if (hideTextMouseover)
-		{
-			hideText = true;
-			SetBackgroundColorHideText();
-		}
-		QWidget::enterEvent(event);
-	}
-
-	void leaveEvent(QEvent* event)
-	{
-		if (hideTextMouseover)
-		{
-			hideText = false;
-			SetBackgroundColorHideText();
-		}
-		QWidget::leaveEvent(event);
-	}
-
 };
 
 class ExtraWindow : public PrettyWindow, QAbstractNativeEventFilter
@@ -225,18 +193,15 @@ public:
 	{
 		ui.display->setTextFormat(Qt::PlainText);
 		if (settings.contains(WINDOW) && QApplication::screenAt(settings.value(WINDOW).toRect().bottomRight())) setGeometry(settings.value(WINDOW).toRect());
-		maxSentenceSize = settings.value(MAX_SENTENCE_SIZE, maxSentenceSize).toInt();
 
 		for (auto [name, default, slot] : Array<const char*, bool, void(ExtraWindow::*)(bool)>{
 			{ TOPMOST, false, &ExtraWindow::SetTopmost },
-			{ SIZE_LOCK, false, &ExtraWindow::SetLock },
+			{ SIZE_LOCK, false, &ExtraWindow::SetSizeLock },
 			{ POSITION_LOCK, false, &ExtraWindow::SetPositionLock },
 			{ CENTERED_TEXT, false, &ExtraWindow::SetCenteredText },
-			{ AUTO_RESIZE_WINDOW_HEIGHT, false, &ExtraWindow::SetAutoResizeHeight },
-			{ HIDE_TEXT, false, &ExtraWindow::SetHideText },
-			{ HIDE_TEXT_MOUSEOVER, false, &ExtraWindow::SetHideTextMouseover },
+			{ AUTO_RESIZE_WINDOW_HEIGHT, false, &ExtraWindow::SetAutoResize },
 			{ SHOW_ORIGINAL, true, &ExtraWindow::SetShowOriginal },
-			{ SHOW_ORIGINAL_AFTER_TRANSLATION, true, &ExtraWindow::SetShowOriginalAfterTranslation },
+			{ ORIGINAL_AFTER_TRANSLATION, true, &ExtraWindow::SetShowOriginalAfterTranslation },
 			{ DICTIONARY, false, &ExtraWindow::SetUseDictionary },
 		})
 		{
@@ -245,26 +210,16 @@ public:
 			auto action = menu.addAction(name, this, slot);
 			action->setCheckable(true);
 			action->setChecked(default);
-			if (slot == &ExtraWindow::SetHideTextMouseover)
-				hideTextMouseoveAction = action;
-			if (slot == &ExtraWindow::SetHideText)
-				hideTextAction = action;
 		}
 
 		menu.addAction(CLICK_THROUGH, this, &ExtraWindow::ToggleClickThrough);
 
-		menu.addAction(MAX_SENTENCE_SIZE, this, [this]
-		{
-			settings.setValue(MAX_SENTENCE_SIZE, maxSentenceSize = QInputDialog::getInt(this, MAX_SENTENCE_SIZE, "", maxSentenceSize, 0, INT_MAX, 1, nullptr, Qt::WindowCloseButtonHint));
-		});
 		ui.display->installEventFilter(this);
-		ui.display->setMouseTracking(true);
 		qApp->installNativeEventFilter(this);
 
 		QMetaObject::invokeMethod(this, [this]
 		{
-			RegisterHotKey((HWND)winId(), HIDE_TEXT_HOTKEY, MOD_ALT | MOD_SHIFT | MOD_NOREPEAT, 0x48);
-			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_ALT | MOD_SHIFT | MOD_NOREPEAT, 0x54);
+			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_SHIFT | MOD_NOREPEAT, 0x58);
 			show();
 			AddSentence(EXTRA_WINDOW_INFO);
 		}, Qt::QueuedConnection);
@@ -277,23 +232,49 @@ public:
 
 	void AddSentence(QString sentence)
 	{
-		if (sentence.size() > maxSentenceSize) sentence = SENTENCE_TOO_BIG;
-		if (showOriginal){
-			if (showOriginalAfterTranslation && sentence.contains(u8"\x200b \n"))
-				sentence = sentence.split(u8"\x200b \n")[1] + "\n" + sentence.split(u8"\x200b \n")[0];
-		} else
-			if (sentence.contains(u8"\x200b \n")) sentence = sentence.split(u8"\x200b \n")[1];
 		sanitize(sentence);
 		sentence.chop(std::distance(std::remove(sentence.begin(), sentence.end(), QChar::Tabulation), sentence.end()));
 		sentenceHistory.push_back(sentence);
-		if (sentenceHistory.size() > maxHistoryIndex) sentenceHistory.erase(sentenceHistory.begin());
+		if (sentenceHistory.size() > 1000) sentenceHistory.erase(sentenceHistory.begin());
 		historyIndex = sentenceHistory.size() - 1;
-		savedSentence = sentence;
-		if (!hideText) ui.display->setText(sentence);
-		AutoResize(sentence);
+		DisplaySentence();
 	}
 
 private:
+	void DisplaySentence()
+	{
+		QString sentence = sentenceHistory[historyIndex];
+		if (sentence.contains(u8"\x200b \n"))
+			if (!showOriginal) sentence = sentence.split(u8"\x200b \n")[1];
+			else if (showOriginalAfterTranslation) sentence = sentence.split(u8"\x200b \n")[1] + "\n" + sentence.split(u8"\x200b \n")[0];
+
+		if (autoResize)
+		{
+			ui.display->resize(
+				ui.display->width(),
+				QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height()
+			);
+		}
+		else if (locked)
+		{
+			QFontMetrics fontMetrics(ui.display->font(), ui.display);
+			int low = 0, high = sentence.size(), last = 0;
+			while (low < high)
+			{
+				int mid = (low + high) / 2;
+				if (fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.left(mid)).height() < ui.display->height())
+				{
+					last = mid;
+					low = mid + 1;
+				}
+				else high = mid;
+			}
+			sentence = sentence.left(last);
+		}
+
+		ui.display->setText(sentence);
+	}
+
 	void SetTopmost(bool topmost)
 	{
 		for (auto window : { winId(), dictionaryWindow.winId() })
@@ -306,97 +287,34 @@ private:
 		settings.setValue(POSITION_LOCK, this->locked = locked);
 	};
 
-	void SetLock(bool locked)
+	void SetSizeLock(bool locked)
 	{
 		setSizeGripEnabled(!locked);
 		settings.setValue(SIZE_LOCK, locked);
 	};
 
-	void SetCenteredText(bool centeredCenter)
+	void SetCenteredText(bool centeredText)
 	{
-		if (centeredCenter)
-			ui.display->setAlignment(Qt::AlignCenter);
-		else
-			ui.display->setAlignment(Qt::AlignLeft);
-
-		settings.setValue(CENTERED_TEXT, this->centeredCenter = centeredCenter);
+		ui.display->setAlignment(centeredText ? Qt::AlignHCenter : Qt::AlignLeft);
+		settings.setValue(CENTERED_TEXT, this->centeredText = centeredText);
 	};
 
-	void SetAutoResizeHeight(bool autoResizeHeight)
+	void SetAutoResize(bool autoResize)
 	{
-		settings.setValue(AUTO_RESIZE_WINDOW_HEIGHT, this->autoResizeHeight = autoResizeHeight);
-		if (autoResizeHeight) AutoResize(savedSentence);
-	};
-
-	void AutoResize(QString sentence)
-	{
-		if (!autoResizeHeight) return;
-
-		QFontMetrics fontMetrics(ui.display->font(), ui.display);
-		auto boundingRect = fontMetrics.boundingRect(0, 0, width()-20, INT_MAX, Qt::TextWordWrap, sentence);
-		int newHeight = boundingRect.height() + 30;
-		int currHeight = height();
-
-		if (newHeight != currHeight) {
-			QSize s = size();
-			s.setWidth(width());
-			s.setHeight(newHeight);
-			resize(s);
-		}
-	}
-
-	void ToggleClickThrough()
-	{
-		if (clickThrough = !clickThrough)
-		{
-			setAttribute(Qt::WA_TransparentForMouseEvents, true);
-			setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-		} else {
-			setAttribute(Qt::WA_TransparentForMouseEvents , false);
-			//setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);  // doesn't work
-			setWindowFlags(Qt::FramelessWindowHint);
-			SetTopmost(settings.value(TOPMOST, false).toBool());
-		}
-		show();
-	};
-
-	void SetHideTextMouseover(bool hideTextMouseover)
-	{
-		this->hideTextMouseover = hideTextMouseover;
-		if (hideTextMouseover && this->hideText)
-		{
-			this->hideText = false;
-			hideTextAction->setChecked(false);
-			SetBackgroundColorHideText();
-		}
-	};
-
-	void SetHideText(bool hideText)
-	{
-		this->hideText = hideText;
-		if (this->hideTextMouseover)
-		{
-			this->hideTextMouseover = false;
-			hideTextMouseoveAction->setChecked(false);
-		}
-		SetBackgroundColorHideText();
-	};
-
-	void ToggleHideText()
-	{
-		hideTextAction->setChecked(!hideText);
-		SetHideText(!hideText);
+		settings.setValue(AUTO_RESIZE_WINDOW_HEIGHT, this->autoResize = autoResize);
+		DisplaySentence();
 	};
 
 	void SetShowOriginal(bool showOriginal)
 	{
-		if (!showOriginal && settings.value(SHOW_ORIGINAL, false).toBool()) QMessageBox::information(this, SHOW_ORIGINAL, SHOW_ORIGINAL_INFO);
 		settings.setValue(SHOW_ORIGINAL, this->showOriginal = showOriginal);
+		DisplaySentence();
 	};
 
 	void SetShowOriginalAfterTranslation(bool showOriginalAfterTranslation)
 	{
-		settings.setValue(SHOW_ORIGINAL_AFTER_TRANSLATION, this->showOriginalAfterTranslation = showOriginalAfterTranslation);
+		settings.setValue(ORIGINAL_AFTER_TRANSLATION, this->showOriginalAfterTranslation = showOriginalAfterTranslation);
+		DisplaySentence();
 	};
 
 	void SetUseDictionary(bool useDictionary)
@@ -413,27 +331,40 @@ private:
 		settings.setValue(DICTIONARY, this->useDictionary = useDictionary);
 	}
 
-	void ComputeDictionaryPosition(QPoint mouse)
+	void ToggleClickThrough()
+	{
+		clickThrough = !clickThrough;
+		for (auto window : { winId(), dictionaryWindow.winId() })
+		{
+			unsigned exStyle = GetWindowLongPtrW((HWND)window, GWL_EXSTYLE);
+			if (clickThrough) exStyle |= WS_EX_TRANSPARENT;
+			else exStyle &= ~WS_EX_TRANSPARENT;
+			SetWindowLongPtrW((HWND)window, GWL_EXSTYLE, exStyle);
+		}
+	};
+
+	void ShowDictionary(QPoint mouse)
 	{
 		QString sentence = ui.display->text();
 		const QFont& font = ui.display->font();
 		if (cachedDisplayInfo.CompareExchange(ui.display))
 		{
 			QFontMetrics fontMetrics(font, ui.display);
+			int flags = Qt::TextWordWrap | (ui.display->alignment() & (Qt::AlignLeft | Qt::AlignHCenter));
 			textPositionMap.clear();
 			for (int i = 0, height = 0, lineBreak = 0; i < sentence.size(); ++i)
 			{
 				int block = 1;
-				for (int charHeight = fontMetrics.boundingRect(0, 0, 1, INT_MAX, Qt::TextWordWrap, sentence.mid(i, 1)).height();
-					i + block < sentence.size() && fontMetrics.boundingRect(0, 0, 1, INT_MAX, Qt::TextWordWrap, sentence.mid(i, block + 1)).height() < charHeight * 1.5; ++block);
-				auto boundingRect = fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.left(i + block));
+				for (int charHeight = fontMetrics.boundingRect(0, 0, 1, INT_MAX, flags, sentence.mid(i, 1)).height();
+					i + block < sentence.size() && fontMetrics.boundingRect(0, 0, 1, INT_MAX, flags, sentence.mid(i, block + 1)).height() < charHeight * 1.5; ++block);
+				auto boundingRect = fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, flags, sentence.left(i + block));
 				if (boundingRect.height() > height)
 				{
 					height = boundingRect.height();
 					lineBreak = i;
 				}
 				textPositionMap.push_back({
-					fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.mid(lineBreak, i - lineBreak + 1)).width(),
+					fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, flags, sentence.mid(lineBreak, i - lineBreak + 1)).right() + 1,
 					height
 				});
 			}
@@ -454,29 +385,21 @@ private:
 	{
 		auto msg = (MSG*)message;
 		if (msg->message == WM_HOTKEY)
-		{
-			switch (msg->wParam)
-			{
-				case HIDE_TEXT_HOTKEY:
-					{
-					ToggleHideText();
-					return true;
-					}
-				case CLICK_THROUGH_HOTKEY:
-					{
-					ToggleClickThrough();
-					return true;
-					}
-			}
-		}
+			if (msg->wParam == CLICK_THROUGH_HOTKEY) return ToggleClickThrough(), true;
 		return false;
 	}
 
 	bool eventFilter(QObject*, QEvent* event) override
 	{
-		if (useDictionary && event->type() == QEvent::MouseMove) ComputeDictionaryPosition(((QMouseEvent*)event)->localPos().toPoint());
-		if (event->type() == QEvent::MouseButtonPress) dictionaryWindow.hide();
+		if (event->type() == QEvent::MouseButtonPress) mousePressEvent((QMouseEvent*)event);
 		return false;
+	}
+
+	void timerEvent(QTimerEvent* event) override
+	{
+		if (useDictionary && QCursor::pos() != oldPos && (!dictionaryWindow.isVisible() || !dictionaryWindow.geometry().contains(QCursor::pos())))
+			ShowDictionary(ui.display->mapFromGlobal(QCursor::pos()));
+		PrettyWindow::timerEvent(event);
 	}
 
 	void mousePressEvent(QMouseEvent* event) override
@@ -494,14 +417,12 @@ private:
 	void wheelEvent(QWheelEvent* event) override
 	{
 		int scroll = event->angleDelta().y();
-		if (scroll > 0 && historyIndex > 0) ui.display->setText(sentenceHistory[--historyIndex]);
-		if (scroll < 0 && historyIndex + 1 < sentenceHistory.size()) ui.display->setText(sentenceHistory[++historyIndex]);
-		AutoResize(sentenceHistory[historyIndex]);
+		if (scroll > 0 && historyIndex > 0) --historyIndex;
+		if (scroll < 0 && historyIndex + 1 < sentenceHistory.size()) ++historyIndex;
+		DisplaySentence();
 	}
 
-	QAction *hideTextMouseoveAction, *hideTextAction;
-	bool locked, centeredCenter, autoResizeHeight, showOriginal, showOriginalAfterTranslation, useDictionary, clickThrough;
-	int maxSentenceSize = 1000;
+	bool locked, centeredText, autoResize, showOriginal, showOriginalAfterTranslation, useDictionary, clickThrough;
 	QPoint oldPos;
 
 	class
@@ -509,10 +430,11 @@ private:
 	public:
 		bool CompareExchange(QLabel* display)
 		{
-			if (display->text() == text && display->font() == font && display->width() == width) return false;
+			if (display->text() == text && display->font() == font && display->width() == width && display->alignment() == alignment) return false;
 			text = display->text();
 			font = display->font();
 			width = display->width();
+			alignment = display->alignment();
 			return true;
 		}
 
@@ -520,12 +442,12 @@ private:
 		QString text;
 		QFont font;
 		int width;
+		Qt::Alignment alignment;
 	} cachedDisplayInfo;
 	std::vector<QPoint> textPositionMap;
 
 	std::vector<QString> sentenceHistory;
 	int historyIndex = 0;
-	const int maxHistoryIndex = 20;
 
 	class DictionaryWindow : public PrettyWindow
 	{
