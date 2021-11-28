@@ -6,4 +6,4 @@ add_library(host
 )
 target_precompile_headers(host REUSE_FROM pch)
 
-add_subdirectory(cli)
+add_subdirectory(CLI)
