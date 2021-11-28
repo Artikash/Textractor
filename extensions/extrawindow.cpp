@@ -88,14 +88,18 @@ struct PrettyWindow : QDialog, Localizer
 protected:
 	void timerEvent(QTimerEvent*) override
 	{
-		if (autoHide && !hidden && geometry().contains(QCursor::pos()))
+		if (autoHide && geometry().contains(QCursor::pos()))
 		{
-			if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
-			if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
-			QColor hiddenTextColor = TextColor();
-			if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
-			ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
-			hidden = true;
+			if (!hidden)
+			{
+				if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
+				if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
+				QColor hiddenTextColor = TextColor();
+				if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
+				ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
+				hidden = true;
+				repaint();
+			}
 		}
 		else if (hidden)
 		{
@@ -103,6 +107,7 @@ protected:
 			outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
 			ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
 			hidden = false;
+			repaint();
 		}
 	}
 
@@ -243,6 +248,7 @@ public:
 private:
 	void DisplaySentence()
 	{
+		if (sentenceHistory.empty()) return;
 		QString sentence = sentenceHistory[historyIndex];
 		if (sentence.contains(u8"\x200b \n"))
 			if (!showOriginal) sentence = sentence.split(u8"\x200b \n")[1];
@@ -253,9 +259,10 @@ private:
 			ui.display->resize(
 				ui.display->width(),
 				QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height()
-			);
+			); 
+			//resize(width(), QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height() + 22);
 		}
-		else if (locked)
+		else if (sizeLock)
 		{
 			QFontMetrics fontMetrics(ui.display->font(), ui.display);
 			int low = 0, high = sentence.size(), last = 0;
@@ -284,13 +291,13 @@ private:
 
 	void SetPositionLock(bool locked)
 	{
-		settings.setValue(POSITION_LOCK, this->locked = locked);
+		settings.setValue(POSITION_LOCK, posLock = locked);
 	};
 
 	void SetSizeLock(bool locked)
 	{
 		setSizeGripEnabled(!locked);
-		settings.setValue(SIZE_LOCK, locked);
+		settings.setValue(SIZE_LOCK, sizeLock = locked);
 	};
 
 	void SetCenteredText(bool centeredText)
@@ -410,7 +417,7 @@ private:
 
 	void mouseMoveEvent(QMouseEvent* event) override
 	{
-		if (!locked) move(pos() + event->globalPos() - oldPos);
+		if (!posLock) move(pos() + event->globalPos() - oldPos);
 		oldPos = event->globalPos();
 	}
 
@@ -422,7 +429,7 @@ private:
 		DisplaySentence();
 	}
 
-	bool locked, centeredText, autoResize, showOriginal, showOriginalAfterTranslation, useDictionary, clickThrough;
+	bool sizeLock, posLock, centeredText, autoResize, showOriginal, showOriginalAfterTranslation, useDictionary, clickThrough;
 	QPoint oldPos;
 
 	class
