@@ -153,7 +153,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
+	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize || !std::regex_replace(sentence, std::wregex(L"\\s|\u200B"), L"").length()) return false;
 
 	static class
 	{
