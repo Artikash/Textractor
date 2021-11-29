@@ -153,7 +153,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize || !std::regex_replace(sentence, std::wregex(L"\\s|\u200B"), L"").length()) return false;
+	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
 
 	static class
 	{
@@ -187,6 +187,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		Trim(sentence);
 		sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
 	}
+	if (!std::regex_replace(sentence, std::wregex(L"\\s|\x200b"), L"").size()) return false;
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
