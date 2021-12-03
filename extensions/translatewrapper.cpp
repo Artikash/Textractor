@@ -1,5 +1,6 @@
 ﻿#include "qtcommon.h"
 #include "extension.h"
+#include "module.h"
 #include "translatewrapper.h"
 #include "blockmarkup.h"
 #include <concurrent_priority_queue.h>
@@ -22,6 +23,7 @@ extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
 extern const char* GET_API_KEY_FROM;
+extern const wchar_t* REPOSITORY;
 extern const QStringList languagesTo, languagesFrom;
 extern bool translateSelectedOnly, useRateLimiter, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, rateLimitTimespan, maxSentenceSize;
@@ -29,6 +31,9 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 
 QFormLayout* display;
 Settings settings;
+
+std::wstring  repositoryDir = L".";
+std::wstring  currProcessName;
 
 namespace
 {
@@ -38,7 +43,7 @@ namespace
 
 	std::string CacheFile()
 	{
-		return FormatString("%s Cache (%S).txt", TRANSLATION_PROVIDER, tlp->translateTo);
+		return FormatString("%ls/%s Cache (%S).txt", repositoryDir, TRANSLATION_PROVIDER, tlp->translateTo);
 	}
 	void SaveCache()
 	{
@@ -154,6 +159,26 @@ private:
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
+
+	if (auto processName = GetModuleFilename(sentenceInfo["process id"])) 
+	{
+		if(currProcessName != processName.value())
+		{
+		SaveCache();
+		currProcessName = processName.value();
+		repositoryDir = REPOSITORY + FormatString(L"%ls", std::filesystem::path(currProcessName).parent_path().filename().c_str());
+		CreateDirectory(REPOSITORY, NULL);
+		CreateDirectory(repositoryDir.c_str(), NULL);
+		LoadCache();
+		}
+	}
+	else if(currProcessName != L"")
+	{
+		SaveCache();
+		currProcessName = L"";
+		repositoryDir = L".";
+		LoadCache();
+	}
 
 	static class
 	{
