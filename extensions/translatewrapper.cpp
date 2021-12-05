@@ -35,15 +35,21 @@ Settings settings;
 std::wstring  repositoryDir = L".";
 std::wstring  currProcessName;
 
+std::wstring  s2ws(const std::string &s)
+{
+	std::wstring wsTmp(s.begin(), s.end());
+	return wsTmp;
+}
+
 namespace
 {
 	Synchronized<TranslationParam> tlp;
 	Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 	int savedSize = 0;
 
-	std::string CacheFile()
+	std::wstring CacheFile()
 	{
-		return FormatString("%ls/%s Cache (%S).txt", repositoryDir, TRANSLATION_PROVIDER, tlp->translateTo);
+		return FormatString(L"%ls/%s Cache (%lS).txt", repositoryDir, s2ws(FormatString("%s", TRANSLATION_PROVIDER)), tlp->translateTo);
 	}
 	void SaveCache()
 	{
