@@ -60,6 +60,11 @@ public:
 		return root.charMap.empty();
 	}
 
+	void Clear()
+	{
+		root.charMap.clear();
+	}
+
 private:
 	static bool Ignore(wchar_t ch)
 	{
@@ -97,6 +102,7 @@ void UpdateReplacements()
 
 void InitializeReplacements()
 {
+	trie.Clear();
 	UpdateReplacements();
 	if (trie.Empty())
 	{
