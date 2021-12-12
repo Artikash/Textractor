@@ -3,8 +3,7 @@
 #include <cwctype>
 #include <fstream>
 #include <sstream>
-#include <stdio.h>
-#include <iostream>
+#include <process.h>
 
 extern const wchar_t* REPLACER_INSTRUCTIONS;
 
@@ -100,20 +99,13 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		try {
-			UpdateReplacements();
-			if (trie.Empty())
-			{
-				auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
-				for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS))
-					file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
-				const wchar_t program = L'Notepad';
-				_wspawnlp(_P_DETACH, &program, &program, REPLACE_SAVE_FILE, NULL); // show file to user
-			}
-		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what();
-
+		UpdateReplacements();
+		if (trie.Empty())
+		{
+			auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
+			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS))
+				file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
+			//_spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); // show file to user
 		}
 	}
 	break;
