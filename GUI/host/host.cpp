@@ -170,6 +170,9 @@ namespace Host
 			if (statusCode == HC_ACTION && wParam == PM_REMOVE && ((MSG*)lParam)->message == WM_CLIPBOARDUPDATE) SetEvent(clipboardUpdate);
 			return CallNextHookEx(NULL, statusCode, wParam, lParam);
 		}, NULL, GetCurrentThreadId());
+
+		WaitForSingleObject(clipboardUpdate, INFINITE); // Ignore clipboard text present at startup
+
 		std::thread([]
 		{
 			while (WaitForSingleObject(clipboardUpdate, INFINITE) == WAIT_OBJECT_0)
