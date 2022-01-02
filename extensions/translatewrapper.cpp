@@ -187,7 +187,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		Trim(sentence);
 		sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
 	}
-	if (!std::regex_replace(sentence, std::wregex(L"\\s|\x200b"), L"").size()) return false;
+	if (sentence.empty()) return true;
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
