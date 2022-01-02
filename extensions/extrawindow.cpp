@@ -117,10 +117,7 @@ protected:
 private:
 	void RequestFont()
 	{
-		QFont font;
-		// Forced reading of the font from settings otherwise the font window does not have the size set
-		if (!font.fromString(settings.value(FONT, font.toString()).toString())) font = ui.display->font();
-		if (font = QFontDialog::getFont(&ok, font, this, FONT); ok)
+		if (QFont font = QFontDialog::getFont(&ok, ui.display->font(), this, FONT); ok)
 		{
 			settings.setValue(FONT, font.toString());
 			ui.display->setFont(font);
@@ -254,32 +251,28 @@ private:
 			if (!showOriginal) sentence = sentence.split(u8"\x200b \n")[1];
 			else if (showOriginalAfterTranslation) sentence = sentence.split(u8"\x200b \n")[1] + "\n" + sentence.split(u8"\x200b \n")[0];
 
-		if (autoResize)
-		{
-			ui.display->resize(
-				ui.display->width(),
-				QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height()
-			); 
-			//resize(width(), QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height() + 22);
-		}
-		else if (sizeLock)
+		if (sizeLock && !autoResize)
 		{
 			QFontMetrics fontMetrics(ui.display->font(), ui.display);
 			int low = 0, high = sentence.size(), last = 0;
-			while (low < high)
+			while (low <= high)
 			{
 				int mid = (low + high) / 2;
-				if (fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.left(mid)).height() < ui.display->height())
+				if (fontMetrics.boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence.left(mid)).height() <= ui.display->height())
 				{
 					last = mid;
 					low = mid + 1;
 				}
-				else high = mid;
+				else high = mid - 1;
 			}
 			sentence = sentence.left(last);
 		}
 
 		ui.display->setText(sentence);
+		if (autoResize)
+			resize(width(), height() - ui.display->height() +
+				QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height()
+			);
 	}
 
 	void SetTopmost(bool topmost)
