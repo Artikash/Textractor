@@ -233,7 +233,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 		L"Mozilla/5.0 Textractor",
 		L"www.bing.com",
 		L"POST",
-		FormatString(L"/ttranslatev3?fromLang=%s&to=%s&text=%s%s%d", codes.at(tlp.translateFrom), codes.at(tlp.translateTo), Escape(text), token.Copy(), i++).c_str()
+		FormatString(L"/ttranslatev3?fromLang=%s&to=%s&text=%s%s.%d", codes.at(tlp.translateFrom), codes.at(tlp.translateTo), Escape(text), token.Copy(), i++).c_str()
 	})
 		if (auto translation = Copy(JSON::Parse(httpRequest.response)[0][L"translations"][0][L"text"].String())) return { true, translation.value() };
 		else return { false, FormatString(L"%s (token=%s): %s", TRANSLATION_ERROR, std::exchange(token.Acquire().contents, L""), httpRequest.response) };
