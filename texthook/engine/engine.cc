@@ -5984,7 +5984,7 @@ bool InsertWaffleHook()
 {
   bool found = false;
   for (DWORD i = processStartAddress + 0x1000; i < processStopAddress - 4; i++)
-    if (*(DWORD *)i == 0xac68) {
+    if (*(DWORD *)i == 0xac68 && *(BYTE*)(i + 4) == 0) {
       HookParam hp = {};
       hp.address = i;
       hp.length_offset = 1;
