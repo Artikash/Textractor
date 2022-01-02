@@ -4,6 +4,7 @@ find_qt5(Core Widgets WinExtras)
 
 add_executable(Textractor WIN32 
 	main.cpp
+	exception.cpp
 	mainwindow.cpp
 	extenwindow.cpp
 	attachprocessdialog.cpp

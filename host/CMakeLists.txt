@@ -1,5 +1,4 @@
 add_library(host
-	exception.cpp
 	host.cpp
 	textthread.cpp
 	hookcode.cpp
