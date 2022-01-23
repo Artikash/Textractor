@@ -33,7 +33,7 @@ const char* SETTINGS = u8"Settings";
 const char* EXTENSIONS = u8"Extensions";
 const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
-You can also type in the process id)";
+You can also type in the process ID)";
 const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, please use the absolute path";
 const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
@@ -105,8 +105,8 @@ Please contact Artikash with any problems, feature requests, or questions relati
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
 If you like this project, please tell everyone about it! It's time to put AGTH down :))";
-const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
-example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
+const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
 const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: only Textractor x86 can inject this process";
@@ -206,7 +206,7 @@ Modifications to global variables from ProcessSentence are not guaranteed to per
 
 Properties in sentenceInfo:
 "current select": 0 unless sentence is in the text thread currently selected by the user.
-"process id": process id that the sentence is coming from. 0 for console and clipboard.
+"process id": process ID that the sentence is coming from. 0 for console and clipboard.
 "text number": number of the current text thread. Counts up one by one as text threads are created. 0 for console, 1 for clipboard.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -506,7 +506,7 @@ end)";
 	EXTENSIONS = u8"Расширения";
 	SELECT_PROCESS = u8"Выберете процесс";
 	ATTACH_INFO = u8R"(Если вы не видите процесс, к которому хотите присоединить, попробуйте запуск с правами администратора
-Вы также можете ввести id процесса)";
+Вы также можете ввести ID процесса)";
 	SELECT_PROCESS_INFO = u8"При ручном вводе имени файла процесса используйте абсолютный путь";
 	FROM_COMPUTER = u8"Найти в проводнике";
 	PROCESSES = u8"Процессы (*.exe)";
@@ -576,8 +576,8 @@ padding: длина добавочных данных перед строкой 
 Сделать это вы можете на домашней странице (секция issues) или через электронную почту
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
 Если эта программа вам понравилась, расскажите всем о ней :))";
-	CL_OPTIONS = LR"(использование: Textractor [-p{process id|"process name"}]...
-пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с id 4466 или с именем My Game.exe)";
+	CL_OPTIONS = LR"(использование: Textractor [-p{process ID|"process name"}]...
+пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с ID 4466 или с именем My Game.exe)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
 	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте Textractor x86 вместо этого";
@@ -660,7 +660,7 @@ Param sentenceInfo: таблица различной информации о п
 
 Параметры в sentenceInfo:
 "current select": равно 0, если предложение не находится в текстовой нити, выбранной в данный момент пользователем.
-"process id": id процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
+"process id": ID процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
 "text number": номер текущей текстовой нити. Растет один за другим по мере создания текстовых нитей. 0 для консоли, 1 для буфера обмена.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -694,7 +694,7 @@ end)";
 	EXTENSIONS = u8"Ekstensi";
 	SELECT_PROCESS = u8"Pilih Proses";
 	ATTACH_INFO = u8R"(Jika kamu tidak dapat melihat proses yang akan ditempelkan, coba menjalankan dengan mode administrator
-Kamu juga dapat mengetik process id game yang akan ditempel)";
+Kamu juga dapat mengetik process ID game yang akan ditempel)";
 	FROM_COMPUTER = u8"Pilih dari komputer";
 	PROCESSES = u8"Proses (*.exe)";
 	SAVE_SETTINGS = u8"Simpan pengaturan";
@@ -833,7 +833,7 @@ Puoi farlo attraverso la pagina principale del progetto (sezione issues) o via e
 Il codice sorgente è disponibile sotto il GPLv3 nella pagina principale
 Al momento sono in cerca di un nuovo lavoro: contattatemi per email se conoscete qualcuno che ingaggia periti informatici statunitensi
 Se ti piace questo progetto, parlane con tutti per favore :))";
-	CL_OPTIONS = LR"(utilizzo: Textractor [-p{process id|"process name"}]...
+	CL_OPTIONS = LR"(utilizzo: Textractor [-p{process ID|"process name"}]...
 esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi con l'ID 4466 o con il nome My Game.exe)";
 	UPDATE_AVAILABLE = L"Aggiornamento disponibile: scaricala da https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: già inniettato";
@@ -925,7 +925,7 @@ Modifiche alle variabili globali da ProcessSentence non sono garantite di persis
 
 Proprietà in sentenceInfo:
 "current select": 0 a meno che la sentenza è nel thread di testo attualmente scelto dall'utente.
-"process id": id del processo che da cui proviene la sentenza. 0 per console e per appunti.
+"process id": ID del processo che da cui proviene la sentenza. 0 per console e per appunti.
 "text number": numero dell'attuale thread di testo. Conta uno ad uno quando i thread di testo sono creati. 0 per console, 1 per appunti.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -1119,7 +1119,7 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	SETTINGS = u8"설정";
 	EXTENSIONS = u8"확장기능";
 	SELECT_PROCESS = u8"프로세스 선택";
-	ATTACH_INFO = u8R"(부착하려는 게임이 보이지 않는다면, 관리자 권한으로 실행해보세요. 프로세스 id를 입력 할 수도 있습니다.)";
+	ATTACH_INFO = u8R"(부착하려는 게임이 보이지 않는다면, 관리자 권한으로 실행해보세요. 프로세스 ID를 입력 할 수도 있습니다.)";
 	SELECT_PROCESS_INFO = u8"직접 프로세스파일 이름을 타이핑한다면, 정확한 경로를 입력하세요";
 	FROM_COMPUTER = u8"컴퓨터로부터 선택";
 	PROCESSES = u8"프로세스 (*.exe)";
@@ -1269,8 +1269,8 @@ Veuillez me contacter pour tout problème, demande de fonctionnalité ou questio
 Vous pouvez le faire via la page d'accueil du projet (section problèmes) ou par e-mail
 Code source disponible sous GPLv3 sur la page d'accueil du projet
 Si vous aimez ce projet, parlez-en à tout le monde :))";
-	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
-example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
+	CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 	UPDATE_AVAILABLE = L"Mise à jour disponible: téléchargez-la depuis https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: déjà injecté";
 	NEED_32_BIT = L"Textractor: incompatibilité d'architecture: seul Textractor x86 peut injecter ce processus";
@@ -1350,7 +1350,7 @@ Cette extension utilise plusieurs copies de l'interpréteur Lua pour la sécurit
 Les modifications apportées aux variables globales à partir de ProcessSentence ne sont pas garanties de persister.
 Properties in sentenceInfo:
 "current select": 0 unless sentence is in the text thread currently selected by the user.
-"process id": process id that the sentence is coming from. 0 for console and clipboard.
+"process id": process ID that the sentence is coming from. 0 for console and clipboard.
 "text number": number of the current text thread. Counts up one by one as text threads are created. 0 for console, 1 for clipboard.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
