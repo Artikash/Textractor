@@ -1,4 +1,5 @@
 #include "devtools.h"
+#include "module.h"
 #include <ppltasks.h>
 #include <ShlObj.h>
 #include <QWebSocket>
@@ -89,12 +90,17 @@ namespace DevTools
 	void Initialize()
 	{		
 		QString chromePath = settings.value(CHROME_LOCATION).toString();
-		wchar_t programFiles[MAX_PATH + 100] = {};
-		if (chromePath.isEmpty()) for (auto folder : { CSIDL_PROGRAM_FILESX86, CSIDL_PROGRAM_FILES, CSIDL_LOCAL_APPDATA })
+		if (chromePath.isEmpty())
 		{
-			SHGetFolderPathW(NULL, folder, NULL, SHGFP_TYPE_CURRENT, programFiles);
-			wcscat_s(programFiles, L"/Google/Chrome/Application/chrome.exe");
-			if (std::filesystem::exists(programFiles)) chromePath = S(programFiles);
+			for (auto [_, process] : GetAllProcesses())
+				if (process && process->find(L"\\chrome.exe") != std::string::npos) chromePath = S(process.value());
+			wchar_t programFiles[MAX_PATH + 100] = {};
+			for (auto folder : { CSIDL_PROGRAM_FILESX86, CSIDL_PROGRAM_FILES, CSIDL_LOCAL_APPDATA })
+			{
+				SHGetFolderPathW(NULL, folder, NULL, SHGFP_TYPE_CURRENT, programFiles);
+				wcscat_s(programFiles, L"/Google/Chrome/Application/chrome.exe");
+				if (std::filesystem::exists(programFiles)) chromePath = S(programFiles);
+			}
 		}
 		auto chromePathEdit = new QLineEdit(chromePath);
 		static struct : QObject
