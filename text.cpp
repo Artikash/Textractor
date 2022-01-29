@@ -34,7 +34,7 @@ const char* EXTENSIONS = u8"Extensions";
 const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
 You can also type in the process ID)";
-const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, please use the absolute path";
+const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, use the absolute path";
 const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
 const char* CODE_INFODUMP = u8R"(Enter read code
