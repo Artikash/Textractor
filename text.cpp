@@ -182,7 +182,7 @@ const char* SIZE_LOCK = u8"Size lock";
 const char* POSITION_LOCK = u8"Position lock";
 const char* CENTERED_TEXT = u8"Centered text";
 const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
-const char* CLICK_THROUGH = u8"Click through\tShift+X";
+const char* CLICK_THROUGH = u8"Click through\tAlt+X";
 const char* HIDE_MOUSEOVER = u8"Hide while mouse on top";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
@@ -901,7 +901,7 @@ Funziona solo se questa estenzione è usata direttamente dopo un'estensione di t
 	POSITION_LOCK = u8"Lock delle posizione";
 	CENTERED_TEXT = u8"Testo centrato";
 	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
-	CLICK_THROUGH = u8"Clicca attraverso\tAlt+Shift+T";
+	CLICK_THROUGH = u8"Clicca attraverso\tAlt+X";
 	HIDE_MOUSEOVER = u8"Nascondi testo mouseover";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";

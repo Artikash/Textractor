@@ -221,7 +221,7 @@ public:
 
 		QMetaObject::invokeMethod(this, [this]
 		{
-			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_SHIFT | MOD_NOREPEAT, 0x58);
+			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x58);
 			show();
 			AddSentence(EXTRA_WINDOW_INFO);
 		}, Qt::QueuedConnection);
