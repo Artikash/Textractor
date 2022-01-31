@@ -10,7 +10,7 @@
 extern const char* CHROME_LOCATION;
 extern const char* START_DEVTOOLS;
 extern const char* STOP_DEVTOOLS;
-extern const char* HEADLESS_MODE;
+extern const char* HIDE_CHROME;
 extern const char* DEVTOOLS_STATUS;
 extern const char* AUTO_START;
 
@@ -119,14 +119,14 @@ namespace DevTools
 		display->addRow(CHROME_LOCATION, chromePathEdit);
 		auto headlessCheck = new QCheckBox();
 		auto startButton = new QPushButton(START_DEVTOOLS), stopButton = new QPushButton(STOP_DEVTOOLS);
-		headlessCheck->setChecked(settings.value(HEADLESS_MODE, true).toBool());
-		QObject::connect(headlessCheck, &QCheckBox::clicked, [](bool headless) { settings.setValue(HEADLESS_MODE, headless); });
+		headlessCheck->setChecked(settings.value(HIDE_CHROME, true).toBool());
+		QObject::connect(headlessCheck, &QCheckBox::clicked, [](bool headless) { settings.setValue(HIDE_CHROME, headless); });
 		QObject::connect(startButton, &QPushButton::clicked, [chromePathEdit, headlessCheck] { Start(S(chromePathEdit->text()), headlessCheck->isChecked()); });
 		QObject::connect(stopButton, &QPushButton::clicked, &Close);
 		auto buttons = new QHBoxLayout();
 		buttons->addWidget(startButton);
 		buttons->addWidget(stopButton);
-		display->addRow(HEADLESS_MODE, headlessCheck);
+		display->addRow(HIDE_CHROME, headlessCheck);
 		auto autoStartCheck = new QCheckBox();
 		autoStartCheck->setChecked(settings.value(AUTO_START, false).toBool());
 		QObject::connect(autoStartCheck, &QCheckBox::clicked, [](bool autoStart) { settings.setValue(AUTO_START, autoStart); });
