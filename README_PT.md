@@ -2,16 +2,15 @@
 
 ![Como se Parece](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (também conhecido como NextHooker) é um extrator de textos de video-games x86/x64  para Windows/Wine baseado no [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Assista ao [vídeo tutorial](https://tinyurl.com/textractor-tutorial) para uma rápida apresentação de como utilizá-lo.
+Assista ao [vídeo tutorial](docs/TUTORIAL.md) para uma rápida apresentação de como utilizá-lo.
 
 ## Download
 
 As versões lançadas podem ser encontradas [aqui](https://github.com/Artikash/Textractor/releases).<br>
-A última versão lançada do ITHVNR pode ser encontrada [aqui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Tente rodar o vcredist se você encontrar algum erro ao iniciar o Textractor.
+A última versão lançada do ITHVNR pode ser encontrada [aqui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).
 
 ## Recursos e Funções
 
@@ -50,4 +49,4 @@ Informação adicional sobre os hooks é trocada por meio da memória compartilh
 O texto que o host recebe por meio do pipe é então processado um pouco antes de ser despachado devolta para a IGU/GUI.<br>
 Finalmente, a IGU/GUI despacha o texto para as extensões antes de mostrá-lo.
 
-## [Desenvolvedores](CREDITS.md)
+## [Desenvolvedores](docs/CREDITS.md)

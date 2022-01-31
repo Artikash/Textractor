@@ -2,16 +2,15 @@
 
 ![Come si vede](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a. NextHooker) è un agganciatore di testi di videogiochi open-source per Windows/Wine basato su[ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Guarda il [video tutorial](https://tinyurl.com/textractor-tutorial) per una sintesi veloce sul suo utilizzo.
+Guarda il [video tutorial](docs/TUTORIAL.md) per una sintesi veloce sul suo utilizzo.
 
 ## Scarica
 
 Le uscite di Textractor possono essere trovate [qui](https://github.com/Artikash/Textractor/releases).<br>
-L'ultima uscita di ITHVNR può essere trovata [qui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Prova ad avviare vcredist se ti esce un errore quando avvi Textractor.
+L'ultima uscita di ITHVNR può essere trovata [qui](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).
 
 ## Caratteristiche
 
@@ -50,4 +49,4 @@ Informazioni aggiuntive sui ganci soo scambiati attraverso la memorio condivisa.
 Il testo che l'host riceve attraverso il pipe è poi processato un poco prima di essere rinviato alla GUI.<br>
 Infine, la GUI dispone il testo alle estenzioni prima di mostrarle.
 
-## [Sviluppatori](CREDITS.md)
+## [Sviluppatori](docs/CREDITS.md)

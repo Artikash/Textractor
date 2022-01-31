@@ -2,17 +2,16 @@
 
 ![How it looks](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows 7+ (and Wine) based off of [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Watch the [tutorial video](https://tinyurl.com/textractor-tutorial) for a quick rundown on using it.
+Watch the [tutorial video](docs/TUTORIAL.md) for a quick rundown on using it.
 
 ## Download
 
 Official stable releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
 The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Experimental builds of Textractor (with debug info) from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) in the 'Artifacts' section of each job.<br>
-Try running vcredist if you get an error when starting Textractor or if nothing happens when you try attaching to a game.
+Experimental builds of Textractor (with debug info) from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) in the 'Artifacts' section of each job.
 
 ## Features
 
@@ -50,4 +49,4 @@ Additional information about hooks is exchanged via shared memory.<br>
 The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI.<br>
 Finally, the GUI dispatches the text to extensions before displaying it.
 
-## [Developers](CREDITS.md)
+## [Developers](docs/CREDITS.md)

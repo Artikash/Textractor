@@ -1,6 +1,6 @@
 # Textractor
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 ## 概述
 
@@ -46,4 +46,4 @@ texthook 等待管道连接, 之后向一些文本输出函数 (如 TextOut, Get
 之后, 宿主通过管道接收到的文本在传回 GUI 前被简单处理.<br>
 最后, GUI 在显示文本前将其分发给扩展.
 
-## [开发者](CREDITS.md)
+## [开发者](docs/CREDITS.md)
