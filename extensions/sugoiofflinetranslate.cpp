@@ -19,8 +19,8 @@ languagesFrom
 	"Japanese"
 };
 
-bool translateSelectedOnly = false, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
-int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 1000;
+bool translateSelectedOnly = false, useRateLimiter = false, rateLimitSelected = false, useCache = true, useFilter = true;
+int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 10000;
 QString sugoiHost, sugoiPort;
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
@@ -49,12 +49,14 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp)
 {
+	std::string cleanedText = WideStringToString(text);
+	for (auto& ch : cleanedText) if (ch == '\n') ch = ' ';
 	if (HttpRequest httpRequest{
 		L"Mozilla/5.0 Textractor",
 		sugoiHost.toStdWString().c_str(),
 		L"POST",
 		NULL,
-		FormatString(R"({"content":"%s","message":"translate sentences"})", JSON::Escape(WideStringToString(std::regex_replace(text, std::wregex(L"\u200b\n"), L" ")))),
+		FormatString(R"({"content":"%s","message":"translate sentences"})", JSON::Escape(cleanedText)),
 		L"Content-type: application/json",
 		sugoiPort.toUInt(),
 		NULL,
