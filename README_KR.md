@@ -2,16 +2,15 @@
 
 ![How it looks](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a. NextHooker)는 Windows/Wine에서 작동하는 [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine)을 기반으로 한 오픈소스 x86/x64 비디오게임 텍스트 후커 입니다.<br>
-빠른 사용법의 이해를 위해 [tutorial video](https://tinyurl.com/textractor-tutorial) 를 참고하세요.
+빠른 사용법의 이해를 위해 [tutorial video](docs/TUTORIAL.md) 를 참고하세요.
 
 ## 다운로드
 
 [여기](https://github.com/Artikash/Textractor/releases)에서 Textractor 최신버전을 받으실 수 있습니다.<br>
-최신버전의 ITHVNR은 [여기](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO)서 받을 수 있습니다.<br>
-Textractor 실행오류를 겪는다면 vcredist를 실행해 보시기 바랍니다.
+최신버전의 ITHVNR은 [여기](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO)서 받을 수 있습니다.
 
 ## 특징
 
@@ -41,11 +40,11 @@ Textractor 실행오류를 겪는다면 vcredist를 실행해 보시기 바랍�
 
 ## 프로젝트 아키텍쳐
 
-The host (see GUI/host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
+The host (see host folder) injects texthook.dll (created from the texthook folder) into the target process and connects to it via 2 pipe files.<br>
 Host writes to hostPipe, texthook writes to hookPipe.<br>
 texthook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
 Additional information about hooks is exchanged via shared memory.<br>
 The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI.<br>
 Finally, the GUI dispatches the text to extensions before displaying it.
 
-## [개발자들](CREDITS.md)
+## [개발자들](docs/CREDITS.md)

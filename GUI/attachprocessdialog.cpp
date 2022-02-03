@@ -4,14 +4,13 @@
 extern const char* SELECT_PROCESS;
 extern const char* ATTACH_INFO;
 
-AttachProcessDialog::AttachProcessDialog(QWidget *parent, std::vector<std::pair<QString, HICON>> processIcons) :
+AttachProcessDialog::AttachProcessDialog(QWidget* parent, std::vector<std::pair<QString, HICON>> processIcons) :
 	QDialog(parent, Qt::WindowCloseButtonHint),
 	model(this)
 {
 	ui.setupUi(this);
 	setWindowTitle(SELECT_PROCESS);
 	ui.label->setText(ATTACH_INFO);
-	ui.processIdEdit->setValidator(new QIntValidator(0, INT_MAX, this));
 	ui.processList->setModel(&model);
 
 	QPixmap transparent(100, 100);
@@ -25,24 +24,16 @@ AttachProcessDialog::AttachProcessDialog(QWidget *parent, std::vector<std::pair<
 
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(ui.buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-	connect(ui.processList, &QListView::clicked, [this](QModelIndex index)
+	connect(ui.processList, &QListView::clicked, [this](QModelIndex index) { ui.processEdit->setText(model.item(index.row())->text()); });
+	connect(ui.processList, &QListView::doubleClicked, this, &QDialog::accept);
+	connect(ui.processEdit, &QLineEdit::textEdited, [this](QString process)
 	{
-		selectedProcess = model.item(index.row())->text();
+		for (int i = 0; i < model.rowCount(); ++i) ui.processList->setRowHidden(i, !model.item(i)->text().contains(process, Qt::CaseInsensitive));
 	});
-	connect(ui.processList, &QListView::doubleClicked, [this](QModelIndex index)
-	{
-		selectedProcess = model.item(index.row())->text();
-		accept();
-	});
-	connect(ui.processIdEdit, &QLineEdit::returnPressed, [this]
-	{
-		selectedProcess = ui.processIdEdit->text();
-		accept();
-	});
-
+	connect(ui.processEdit, &QLineEdit::returnPressed, this, &QDialog::accept);
 }
 
 QString AttachProcessDialog::SelectedProcess()
 {
-	return selectedProcess.isEmpty() ? ui.processIdEdit->text() : selectedProcess;
+	return ui.processEdit->text();
 }

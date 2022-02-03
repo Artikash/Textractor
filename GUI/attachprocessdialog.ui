@@ -18,11 +18,7 @@
     <widget class="QLabel" name="label"/>
    </item>
    <item>
-    <widget class="QLineEdit" name="processIdEdit">
-     <property name="placeholderText">
-      <string>Process id</string>
-     </property>
-    </widget>
+    <widget class="QLineEdit" name="processEdit"/>
    </item>
    <item>
     <widget class="QListView" name="processList"/>

@@ -33,8 +33,8 @@ const char* SETTINGS = u8"Settings";
 const char* EXTENSIONS = u8"Extensions";
 const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
-You can also type in the process id)";
-const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, please use the absolute path";
+You can also type in the process ID)";
+const char* SELECT_PROCESS_INFO = u8"If you manually type in the process file name, use the absolute path";
 const char* FROM_COMPUTER = u8"Select from computer";
 const char* PROCESSES = u8"Processes (*.exe)";
 const char* CODE_INFODUMP = u8R"(Enter read code
@@ -99,14 +99,14 @@ const wchar_t* CONSOLE = L"Console";
 const wchar_t* CLIPBOARD = L"Clipboard";
 const wchar_t* ABOUT = L"Textractor " ARCH L" v" VERSION LR"( made by Artikash (email: akashmozumdar@gmail.com)
 Project homepage: https://github.com/Artikash/Textractor
-Tutorial video: https://tinyurl.com/textractor-tutorial
+Tutorial video: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 FAQ: https://github.com/Artikash/Textractor/wiki/FAQ
 Please contact Artikash with any problems, feature requests, or questions relating to Textractor
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
 If you like this project, please tell everyone about it! It's time to put AGTH down :))";
-const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
-example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
+const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
 const wchar_t* NEED_32_BIT = L"Textractor: architecture mismatch: only Textractor x86 can inject this process";
@@ -150,7 +150,7 @@ const char* API_KEY = u8"API key";
 const char* CHROME_LOCATION = u8"Google Chrome file location";
 const char* START_DEVTOOLS = u8"Start DevTools";
 const char* STOP_DEVTOOLS = u8"Stop DevTools";
-const char* HEADLESS_MODE = u8"Headless mode";
+const char* HIDE_CHROME = u8"Hide Chrome window";
 const char* DEVTOOLS_STATUS = u8"DevTools status";
 const char* AUTO_START = u8"Start automatically";
 const char* SUGOI_HOST = u8"Sugoi Host (def:localhost)";
@@ -158,7 +158,6 @@ const char* SUGOI_PORT = u8"Sugoi Port (def:14366)";
 const wchar_t* ERROR_START_CHROME = L"failed to start Chrome or to connect to it";
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
-const char* SENTENCE_TOO_BIG = u8"Sentence too large to display";
 const char* MAX_SENTENCE_SIZE = u8"Max sentence size";
 const char* TOPMOST = u8"Always on top";
 const char* DICTIONARY = u8"Dictionary";
@@ -180,7 +179,13 @@ This file must be encoded in UTF-8.)";
 const char* SHOW_ORIGINAL = u8"Original text";
 const char* SHOW_ORIGINAL_INFO = u8R"(Original text will not be shown
 Only works if this extension is used directly after a translation extension)";
+const char* ORIGINAL_AFTER_TRANSLATION = u8"Original text after translation";
 const char* SIZE_LOCK = u8"Size lock";
+const char* POSITION_LOCK = u8"Position lock";
+const char* CENTERED_TEXT = u8"Centered text";
+const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
+const char* CLICK_THROUGH = u8"Click through\tAlt+X";
+const char* HIDE_MOUSEOVER = u8"Hide while mouse on top";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
@@ -203,7 +208,7 @@ Modifications to global variables from ProcessSentence are not guaranteed to per
 
 Properties in sentenceInfo:
 "current select": 0 unless sentence is in the text thread currently selected by the user.
-"process id": process id that the sentence is coming from. 0 for console and clipboard.
+"process id": process ID that the sentence is coming from. 0 for console and clipboard.
 "text number": number of the current text thread. Counts up one by one as text threads are created. 0 for console, 1 for clipboard.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -221,6 +226,17 @@ All text in this file outside of a replacement command is ignored.
 A caret (^) acts as a wildcard that matches any other single character.
 Whitespace in original_text is ignored, but replacement_text can contain spaces, newlines, etc.
 This file must be encoded in Unicode (UTF-16 Little Endian).)";
+const wchar_t* REGEX_REPLACER_INSTRUCTIONS = LR"(This file only does anything when the "Regex Replacer" extension is used.
+Replacement commands must be formatted like this:
+|REGEX|regular_expression|BECOMES|replacement_text|MODIFIER|modifiers|END|
+replacement_text can reference capture groups with a $ followed by their number (e.g. $1 references first capture group).
+modifiers can contain the following:
+"g" the replacement is global.
+"i" the replacement ignores the case.
+If empty the replacement is only for the first match and case sensitive.
+All text in this file outside of a replacement command is ignored.
+This file must be encoded in Unicode (UTF-16 Little Endian).
+Learn, build, & test Regular Expressions: https://regexr.com/)";
 const char* THREAD_LINKER = u8"Thread Linker";
 const char* LINK = u8"Link";
 const char* UNLINK = u8"Unlink";
@@ -290,7 +306,7 @@ Presiona supr en una extension seleccionada para removerla)";
 	CLIPBOARD = L"Portapapeles";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( hecho por mí: Artikash (correo: akashmozumdar@gmail.com)
 Página del proyecto: https://github.com/Artikash/Textractor
-Video tutorial: https://tinyurl.com/textractor-tutorial
+Video tutorial: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 No dudes en conectarme si tienes algún problema, petición de característica o preguntas relacionadas con Textractor
 Puedes hacerlo en la página del proyecto (en el apartado de "Issues") o por correo. Usa el inglés para comunicarte.
 Código fuente disponible bajo GPLv3 en la página del proyecto)";
@@ -385,7 +401,7 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	CLIPBOARD = L"剪贴板";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( 作者: Artikash (email: akashmozumdar@gmail.com)
 项目主页: https://github.com/Artikash/Textractor
-教程视频: https://tinyurl.com/textractor-tutorial
+教程视频: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 如果有任何关于 Textractor 的困难，功能请求或问题，请联系我
 可以通过项目主页 (问题区) 或通过邮件来联系
 项目主页提供基于 GPLv3 协议的源代码)";
@@ -428,7 +444,6 @@ Clic y arrastra los bordes de la ventana para moverla, o en la esquina inferior 
 	API_KEY = u8"API key";
 	EXTRA_WINDOW_INFO = u8R"(右键修改设置
 在窗口边缘点击并拖拽来移动，或在右下角点击并拖拽来调整大小)";
-	SENTENCE_TOO_BIG = u8"文本过长无法显示";
 	MAX_SENTENCE_SIZE = u8"最大文本长度";
 	TOPMOST = u8"窗口总是置顶";
 	DICTIONARY = u8"字典";
@@ -493,7 +508,7 @@ end)";
 	EXTENSIONS = u8"Расширения";
 	SELECT_PROCESS = u8"Выберете процесс";
 	ATTACH_INFO = u8R"(Если вы не видите процесс, к которому хотите присоединить, попробуйте запуск с правами администратора
-Вы также можете ввести id процесса)";
+Вы также можете ввести ID процесса)";
 	SELECT_PROCESS_INFO = u8"При ручном вводе имени файла процесса используйте абсолютный путь";
 	FROM_COMPUTER = u8"Найти в проводнике";
 	PROCESSES = u8"Процессы (*.exe)";
@@ -558,13 +573,13 @@ padding: длина добавочных данных перед строкой 
 	CLIPBOARD = L"Буфер обмена";
 	ABOUT = L"Textractor " ARCH L" в." VERSION LR"( автор: Artikash (email: akashmozumdar@gmail.com)
 Домашняя страница: https://github.com/Artikash/Textractor
-Обучающее видео: https://tinyurl.com/textractor-tutorial
+Обучающее видео: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 Сообщайте о любых проблемах, желаемых для добавления функциях, или задавайте вопросы, касающиеся Textractor
 Сделать это вы можете на домашней странице (секция issues) или через электронную почту
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
 Если эта программа вам понравилась, расскажите всем о ней :))";
-	CL_OPTIONS = LR"(использование: Textractor [-p{process id|"process name"}]...
-пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с id 4466 или с именем My Game.exe)";
+	CL_OPTIONS = LR"(использование: Textractor [-p{process ID|"process name"}]...
+пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с ID 4466 или с именем My Game.exe)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
 	NEED_32_BIT = L"Textractor: несоответствие архитектуры: попробуйте Textractor x86 вместо этого";
@@ -603,7 +618,6 @@ padding: длина добавочных данных перед строкой 
 	API_KEY = u8"Ключ API";
 	EXTRA_WINDOW_INFO = u8R"(Правый клик для изменения настроек
 Нажмите и перетащите за края - для перемещения, или за правый-нижний угол - для изменения размера)";
-	SENTENCE_TOO_BIG = u8"Предложение слишком длинное для отображения";
 	MAX_SENTENCE_SIZE = u8"Максимальная длина предложения";
 	TOPMOST = u8"Поверх всех окон";
 	DICTIONARY = u8"Словарь";
@@ -648,7 +662,7 @@ Param sentenceInfo: таблица различной информации о п
 
 Параметры в sentenceInfo:
 "current select": равно 0, если предложение не находится в текстовой нити, выбранной в данный момент пользователем.
-"process id": id процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
+"process id": ID процесса, из которого предложение поступило. Равно 0, когда это консоль или буфер обмена.
 "text number": номер текущей текстовой нити. Растет один за другим по мере создания текстовых нитей. 0 для консоли, 1 для буфера обмена.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -682,7 +696,7 @@ end)";
 	EXTENSIONS = u8"Ekstensi";
 	SELECT_PROCESS = u8"Pilih Proses";
 	ATTACH_INFO = u8R"(Jika kamu tidak dapat melihat proses yang akan ditempelkan, coba menjalankan dengan mode administrator
-Kamu juga dapat mengetik process id game yang akan ditempel)";
+Kamu juga dapat mengetik process ID game yang akan ditempel)";
 	FROM_COMPUTER = u8"Pilih dari komputer";
 	PROCESSES = u8"Proses (*.exe)";
 	SAVE_SETTINGS = u8"Simpan pengaturan";
@@ -698,7 +712,7 @@ Tekan delete pada ekstensi yang dipilih untuk menghapus ekstensi)";
 	CLIPBOARD = L"Papan clipboard";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( dibuat oleh saya: Artikash (email: akashmozumdar@gmail.com)
 Halaman project: https://github.com/Artikash/Textractor
-Video tutorial : https://tinyurl.com/textractor-tutorial
+Video tutorial : https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 Tolong hubungi saya jika kamu memiliki masalah terkait masalah, permintaan fitur, atau pertanyaan terkait Textractor
 Kamu dapat melakukannya lewat halaman utama project (bagian issues) atau lewat email
 Source code tersedia dibawah lisensi GPLv3 di halaman utama project
@@ -815,13 +829,13 @@ Per rimuovere un estenzione, selezionala e premi rimuovi)";
 	CLIPBOARD = L"Appunti";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( creato da me: Artikash (email: akashmozumdar@gmail.com)
 Pagina principale del progetto: https://github.com/Artikash/Textractor
-Video tutorial: https://tinyurl.com/textractor-tutorial
+Video tutorial: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 Contattatemi per ogni problema, richiesta futura, o domande legate a Textractor
 Puoi farlo attraverso la pagina principale del progetto (sezione issues) o via email
 Il codice sorgente è disponibile sotto il GPLv3 nella pagina principale
 Al momento sono in cerca di un nuovo lavoro: contattatemi per email se conoscete qualcuno che ingaggia periti informatici statunitensi
 Se ti piace questo progetto, parlane con tutti per favore :))";
-	CL_OPTIONS = LR"(utilizzo: Textractor [-p{process id|"process name"}]...
+	CL_OPTIONS = LR"(utilizzo: Textractor [-p{process ID|"process name"}]...
 esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi con l'ID 4466 o con il nome My Game.exe)";
 	UPDATE_AVAILABLE = L"Aggiornamento disponibile: scaricala da https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: già inniettato";
@@ -862,7 +876,6 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	API_KEY = u8"Chiave API";
 	EXTRA_WINDOW_INFO = u8R"(Tasto destro per cambiare le impostazioni
 Clicca e trascina i bordi della finestra per muoverla, oppure nell'angolo in basso a destra per ridimensionare)";
-	SENTENCE_TOO_BIG = u8"Sentenza troppo grande da visualizzare";
 	MAX_SENTENCE_SIZE = u8"Dimensione massima sentenza";
 	TOPMOST = u8"Sempre in primo piano";
 	DICTIONARY = u8"Dizionario";
@@ -885,7 +898,13 @@ Questo file deve essere codificato in UTF-8.)";
 	SHOW_ORIGINAL = u8"Testo originale";
 	SHOW_ORIGINAL_INFO = u8R"(Testo originale non sarà mostrato
 Funziona solo se questa estenzione è usata direttamente dopo un'estensione di traduzione)";
+	ORIGINAL_AFTER_TRANSLATION = u8"Mostra testo originale dopo traduzione";
 	SIZE_LOCK = u8"Lock delle dimensione";
+	POSITION_LOCK = u8"Lock delle posizione";
+	CENTERED_TEXT = u8"Testo centrato";
+	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
+	CLICK_THROUGH = u8"Clicca attraverso\tAlt+X";
+	HIDE_MOUSEOVER = u8"Nascondi testo mouseover";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
@@ -908,7 +927,7 @@ Modifiche alle variabili globali da ProcessSentence non sono garantite di persis
 
 Proprietà in sentenceInfo:
 "current select": 0 a meno che la sentenza è nel thread di testo attualmente scelto dall'utente.
-"process id": id del processo che da cui proviene la sentenza. 0 per console e per appunti.
+"process id": ID del processo che da cui proviene la sentenza. 0 per console e per appunti.
 "text number": numero dell'attuale thread di testo. Conta uno ad uno quando i thread di testo sono creati. 0 per console, 1 per appunti.
 --]]
 function ProcessSentence(sentence, sentenceInfo)
@@ -925,6 +944,17 @@ I comandi di rimpiazzo devono essere formattati cosi:
 Tutto il testo in questo file all'infuori di un comando di rimpiazzo è ignorato.
 La spaziatura nel testo_originale è ignorato, ma testo_sostituito può contenere spaziature, ritorni a capo, ecc.
 Questo file deve essere codificato in Unicode (UTF-16 Little Endian).)";
+	REGEX_REPLACER_INSTRUCTIONS = LR"(Questo file fa qualcosa solo quando l'estenzione "Regex Replacer" è utilizzata.
+I comandi di sostituzione devono essere formattati cosi:
+|REGEX|espressione_regolare|BECOMES|testo_sostituito|MODIFIER|modificatori|END|
+Il parametro "MODIFIER" può contenere i seguenti modificatori:
+"g" la sostituzione è globale.
+"i" la sostituzione ignora maiuscole/minuscole.
+Se il modificatore è vuoto, la sostituzione viene applicata alla sola prima corrispondenza
+e fa distinzione tra maiuscole e minuscole.
+Tutto il testo in questo file all'infuori di un comando di sostituzione è ignorato.
+Questo file deve essere codificato in Unicode (UTF-16 Little Endian).
+Apprendere, creare e testare Espressioni Regolari: https://regexr.com/)";
 	THREAD_LINKER = u8"Collegatore di thread";
 	LINK = u8"Collegamento";
 	THREAD_LINK_FROM = u8"Numero di thread da cui collegarsi";
@@ -964,7 +994,7 @@ Pressione delete com uma extensão selecionada para removê-la.)";
 	CLIPBOARD = L"Área de Transferência";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( Feito por mim: Artikash (e-mail: akashmozumdar@gmail.com)
 Homepage do Projeto: https://github.com/Artikash/Textractor
-Vídeo Tutorial: https://tinyurl.com/textractor-tutorial
+Vídeo Tutorial: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 Por favor, em caso de problemas, requisição de recurso e/ou funções e de dúvidas, entrar em contato comigo. Use o Inglês para se comunicar.
 Você pode fazê-lo por meio da Homepage do Projeto (na aba "Issues") ou via E-mail.
 O código-fonte se encontra disponível na Homepage do projeto sob a licença GPLv3.
@@ -1041,7 +1071,7 @@ Esse arquívo deve ser codifícado em (UTF-16 little endian).)";
 	CLIPBOARD = L"ข้อมูลชั่วคราว";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( ได้ถูกพัฒนาโดย: Artikash (email: akashmozumdar@gmail.com)
 หน้าเว็บไซต์หลัก: https://github.com/Artikash/Textractor
-วีดีโอสอนวิถีใช้: https://tinyurl.com/textractor-tutorial
+วีดีโอสอนวิถีใช้: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 ถ้าหากพบเจอปัญหาสามารถติดต่อมาได้ รวมไปถึงการแนะนำฟังก์ชั้นที่อยากให้มี หรือ คำถามเกี่ยวกับโปรแกรม Textractor สามารถติดต่อ
 ผ่านหน้าเว็บไซต์หลักผ่านทางหน้า Issue หรือทางอีเมลล์
 Source code สามารถหาได้จากส่วนของ GPLv3 ที่หน้าหลักของเว็บไซต์)";
@@ -1091,7 +1121,7 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	SETTINGS = u8"설정";
 	EXTENSIONS = u8"확장기능";
 	SELECT_PROCESS = u8"프로세스 선택";
-	ATTACH_INFO = u8R"(부착하려는 게임이 보이지 않는다면, 관리자 권한으로 실행해보세요. 프로세스 id를 입력 할 수도 있습니다.)";
+	ATTACH_INFO = u8R"(부착하려는 게임이 보이지 않는다면, 관리자 권한으로 실행해보세요. 프로세스 ID를 입력 할 수도 있습니다.)";
 	SELECT_PROCESS_INFO = u8"직접 프로세스파일 이름을 타이핑한다면, 정확한 경로를 입력하세요";
 	FROM_COMPUTER = u8"컴퓨터로부터 선택";
 	PROCESSES = u8"프로세스 (*.exe)";
@@ -1235,14 +1265,14 @@ Pour supprimer une extension, sélectionnez-la et appuyez sur supprimer)";
 	CLIPBOARD = L"Presse-papier";
 	ABOUT = L"Textractor " ARCH L" v" VERSION LR"( Fait par moi: Artikash (email: akashmozumdar@gmail.com)
 Page d'acceuil du projet: https://github.com/Artikash/Textractor
-Vidéo tuto: https://tinyurl.com/textractor-tutorial
+Vidéo tuto: https://github.com/Artikash/Textractor/blob/master/docs/TUTORIAL.md
 FAQ: https://github.com/Artikash/Textractor/wiki/FAQ
 Veuillez me contacter pour tout problème, demande de fonctionnalité ou question concernant Textractor
 Vous pouvez le faire via la page d'accueil du projet (section problèmes) ou par e-mail
 Code source disponible sous GPLv3 sur la page d'accueil du projet
 Si vous aimez ce projet, parlez-en à tout le monde :))";
-	CL_OPTIONS = LR"(usage: Textractor [-p{process id|"process name"}]...
-example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 4466 or with name My Game.exe)";
+	CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 	UPDATE_AVAILABLE = L"Mise à jour disponible: téléchargez-la depuis https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: déjà injecté";
 	NEED_32_BIT = L"Textractor: incompatibilité d'architecture: seul Textractor x86 peut injecter ce processus";
@@ -1282,7 +1312,6 @@ example: Textractor -p4466 -p"My Game.exe" tries to inject processes with id 446
 	API_KEY = u8"API key";
 	EXTRA_WINDOW_INFO = u8R"(Clic droit pour modifier les paramètres
 Cliquez et faites glisser sur les bords de la fenêtre pour vous déplacer ou dans le coin inférieur droit pour redimensionner)";
-	SENTENCE_TOO_BIG = u8"Phrase trop grande pour être affichée";
 	MAX_SENTENCE_SIZE = u8"Taille maximale de la phrase";
 	TOPMOST = u8"Toujours au dessus";
 	DICTIONARY = u8"Dictionnaire";
@@ -1323,7 +1352,7 @@ Cette extension utilise plusieurs copies de l'interpréteur Lua pour la sécurit
 Les modifications apportées aux variables globales à partir de ProcessSentence ne sont pas garanties de persister.
 Properties in sentenceInfo:
 "current select": 0 unless sentence is in the text thread currently selected by the user.
-"process id": process id that the sentence is coming from. 0 for console and clipboard.
+"process id": process ID that the sentence is coming from. 0 for console and clipboard.
 "text number": number of the current text thread. Counts up one by one as text threads are created. 0 for console, 1 for clipboard.
 --]]
 function ProcessSentence(sentence, sentenceInfo)

@@ -166,8 +166,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 				tokens.push(token); // popped one too many
 				break;
 			}
-			tokens.push(current);
-			return tokens.size() <= tokenCount;
+			bool available = tokens.size() < tokenCount;
+			if (available) tokens.push(current);
+			return available;
 		}
 
 	private:
@@ -187,10 +188,11 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		Trim(sentence);
 		sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
 	}
+	if (sentence.empty()) return true;
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
-		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second + L"\x200b"; // dumb hack to not try to translate if stored empty translation
+		if (auto it = translationCache->find(sentence); it != translationCache->end()) translation = it->second;
 	}
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
 		if (rateLimiter.Request() || !useRateLimiter || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, tlp.Copy());

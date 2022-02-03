@@ -10,7 +10,8 @@ DefaultGroupName=Textractor
 MinVersion=6.1
 OutputBaseFilename=Textractor-{#VERSION}-Setup
 OutputDir=Builds
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
+PrivilegesRequiredOverridesAllowed=dialog
 SolidCompression=yes
 Uninstallable=no
 
@@ -41,3 +42,4 @@ Source: "Builds\Textractor-Thai-{#VERSION}\*"; DestDir: "{app}"; Languages: th; 
 Source: "Builds\Textractor-Korean-{#VERSION}\*"; DestDir: "{app}"; Languages: ko; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-Italian-{#VERSION}\*"; DestDir: "{app}"; Languages: it; Flags: recursesubdirs ignoreversion
 Source: "Builds\Textractor-French-{#VERSION}\*"; DestDir: "{app}"; Languages: fr; Flags: recursesubdirs ignoreversion
+Source: "INSTALL_THIS_UNICODE_FONT.ttf"; DestDir: "{autofonts}"; DestName: "ARIAL_UNICODE_MS.ttf"; FontInstall: "Arial Unicode MS";

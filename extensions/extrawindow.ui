@@ -10,6 +10,9 @@
     <height>300</height>
    </rect>
   </property>
+  <property name="contextMenuPolicy">
+    <enum>Qt::CustomContextMenu</enum>
+  </property>
   <layout class="QHBoxLayout">
    <item>
     <widget class="QLabel" name="display">

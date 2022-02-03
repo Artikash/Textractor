@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "main.h"
 #include "util.h"
+#include "MinHook.h"
 
 extern const char* HOOK_SEARCH_STARTING;
 extern const char* HOOK_SEARCH_INITIALIZING;

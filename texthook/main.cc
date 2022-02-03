@@ -9,6 +9,7 @@
 #include "texthook.h"
 #include "hookfinder.h"
 #include "util.h"
+#include "MinHook.h"
 
 extern const char* PIPE_CONNECTED;
 extern const char* INSERTING_HOOK;

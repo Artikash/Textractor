@@ -52,6 +52,7 @@ foreach ($language in @{
 			"Google Translate",
 			"Lua",
 			"Regex Filter",
+			"Regex Replacer",
 			"Remove Repeated Characters",
 			"Remove Repeated Phrases",
 			"Remove Repeated Phrases 2",
@@ -94,7 +95,7 @@ foreach ($arch in @("x86", "x64"))
 rm -Force -Recurse -Verbose "Textractor";
 mkdir -Force -Verbose "Textractor";
 copy -Force -Recurse -Verbose -Destination "Textractor" -Path @("Runtime/*", "Textractor--$version/*");
-&"C:\Program Files\7-Zip\7z" a "Textractor-$version-Zip-Version-English-Only.zip" Textractor/
+&"C:\Program Files\7-Zip\7z" a "Textractor-$version-Zip-Version-English-Only.zip" Textractor/ ../INSTALL_THIS_UNICODE_FONT.ttf
 
 cd ..;
 &"C:\Program Files (x86)\Inno Setup 6\iscc" -DVERSION="$version" installer.iss;

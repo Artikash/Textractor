@@ -77,7 +77,7 @@
        <widget class="QPlainTextEdit" name="textOutput">
         <property name="font">
          <font>
-          <family>Meiryo UI</family>
+          <family>Arial Unicode MS</family>
           <pointsize>13</pointsize>
          </font>
         </property>

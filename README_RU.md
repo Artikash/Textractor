@@ -2,16 +2,15 @@
 
 ![Как это выглядит](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a. NextHooker) это проект x86/x64 Windows/Wine программы для захвата текста из видеоигр, основанный на [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Смотреть [обучающее видео](https://tinyurl.com/textractor-tutorial) для быстрого ознакомления.
+Смотреть [обучающее видео](docs/TUTORIAL.md) для быстрого ознакомления.
 
 ## Загрузка
 
 Выпуски Textractor могут быть найдены [здесь](https://github.com/Artikash/Textractor/releases).<br>
-Последний выпуск ITHVNR может быть найден [здесь](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Установите библиотеки Visual C redist(vcredist.x86.exe), если получаете ошибку при запуске Textractor.
+Последний выпуск ITHVNR может быть найден [здесь](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).
 
 ## Возможности
 
@@ -32,7 +31,7 @@
 
 ## Вклад
 
-Любой вклад приветствуется! Пишите мне(автору)(нет, я не занят!) на akashmozumdar@gmail.com, если у вас есть любые вопросы о кодовой базе.<br>
+Любой вклад приветствуется! Пишите мне(автору) на akashmozumdar@gmail.com, если у вас есть любые вопросы о кодовой базе.<br>
 Используйте стандартные действия для создания pull request (fork, branch, commit changes, создайте PR из своей ветки branch на мой master).<br>
 Вклад в перевод совсем не сложен: просто переведите строки в text.cpp, также, как и этот README.
 
@@ -43,11 +42,11 @@
 
 ## Архитектура проекта
 
-Хост (смотрите папку GUI/host) внедряет texthook.dll (созданной из папки texthook) в целевой процесс и подключается к нему через два файла-канала (pipe).<br>
+Хост (смотрите папку host) внедряет texthook.dll (созданной из папки texthook) в целевой процесс и подключается к нему через два файла-канала (pipe).<br>
 Хост пишет в hostPipe, texthook пишет в hookPipe.<br>
 texthook ждет присоединения канала, тогда внедряет некоторые инструкции в любые выводящие текст функции (такие как TextOut, GetGlyphOutline), что вызывает пересылку поступающего в них текста через канал.<br>
 Дополнительная информация о хуках размещена через файл просмотра (a.k.a. section object), который сопоставлен с ссылкой на класс TextHook.<br>
 Текст, который хост получает через канал, затем немного обрабатывается перед отправкой обратно в графический интерфейс (GUI).<br>
 Наконец, GUI отправляет текст расширениям, перед его отображением.
 
-## [Разработчики](CREDITS.md)
+## [Разработчики](docs/CREDITS.md)

@@ -18,7 +18,7 @@ extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 namespace
 {
 	constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
-	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Regex Filter>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines>Styler";
+	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Regex Filter>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines";
 
 	struct Extension
 	{
@@ -55,7 +55,7 @@ namespace
 
 	void Unload(int index)
 	{
-		std::scoped_lock writeLock(extenMutex);
+		std::scoped_lock lock(extenMutex);
 		FreeLibrary(GetModuleHandleW((extensions.at(index).name + L".xdll").c_str()));
 		extensions.erase(extensions.begin() + index);
 	}

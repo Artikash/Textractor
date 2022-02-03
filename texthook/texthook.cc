@@ -6,6 +6,7 @@
 #include "texthook.h"
 #include "main.h"
 #include "ithsys/ithsys.h"
+#include "MinHook.h"
 
 extern const char* FUNC_MISSING;
 extern const char* MODULE_MISSING;

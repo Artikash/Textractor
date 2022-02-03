@@ -2,16 +2,15 @@
 
 ![How it looks](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a NextHooker) adalah text hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Lihat [video tutorial](https://tinyurl.com/textractor-tutorial) untuk mengetahui bagaimana cara menggunakannya.
+Lihat [video tutorial](docs/TUTORIAL.md) untuk mengetahui bagaimana cara menggunakannya.
 
 ## Pengunduhan
 
 Rilisan Textractor dapat diunduh [disini](https://github.com/Artikash/Textractor/releases).<br>
-Rilisan Terakhir ITHVNR dapat diunduh [disini](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Coba jalankan vcredist.x86.exe jika kamu memiliki masalah ketika menjalankan Textractor.
+Rilisan Terakhir ITHVNR dapat diunduh [disini](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).
 
 ## Fitur
 
@@ -35,7 +34,7 @@ Lihat folder extensions untuk melihat sampel ekstensi.
 
 ## Kontribusi
 
-Seluruh kontribusi diapresiasi! Tolong email (tidak, saya tidak sibuk!) saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai codebase nya.<br>
+Seluruh kontribusi diapresiasi! Tolong email saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai codebase nya.<br>
 Kamu harus menggunakan proses standar dalam membuat permintaan pull(fork, branch, commit changes, membuat PR dari branch kamu ke master saya).<br>
 Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari text.cpp lalu terjemahkan README ini.
 
@@ -47,11 +46,11 @@ Lalu kamu dapat membuka folder di Visual Studio, dan build. Run Textractor.exe.
 
 ## Arsitektur Project
 
-Host (lihat folder GUI/host) menginject texthook.dll (dibuat dari folder texthook) kedalam target process dan disambungkan lewat 2 file pipe.<br>
+Host (lihat folder host) menginject texthook.dll (dibuat dari folder texthook) kedalam target process dan disambungkan lewat 2 file pipe.<br>
 Host menulis ke hostPipe, texthook menulis ke hookPipe.<br>
 texthook menunggu pipe tersambung, lalu menginject beberapa instruksi ke teks yang menghasilkan fungsi (contoh: TextOut, GetGlyphOutline) yang membuat input dikirim melewati pipa.<br>
 Informasi tambahan tentang hook dipindahkan melewati shared memory.<br>
 Text yang diterima host melewati pipe lalu diproses lagi sebelum dikembalikan ke GUI.<br>
 Dan pada akhirnya, GUI melepas text ke ekstensi sebelum menampilkan teks.
 
-## [Pengembang](CREDITS.md)
+## [Pengembang](docs/CREDITS.md)

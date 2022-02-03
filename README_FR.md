@@ -2,16 +2,15 @@
 
 ![À quoi ça ressemble](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
 **Textractor** (a.k.a. NextHooker) est un traducteur de jeux-videos basé surtout sur du texte en open source x86/x64 pour Windows/Wine [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Regarde le [tutorial video](https://tinyurl.com/textractor-tutorial) pour un aperçu rapide de son utilisation.
+Regarde le [tutorial video](docs/TUTORIAL.md) pour un aperçu rapide de son utilisation.
 
 ## Téléchargement
 
 Les versions de Textractor peuvent être trouvées[here](https://github.com/Artikash/Textractor/releases).<br>
-Le denière version de THVNR peut etre trouvé [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Essayez de démarrer Vcredist si vous avez une erreur en lançant Textractor.
+Le denière version de THVNR peut etre trouvé [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).
 
 ## Nouveautés
 - Hautement extensible et personnalisable
@@ -31,7 +30,7 @@ Voir le dossier des extensions pour des exemples de ce que les extensions peuven
 
 ## Contribution
 
-Toutes les contributions sont appréciées! Veuillez m'envoyer un e-mail (non, je ne suis pas occupé!) À akashmozumdar@gmail.com si vous avez des questions sur la base de code. <br>
+Toutes les contributions sont appréciées! Veuillez m'envoyer un e-mail À akashmozumdar@gmail.com si vous avez des questions sur la base de code. <br>
 Vous devez utiliser le processus standard de création d'une demande d'extraction (fork, branch, commit changes, make PR from your branch to my master). <br>
 Contribuer à une traduction est simple: il suffit de traduire les chaînes dans text.cpp ainsi que ce fichier README.
 
@@ -49,4 +48,4 @@ Des informations supplémentaires sur les hooks sont échangées via la mémoire
 Le texte que l'hôte reçoit via le canal est ensuite traité un peu avant d'être renvoyé à l'interface graphique. <br>
 Enfin, l'interface graphique envoie le texte aux extensions avant de l'afficher.
 
-## [Développeurs](CREDITS.md)
+## [Développeurs](docs/CREDITS.md)

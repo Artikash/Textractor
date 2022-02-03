@@ -94,7 +94,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"Slovenian" }, { L"Slovenian" } },
 	{ { L"Spanish" }, { L"Spanish" } },
 	{ { L"Swedish" }, { L"Swedish" } },
-	{ { L"?" }, { L"Any language (detect)" } }
+	{ { L"?" }, { L"Detect language" } }
 };
 
 bool translateSelectedOnly = true, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;

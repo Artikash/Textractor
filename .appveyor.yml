@@ -8,17 +8,18 @@ environment:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     arch: x64
     platform: x64
-    qtbin: msvc2017_64
+    qtbin: msvc2019_64
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     arch: x86
     platform: Win32
-    qtbin: msvc2017
+    qtbin: msvc2019
 
 before_build:
+  - git submodule update --init
   - cd C:\
   - mkdir %arch%
   - cd %arch%
-  - cmake -G "Visual Studio 16 2019" -A "%platform%" -DQt5_DIR="C:\Qt\5.13\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" -DVERSION="" ../Textractor
+  - cmake -G "Visual Studio 16 2019" -A "%platform%" -DQt5_DIR="C:\Qt\5.15\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" -DVERSION="" ../Textractor
 
 build:
   project: C:\%arch%\Textractor.sln
