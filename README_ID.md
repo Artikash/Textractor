@@ -4,7 +4,7 @@
 
 [English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
 
-**Textractor** (a.k.a NextHooker) adalah text hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
+**Textractor** (a.k.a NextHooker) adalah teks hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Lihat [video tutorial](docs/TUTORIAL.md) untuk mengetahui bagaimana cara menggunakannya.
 
 ## Pengunduhan
@@ -47,7 +47,7 @@ Host (lihat folder host) menyuntikan texthook.dll (dibuat dari folder texthook) 
 Host menulis ke hostPipe, texthook menulis ke hookPipe.<br>
 texthook menunggu pipe tersambung, lalu menyuntikan beberapa instruksi ke teks yang menghasilkan fungsi (contoh: TextOut, GetGlyphOutline) yang membuat input dikirim melewati pipa.<br>
 Informasi tambahan tentang hook dipindahkan melewati shared memory.<br>
-Text yang diterima host melewati pipe lalu diproses lagi sebelum dikembalikan ke GUI.<br>
-Dan pada akhirnya, GUI melepas text ke ekstensi sebelum menampilkan teks.
+Teks yang diterima host melewati pipe lalu diproses lagi sebelum dikembalikan ke GUI.<br>
+Dan pada akhirnya, GUI melepas teks ke ekstensi sebelum menampilkan teks.
 
 ## [Pengembang](docs/CREDITS.md)
