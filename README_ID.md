@@ -21,7 +21,7 @@ Rilisan Terakhir ITHVNR dapat diunduh [disini](https://drive.google.com/open?id=
 
 ## Dukungan
 
-Tolong beritahu saya jika kamu menemukan klutu, game yang tidak dapat di tempel oleh Textractor, permintaan fitur, atau usulan lain.<br>
+Tolong beritahu saya jika kamu menemukan kutu, game yang tidak dapat di tempel oleh Textractor, permintaan fitur, atau usulan lain.<br>
 Jika kamu memiliki masalah dalam menempelkan kedalam game tolong email saya link agar saya dapat mengunduh game tersebut, atau hadiahkan game tersebut di [Steam](https://steamcommunity.com/profiles/76561198097566313/).
 
 ## Ekstensi
@@ -38,7 +38,7 @@ Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahka
 ## Mengcompile
 
 Sebelum melakukan proses compile *Textractor*, kamu harus memiliki Visual Studio dengan dukungan Cmake, juga dengan Qt version 5.13<br>
-Lalu kamu dapat membuka folder di Visual Studio, dan build. Run Textractor.exe.
+Lalu kamu dapat membuka folder di Visual Studio, dan build. Jalankan Textractor.exe.
 
 
 ## Arsitektur Project
