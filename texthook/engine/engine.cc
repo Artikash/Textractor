@@ -9030,12 +9030,37 @@ bool InsertWolf2Hook()
   NewHook(hp, "WolfRPG2");
   return true;
 }
+//example-game:妹！せいかつ～ファンタジー～ by:iov
+bool InsertWolf3Hook()
+{
+    const BYTE bytes[] = { 0xC7,0x45,0xFC,0x00,0x00,0x00,0x00,0x8B,0x45,0x94,0x83,0xE0,0x01 };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:WolfRPG: pattern3 not found");
+        return false;
+    }
 
+    HookParam myhp = {};
+    myhp.address = addr+41;
+
+    myhp.type = USING_STRING | NO_CONTEXT;
+    myhp.offset = pusha_eax_off - 4;
+    myhp.type |= DATA_INDIRECT;
+    
+    myhp.index = 4;
+
+    char nameForUser[HOOK_NAME_SIZE] = "WolfRPG_String_Copy";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: WolfRPG_String_Copy Hook");
+    return true;
+}
+	
 } // WolfRPG namespace
 
 bool InsertWolfHook()
 {
-  return InsertOldWolfHook(), InsertWolf2Hook();
+  return InsertOldWolfHook(), InsertWolf2Hook(), InsertWolf3Hook();
 }
 
 bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
