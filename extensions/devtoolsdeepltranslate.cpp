@@ -7,7 +7,6 @@ extern const wchar_t* TRANSLATION_ERROR;
 
 const char* TRANSLATION_PROVIDER = "DevTools DeepL Translate";
 const char* GET_API_KEY_FROM = nullptr;
-bool firstTranslation = true;
 std::wstring currTranslateTo;
 
 extern const QStringList languagesTo
