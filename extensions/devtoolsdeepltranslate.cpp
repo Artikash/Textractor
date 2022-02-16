@@ -7,6 +7,7 @@ extern const wchar_t* TRANSLATION_ERROR;
 
 const char* TRANSLATION_PROVIDER = "DevTools DeepL Translate";
 const char* GET_API_KEY_FROM = nullptr;
+std::wstring currTranslateTo;
 
 extern const QStringList languagesTo
 {
@@ -66,35 +67,35 @@ languagesFrom =
 };
 extern const std::unordered_map<std::wstring, std::wstring> codes
 {
-	{ { L"Bulgarian" }, { L"Bulgarian" } },
-	{ { L"Chinese" }, { L"Chinese" } },
-	{ { L"Chinese (Simplified)" }, { L"Chinese (simplified)" } },
-	{ { L"Czech" }, { L"Czech" } },
-	{ { L"Danish" }, { L"Danish" } },
-	{ { L"Dutch" }, { L"Dutch" } },
-	{ { L"English" }, { L"English" } },
-	{ { L"English (American)" }, { L"English (American)" } },
-	{ { L"English (British)" }, { L"English (British)" } },
-	{ { L"Estonian" }, { L"Estonian" } },
-	{ { L"Finnish" }, { L"Finnish" } },
-	{ { L"French" }, { L"French" } },
-	{ { L"German" }, { L"German" } },
-	{ { L"Greek" }, { L"Greek" } },
-	{ { L"Hungarian" }, { L"Hungarian" } },
-	{ { L"Italian" }, { L"Italian" } },
-	{ { L"Japanese" }, { L"Japanese" } },
-	{ { L"Latvian" }, { L"Latvian" } },
-	{ { L"Lithuanian" }, { L"Lithuanian" } },
-	{ { L"Polish" }, { L"Polish" } },
-	{ { L"Portuguese" }, { L"Portuguese" } },
-	{ { L"Portuguese (Brazilian)" }, { L"Portuguese (Brazilian)" } },
-	{ { L"Romanian" }, { L"Romanian" } },
-	{ { L"Russian" }, { L"Russian" } },
-	{ { L"Slovak" }, { L"Slovak" } },
-	{ { L"Slovenian" }, { L"Slovenian" } },
-	{ { L"Spanish" }, { L"Spanish" } },
-	{ { L"Swedish" }, { L"Swedish" } },
-	{ { L"?" }, { L"Detect language" } }
+	{ { L"Bulgarian" }, { L"bg-BG" } },
+	{ { L"Chinese" }, { L"zh" } },
+	{ { L"Chinese (Simplified)" }, { L"zh-ZH" } },
+	{ { L"Czech" }, { L"cs-CS" } },
+	{ { L"Danish" }, { L"da-DA" } },
+	{ { L"Dutch" }, { L"nl-NL" } },
+	{ { L"English" }, { L"en" } },
+	{ { L"English (American)" }, { L"en-US" } },
+	{ { L"English (British)" }, { L"en-GB" } },
+	{ { L"Estonian" }, { L"et-ET" } },
+	{ { L"Finnish" }, { L"fi-FI" } },
+	{ { L"French" }, { L"fr-FR" } },
+	{ { L"German" }, { L"de-DE" } },
+	{ { L"Greek" }, { L"el-EL" } },
+	{ { L"Hungarian" }, { L"hu-HU" } },
+	{ { L"Italian" }, { L"it-IT" } },
+	{ { L"Japanese" }, { L"ja-JA" } },
+	{ { L"Latvian" }, { L"lv-LV" } },
+	{ { L"Lithuanian" }, { L"lt-LT" } },
+	{ { L"Polish" }, { L"pl-PL" } },
+	{ { L"Portuguese" }, { L"pt-PT" } },
+	{ { L"Portuguese (Brazilian)" }, { L"pt-BR" } },
+	{ { L"Romanian" }, { L"ro-RO" } },
+	{ { L"Russian" }, { L"ru-RU" } },
+	{ { L"Slovak" }, { L"sk-SK" } },
+	{ { L"Slovenian" }, { L"sl-SL" } },
+	{ { L"Spanish" }, { L"es-ES" } },
+	{ { L"Swedish" }, { L"sv-SV" } },
+	{ { L"?" }, { L"auto" } }
 };
 
 bool translateSelectedOnly = true, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
@@ -126,16 +127,21 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	std::scoped_lock lock(translationMutex);
 	std::wstring escaped; // DeepL breaks with slash in input
 	for (auto ch : text) ch == '/' ? escaped += L"\\/" : escaped += ch;
-	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#en/en/%s"})", Escape(escaped)));
-	for (int retry = 0; ++retry < 20; Sleep(100))
-		if (Copy(DevTools::SendRequest("Runtime.evaluate", LR"({"expression":"document.readyState"})")[L"result"][L"value"].String()) == L"complete") break;
+	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo).substr(0, 2), Escape(escaped)));
+	if (currTranslateTo != tlp.translateTo)
+	{
+		currTranslateTo = tlp.translateTo;
+		for (int retry = 0; ++retry < 20; Sleep(100))
+			if (Copy(DevTools::SendRequest("Runtime.evaluate", LR"({"expression":"document.readyState"})")[L"result"][L"value"].String()) == L"complete") break;
 
-	DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
-		document.querySelector('.lmt__language_select--source').querySelector('button').click();
-		document.evaluate(`//*[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
-		document.querySelector('.lmt__language_select--target').querySelector('button').click();
-		document.evaluate(`//*[text()='%s']`,document.querySelector('.lmt__language_select__menu'),null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue.click();
-	"})", codes.at(tlp.translateFrom), codes.at(tlp.translateTo)));
+		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
+			document.querySelector('.lmt__language_select--source').querySelector('button').click();
+			document.querySelector('[dl-test=translator-lang-option-%s').click();
+
+			document.querySelector('.lmt__language_select--target').querySelector('button').click();
+			document.querySelector('[dl-test=translator-lang-option-%s]').click();
+		"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo)));
+	}
 
 	for (int retry = 0; ++retry < 100; Sleep(100))
 		if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
