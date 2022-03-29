@@ -9495,6 +9495,25 @@ void SpecialHookWillPlusA(DWORD esp_base, HookParam *, BYTE index, DWORD *data, 
 
 bool InsertWillPlusAHook()
 {
+    //by iov
+    const BYTE bytes2[] = { 0x8B,0x00,0xFF,0x76,0xFC,0x8B,0xCF,0x50 };
+    ULONG range2 = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr2 = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range2);
+    if (addr2) {
+        //ConsoleOutput("Insert: pix_strcpy_s Hook addr %x", addr + 0x1b);
+        HookParam myhp = {};
+        myhp.address = addr2 + 2;
+   
+        myhp.type = USING_UNICODE | NO_CONTEXT | USING_STRING; 
+        
+        myhp.offset = pusha_eax_off - 4;//esp+4
+
+        char nameForUser[HOOK_NAME_SIZE] = "WillPlus3_memcpy";
+        NewHook(myhp, nameForUser);
+        ConsoleOutput("Insert: WillPlus3_memcpy Hook");
+        return true;
+    }	
+	
   const BYTE bytes[] = {
     0x81,0xec, 0x14,0x08,0x00,0x00 // 0042B5E0   81EC 14080000    SUB ESP,0x814	; jichi: text in eax, name in eax - 1024, able to copy
   };
