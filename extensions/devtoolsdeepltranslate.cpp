@@ -119,6 +119,21 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 	return TRUE;
 }
 
+std::wstring htmlDecode (std::wstring text) {
+    const std::wstring enc[] = { L"&amp;", L"&lt;", L"&gt;" };
+    const std::wstring dec[] = { L"&", L"<", L">" };
+	
+	size_t pos;
+	for(int j = 0; j < 3; j++) {
+		do {
+			pos = text.find(enc[j]);
+	  		if (pos != std::wstring::npos)
+		    		text.replace (pos,enc[j].length(),dec[j]);
+    		} while (pos != std::wstring::npos);
+  	}
+	return text;
+}
+
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp)
 {
 	if (!DevTools::Connected()) return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, ERROR_START_CHROME) };
@@ -146,7 +161,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	for (int retry = 0; ++retry < 100; Sleep(100))
 		if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
 			LR"({"expression":"document.querySelector('#target-dummydiv').innerHTML.trim() ","returnByValue":true})"
-		)[L"result"][L"value"].String())) if (!translation->empty()) return { true, translation.value() };
+		)[L"result"][L"value"].String())) if (!translation->empty()) return { true, htmlDecode(translation.value()) };
 	if (auto errorMessage = Copy(DevTools::SendRequest("Runtime.evaluate",
 		LR"({"expression":"document.querySelector('div.lmt__system_notification').innerHTML","returnByValue":true})"
 	)[L"result"][L"value"].String())) return { false, FormatString(L"%s: %s", TRANSLATION_ERROR, errorMessage.value()) };
