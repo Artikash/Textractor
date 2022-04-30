@@ -36,11 +36,11 @@ namespace
 		if (process) DevTools::Close();
 
 		auto args = FormatString(
-			L"%s --proxy-server=direct:// --disable-extensions --disable-gpu --user-data-dir=\"%s\\devtoolscache\" --remote-debugging-port=9222",
+			L"%s --proxy-server=direct:// --disable-extensions --disable-gpu --no-first-run --user-data-dir=\"%s\\devtoolscache\" --remote-debugging-port=9222",
 			chromePath,
 			std::filesystem::current_path().wstring()
 		);
-		if (headless) args += L" --headless";
+		args += headless ? L" --window-size=1920,1080 --headless" : L" --window-size=850,900";
 		DWORD exitCode = 0;
 		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
 		PROCESS_INFORMATION processInfo = {};
