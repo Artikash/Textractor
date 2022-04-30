@@ -46,8 +46,8 @@ constexpr auto DICTIONARY_SAVE_FILE = u8"SavedDictionary.txt";
 constexpr int CLICK_THROUGH_HOTKEY = 0xc0d0;
 constexpr int HIDE_TEXT_HOTKEY = 0xc0d1;
 const qreal COLOR_ALFAF_HIDE_WINDOW = 0.05;
-const int TEXT_TIMEOUT_DEF = 2000;
-const int TEXT_TIMEOUT_ADD_PER_CHAR_DEF = 40;
+const int TEXT_TIMEOUT_DEF = 0;
+const int TEXT_TIMEOUT_ADD_PER_CHAR_DEF = 0;
 
 QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool customOpacity = true)
 {
