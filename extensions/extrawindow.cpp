@@ -68,6 +68,7 @@ struct PrettyWindow : QDialog, Localizer
 		ui.display->setGraphicsEffect(outliner = new Outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
+		setWindowTitle("Extra Window");
 
 		settings.beginGroup(name);
 		QFont font = ui.display->font();
