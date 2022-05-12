@@ -69,6 +69,7 @@ extern const wchar_t* ABOUT;
 extern const wchar_t* CL_OPTIONS;
 extern const wchar_t* LAUNCH_FAILED;
 extern const wchar_t* INVALID_CODE;
+extern const wchar_t* REPOSITORY;
 
 namespace
 {
@@ -80,6 +81,8 @@ namespace
 	Ui::MainWindow ui;
 	std::atomic<DWORD> selectedProcessId = 0;
 	ExtenWindow* extenWindow = nullptr;
+	concurrency::reader_writer_lock configFoldersMutex;
+	std::unordered_map<DWORD, std::wstring> configFolders;
 	std::unordered_set<DWORD> alreadyAttached;
 	bool autoAttach = false, autoAttachSavedOnly = true;
 	bool showSystemProcesses = false;
@@ -118,6 +121,7 @@ namespace
 		};
 		DWORD (*GetSelectedProcessId)() = [] { return selectedProcessId.load(); };
 
+		concurrency::reader_writer_lock::scoped_lock_read readLock(configFoldersMutex);
 		return
 		{ {
 		{ "current select", &thread == current },
@@ -126,6 +130,7 @@ namespace
 		{ "hook address", (int64_t)thread.tp.addr },
 		{ "text handle", thread.handle },
 		{ "text name", (int64_t)thread.name.c_str() },
+		{ "config folder", thread.tp.processId ? (int64_t)configFolders.at(thread.tp.processId).c_str() : (int64_t)L"./" },
 		{ "add sentence", (int64_t)AddSentence },
 		{ "add text", (int64_t)AddText },
 		{ "get selected process id", (int64_t)GetSelectedProcessId },
@@ -242,6 +247,7 @@ namespace
 
 	void ConfigureProcess()
 	{
+ 		// TODO: move this file into config folder (need to coordinate with texthook dll
 		if (auto processName = GetModuleFilename(selectedProcessId)) if (int last = processName->rfind(L'\\') + 1)
 		{
 			std::wstring configFile = std::wstring(processName.value()).replace(last, std::string::npos, GAME_CONFIG_FILE);
@@ -559,6 +565,17 @@ namespace
 			for (auto hookInfo : hookList->split(" , "))
 				if (auto hp = HookCode::Parse(S(hookInfo))) Host::InsertHook(processId, hp.value());
 				else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx, &savedThreadCtx2, savedThreadCode, (unsigned)std::size(savedThreadCode));
+		std::wstring repositoryDir;
+		repositoryDir = REPOSITORY;
+		repositoryDir += std::filesystem::path(S(process)).parent_path().filename();
+		repositoryDir += L"("; 
+		repositoryDir += std::filesystem::path(S(process)).filename().replace_extension("");
+		repositoryDir += L")_" + std::to_wstring(std::hash<std::wstring_view>()(S(process)));
+		repositoryDir += L"/";
+		if (!std::filesystem::exists(REPOSITORY)) CreateDirectoryW(REPOSITORY, nullptr);
+		if (!std::filesystem::exists(repositoryDir)) CreateDirectoryW(repositoryDir.c_str(), nullptr);
+		std::scoped_lock writeLock(configFoldersMutex);
+		configFolders[processId] = repositoryDir;
 	}
 
 	void ProcessDisconnected(DWORD processId)
