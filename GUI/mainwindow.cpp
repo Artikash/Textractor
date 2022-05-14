@@ -576,6 +576,8 @@ namespace
 		if (!std::filesystem::exists(repositoryDir)) CreateDirectoryW(repositoryDir.c_str(), nullptr);
 		std::scoped_lock writeLock(configFoldersMutex);
 		configFolders[processId] = repositoryDir;
+
+		loadExtensions(repositoryDir);
 	}
 
 	void ProcessDisconnected(DWORD processId)
@@ -584,6 +586,7 @@ namespace
 		{
 			ui.processCombo->removeItem(ui.processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
 		}, Qt::BlockingQueuedConnection);
+		loadExtensions();
 	}
 
 	void ThreadAdded(TextThread& thread)
