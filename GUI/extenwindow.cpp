@@ -154,9 +154,7 @@ ExtenWindow::ExtenWindow(QWidget* parent) : QMainWindow(parent, Qt::WindowCloseB
 	connect(ui.extenList, &QListWidget::customContextMenuRequested, ContextMenu);
 	ui.extenList->installEventFilter(this);
 
-	if (!QFile::exists(extenSaveFileName)) QTextFile(extenSaveFileName, QIODevice::WriteOnly).write(DEFAULT_EXTENSIONS);
-	for (auto extenName : QString(QTextFile(extenSaveFileName, QIODevice::ReadOnly).readAll()).split(">")) Load(extenName);
-	Sync();
+	loadExtensions();
 }
 
 bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
