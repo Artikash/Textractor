@@ -18,11 +18,9 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 			text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
 		};
 
-		//sentence = sentence.substr(checkSentence.size(), wstring::npos);
 		sentence = sentence.substr(checkSentence.size());
 		Ltrim(sentence);
 		return true;
-		//return !sentence.empty();
 	}
 	return false;
 }
