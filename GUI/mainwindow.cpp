@@ -81,6 +81,9 @@ namespace
 	Ui::MainWindow ui;
 	std::atomic<DWORD> selectedProcessId = 0;
 	ExtenWindow* extenWindow = nullptr;
+	QString HookSaveFile = HOOK_SAVE_FILE;
+	QString HookSaveFileProc = HOOK_SAVE_FILE;
+	QString GameSaveFile = GAME_SAVE_FILE;
 	std::wstring extenDefPath = L"./";
 	concurrency::reader_writer_lock configFoldersMutex;
 	std::unordered_map<DWORD, std::wstring> configFolders;
@@ -149,8 +152,20 @@ namespace
 			for (auto process : QString(QTextFile(GAME_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
 				attachTargets.insert(S(process));
 		if (autoAttachSavedOnly)
-			for (auto process : QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
-				attachTargets.insert(S(process.split(" , ")[0]));
+		{
+			WIN32_FIND_DATA FindDirectory;
+			HANDLE hFind;
+			std::wstring  sPathFindDir = REPOSITORY;
+			sPathFindDir += L"*";
+			hFind = FindFirstFileW(sPathFindDir.c_str(), &FindDirectory);
+			do
+			{
+				if (FindDirectory.dwFileAttributes == 16)	//Directory
+					for (auto process : QString(QTextFile(S(REPOSITORY) + S(FindDirectory.cFileName) + u8"/" + HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts))
+						attachTargets.insert(S(process.split(" , ")[0]));
+			} while (FindNextFile(hFind, &FindDirectory));
+			FindClose(hFind);
+		}
 
 		if (!attachTargets.empty())
 			for (auto [processId, processName] : GetAllProcesses())
@@ -270,7 +285,7 @@ namespace
 		if (!processName) processName = UserSelectedProcess();
 		DetachProcess();
 		if (!processName) return;
-		for (auto file : { GAME_SAVE_FILE, HOOK_SAVE_FILE })
+		for (auto file : { GameSaveFile, HookSaveFile, HookSaveFileProc })
 		{
 			QStringList lines = QString::fromUtf8(QTextFile(file, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
 			lines.erase(std::remove_if(lines.begin(), lines.end(), [&](const QString& line) { return line.contains(S(processName.value())); }), lines.end());
@@ -334,7 +349,7 @@ namespace
 		auto hookInfo = QStringList() << S(processName.value()) << hookCodes.values();
 		ThreadParam tp = current->tp;
 		if (tp.processId == selectedProcessId) hookInfo << QString("|%1:%2:%3").arg(tp.ctx).arg(tp.ctx2).arg(S(HookCode::Generate(current->hp, tp.processId)));
-		QTextFile(HOOK_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
+		QTextFile(HookSaveFileProc, QIODevice::WriteOnly | QIODevice::Append).write((hookInfo.join(" , ") + "\n").toUtf8());
 	}
 
 	void FindHooks()
@@ -557,15 +572,6 @@ namespace
 		});
 		if (process == "???") return;
 
-		// This does add (potentially tons of) duplicates to the file, but as long as I don't perform Ω(N^2) operations it shouldn't be an issue
-		QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
-
-		QStringList allProcesses = QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
-		auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
-		if (hookList != allProcesses.rend())
-			for (auto hookInfo : hookList->split(" , "))
-				if (auto hp = HookCode::Parse(S(hookInfo))) Host::InsertHook(processId, hp.value());
-				else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx, &savedThreadCtx2, savedThreadCode, (unsigned)std::size(savedThreadCode));
 		std::wstring repositoryDir;
 		repositoryDir = REPOSITORY;
 		repositoryDir += std::filesystem::path(S(process)).parent_path().filename();
@@ -577,8 +583,20 @@ namespace
 		if (!std::filesystem::exists(repositoryDir)) CreateDirectoryW(repositoryDir.c_str(), nullptr);
 		std::scoped_lock writeLock(configFoldersMutex);
 		configFolders[processId] = repositoryDir;
+		HookSaveFileProc = S(repositoryDir) + HOOK_SAVE_FILE;
 
 		loadExtensions(repositoryDir);
+
+		// This does add (potentially tons of) duplicates to the file, but as long as I don't perform Ω(N^2) operations it shouldn't be an issue
+		QTextFile(GAME_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Append).write((process + "\n").toUtf8());
+
+		QStringList allProcesses = QString(QTextFile(HookSaveFileProc, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts);
+		allProcesses += QString(QTextFile(HOOK_SAVE_FILE, QIODevice::ReadOnly).readAll()).split("\n", QString::SkipEmptyParts); //for hooks saved without config folder
+		auto hookList = std::find_if(allProcesses.rbegin(), allProcesses.rend(), [&](QString hookList) { return hookList.contains(process); });
+		if (hookList != allProcesses.rend())
+			for (auto hookInfo : hookList->split(" , "))
+				if (auto hp = HookCode::Parse(S(hookInfo))) Host::InsertHook(processId, hp.value());
+				else swscanf_s(S(hookInfo).c_str(), L"|%I64d:%I64d:%[^\n]", &savedThreadCtx, &savedThreadCtx2, savedThreadCode, (unsigned)std::size(savedThreadCode));
 	}
 
 	void ProcessDisconnected(DWORD processId)
@@ -587,6 +605,7 @@ namespace
 		{
 			ui.processCombo->removeItem(ui.processCombo->findText(QString::number(processId, 16).toUpper() + ":", Qt::MatchStartsWith));
 		}, Qt::BlockingQueuedConnection);
+		HookSaveFileProc = HOOK_SAVE_FILE;
 		loadExtensions(extenDefPath);
 	}
 
