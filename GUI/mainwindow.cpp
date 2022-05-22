@@ -679,11 +679,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	std::unique_ptr<LPWSTR[], Functor<LocalFree>> argv(CommandLineToArgvW(GetCommandLineW(), &argc));
 	for (int i = 0; i < argc; ++i)
 		if (std::wstring arg = argv[i]; arg[0] == L'/' || arg[0] == L'-')
+		{
 			if (arg[1] == L'p' || arg[1] == L'P')
 				if (DWORD processId = wcstoul(arg.substr(2).c_str(), nullptr, 0)) Host::InjectProcess(processId);
 				else for (auto [processId, processName] : processes)
 					if (processName.value_or(L"").find(L"\\" + arg.substr(2)) != std::string::npos) Host::InjectProcess(processId);
-
+			if (arg[1] == L'c' || arg[1] == L'C')
+				ViewThread(1);
+		}
 	std::thread([] { for (; ; Sleep(10000)) AttachSavedProcesses(); }).detach();
 }
 
