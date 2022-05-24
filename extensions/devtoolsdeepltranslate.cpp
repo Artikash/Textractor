@@ -99,6 +99,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 
 bool translateSelectedOnly = true, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 2500;
+std::wstring dontTranslateIfMatch = L"";
 
 BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {

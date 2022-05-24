@@ -157,6 +157,7 @@ const wchar_t* ERROR_START_CHROME = L"failed to start Chrome or to connect to it
 const char* EXTRA_WINDOW_INFO = u8R"(Right click to change settings
 Click and drag on window edges to move, or the bottom right corner to resize)";
 const char* MAX_SENTENCE_SIZE = u8"Max sentence size";
+const char* DONT_TRANSLATE_IF_MATCH = u8"Don't translate if match full";
 const char* TOPMOST = u8"Always on top";
 const char* DICTIONARY = u8"Dictionary";
 const char* DICTIONARY_INSTRUCTIONS = u8R"(This file is used only for the "Dictionary" feature of the Extra Window extension.
@@ -875,6 +876,7 @@ esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi
 	EXTRA_WINDOW_INFO = u8R"(Tasto destro per cambiare le impostazioni
 Clicca e trascina i bordi della finestra per muoverla, oppure nell'angolo in basso a destra per ridimensionare)";
 	MAX_SENTENCE_SIZE = u8"Dimensione massima sentenza";
+	DONT_TRANSLATE_IF_MATCH = u8"Non traduce se corrisponde completamente";
 	TOPMOST = u8"Sempre in primo piano";
 	DICTIONARY = u8"Dizionario";
 	DICTIONARY_INSTRUCTIONS = u8R"(Questo file è utilizzato solo per la funzione "Dizionario" dell'estenzione Extra Window.

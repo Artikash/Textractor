@@ -17,6 +17,7 @@ extern const char* FILTER_GARBAGE;
 extern const char* MAX_TRANSLATIONS_IN_TIMESPAN;
 extern const char* TIMESPAN;
 extern const char* MAX_SENTENCE_SIZE;
+extern const char* DONT_TRANSLATE_IF_MATCH;
 extern const char* API_KEY;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
@@ -25,6 +26,7 @@ extern const char* GET_API_KEY_FROM;
 extern const QStringList languagesTo, languagesFrom;
 extern bool translateSelectedOnly, useRateLimiter, rateLimitSelected, useCache, useFilter;
 extern int tokenCount, rateLimitTimespan, maxSentenceSize;
+extern std::wstring dontTranslateIfMatch;
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp);
 
 QFormLayout* display;
@@ -119,6 +121,14 @@ public:
 			display->addRow(label, spinBox);
 			connect(spinBox, qOverload<int>(&QSpinBox::valueChanged), [label, &value](int newValue) { settings.setValue(label, value = newValue); });
 		}
+
+		auto matchEdit = new QLineEdit(settings.value(DONT_TRANSLATE_IF_MATCH).toString(), this);
+		dontTranslateIfMatch = S(matchEdit->text());
+		QObject::connect(matchEdit, &QLineEdit::textChanged, [](QString match) { settings.setValue(DONT_TRANSLATE_IF_MATCH, S(dontTranslateIfMatch = S(match))); });
+		auto matchLabel = new QLabel(QString("%1 (<a href=\"https://regexr.com/\">regex</a>)").arg(DONT_TRANSLATE_IF_MATCH), this);
+		matchLabel->setOpenExternalLinks(true);
+		display->addRow(matchLabel, matchEdit);
+
 		if (GET_API_KEY_FROM)
 		{
 			auto keyEdit = new QLineEdit(settings.value(API_KEY).toString(), this);
@@ -189,6 +199,16 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
 	}
 	if (sentence.empty()) return true;
+
+	try 
+	{ 
+		if (!dontTranslateIfMatch.empty() && std::regex_match(sentence, std::wregex(dontTranslateIfMatch)))
+		{
+			sentence += L"\x200b \n" + sentence;
+			return true;
+		}
+	} catch (...) {}
+	
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
