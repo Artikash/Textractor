@@ -36,7 +36,8 @@ extern const QStringList languagesTo
 	"Slovak",
 	"Slovenian",
 	"Spanish",
-	"Swedish"
+	"Swedish",
+	"Turkish"
 },
 languagesFrom =
 {
@@ -63,7 +64,8 @@ languagesFrom =
 	"Slovak",
 	"Slovenian",
 	"Spanish",
-	"Swedish"
+	"Swedish",
+	"Turkish"
 };
 extern const std::unordered_map<std::wstring, std::wstring> codes
 {
@@ -95,6 +97,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"Slovenian" }, { L"sl-SL" } },
 	{ { L"Spanish" }, { L"es-ES" } },
 	{ { L"Swedish" }, { L"sv-SV" } },
+	{ { L"Turkish" }, { L"tr-TR" } },
 	{ { L"?" }, { L"auto" } }
 };
 
