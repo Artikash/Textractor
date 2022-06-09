@@ -213,11 +213,50 @@ namespace Engine
 		ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
 		return false;
 	}
+	int getGodoStringLength(uintptr_t stack, uintptr_t data) {
+		int len = *(int*)(data - 4);
+		len--;
+		int checkLength = len > 0 && len < PIPE_BUFFER_SIZE ? len : 0;
+		//检查是否为错误的unicode字符
+		for (size_t i = 0; i < checkLength; i++)
+		{
+			if (*(WORD*)(data + i * 2) == 0x0)
+				return 0;
+		}
+		return checkLength * 2;
 
+	}
+	//BY:IOV
+	bool InsertGodotHook_X64() {
+		const BYTE bytes[] = { 0x8B,0x40,0xFC,0x83,0xF8,0x01,0x83,0xD0,0xFF,0x41,0x39,0xC6 };
+
+		ULONG64 range = min(processStopAddress - processStartAddress, X64_MAX_REL_ADDR);
+		for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStartAddress + range)) {
+			HookParam myhp = {};
+			myhp.address = addr;
+
+			myhp.type = USING_STRING | USING_UNICODE | NO_CONTEXT; // /HQ 不使用上下文区分 把所有线程的文本都提取
+			//myhp.padding = 0xc;//[esp+4]+padding
+			// data_offset
+			myhp.offset = -0xC-4;//RCX
+			myhp.length_fun = getGodoStringLength;
+			char nameForUser[HOOK_NAME_SIZE] = "RichTextLabel_add_text";
+			NewHook(myhp, nameForUser);
+			ConsoleOutput("Insert: Godot_add_text_X64 Hook ");
+			return true;
+		}
+
+		ConsoleOutput("vnreng:Godot_x64: pattern not found");
+		return false;
+	}
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
-
+		
+		if (Util::CheckFile(L"*.pck")) {
+			return InsertGodotHook_X64();			 
+		}
+	
 		for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
 
 		if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
