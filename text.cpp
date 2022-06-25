@@ -31,6 +31,8 @@ const char* SAVE_HOOKS = u8"Save hook(s)";
 const char* SEARCH_FOR_HOOKS = u8"Search for hooks";
 const char* SETTINGS = u8"Settings";
 const char* EXTENSIONS = u8"Extensions";
+const char* PAUSE = u8"Pause";
+const char* PAUSED = u8"= PAUSED =";
 const char* SELECT_PROCESS = u8"Select process";
 const char* ATTACH_INFO = u8R"(If you don't see the process you want to attach, try running with admin rights
 You can also type in the process ID)";
@@ -759,6 +761,8 @@ Klik dan tarik pinggiran jendela untuk memindahkan, atau sudut kanan bawah untuk
 	SEARCH_FOR_HOOKS = u8"Ricerca ganci";
 	SETTINGS = u8"Impostazioni";
 	EXTENSIONS = u8"Estenzioni";
+	PAUSE = u8"Pausa";
+	PAUSED = u8"= IN PAUSA =";
 	SELECT_PROCESS = u8"Seleziona processo";
 	ATTACH_INFO = u8R"(Se non vedi il processo che desideri allefare, prova ad eseguire come amministratore
 Puoi anche digitare l'ID del processo)";

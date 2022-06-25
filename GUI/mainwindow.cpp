@@ -28,6 +28,8 @@ extern const char* SAVE_HOOKS;
 extern const char* SEARCH_FOR_HOOKS;
 extern const char* SETTINGS;
 extern const char* EXTENSIONS;
+extern const char* PAUSE;
+extern const char* PAUSED;
 extern const char* FONT;
 extern const char* SELECT_PROCESS;
 extern const char* SELECT_PROCESS_INFO;
@@ -87,6 +89,8 @@ namespace
 	wchar_t savedThreadCode[1000] = {};
 	TextThread* current = nullptr;
 	MainWindow* This = nullptr;
+	bool pauseProcessingSentence = false;
+	QPushButton *pauseButton;
 
 	QString TextThreadString(TextThread& thread)
 	{
@@ -530,6 +534,12 @@ namespace
 		extenWindow->showNormal();
 	}
 
+	void Pause()
+	{
+		pauseProcessingSentence = pauseButton->isChecked();
+		pauseButton->setText(pauseProcessingSentence ? PAUSED : PAUSE);
+	}
+
 	void SetOutputFont(QString fontString)
 	{
 		QFont font = ui.textOutput->font();
@@ -597,6 +607,8 @@ namespace
 
 	bool SentenceReceived(TextThread& thread, std::wstring& sentence)
 	{
+		if (pauseProcessingSentence) return false;
+
 		for (int i = 0; i < sentence.size(); ++i) if (sentence[i] == '\r' && sentence[i + 1] == '\n') sentence[i] = 0x200b; // for some reason \r appears as newline - no need to double
 		if (!DispatchSentenceToExtensions(sentence, GetSentenceInfo(thread).data())) return false;
 		sentence += L'\n';
@@ -642,12 +654,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 		{ SAVE_HOOKS, SaveHooks },
 		{ SEARCH_FOR_HOOKS, FindHooks },
 		{ SETTINGS, OpenSettings },
-		{ EXTENSIONS, Extensions }
+		{ EXTENSIONS, Extensions },
+		{ PAUSE, Pause }
 	})
 	{
 		auto button = new QPushButton(text, ui.processFrame);
 		connect(button, &QPushButton::clicked, slot);
 		ui.processLayout->addWidget(button);
+		if (slot == &Pause)
+		{
+			button->setCheckable(true);
+			button->setStyleSheet("text-align: center");
+			pauseButton = button;
+		}
 	}
 	ui.processLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
