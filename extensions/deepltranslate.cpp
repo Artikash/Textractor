@@ -22,6 +22,7 @@ extern const QStringList languagesTo
 	"German",
 	"Greek",
 	"Hungarian",
+	"Indonesian",
 	"Italian",
 	"Japanese",
 	"Latvian",
@@ -34,7 +35,8 @@ extern const QStringList languagesTo
 	"Slovak",
 	"Slovenian",
 	"Spanish",
-	"Swedish"
+	"Swedish",
+	"Turkish"
 },
 languagesFrom
 {
@@ -50,6 +52,7 @@ languagesFrom
 	"German",
 	"Greek",
 	"Hungarian",
+	"Indonesian",
 	"Italian",
 	"Japanese",
 	"Latvian",
@@ -61,7 +64,8 @@ languagesFrom
 	"Slovak",
 	"Slovenian",
 	"Spanish",
-	"Swedish"
+	"Swedish",
+	"Turkish"
 };
 extern const std::unordered_map<std::wstring, std::wstring> codes
 {
@@ -80,6 +84,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"German" }, { L"DE" } },
 	{ { L"Greek" }, { L"EL" } },
 	{ { L"Hungarian" }, { L"HU" } },
+	{ { L"Indonesian" }, { L"ID" } },
 	{ { L"Italian" }, { L"IT" } },
 	{ { L"Japanese" }, { L"JA" } },
 	{ { L"Latvian" }, { L"LV" } },
@@ -94,6 +99,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 	{ { L"Slovenian" }, { L"SL" } },
 	{ { L"Spanish" }, { L"ES" } },
 	{ { L"Swedish" }, { L"SV" } },
+	{ { L"Turkish" }, { L"TR" } },
 	{ { L"?" }, { L"auto" } }
 };
 
