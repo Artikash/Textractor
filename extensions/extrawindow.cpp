@@ -463,8 +463,10 @@ private:
 	{
 		auto msg = (MSG*)message;
 		if (msg->message == WM_HOTKEY)
+		{
 			if (msg->wParam == HIDE_TEXT_HOTKEY) return ToggleHideText(), true;
 			if (msg->wParam == CLICK_THROUGH_HOTKEY) return ToggleClickThrough(), true;
+		}
 		return false;
 	}
 
