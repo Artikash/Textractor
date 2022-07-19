@@ -162,6 +162,11 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 			document.querySelector('.lmt__language_select--target').querySelector('button').click();
 			document.querySelector('[dl-test=translator-lang-option-%s]').click();
 		"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo)));
+		//Fixed closure drop-down language selection due to site modification
+		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
+			document.querySelector('[class=lmt__textarea_container]').click();
+		"})"));
+		Sleep(200);
 	}
 
 	for (int retry = 0; ++retry < 100; Sleep(100))
