@@ -7,10 +7,11 @@ environment:
   matrix:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: x64
-    platform: " Win64"
+    platform: x64
     qtbin: msvc2017_64
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     arch: x86
+    platform: Win32
     qtbin: msvc2017
 
 before_build:
@@ -18,7 +19,7 @@ before_build:
   - cd C:\
   - mkdir %arch%
   - cd %arch%
-  - cmake -G "Visual Studio 15 2017%platform%" -DQt5_DIR="C:\Qt\5.13.2\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" -DVERSION="" ../Textractor
+  - cmake -G "Visual Studio 15 2017" -A %platform% -DQt5_DIR="C:\Qt\5.13.2\%qtbin%\lib\cmake\Qt5" -DCMAKE_BUILD_TYPE="RelWithDebInfo" -DVERSION="" ../Textractor
 
 build:
   project: C:\%arch%\Textractor.sln
