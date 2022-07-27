@@ -49,7 +49,7 @@ private:
 	}
 
 	static constexpr C endImpl[5] = { '|', 'E', 'N', 'D', '|' };
-	static constexpr std::basic_string_view end{ endImpl, 5 };
+	static constexpr std::basic_string_view<C> end{ endImpl, 5 };
 
 	std::basic_streambuf<char>& streambuf;
 	std::basic_string<C> buffer;
