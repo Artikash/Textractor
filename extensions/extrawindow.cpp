@@ -90,23 +90,23 @@ protected:
 	{
 		if (autoHide && geometry().contains(QCursor::pos()))
 		{
-			if (!hidden)
+			if (hidden)
 			{
-				if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
-				if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
-				QColor hiddenTextColor = TextColor();
-				if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
-				ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
-				hidden = true;
+				backgroundColor.setAlpha(settings.value(BG_COLOR).value<QColor>().alpha());
+				outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
+				ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
+				hidden = false;
 				repaint();
 			}
 		}
-		else if (hidden)
+		else if (!hidden)
 		{
-			backgroundColor.setAlpha(settings.value(BG_COLOR).value<QColor>().alpha());
-			outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
-			ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
-			hidden = false;
+			if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
+			if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
+			QColor hiddenTextColor = TextColor();
+			if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
+			ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
+			hidden = true;
 			repaint();
 		}
 	}

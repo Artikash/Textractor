@@ -183,7 +183,7 @@ const char* POSITION_LOCK = u8"Position lock";
 const char* CENTERED_TEXT = u8"Centered text";
 const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
 const char* CLICK_THROUGH = u8"Click through\tAlt+X";
-const char* HIDE_MOUSEOVER = u8"Hide while mouse on top";
+const char* HIDE_MOUSEOVER = u8"Show only on mouseover";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
@@ -775,7 +775,7 @@ Codepage di base è 932 (Shift-JIS) ma può essere cambiato nelle impostazioni
 A/B: carattere del codepage little/big endian
 W: carattere UTF-16
 H: Due byte esadecimali
-S/Q/V/M: stringa codepage/UTF-16/UTF-8/hex 
+S/Q/V/M: stringa codepage/UTF-16/UTF-8/hex
 F: tratta le stringhe come linee di testo complete
 N: non usa il contesto
 null_lengt: lunghezza del terminatore null utilizzato per la stringa
@@ -902,7 +902,7 @@ Funziona solo se questa estenzione è usata direttamente dopo un'estensione di t
 	CENTERED_TEXT = u8"Testo centrato";
 	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
 	CLICK_THROUGH = u8"Clicca attraverso\tAlt+X";
-	HIDE_MOUSEOVER = u8"Nascondi testo mouseover";
+	HIDE_MOUSEOVER = u8"Mostra solo al passaggio del mouse";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
@@ -1096,7 +1096,7 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	COULD_NOT_FIND = u8"Textractor: ไม่สามารถหาข้อมูลตัวอักษรได้";
 	TOO_MANY_TRANS_REQUESTS = L"มีการเรียกขอมากเกินกำหนด : ปฏิเสธที่จะทำการขอคำแปลต่อ";
 	TRANSLATION_ERROR = L"เกิดข้อผิดพลาดระหว่างการแปลภาษา";
-	EXTRA_WINDOW_INFO = u8R"(คลิกขวาเพื่อที่จะตั่งค่า 
+	EXTRA_WINDOW_INFO = u8R"(คลิกขวาเพื่อที่จะตั่งค่า
 คลิกและลากทางขวาบนของหน้าต่างเพื่อควบคุมหน้าต่าง หรือ ขวาล่างเพื่อที่จะปรับขนาด)";
 	BG_COLOR = u8"สีพื่นหลัง";
 	TEXT_COLOR = u8"สีตัวอักษร";
@@ -1124,7 +1124,7 @@ Source code สามารถหาได้จากส่วนของ GPLv
 	FROM_COMPUTER = u8"컴퓨터로부터 선택";
 	PROCESSES = u8"프로세스 (*.exe)";
 	SAVE_SETTINGS = u8"설정 저장";
-	EXTEN_WINDOW_INSTRUCTIONS = u8R"(확장기능을 추가하려면 리스트에서 오른쪽 클릭하거나 
+	EXTEN_WINDOW_INSTRUCTIONS = u8R"(확장기능을 추가하려면 리스트에서 오른쪽 클릭하거나
 		폴더에서 드래그하세요.
 확장기능 순서를 변경하려면 리스트에서 드래그합니다.
 (확장기능은 위부터 순서대로 작동합니다.)
@@ -1216,7 +1216,7 @@ F: treat strings as full lines of text
 N: n'utilise pas de contexte
 null_length: length of null terminator used for string
 padding: length of padding data before string (C struct { int64_t size; char string[500]; } needs padding = 8)
-Les valeures négatives pour data_offset/split_offset font références aux registres 
+Les valeures négatives pour data_offset/split_offset font références aux registres
 -4 pour EAX, -8 pour ECX, -C pour EDX, -10 pour EBX, -14 pour ESP, -18 pour EBP, -1C pour ESI, -20 pour EDI
 -C pour RAX, -14 pour RBX, -1C pour RCX, -24 pour RDX, and so on for RSP, RBP, RSI, RDI, R8-R15
 * means dereference pointer+deref_offset)";
