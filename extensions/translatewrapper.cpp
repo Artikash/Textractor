@@ -163,7 +163,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (!sentenceInfo["current select"] || sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
+	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
 
 	static class
 	{
