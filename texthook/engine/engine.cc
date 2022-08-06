@@ -9602,7 +9602,7 @@ static bool InsertNewWillPlusHook()
 		found = true;
 	}
     /*
-    hook cmp esi,0x3000
+    hook cmp esi or ebx,0x3000
     Sample games:
     https://vndb.org/r54549
     https://vndb.org/v22705
@@ -9610,17 +9610,24 @@ static bool InsertNewWillPlusHook()
     https://vndb.org/v25719
     https://vndb.org/v27227
     https://vndb.org/v27385
+    https://vndb.org/v34544
+    https://vndb.org/v35279
+    https://vndb.org/r94284
     */
     const BYTE pattern[] =
     {
-        0x81,0xfe,0x00,0x30,0x00,0x00   //81FE 00300000  cmp esi,0x3000
+        0x81,XX, 0x00,0x30,0x00,0x00   // 81FE or FB 00300000  cmp esi or ebx,0x3000
     };
+
     for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
     {
+        BYTE byte = *(BYTE*)(addr + 1);
+        if (byte != 0xfe && byte != 0xfb)
+            continue;
         HookParam hp = {};
         hp.address = addr;
         hp.type = USING_UNICODE;
-        hp.offset = pusha_esi_off - 4;
+        hp.offset = byte == 0xfe ? pusha_esi_off - 4 : pusha_ebx_off - 4;
         hp.length_offset = 1;
         NewHook(hp, "WillPlus3");
         found = true;
@@ -9633,10 +9640,10 @@ static bool InsertNewWillPlusHook()
 
 bool InsertWillPlusHook()
 {
-  bool ok = InsertOldWillPlusHook();
-  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || ok;
-  if (!ok) PcHooks::hookOtherPcFunctions();
-  return ok;
+    bool ok = InsertOldWillPlusHook();
+    ok = InsertWillPlusWHook() || InsertNewWillPlusHook() || InsertWillPlusAHook() || ok;
+    if (!ok) PcHooks::hookOtherPcFunctions();
+    return ok;
 }
 
 /** jichi 9/14/2013
