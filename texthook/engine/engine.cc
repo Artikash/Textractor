@@ -9617,15 +9617,16 @@ static bool InsertNewWillPlusHook()
     const BYTE pattern[] =
     {
         0x81,XX, 0x00,0x30,0x00,0x00   // 81FE or FB 00300000  cmp esi or ebx,0x3000
+                                       // je xx
+                                       // hook here
     };
-
     for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
     {
         BYTE byte = *(BYTE*)(addr + 1);
         if (byte != 0xfe && byte != 0xfb)
             continue;
         HookParam hp = {};
-        hp.address = addr;
+        hp.address = addr + 8;
         hp.type = USING_UNICODE;
         hp.offset = byte == 0xfe ? pusha_esi_off - 4 : pusha_ebx_off - 4;
         hp.length_offset = 1;
