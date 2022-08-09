@@ -5730,21 +5730,21 @@ void SpecialHookShina2(DWORD esp_base, HookParam *, BYTE, DWORD *data, DWORD *sp
 // Used to merge correct text thread.
 // 1. Only keep threads with 0 and -1 split
 // 2. Skip the thread withb 0 split and with minimum return address
-void SpecialHookShina1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
-{
-  static DWORD min_retaddr = -1;
-  DWORD s = *(DWORD *)(esp_base + hp->split);
-  if (s == 0 || (s & 0xffff) == 0xffff) { // only keep threads with 0 and -1 split
-    if (s == 0 && retof(esp_base) <= min_retaddr) {
-      min_retaddr = retof(esp_base);
-      return;
-    }
-    *split = FIXED_SPLIT_VALUE;
-    // Follow the same logic as the hook.
-    *data = *(DWORD *)*data; // DATA_INDIRECT
-    *len = LeadByteTable[*data & 0xff];
-  }
-}
+//void SpecialHookShina1(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
+//{
+//  static DWORD min_retaddr = -1;
+//  DWORD s = *(DWORD *)(esp_base + hp->split);
+//  if (s == 0 || (s & 0xffff) == 0xffff) { // only keep threads with 0 and -1 split
+//    if (s == 0 && retof(esp_base) <= min_retaddr) {
+//      min_retaddr = retof(esp_base);
+//      return;
+//    }
+//    *split = FIXED_SPLIT_VALUE;
+//    // Follow the same logic as the hook.
+//    *data = *(DWORD *)*data; // DATA_INDIRECT
+//    *len = LeadByteTable[*data & 0xff];
+//  }
+//}
 
 // jichi 8/27/2013
 // Return ShinaRio version number
@@ -5825,9 +5825,8 @@ bool InsertShinaHook()
 		  return ret;
 	  };
 	  ConsoleOutput("Textractor: ShinaRio 2.50+: adding trigger");
-	  return true;
   }
-  else if (ver >= 48) { // v2.48, v2.49
+  if (ver >= 48) { // v2.48, v2.49
     HookParam hp = {};
     hp.address = (DWORD)::GetTextExtentPoint32A;
     hp.text_fun = SpecialHookShina2;
