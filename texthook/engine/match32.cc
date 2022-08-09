@@ -629,10 +629,9 @@ bool DetermineEngineAtLast()
 	}
   if (Util::CheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as 母子愛2体験版, which is checked first
     return true;
-  if ((Util::CheckFile(L"system") && Util::CheckFile(L"system.dat")) || Util::CheckFile(L"*01")) { // jichi 7/31/2015 & Artikash 6/15/2018
-    InsertAbelHook();
-    return true;
-  }
+  if ((Util::CheckFile(L"system") && Util::CheckFile(L"system.dat")) || Util::CheckFile(L"*01")) // jichi 7/31/2015 & Artikash 6/15/2018
+    if (InsertAbelHook())
+      return true;
   if (Util::CheckFile(L"data\\*.cpk")) { // jichi 12/2/2014
     Insert5pbHook();
     return true;
