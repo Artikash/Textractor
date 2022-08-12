@@ -7,6 +7,7 @@ extern const wchar_t* TRANSLATION_ERROR;
 
 const char* TRANSLATION_PROVIDER = "DevTools Systran Translate";
 const char* GET_API_KEY_FROM = nullptr;
+bool firstTranslation = true;
 
 extern const QStringList languagesTo
 {
@@ -140,11 +141,20 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	static std::mutex translationMutex;
 	std::scoped_lock lock(translationMutex);
 
+	if (firstTranslation) {
+		firstTranslation = false; 
+		DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.systran.net/en/translate/?source=%s&target=%s&input=%s"})", codes.at(tlp.translateFrom), codes.at(tlp.translateTo), Escape(text)));
+		for (int retry = 0; ++retry < 100; Sleep(100))
+			if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
+				LR"({"expression":"document.querySelector('#yDmH0d button').innerHTML.trim() ","returnByValue":true})"
+			)[L"result"][L"value"].String())) if (!translation->empty()) break;
+	}
+
 	DevTools::SendRequest(
 		"Page.navigate",
-		FormatString(LR"({"url":"https://translate.systran.net/?source=%s&target=%s&input=%s"})", codes.at(tlp.translateFrom), codes.at(tlp.translateTo), Escape(text))
+		FormatString(LR"({"url":"https://www.systran.net/en/translate/?source=%s&target=%s&input=%s"})", codes.at(tlp.translateFrom), codes.at(tlp.translateTo), Escape(text))
 	);
-	for (int retry = 0; ++retry < 100; Sleep(100))
+	for (int retry = 0; ++retry < 150; Sleep(100))
 		if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
 			LR"({"expression":"document.querySelector('#outputEditor').textContent.trim() ","returnByValue":true})"
 		)[L"result"][L"value"].String())) if (!translation->empty()) return { true, translation.value() };
