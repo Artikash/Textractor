@@ -301,6 +301,7 @@ public:
 
 	~ExtraWindow()
 	{
+		AddSentence(EXTRA_WINDOW_INFO);
 		settings.setValue(WINDOW, geometry());
 	}
 
