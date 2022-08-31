@@ -52,9 +52,132 @@ namespace Engine
 		}
 		return found;
 	}
+		//MonoImage* mono_assembly_get_image(MonoAssembly* assembly)：获取程序集的镜像。后面几乎所有的操作都会以MonoImage* 为第一个参数。
+	static uintptr_t (*mono_assembly_get_image)(uintptr_t) = NULL;
+	// const char* mono_image_get_name(MonoImage * image) :获取程序集名。我们用它判断哪个程序集是我们的目标
+	static char* (*mono_image_get_name)(uintptr_t) = NULL;
+	//MonoClass* mono_class_from_name (MonoImage *image, const char* name_space, const char *name):通过类名获取类(非实例)。
+	static uintptr_t(*mono_class_from_name)(uintptr_t, char*, char*) = NULL;
+	//MonoVTable* mono_class_vtable (MonoDomain *domain, MonoClass *klass)：获取vtable，我们通过它可以找到静态字段的起始地址。
+	static uintptr_t(*mono_class_vtable)(uintptr_t, uintptr_t) = NULL;
+	//void* mono_vtable_get_static_field_data (MonoVTable *vt)：获取静态字段的起始地址。
+	static void*  (*mono_vtable_get_static_field_data)(uintptr_t) = NULL;
+	//MonoMethod* mono_class_get_method_from_name (MonoClass *klass, const char *name, int param_count):获取方法(非native code地址)。
+	//其中param_count是参数数量，可以输入-1来省略。此函数无法获取重载的方法，但对于我们来说足够了。
+	static uintptr_t(*mono_class_get_method_from_name)(uintptr_t, char*,int) = NULL;
+	//获取属性。用它可以进一步获得属性的getter和setter。
+	//MonoProperty* mono_class_get_property_from_name(MonoClass* klass, const char* name)：
+	static uintptr_t(*mono_class_get_property_from_name)(uintptr_t, char*) = NULL;
+	//获取属性的getter和setter。
+	//MonoMethod* mono_property_get_get_method(MonoProperty* prop) 与 MonoMethod* mono_property_get_set_method(MonoProperty* prop)：
+	static uintptr_t(*mono_property_get_set_method)(uintptr_t) = NULL;
+	// （不安全）返回方法的地址，如果方法尚未编译，则JIT开始编译。这个是解决问题的核心方法。 gpointer mono_compile_method (MonoMethod *method):
+	static  uint64_t* (*mono_compile_method)(uintptr_t) = NULL;
 
+	//获取函数的非托管块指针 (native)   gpointer mono_method_get_unmanaged_thunk (MonoMethod *method)
+	//使用这个来获取native代码 方法尚未编译，会执行编译 并提取 x86版本可能使用的是__stdcall
+	static  uint64_t* (*mono_method_get_unmanaged_thunk)(uintptr_t) = NULL;
+	//MonoDomain* mono_get_root_domain (void) ：获取主作用域。用于附加线程以及获取静态字段的地址。
+	static  MonoDomain* (*mono_get_root_domain)() = NULL;
+	//void mono_thread_attach (MonoDomain*)：附加到进程的主线程。这个操作是必须的。
+	static  void (*mono_thread_attach)(MonoDomain*) = NULL;
+
+	//MonoAssembly* assembly，而后者则是void* user_data
+	int getV8StringLength(uintptr_t stack, uintptr_t data) {
+		int len = *(int*)(data - 4);
+		int checkLength = len > 0 && len < PIPE_BUFFER_SIZE ? len : 0;
+		//检查是否为错误的unicode字符
+		for (size_t i = 0; i < checkLength; i++)
+		{
+			if (*(WORD*)(data + i * 2) == 0x0)
+				return 0;
+		}
+		return checkLength * 2;
+
+	}
+	void MonoCallBack(uintptr_t assembly, void* userData) {
+		uintptr_t mono_property = NULL;
+		uintptr_t image=mono_assembly_get_image(assembly);
+		// TMP_Text TextMeshProUGUI
+	auto mono_tmp_class=mono_class_from_name(image, "TMPro", "TMP_Text");
+	auto mono_ugui_class = mono_class_from_name(image, "UnityEngine.UI", "Text");
+	auto mono_ngui_class = mono_class_from_name(image, "", "UILabel");
+	if (!mono_tmp_class && !mono_ugui_class && !mono_ngui_class)
+		return;
+	if (mono_tmp_class) {
+		mono_property = mono_class_get_property_from_name(mono_tmp_class, "text");
+	}
+	else if (mono_ugui_class)
+	{
+		mono_property = mono_class_get_property_from_name(mono_ugui_class, "text");
+	}
+	else if (mono_ngui_class) {
+		mono_property = mono_class_get_property_from_name(mono_ngui_class, "text");
+	}
+				
+	if (mono_property == NULL)
+		return;
+	auto mono_set_method= mono_property_get_set_method(mono_property);
+	//注意必须调用mono_thread_attach 附加到主domain 才能调用 mono_method_get_unmanaged_thunk mono_compile_method 或mono_runtime_invoke
+	mono_thread_attach(mono_get_root_domain());
+	uint64_t* method_pointer= mono_compile_method(mono_set_method);
+	if (method_pointer) {
+		HookParam hp = {};
+		hp.type = USING_STRING | USING_UNICODE;
+		hp.address = (uint64_t)method_pointer;
+		hp.offset = -0x28; // rdx
+		//hp.index = 0;
+		hp.padding = 0x14;
+		if (mono_tmp_class) {
+			ConsoleOutput("Mono_X64,Insert: TextMeshProUGUI_set_text Hook BY:IOV");
+			hp.length_fun = getV8StringLength;
+			NewHook(hp, "TextMeshProUGUI_set_text");
+		}
+		else if (mono_ugui_class)
+		{
+			ConsoleOutput("Mono_X64,Insert: UGUI_set_text Hook BY:IOV");
+			hp.length_fun = getV8StringLength;
+			NewHook(hp, "UGUI_set_text");
+		}
+		else if (mono_ngui_class)
+		{
+			ConsoleOutput("Mono_X64,Insert: NGUI_set_text Hook BY:IOV");
+			hp.length_fun = getV8StringLength;
+			NewHook(hp, "NGUI_set_text");
+		}
+
+	}
+	
+	}
+
+	bool InsertMonoHooksByAssembly(HMODULE module) {
+		//void mono_assembly_foreach (GFunc func, gpointer user_data)
+		//遍历程序集。用于获取目标程序集的指针。其中的func 是一个回调函数，要自己写。它有两个参数，前者就是MonoAssembly*，而后者则是user_data
+		static auto mono_assembly_foreach = (void (*)(void (*)(uintptr_t, void*), uintptr_t))GetProcAddress(module, "mono_assembly_foreach");
+		mono_assembly_get_image= (uintptr_t(*)(uintptr_t))GetProcAddress(module, "mono_assembly_get_image");
+		mono_image_get_name = (char* (*)(uintptr_t))GetProcAddress(module, "mono_image_get_name");
+		mono_class_from_name = (uintptr_t(*)(uintptr_t, char*, char*))GetProcAddress(module, "mono_class_from_name");
+		mono_class_get_property_from_name = (uintptr_t(*)(uintptr_t, char*))GetProcAddress(module, "mono_class_get_property_from_name");
+		mono_property_get_set_method = (uintptr_t(*)(uintptr_t))GetProcAddress(module, "mono_property_get_set_method");
+		mono_compile_method = (uint64_t * (*)(uintptr_t))GetProcAddress(module, "mono_compile_method");
+		//mono_method_get_unmanaged_thunk= (uint64_t * (*)(uintptr_t))GetProcAddress(module, "mono_method_get_unmanaged_thunk");
+		mono_get_root_domain = (MonoDomain * (*)())GetProcAddress(module, "mono_get_root_domain");
+		
+		mono_thread_attach = (void (*)(MonoDomain*))GetProcAddress(module, "mono_thread_attach");
+		if (mono_assembly_foreach && mono_assembly_get_image && mono_image_get_name && mono_class_from_name &&
+			mono_class_get_property_from_name && mono_property_get_set_method && mono_compile_method &&
+			 mono_get_root_domain && mono_thread_attach) {
+			mono_assembly_foreach(MonoCallBack, NULL);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}	
 	bool InsertMonoHooks(HMODULE module)
 	{
+		return InsertMonoHooksByAssembly(module);
 		auto SpecialHookMonoString = nullptr;
 		static HMODULE mono = module;
 		bool ret = false;
