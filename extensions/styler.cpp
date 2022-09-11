@@ -4,7 +4,7 @@
 
 extern const char* LOAD_SCRIPT;
 
-constexpr auto STYLE_SAVE_FILE = u8"Textractor.css";
+constexpr auto STYLE_SAVE_FILE = u8"Textractor.qss";
 
 class Window : public QDialog, Localizer
 {
@@ -13,7 +13,8 @@ public:
 	{
 		connect(&loadButton, &QPushButton::clicked, this, &Window::LoadScript);
 
-		if (scriptEditor.toPlainText().isEmpty()) scriptEditor.setPlainText("/*https://doc.qt.io/qt-5/stylesheet-syntax.html*/");
+		if (scriptEditor.toPlainText().isEmpty())
+			scriptEditor.setPlainText("/*\nhttps://www.google.com/search?q=Qt+stylesheet+gallery\nhttps://doc.qt.io/qt-5/stylesheet-syntax.html\n*/");
 		layout.addWidget(&scriptEditor);
 		layout.addWidget(&loadButton);
 
