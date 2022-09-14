@@ -234,6 +234,7 @@ extern const std::unordered_map<std::wstring, std::wstring> codes
 
 bool translateSelectedOnly = false, useRateLimiter = true, rateLimitSelected = false, useCache = true, useFilter = true;
 int tokenCount = 30, rateLimitTimespan = 60000, maxSentenceSize = 1000;
+std::wstring dontTranslateIfMatch = L"";
 
 std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationParam tlp)
 {
