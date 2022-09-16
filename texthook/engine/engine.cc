@@ -9030,12 +9030,63 @@ bool InsertWolf2Hook()
   NewHook(hp, "WolfRPG2");
   return true;
 }
+//example-game:妹！せいかつ～ファンタジー～ by:iov
+bool InsertWolf3Hook()
+{
+    const BYTE bytes[] = { 0xC7,0x45,0xFC,0x00,0x00,0x00,0x00,0x8B,0x45,0x94,0x83,0xE0,0x01 };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:WolfRPG: pattern3 not found");
+        return false;
+    }
 
+    HookParam myhp = {};
+    myhp.address = addr+41;
+
+    myhp.type = USING_STRING | NO_CONTEXT;
+    myhp.offset = pusha_eax_off - 4;
+    myhp.type |= DATA_INDIRECT;
+    
+    myhp.index = 4;
+
+    char nameForUser[HOOK_NAME_SIZE] = "WolfRPG_String_Copy";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: WolfRPG_String_Copy Hook");
+    return true;
+}
+
+bool InsertWolf4Hook() {
+    const BYTE bytes[] = {0xC6,0x45,0xFC,0x29,0x8B,0x8D,0xE0,0xEF,0xFF,0xFF,0xE8,XX4,0x50,0x8B,0x4D,0xE8,0x2B,0x4D,0xEC };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:WolfRPG: pattern4 not found");
+        return false;
+    }
+
+    HookParam myhp = {};
+    myhp.address = addr + 16;
+
+    myhp.type = USING_STRING | NO_CONTEXT;
+    myhp.offset = pusha_eax_off - 4;
+   // myhp.type |= DATA_INDIRECT;
+
+  //  myhp.index = 4;
+
+    char nameForUser[HOOK_NAME_SIZE] = "WolfRPG4";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: WolfRPG4 Hook");
+    return true;
+}
+	
+	
+	
 } // WolfRPG namespace
 
 bool InsertWolfHook()
 {
-  return InsertOldWolfHook(), InsertWolf2Hook();
+   return InsertOldWolfHook(), InsertWolf2Hook(), InsertWolf3Hook(), InsertWolf4Hook();
 }
 
 bool InsertIGSDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
@@ -16984,9 +17035,114 @@ bool InsertRenpyHook()
 	return false;
 }
 
+	static uintptr_t(*mono_assembly_get_image)(uintptr_t) = NULL;
+static char* (*mono_image_get_name)(uintptr_t) = NULL;
+static uintptr_t(*mono_class_from_name)(uintptr_t, char*, char*) = NULL;
+static uintptr_t(*mono_class_vtable)(uintptr_t, uintptr_t) = NULL;
+static void* (*mono_vtable_get_static_field_data)(uintptr_t) = NULL;
+static uintptr_t(*mono_class_get_method_from_name)(uintptr_t, char*, int) = NULL;
+static uintptr_t(*mono_class_get_property_from_name)(uintptr_t, char*) = NULL;
+static uintptr_t(*mono_property_get_set_method)(uintptr_t) = NULL;
+static  uint64_t* (*mono_compile_method)(uintptr_t) = NULL;
+static  MonoDomain* (*mono_get_root_domain)() = NULL;
+static  void (*mono_thread_attach)(MonoDomain*) = NULL;
+int getV8StringLength(uintptr_t stack, uintptr_t data) {
+    int len = *(int*)(data - 4);
+    int checkLength = len > 0 && len < PIPE_BUFFER_SIZE ? len : 0;
+    for (size_t i = 0; i < checkLength; i++)
+    {
+        if (*(WORD*)(data + i * 2) == 0x0)
+            return 0;
+    }
+    return checkLength * 2;
+
+}
+void MonoCallBack(uintptr_t assembly, void* userData) {
+    uintptr_t mono_property = NULL;
+    uintptr_t image = mono_assembly_get_image(assembly);
+    // TMP_Text TextMeshProUGUI
+    auto mono_tmp_class = mono_class_from_name(image, "TMPro", "TMP_Text");
+    auto mono_ugui_class = mono_class_from_name(image, "UnityEngine.UI", "Text");
+    auto mono_ngui_class = mono_class_from_name(image, "", "UILabel");
+    if (!mono_tmp_class && !mono_ugui_class && !mono_ngui_class)
+        return;
+    if (mono_tmp_class) {
+        mono_property = mono_class_get_property_from_name(mono_tmp_class, "text");
+    }
+    else if(mono_ugui_class)
+    {
+        mono_property = mono_class_get_property_from_name(mono_ugui_class, "text");
+    }
+    else if (mono_ngui_class) {
+        mono_property = mono_class_get_property_from_name(mono_ngui_class, "text");
+    }
+
+    if (mono_property == NULL)
+        return;
+    auto mono_set_method = mono_property_get_set_method(mono_property);
+    //注意必须调用mono_thread_attach 附加到主domain 才能调用 mono_method_get_unmanaged_thunk mono_compile_method 或mono_runtime_invoke
+    mono_thread_attach(mono_get_root_domain());
+    uint64_t* method_pointer = mono_compile_method(mono_set_method);
+    if (method_pointer) {
+        HookParam hp = {};
+        hp.type = USING_STRING | USING_UNICODE |DATA_INDIRECT;
+        hp.address = (uint64_t)method_pointer;
+        hp.offset = pusha_esp_off-4; // esp+8
+        hp.index = 12;
+        hp.padding = 12;
+        
+        if (mono_tmp_class) {
+            ConsoleOutput("Mono_X86,Insert: TextMeshProUGUI_set_text Hook BY:IOV");
+            hp.length_fun = getV8StringLength;
+            NewHook(hp, "TextMeshProUGUI_set_text");
+        }
+        else if(mono_ugui_class)
+        {
+            ConsoleOutput("Mono_X86,Insert: UGUI_set_text Hook BY:IOV");
+            hp.length_fun = getV8StringLength;
+            NewHook(hp, "UGUI_set_text");
+        }
+        else if(mono_ngui_class)
+        {
+            ConsoleOutput("Mono_X86,Insert: NGUI_set_text Hook BY:IOV");
+            hp.length_fun = getV8StringLength;
+            NewHook(hp, "NGUI_set_text");
+        }
+    }
+
+}
+bool InsertMonoHooksByAssembly(HMODULE module) {
+    //void mono_assembly_foreach (GFunc func, gpointer user_data)
+    //遍历程序集。用于获取目标程序集的指针。其中的func 是一个回调函数，要自己写。它有两个参数，前者就是MonoAssembly*，而后者则是user_data
+    static auto mono_assembly_foreach = (void (*)(void (*)(uintptr_t, void*), uintptr_t))GetProcAddress(module, "mono_assembly_foreach");
+    mono_assembly_get_image = (uintptr_t(*)(uintptr_t))GetProcAddress(module, "mono_assembly_get_image");
+    mono_image_get_name = (char* (*)(uintptr_t))GetProcAddress(module, "mono_image_get_name");
+    mono_class_from_name = (uintptr_t(*)(uintptr_t, char*, char*))GetProcAddress(module, "mono_class_from_name");
+    mono_class_get_property_from_name = (uintptr_t(*)(uintptr_t, char*))GetProcAddress(module, "mono_class_get_property_from_name");
+    mono_property_get_set_method = (uintptr_t(*)(uintptr_t))GetProcAddress(module, "mono_property_get_set_method");
+    mono_compile_method = (uint64_t * (*)(uintptr_t))GetProcAddress(module, "mono_compile_method");
+    mono_get_root_domain = (MonoDomain * (*)())GetProcAddress(module, "mono_get_root_domain");
+
+    mono_thread_attach = (void (*)(MonoDomain*))GetProcAddress(module, "mono_thread_attach");
+    if (mono_assembly_foreach && mono_assembly_get_image && mono_image_get_name && mono_class_from_name &&
+        mono_class_get_property_from_name && mono_property_get_set_method && mono_compile_method &&
+        mono_get_root_domain && mono_thread_attach) {
+        mono_assembly_foreach(MonoCallBack, NULL);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+	
+	
+	
 void InsertMonoHook(HMODULE h)
 {
 	static HMODULE mono = h;
+    if (InsertMonoHooksByAssembly(mono))
+        return ;
 	/* Artikash 2/13/2019:
 	How to hook Mono/Unity3D:
 	Find all standard function prologs in memory with write/execute permission: these represent possible JIT compiled functions
