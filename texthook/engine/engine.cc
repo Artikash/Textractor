@@ -2057,6 +2057,40 @@ bool InsertBGI2Hook()
   return true;
 }
 
+bool InsertBGI3Hook()
+{
+    /*
+    * Sample games:
+    * https://vndb.org/v28283
+    * https://vndb.org/v30456
+    * https://vndb.org/v33996
+    * https://vndb.org/v34532
+    * https://vndb.org/v36131
+    */
+    bool found = false;
+    const BYTE pattern[] = {
+        0x55,                           // 55               push ebp
+        0x8b,0xec,                      // 8BEC             mov ebp,esp
+        0x83,0xe4, 0xf8,                // 83E4 F8          and esp,FFFFFFF8
+        0x81,0xec, 0x84,0x00,0x00,0x00  // 81EC 84000000    sub esp,0x84
+    };
+
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.offset = 8;
+        hp.split = 0x04;
+        hp.length_offset = 1;
+        hp.type = USING_UNICODE | USING_SPLIT;
+        ConsoleOutput("Textractor: INSERT BGI3");
+        NewHook(hp, "BGI3");
+        found = true;
+    }
+    if (!found) ConsoleOutput("Textractor:BGI3: pattern not found");
+    return found;
+}
+
 #if 0
 /**
  *  jichi 1/31/2014: Add a new BGI hook
@@ -2149,7 +2183,7 @@ bool InsertBGI3Hook()
 // Insert BGI2 first.
 // Artikash 6/12/2019: In newer games neither exists, but WideCharToMultiByte works, so insert that if BGI2 fails.
 bool InsertBGIHook()
-{ return InsertBGI2Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
+{ return InsertBGI2Hook() || InsertBGI3Hook() || (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
 
 /********************************************************************************************
 Reallive hook:
@@ -9602,7 +9636,7 @@ static bool InsertNewWillPlusHook()
 		found = true;
 	}
     /*
-    hook cmp esi or ebx,0x3000
+    hook cmp reg,0x3000
     Sample games:
     https://vndb.org/r54549
     https://vndb.org/v22705
@@ -9629,14 +9663,39 @@ static bool InsertNewWillPlusHook()
             continue;
 
         BYTE byte = *(BYTE*)(addr + 1);
-
-        HookParam hp = {};
-        hp.address = addr + 8;
-        hp.type = USING_UNICODE;
-        hp.offset = byte == 0xfe ? -0x20 : (byte == 0xfb ? -0x14 : -0x24);
-        hp.length_offset = 1;
-        NewHook(hp, "WillPlus3");
-        found = true;
+        int offset = 0;
+        switch (byte) {
+        case 0xf9:
+            offset = pusha_ecx_off - 4;
+            break;
+        case 0xfa:
+            offset = pusha_edx_off - 4;
+            break;
+        case 0xfb:
+            offset = pusha_ebx_off - 4;
+            break;
+        case 0xfc:
+            offset = pusha_esp_off - 4;
+            break;
+        case 0xfd:
+            offset = pusha_ebp_off - 4;
+            break;
+        case 0xfe:
+            offset = pusha_esi_off - 4;
+            break;
+        case 0xff:
+            offset = pusha_edi_off - 4;
+            break;
+        };
+        if (offset) {
+            HookParam hp = {};
+            hp.address = addr + 8;
+            hp.type = USING_UNICODE;
+            hp.offset = offset;
+            hp.length_offset = 1;
+            NewHook(hp, "WillPlus3");
+            found = true;
+        }
     }
     if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
     return found;
