@@ -9616,16 +9616,16 @@ static bool InsertNewWillPlusHook()
     */
     const BYTE pattern[] =
     {
-        0x81,XX, 0x00,0x30,0x00,0x00   //    81FE 00300000  cmp esi,0x3000
-                                       // or 81FB 00300000  cmp ebx,0x3000
-                                       // or 81FF 00300000  cmp edi,0x3000
-                                       //                   je xx
-                                       //    8b4D A8        mov ecx,dword ptr ss:[ebp-??] hook here
-                                       //    85C9           test ecx,ecx
+        0x81,XX, 0x00,0x30,0x00,0x00    //    81FE 00300000  cmp esi,0x3000
+                                        // or 81FB 00300000  cmp ebx,0x3000
+                                        // or 81FF 00300000  cmp edi,0x3000
+                                        //                   je xx
+                                        //    8b4D A8        mov ecx,dword ptr ss:[ebp-??] hook here
+                                        //    85C9           test ecx,ecx
     };
     for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
     {
-        if (*(DWORD*)(addr + 0xb) != 0xC985)
+        if (*(WORD*)(addr + 0xb) != 0xC985)
             continue;
 
         BYTE byte = *(BYTE*)(addr + 1);
@@ -9633,13 +9633,13 @@ static bool InsertNewWillPlusHook()
         HookParam hp = {};
         hp.address = addr + 8;
         hp.type = USING_UNICODE;
-        hp.offset = byte == 0xfe ? -0x20 : (byte == 0xfb : -0x14 ? -0x24);
+        hp.offset = byte == 0xfe ? -0x20 : (byte == 0xfb ? -0x14 : -0x24);
         hp.length_offset = 1;
         NewHook(hp, "WillPlus3");
         found = true;
     }
-	if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
-	return found;
+    if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
+    return found;
 }
 
 } // unnamed namespace
