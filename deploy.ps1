@@ -58,6 +58,7 @@ foreach ($language in @{
 			"Remove Repeated Phrases 2",
 			"Remove 30 Repeated Sentences",
 			"Replacer",
+			"Replacer Translated Text",
 			"Styler",
 			"Thread Linker"
 		))
