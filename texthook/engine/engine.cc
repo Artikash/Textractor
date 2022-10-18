@@ -17229,7 +17229,49 @@ bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 				return true;
 	return false;
 }
+bool InsertAnimHook() {
+    const BYTE bytes[] = { 0xC7,0x45,0xFC,0x01,0x00,0x00,0x00,0x8B,0x4D,0x10,0x51,0x8D,0x8D,0x40,0x7E,0xFF,0xFF };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:Anim: pattern not found");
+        return false;
+    }
+    HookParam myhp = {};
+    myhp.address = addr+10;
 
+    myhp.type = USING_STRING| NO_CONTEXT; // /HQ 不使用上下文区分 把所有线程的文本都提取
+   
+    // data_offset
+    myhp.offset = pusha_ecx_off - 4;//esp+4
+
+    char nameForUser[HOOK_NAME_SIZE] = "Anim";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: Anim Hook by:IOV");
+    return true;
+}
+
+bool InsertAnim2Hook() {
+    const BYTE bytes[] = { 0xC7,0x45,0xFC,0x01,0x00,0x00,0x00,0x8B,0x45,0x10,0x50,0x8D,0x8D,0xAC,0x7E,0xFF,0xFF };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:Anim2: pattern not found");
+        return false;
+    }
+    HookParam myhp = {};
+    myhp.address = addr + 10;
+
+    myhp.type = USING_STRING | NO_CONTEXT; 
+
+    // data_offset
+    myhp.offset = pusha_eax_off - 4;//esp+4
+
+    char nameForUser[HOOK_NAME_SIZE] = "Anim2";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: Anim2 Hook by:IOV");
+    return true;
+}
 bool InsertMonoHooks()
 {
   HMODULE h = ::GetModuleHandleA("mono.dll");
