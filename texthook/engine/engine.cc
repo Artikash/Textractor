@@ -6393,10 +6393,30 @@ bool InsertCotophaHook2()
 	}
 	return false;
 }
+bool InsertCotophaHook3() {
+    const BYTE bytes[] = { 0x8B,0x75,0xB8,0x8B,0xCE,0x50,0xC6,0x45,0xFC,0x01,0xE8 };
+    ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+    if (!addr) {
+        ConsoleOutput("vnreng:Cotopha3: Cotopha3 not found");
+        return false;
+    }
 
+    HookParam myhp = {};
+    myhp.address = addr;
+
+    myhp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+    myhp.offset = pusha_eax_off - 4;
+
+    char nameForUser[HOOK_NAME_SIZE] = "Cotopha3_EWideString";
+    NewHook(myhp, nameForUser);
+    ConsoleOutput("Insert: Cotopha3_EWideString Hook BY:IOV");
+    return true;
+}
 bool InsertCotophaHook()
 {
-	return InsertCotophaHook1() | InsertCotophaHook2();
+	   InsertCotophaHook1();
+	return  InsertCotophaHook3() || InsertCotophaHook2();
 }
 
 // jichi 5/10/2014
