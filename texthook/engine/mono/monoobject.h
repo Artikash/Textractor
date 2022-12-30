@@ -33,6 +33,9 @@ struct MonoString;
 struct MonoThreadsSync;
 struct MonoThread;
 struct MonoVTable;
+struct MonoImage;
+struct MonoClass;
+struct MonoMethod;
 
 struct MonoObject {
   MonoVTable *vtable;

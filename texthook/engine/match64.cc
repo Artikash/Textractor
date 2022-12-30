@@ -72,53 +72,72 @@ namespace Engine
 		Mono calling convention uses 'this' as first argument
 		Must be dynamic hook bootstrapped from other mono api or mono_domain_get won't work
 		*/
+		/*
+			Dmner: 30/12/2022
+			Instead of directly scanning all write/execute memory looking for jitted methods, look for the class we want (System.String) and enumerate its methods.
+			For any hookable method, we 'compile' it (which will either JIT it or return the address of the jitted code) and then insert the hook as per normal.
+		*/
 		trigger_fun = [](LPVOID addr, DWORD, DWORD)
 		{
 			static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
-			static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
 			static auto getName = (char*(*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
-			if (!getDomain || !getName || !getJitInfo) goto failed;
+			static auto getImageRef = (MonoImage * (*)(const char*))GetProcAddress(mono, "mono_image_loaded");
+			static auto getClassFromName = (MonoClass * (*)(MonoImage*, const char*, const char*))GetProcAddress(mono, "mono_class_from_name");
+			static auto getMethodsFromClass = (MonoMethod * (*)(MonoClass*, void*))GetProcAddress(mono, "mono_class_get_methods");
+			static auto getMethodFullName = (char* (*)(MonoMethod*, bool))GetProcAddress(mono, "mono_method_full_name");
+			static auto compileMethod = (void* (*)(MonoMethod*))GetProcAddress(mono, "mono_compile_method");
+			if (!getDomain || !getImageRef || !getClassFromName || !getMethodsFromClass || !getMethodFullName || !compileMethod) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
 			ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", loadedConfig ? loadedConfig : "brute force");
-			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
-			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
-			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
-			for (auto addr : Util::SearchMemory(prolog, size, PAGE_EXECUTE_READWRITE))
+
+			auto image = getImageRef("mscorlib");
+			if (!image)
 			{
-				[](uint64_t addr)
-				{
-					__try
-					{
-						if (getJitInfo(domain, addr))
-							if (char* name = getName(addr))
-								if (strstr(name, "0x0") && ShouldMonoHook(name))
-								{
-									HookParam hp = {};
-									hp.address = addr;
-									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
-									if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
-									hp.offset = -0x20; // rcx
-									hp.padding = 20;
-									char nameForUser[HOOK_NAME_SIZE] = {};
-									strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
-									if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
-									if (char* end = strstr(nameForUser, "{")) *end = 0;
-									hp.length_fun = [](uintptr_t, uintptr_t data)
-									{
-										/* Artikash 6/18/2019:
-										even though this should get the true length mono uses internally
-										there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
-										int len = *(int*)(data - 4);
-										return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
-									};
-									NewHook(hp, nameForUser);
-								}
-					}
-					__except (EXCEPTION_EXECUTE_HANDLER) {}
-				}(addr);
+				ConsoleOutput("Textractor: Mono Dynamic failed to locate core lib");
+				goto failed;
 			}
 
+			auto clazz = getClassFromName(image, "System", "String");
+			if (!clazz)
+			{
+				ConsoleOutput("Textractor: Mono Dynamic failed to locate System.String");
+				goto failed;
+			}
+
+			void* iter = nullptr;
+			MonoMethod* method;
+			while (method = getMethodsFromClass(clazz, &iter))
+			{
+				auto fullname = getMethodFullName(method, true);
+				if (ShouldMonoHook(fullname))
+				{
+					// need to 'compile' the method to get its address -- this will return the existing methods address if already jitted
+					void* comAddr = compileMethod(method);
+
+					HookParam hp = {};
+					hp.address = (uint64_t)comAddr;
+					hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
+					if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
+					hp.offset = -0x20; // rcx
+					hp.padding = 20;
+					char nameForUser[HOOK_NAME_SIZE] = {};
+					strncpy_s(nameForUser, fullname, HOOK_NAME_SIZE - 1);
+					if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
+					if (char* end = strstr(nameForUser, "{")) *end = 0;
+					hp.length_fun = [](uintptr_t, uintptr_t data)
+					{
+						/* Artikash 6/18/2019:
+						even though this should get the true length mono uses internally
+						there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
+						int len = *(int*)(data - 4);
+						return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
+					};
+					ConsoleOutput("Textractor: FoundHook at %jx", hp.address);
+					NewHook(hp, nameForUser);
+				}
+			}
+			
 			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 			return true;
 		failed:
