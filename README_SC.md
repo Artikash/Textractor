@@ -30,7 +30,7 @@ Textractor 的发行版可以在[这里](https://github.com/Artikash/Textractor/
 
 欢迎一切贡献！如有任何关于代码的疑问，请向 akashmozumdar@gmail.com 发邮件.<br>
 你应当使用创建 PR 的标准过程 (分岔 (fork), 分支 (branch), 提交变化, 创建从你的分支到我的 master 分支的 PR).<br>
-提供翻译贡献很简单: 只需翻译 text.cpp 中的字符串和这份 README 即可.
+提供翻译贡献很简单: 只需翻译 [text.cpp](./text.cpp) 中的字符串和这份 README 即可.
 
 ## 编译
 

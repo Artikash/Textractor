@@ -33,7 +33,7 @@ Lihat ekstensi folder untuk melihat sampel ekstensi.
 
 Seluruh kontribusi diapresiasi! Tolong email saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai kode dasar nya.<br>
 Kamu harus menggunakan proses standar dalam membuat permintaan pull(fork, cabang, perubahan commit, membuat PR dari cabang kamu ke master saya).<br>
-Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari text.cpp lalu terjemahkan README ini.
+Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari [text.cpp](./text.cpp) lalu terjemahkan README ini.
 
 ## Mengcompile
 

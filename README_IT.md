@@ -33,7 +33,7 @@ Guardate la cartella delle estenzioni per esempi di cosa possono fare le estenzi
 
 Tutti i contributi sono apprezzati! Inviatemi un email a akashmozumdar@gmail.com se avete delle domande sul codebase.<br>
 Dovreste usare il processo standard di creare una pull request (fork, branch, commit changes, crea PR dal vostro ramo al mio master).<br>
-Contribuire alla traduzione è semplice: traduci le stringhe in text.cpp cosi come questo README.
+Contribuire alla traduzione è semplice: traduci le stringhe in [text.cpp](./text.cpp) cosi come questo README.
 
 ## Compiling
 
