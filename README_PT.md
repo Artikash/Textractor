@@ -33,7 +33,7 @@ Veja a pasta de extensões para mais exemplos do que as extensões são capazes 
 
 Todas contribuições são bem-vindas! Por favor, me mande um e-mail no endereço akashmozumdar@gmail.com caso tenha alguma dúvida quanto ao codebase.<br>
 Você deve seguir o processo padrão de fazer um pull request (fork, branch, realizar mudanças, realizar o PR do seu branch para o meu master).<br>
-Contribuir com uma tradução é fácil: basta traduzir as linhas do text.cpp assim como esse README.
+Contribuir com uma tradução é fácil: basta traduzir as linhas do [text.cpp](./text.cpp) assim como esse README.
 
 ## Compilando
 

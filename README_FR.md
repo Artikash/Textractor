@@ -32,7 +32,7 @@ Voir le dossier des extensions pour des exemples de ce que les extensions peuven
 
 Toutes les contributions sont appréciées! Veuillez m'envoyer un e-mail À akashmozumdar@gmail.com si vous avez des questions sur la base de code. <br>
 Vous devez utiliser le processus standard de création d'une demande d'extraction (fork, branch, commit changes, make PR from your branch to my master). <br>
-Contribuer à une traduction est simple: il suffit de traduire les chaînes dans text.cpp ainsi que ce fichier README.
+Contribuer à une traduction est simple: il suffit de traduire les chaînes dans [text.cpp](./text.cpp) ainsi que ce fichier README.
 
 ## Compilation 
 
