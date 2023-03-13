@@ -5,7 +5,38 @@
 #include <sstream>
 #include <process.h>
 
-extern const wchar_t* REPLACER_INSTRUCTIONS;
+const wchar_t* REPLACER_TEMPLATE = LR"(|ORIG|……。|BECOMES|...|END|
+|ORIG|…|BECOMES|...|END|
+|ORIG|──|BECOMES|─|END|
+|ORIG|。|BECOMES|.|END|
+|ORIG|、|BECOMES|,|END|
+|ORIG|．|BECOMES|.|END|
+|ORIG|・|BECOMES|.|END|
+|ORIG|〝|BECOMES|"|END|
+|ORIG|〟|BECOMES|"|END|
+|ORIG|「|BECOMES|"|END|
+|ORIG|」|BECOMES|"|END|
+|ORIG|《|BECOMES|<<|END|
+|ORIG|》|BECOMES|>>|END|
+|ORIG|『|BECOMES|'|END|
+|ORIG|』|BECOMES|'|END|
+|ORIG|（|BECOMES|(|END|
+|ORIG|）|BECOMES|)|END|
+|ORIG|～|BECOMES|~|END|
+|ORIG|＊|BECOMES|*|END|
+|ORIG|●|BECOMES|***|END|
+|ORIG|？|BECOMES|?|END|
+|ORIG|！|BECOMES|!|END|
+|ORIG|０|BECOMES|0|END|
+|ORIG|１|BECOMES|1|END|
+|ORIG|２|BECOMES|2|END|
+|ORIG|３|BECOMES|3|END|
+|ORIG|４|BECOMES|4|END|
+|ORIG|５|BECOMES|5|END|
+|ORIG|６|BECOMES|6|END|
+|ORIG|７|BECOMES|7|END|
+|ORIG|８|BECOMES|8|END|
+|ORIG|９|BECOMES|9|END|)";
 
 constexpr auto REPLACE_SAVE_FILE = u8"SavedReplacementsLanguageChars.txt";
 
@@ -103,7 +134,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved
 		if (trie.Empty())
 		{
 			auto file = std::ofstream(REPLACE_SAVE_FILE, std::ios::binary) << "\xff\xfe";
-			for (auto ch : std::wstring_view(REPLACER_INSTRUCTIONS))
+			for (auto ch : std::wstring_view(REPLACER_TEMPLATE))
 				file << (ch == L'\n' ? std::string_view("\r\0\n", 4) : std::string_view((char*)&ch, 2));
 			SpawnThread([] { _spawnlp(_P_DETACH, "notepad", "notepad", REPLACE_SAVE_FILE, NULL); }); // show file to user
 		}
