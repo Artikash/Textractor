@@ -5803,7 +5803,7 @@ bool InsertShinaHook()
 	  trigger_fun = [](LPVOID funcAddr, DWORD, DWORD stack)
 	  {
 		  bool ret = false;
-		  if (funcAddr != GetGlyphOutlineA) return false;
+		  if (funcAddr != GetGlyphOutlineA && funcAddr != GetTextExtentPoint32A) return false;
 		  for (int i = 0; i < 100; ++i)
 		  {
 			  // Address of text is somewhere on stack in call to func. Search for it.
@@ -5817,7 +5817,7 @@ bool InsertShinaHook()
 					  hp.type = DIRECT_READ;
 					  hp.address = addr;
 					  ConsoleOutput("Textractor: triggered: adding dynamic reader");
-					  NewHook(hp, "READ");
+					  NewHook(hp, "ShinaRio READ");
 					  ret = true;
 				  }
 			  };
