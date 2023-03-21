@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Textractor)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 if (NOT MSVC)
 	message(FATAL_ERROR "Textractor can only be built with Visual Studio")
 endif()
@@ -41,6 +42,6 @@ link_libraries(text)
 
 add_subdirectory(host)
 add_subdirectory(texthook)
-add_subdirectory(GUI)
-add_subdirectory(extensions)
-add_subdirectory(test)
+#add_subdirectory(GUI)
+#add_subdirectory(extensions)
+#add_subdirectory(test)
