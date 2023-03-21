@@ -27,7 +27,20 @@ namespace Engine
 		__except (EXCEPTION_EXECUTE_HANDLER) { ConsoleOutput(HIJACK_ERROR); }
 #endif // ITH_DISABLE_ENGINE
 		if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
-			PcHooks::hookOtherPcFunctions();
+
+
+
+
+
+
+			//PcHooks::hookOtherPcFunctions();
+
+
+
+
+
+
+
 		} //else
 		//  ConsoleOutput("vnreng: found game engine, IGNORE non gui hooks");
 		return found;

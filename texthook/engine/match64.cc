@@ -255,22 +255,22 @@ namespace Engine
 	}
 	bool UnsafeDetermineEngineType()
 	{
-		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
+		//if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
 
-		for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
+		//for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
 
-		if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
-		{
-			ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
-			wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
-			spDefault.padding = 20;
-			return true;
-		}
+		//if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
+		//{
+		//	ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
+		//	wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
+		//	spDefault.padding = 20;
+		//	return true;
+		//}
 		if (Util::CheckFile(L"*.pfs")) {
 			InsertArtemis64Hook();
 			return true;
 		}
-		if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
+		/*if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
 
 		for (const wchar_t* monoName : { L"mono.dll", L"mono-2.0-bdwgc.dll" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 
@@ -280,7 +280,7 @@ namespace Engine
 				if (HMODULE module = GetModuleHandleW((DXVersion + L"_" + std::to_wstring(i)).c_str())) PcHooks::hookD3DXFunctions(module);
 
 		PcHooks::hookGDIFunctions();
-		PcHooks::hookGDIPlusFunctions();
+		PcHooks::hookGDIPlusFunctions();*/
 		return false;
 	}
 }
