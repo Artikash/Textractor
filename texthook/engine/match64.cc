@@ -74,9 +74,9 @@ namespace Engine
 		*/
 		trigger_fun = [](LPVOID addr, DWORD, DWORD)
 		{
-			static auto getDomain = (MonoDomain*(*)())GetProcAddress(mono, "mono_domain_get");
-			static auto getJitInfo = (MonoObject*(*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
-			static auto getName = (char*(*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
+			static auto getDomain = (MonoDomain * (*)())GetProcAddress(mono, "mono_domain_get");
+			static auto getJitInfo = (MonoObject * (*)(MonoDomain*, uintptr_t))GetProcAddress(mono, "mono_jit_info_table_find");
+			static auto getName = (char* (*)(uintptr_t))GetProcAddress(mono, "mono_pmip");
 			if (!getDomain || !getName || !getJitInfo) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
@@ -84,40 +84,40 @@ namespace Engine
 			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
 			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
 			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
-			for (auto addr : Util::SearchMemory(prolog, size, PAGE_EXECUTE_READWRITE))
-			{
-				[](uint64_t addr)
+				for (auto addr : Util::SearchMemory(prolog, size, PAGE_EXECUTE_READWRITE))
 				{
-					__try
+					[](uint64_t addr)
 					{
-						if (getJitInfo(domain, addr))
-							if (char* name = getName(addr))
-								if (strstr(name, "0x0") && ShouldMonoHook(name))
-								{
-									HookParam hp = {};
-									hp.address = addr;
-									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
-									if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
-									hp.offset = -0x20; // rcx
-									hp.padding = 20;
-									char nameForUser[HOOK_NAME_SIZE] = {};
-									strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
-									if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
-									if (char* end = strstr(nameForUser, "{")) *end = 0;
-									hp.length_fun = [](uintptr_t, uintptr_t data)
+						__try
+						{
+							if (getJitInfo(domain, addr))
+								if (char* name = getName(addr))
+									if (strstr(name, "0x0") && ShouldMonoHook(name))
 									{
-										/* Artikash 6/18/2019:
-										even though this should get the true length mono uses internally
-										there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
-										int len = *(int*)(data - 4);
-										return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
-									};
-									NewHook(hp, nameForUser);
-								}
-					}
-					__except (EXCEPTION_EXECUTE_HANDLER) {}
-				}(addr);
-			}
+										HookParam hp = {};
+										hp.address = addr;
+										hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
+										if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
+										hp.offset = -0x20; // rcx
+										hp.padding = 20;
+										char nameForUser[HOOK_NAME_SIZE] = {};
+										strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
+										if (char* end = strstr(nameForUser, " + 0x0")) *end = 0;
+										if (char* end = strstr(nameForUser, "{")) *end = 0;
+										hp.length_fun = [](uintptr_t, uintptr_t data)
+										{
+											/* Artikash 6/18/2019:
+											even though this should get the true length mono uses internally
+											there's still some garbage picked up on https://vndb.org/v20403 demo, don't know why */
+											int len = *(int*)(data - 4);
+											return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
+										};
+										NewHook(hp, nameForUser);
+									}
+						}
+						__except (EXCEPTION_EXECUTE_HANDLER) {}
+					}(addr);
+				}
 
 			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 			return true;
@@ -132,7 +132,7 @@ namespace Engine
 	// sample game https://www.freem.ne.jp/dl/win/18963
 	bool InsertV8Hook(HMODULE module)
 	{
-		auto getV8Length =  [](uintptr_t, uintptr_t data)
+		auto getV8Length = [](uintptr_t, uintptr_t data)
 		{
 			int len = *(int*)(data - 4);
 			return len > 0 && len < PIPE_BUFFER_SIZE ? len * 2 : 0;
@@ -213,64 +213,22 @@ namespace Engine
 		ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
 		return false;
 	}
-	uint64_t SafeSearchMemory(uint64_t startAddr, uint64_t endAddr, const BYTE* bytes, short length)
-	{
-		__try
-		{
-			for (int i = 0; i < endAddr - startAddr - length; ++i)
-				for (int j = 0; j <= length; ++j)
-					if (j == length) return startAddr + i; // not sure about this algorithm...
-					else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != XX) break;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			ConsoleOutput("Textractor: SearchMemory ERROR (Textractor will likely still work fine, but please let Artikash know if this happens a lot!)");
-		}
-		return 0;
-	}
 
-	bool InsertArtemis64Hook()
-	{
-		const BYTE BYTES[] = {
-			0x48,0x89,0x5C,0x24,0x20,0x55,0x56,0x57,0x41,0x54,0x41,0x55,0x41,0x56,0x41,0x57,0x48,0x83,0xec,0x60
-			//__int64 __fastcall sub_14017A760(__int64 a1, char *a2, char **a3)
-			//FLIP FLOP IO
-		};
-		auto addr = SafeSearchMemory(spDefault.minAddress, spDefault.maxAddress, BYTES, sizeof(BYTES));
-
-		if (addr == 0) {
-			ConsoleOutput("Textractor: InsertArtemis64Hook failed");
-			return false;
-		}
-		char info[1000] = {};
-		sprintf(info, "Textractor: InsertArtemis64Hook %08x", addr);
-		ConsoleOutput(info);
-		HookParam hp = {};
-		hp.address = addr;
-		hp.type = USING_UTF8 | USING_STRING;
-		hp.offset = -0x24 - 4;//rdx 
-		NewHook(hp, "Artemis64");
-		return true;
-
-	}
 	bool UnsafeDetermineEngineType()
 	{
-		//if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
+		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
 
-		//for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
+		for (const wchar_t* moduleName : { (const wchar_t*)NULL, L"node.dll", L"nw.dll" }) if (InsertV8Hook(GetModuleHandleW(moduleName))) return true;
 
-		//if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
-		//{
-		//	ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
-		//	wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
-		//	spDefault.padding = 20;
-		//	return true;
-		//}
-		if (Util::CheckFile(L"*.pfs")) {
-			InsertArtemis64Hook();
+		if (GetModuleHandleW(L"GameAssembly.dll")) // TODO: is there a way to autofind hook?
+		{
+			ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
+			wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
+			spDefault.padding = 20;
 			return true;
 		}
-		/*if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
+
+		if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
 
 		for (const wchar_t* monoName : { L"mono.dll", L"mono-2.0-bdwgc.dll" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
 
@@ -280,7 +238,7 @@ namespace Engine
 				if (HMODULE module = GetModuleHandleW((DXVersion + L"_" + std::to_wstring(i)).c_str())) PcHooks::hookD3DXFunctions(module);
 
 		PcHooks::hookGDIFunctions();
-		PcHooks::hookGDIPlusFunctions();*/
+		PcHooks::hookGDIPlusFunctions();
 		return false;
 	}
 }

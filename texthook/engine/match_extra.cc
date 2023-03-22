@@ -16,22 +16,7 @@ namespace Engine
 	char configFileData[1000]{};
 
 	bool UnsafeDetermineEngineType();
-
-	// jichi 10/21/2014: Return whether found the game engine
-	bool DetermineEngineType()
-	{
-		// jichi 9/27/2013: disable game engine for debugging use
-		bool found = false;
-#ifndef ITH_DISABLE_ENGINE
-		__try { found = UnsafeDetermineEngineType(); }
-		__except (EXCEPTION_EXECUTE_HANDLER) { ConsoleOutput(HIJACK_ERROR); }
-#endif // ITH_DISABLE_ENGINE
-		if (!found) { // jichi 10/2/2013: Only enable it if no game engine is detected
-			PcHooks::hookOtherPcFunctions();
-		} //else
-		//  ConsoleOutput("vnreng: found game engine, IGNORE non gui hooks");
-		return found;
-	}
+	 
 
 	void Hijack()
 	{
@@ -67,19 +52,9 @@ namespace Engine
 				spDefault.maxAddress = processStopAddress;
 				ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 
-				DetermineEngineType();
+				UnsafeDetermineEngineType();
 				if (processStartAddress + 0x40000 > processStopAddress) ConsoleOutput("Textractor: WARNING injected process is very small, possibly a dummy!");
 			}(), 0);
 	}
-
-	bool ShouldMonoHook(const char* name)
-	{
-		if (!loadedConfig) return strstr(name, "string:") && !strstr(name, "string:mem");
-		for (const char* hook = loadedConfig; hook; hook = strchr(hook + 1, '\t'))
-			for (auto start = name; *start; ++start)
-				for (int i = 0; ; ++i)
-					if (start[i] != hook[i + 1]) break;
-					else if (!hook[i + 2] || hook[i + 2] == '\t') return true;
-		return false;
-	}
+	 
 }
