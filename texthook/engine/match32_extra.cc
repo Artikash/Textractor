@@ -15,6 +15,9 @@ enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
 
 // - Methods -
 
+#define XX2 XX,XX       // WORD
+#define XX4 XX2,XX2     // DWORD
+#define XX8 XX4,XX4     // QWORD
 namespace Engine { 
 
 	namespace {
@@ -158,11 +161,61 @@ namespace Engine {
 			return ret;
 			return false;
 		}
+		bool InsertHorkEye3Hook()
+		{
+			 
+
+			memcpy(spDefault.pattern, Array<BYTE>{ 0xcc, 0xcc, 0xcc, XX, 0xec }, spDefault.length = 5);
+			spDefault.offset = 3;
+
+			const BYTE bytes2[] =
+			{ 
+				0x55,
+				0x8d,0xac,0x24,XX4, 
+				0x81,0xec,XX4,
+				0x6a,0xff,
+				0x68,XX4,
+				0x64,0xa1,0x00,0x00,0x00,0x00,
+				0x50,
+				0x83,0xec,0x38,   //必须是0x38，不能是XX，否则有重的。
+
+//.text:0042E7F0 55                            push    ebp
+//.text : 0042E7F1 8D AC 24 24 FF FF FF          lea     ebp,[esp - 0DCh]
+//.text : 0042E7F8 81 EC DC 00 00 00             sub     esp, 0DCh
+//.text : 0042E7FE 6A FF                         push    0FFFFFFFFh
+//.text : 0042E800 68 51 1E 5C 00                push    offset SEH_42E7F0
+//.text : 0042E805 64 A1 00 00 00 00             mov     eax, large fs : 0
+//.text : 0042E80B 50                            push    eax
+//.text : 0042E80C 83 EC 38                      sub     esp, 38h
+//.text : 0042E80F A1 24 D0 64 00                mov     eax, ___security_cookie
+//.text : 0042E814 33 C5 xor eax, ebp
+//.text : 0042E816 89 85 D8 00 00 00             mov[ebp + 0DCh + var_4], eax
+			};
+
+			for (auto addr : Util::SearchMemory(bytes2, sizeof(bytes2)))
+			{
+				HookParam hp = {};
+				hp.address = addr;
+				hp.offset = 4;
+				hp.type = USING_STRING;
+				ConsoleOutput("Textractor: INSERT HorkEye3");
+				NewHook(hp, "HorkEye3");
+				return true;
+			}
+
+			ConsoleOutput("vnreng:HorkEye: pattern not found");
+			return false;
+
+		}
+
 	}
 
 bool UnsafeDetermineEngineType()
 {
-	
+	if (Util::SearchResourceString(L"HorkEye")) { // appear in copyright: Copyright (C) HorkEye, http://horkeye.com
+		InsertHorkEye3Hook();
+		return true;
+	}
 	if (InsertlibcefHook(GetModuleHandleW(L"libcef.dll"))) {
 		return true;
 	}

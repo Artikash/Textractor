@@ -36,7 +36,20 @@ int main()
 		wchar_t command[500] = {};
 		DWORD processId = 0;
 
-		if (swscanf(input, L"%500s -P%d", command, &processId) != 2) ExitProcess(0);
+		int split;
+		for (split = wcslen(input) - 1; split >= 1; split--) {
+			if (input[split] == L'P' && input[split-1]=='-') {
+				processId = _wtoi(input + split + 1);
+				break;
+			}
+		}
+		if(split==1)ExitProcess(0);
+		split -= 2;
+		while (split > 0 && input[split] == L' ')split -= 1;
+		if (split == 0)ExitProcess(0);
+		input[split + 1] = 0;
+		wcscpy(command, input);
+		//if (swscanf(input, L"%500s -P%d", command, &processId) != 2) ExitProcess(0);
 		if (_wcsicmp(command, L"attach") == 0) Host::InjectProcess(processId);
 		else if (_wcsicmp(command, L"detach") == 0) { Host::DetachProcess(processId); }
 		else if (_wcsicmp(command, L"find") == 0) {
