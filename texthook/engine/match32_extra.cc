@@ -18,9 +18,9 @@ enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
 #define XX2 XX,XX       // WORD
 #define XX4 XX2,XX2     // DWORD
 #define XX8 XX4,XX4     // QWORD
-namespace Engine { 
+namespace Engine{ 
 
-	namespace {
+	namespace Extra {
 		typedef wchar_t char16;
 
 		typedef struct _cef_string_wide_t {
@@ -159,7 +159,6 @@ namespace Engine {
 			if (!ret)
 				ConsoleOutput("vnreng: Mono: failed to find function address");
 			return ret;
-			return false;
 		}
 		bool InsertHorkEye3Hook()
 		{ 
@@ -241,6 +240,7 @@ namespace Engine {
 					return end;
 				}
 			}
+			return 0;
 		}
 		bool InsertAGSHook()
 		{
@@ -290,20 +290,45 @@ namespace Engine {
 			return ok;
 
 		}
+		bool InsertWillPlusHook() {
+			const BYTE bytes[] = {
+				   0xc7,0x45,0xfc,0x00,0x00,0x00,0x00,
+				   0x33,0xc9,
+				   0xc7,0x47,0x78,0x00,0x00,0x00,0x00
+			}; 
+			ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+
+			if (addr == 0)return false;
+
+			addr = MemDbg::findEnclosingFunctionBeforeDword(0x83dc8b53, addr, MemDbg::MaximumFunctionSize, 1);
+
+			if (addr == 0)return false;
+			HookParam hp = {};
+			hp.address = addr;
+			hp.offset = 7*4;
+			hp.type = USING_STRING|USING_UNICODE;
+			ConsoleOutput("Textractor: INSERT WillPlus_extra");
+			NewHook(hp, "WillPlus_extra");
+			return  true;
+		}
 
 	}
 
 bool UnsafeDetermineEngineType()
 {
+	if (Util::CheckFile(L"Rio.arc") && Util::CheckFile(L"Chip*.arc")) {
+		Extra::InsertWillPlusHook();
+		return true;
+	}
 	if (Util::SearchResourceString(L"HorkEye")) { // appear in copyright: Copyright (C) HorkEye, http://horkeye.com
-		InsertHorkEye3Hook();
+		Extra::InsertHorkEye3Hook();
 		return true;
 	}
 	if (Util::CheckFile(L"voice/*.pk")|| Util::CheckFile(L"sound/*.pk")|| Util::CheckFile(L"misc/*.pk")) {
-		if(InsertAGSHook())
+		if(Extra::InsertAGSHook())
 			return true;
 	}
-	if (InsertlibcefHook(GetModuleHandleW(L"libcef.dll"))) {
+	if (Extra::InsertlibcefHook(GetModuleHandleW(L"libcef.dll"))) {
 		return true;
 	}
 	return false;
