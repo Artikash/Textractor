@@ -157,7 +157,7 @@ namespace Engine{
 			}
 
 			if (!ret)
-				ConsoleOutput("vnreng: Mono: failed to find function address");
+				ConsoleOutput("vnreng: libcef: failed to find function address");
 			return ret;
 		}
 		bool InsertHorkEye3Hook()
@@ -195,10 +195,6 @@ namespace Engine{
 			ConsoleOutput("Textractor: INSERT HorkEye3");
 			NewHook(hp, "HorkEye3");
 			return true;
-			 
-
-			ConsoleOutput("vnreng:HorkEye: pattern not found");
-			return false;
 
 		}
 		 
@@ -311,6 +307,75 @@ namespace Engine{
 			NewHook(hp, "WillPlus_extra");
 			return  true;
 		}
+		bool InsertCsystemHook() {
+			const BYTE bytes[] = {
+				0x83,0xbe,XX4,0x00,
+				0x8b,XX2,
+				0x0f,0x85,XX4,
+				0x83,0xbe,XX4,0x00,
+				0x0f,0x85,XX4,
+				0x83,0xbe,XX4,0x00,
+				0x0f,0x84,XX4
+/*.always:0048E4CA 83 BE F8 04 00 00 00          cmp     dword ptr[esi + 4F8h], 0
+.always : 0048E4D1 8B 5D 84                      mov     ebx,[ebp + Src]
+.always : 0048E4D4 0F 85 86 F8 FF FF             jnz     loc_48DD60
+.always : 0048E4D4
+.always : 0048E4DA 83 BE F4 04 00 00 00          cmp     dword ptr[esi + 4F4h], 0
+.always : 0048E4E1 0F 85 79 F8 FF FF             jnz     loc_48DD60
+.always : 0048E4E1
+.always : 0048E4E7 83 BE 00 05 00 00 00          cmp     dword ptr[esi + 500h], 0
+.always : 0048E4EE 0F 84 6C F8 FF FF             jz      loc_48DD60*/
+
+			};
+			const BYTE bytes2[] = {
+				0x8b,0x86,XX4,
+				0x6a,0x00,
+				0x8b,0x80,XX4,
+				0x50,
+				0x8b,0x08,
+				0xff,0x91,XX4,
+				0x8b,0x45,XX,
+				0x83,0xF8,0x08
+				//
+//.always:0048E51D 8B 86 58 0A 00 00             mov     eax,[esi + 0A58h]
+//.always : 0048E523 6A 00                         push    0
+//.always : 0048E525 8B 80 B8 01 00 00             mov     eax,[eax + 1B8h]
+//.always : 0048E52B 50                            push    eax
+//.always : 0048E52C 8B 08                         mov     ecx,[eax]
+//.always:0048E52E FF 91 C4 00 00 00             call    dword ptr[ecx + 0C4h]
+//.always : 0048E52E
+//.always : 0048E534 8B 45 DC                      mov     eax,[ebp + var_24]
+//.always : 0048E537 83 F8 08                      cmp     eax, 8
+			};
+
+			auto addrs = Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE_READWRITE, processStartAddress, processStopAddress);
+			auto addrs2 = Util::SearchMemory(bytes2, sizeof(bytes2), PAGE_EXECUTE_READWRITE, processStartAddress, processStopAddress);
+			addrs.insert(addrs.end(), addrs2.begin(), addrs2.end());
+			for (auto addr : addrs) { 
+				HookParam hp = {};
+				hp.address = addr;
+				hp.offset = -0x14;
+				hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT;
+				ConsoleOutput("Textractor: INSERT Csystem");
+				NewHook(hp, "Csystem");
+			}
+			 
+			
+			return addrs.size()>0;
+		}
+		bool CheckCsystem() {
+			//WendyBell
+			wchar_t arcdatpattern[] = L"Arc0%d.dat";
+			wchar_t arcdat[20];
+			bool iswendybell = false;
+			for (int i = 0; i < 10; i++) {
+				wsprintf(arcdat, arcdatpattern, i);
+				if (Util::CheckFile(arcdat)) {
+					iswendybell = true; break;
+				}
+			}
+			return (iswendybell && InsertCsystemHook());
+		}
 
 	}
 
@@ -318,6 +383,9 @@ bool UnsafeDetermineEngineType()
 {
 	if (Util::CheckFile(L"Rio.arc") && Util::CheckFile(L"Chip*.arc")) {
 		Extra::InsertWillPlusHook();
+		return true;
+	}
+	if (Extra::CheckCsystem()) {
 		return true;
 	}
 	if (Util::SearchResourceString(L"HorkEye")) { // appear in copyright: Copyright (C) HorkEye, http://horkeye.com

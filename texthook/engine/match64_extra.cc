@@ -9,21 +9,7 @@
 
 namespace Engine
 { 
-	uint64_t SafeSearchMemory(uint64_t startAddr, uint64_t endAddr, const BYTE* bytes, short length)
-	{
-		__try
-		{
-			for (int i = 0; i < endAddr - startAddr - length; ++i)
-				for (int j = 0; j <= length; ++j)
-					if (j == length) return startAddr + i; // not sure about this algorithm...
-					else if (*((BYTE*)startAddr + i + j) != *(bytes + j) && *(bytes + j) != XX) break;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			ConsoleOutput("Textractor: SearchMemory ERROR (Textractor will likely still work fine, but please let Artikash know if this happens a lot!)");
-		}
-		return 0;
-	}
+	 
 
 	bool InsertArtemis64Hook()
 	{
