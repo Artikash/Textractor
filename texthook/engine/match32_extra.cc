@@ -187,16 +187,16 @@ namespace Engine {
 //.text : 0042E816 89 85 D8 00 00 00             mov[ebp + 0DCh + var_4], eax
 			};
 
-			for (auto addr : Util::SearchMemory(bytes2, sizeof(bytes2)))
-			{
-				HookParam hp = {};
-				hp.address = addr;
-				hp.offset = 4;
-				hp.type = USING_STRING;
-				ConsoleOutput("Textractor: INSERT HorkEye3");
-				NewHook(hp, "HorkEye3");
-				return true;
-			}
+			auto addr=MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStopAddress);
+			 
+			HookParam hp = {};
+			hp.address = addr;
+			hp.offset = 4;
+			hp.type = USING_STRING;
+			ConsoleOutput("Textractor: INSERT HorkEye3");
+			NewHook(hp, "HorkEye3");
+			return true;
+			 
 
 			ConsoleOutput("vnreng:HorkEye: pattern not found");
 			return false;
