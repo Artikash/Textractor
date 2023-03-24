@@ -8,7 +8,7 @@
 #include "util/util.h"
 #include "main.h"
 #include "ithsys/ithsys.h"
-
+#include"memdbg/memsearch.h"
 //#define ConsoleOutput(...)  (void)0     // jichi 8/18/2013: I don't need ConsoleOutput
 
 enum { MAX_REL_ADDR = 0x200000 }; // jichi 8/18/2013: maximum relative address
@@ -162,12 +162,7 @@ namespace Engine {
 			return false;
 		}
 		bool InsertHorkEye3Hook()
-		{
-			 
-
-			memcpy(spDefault.pattern, Array<BYTE>{ 0xcc, 0xcc, 0xcc, XX, 0xec }, spDefault.length = 5);
-			spDefault.offset = 3;
-
+		{ 
 			const BYTE bytes2[] =
 			{ 
 				0x55,
@@ -207,6 +202,94 @@ namespace Engine {
 			return false;
 
 		}
+		 
+		std::vector<DWORD> findrelativecall(const BYTE* pattern ,int length,DWORD calladdress,DWORD start, DWORD end)
+		{
+			std::vector<DWORD> save;
+			for (; start < end;start+=1 ) { 
+				DWORD addr=MemDbg::findBytes(pattern, length, start, end); 
+				start = addr;
+				if (!addr)return save;
+				
+				BYTE callop = 0xE8;
+				
+				union little {
+					DWORD _dw;
+					BYTE _bytes[4]; 
+				}relative;
+				relative._dw = (calladdress - addr -length- 5);
+				DWORD calladdr = addr + length;
+				if (*((BYTE*)calladdr) == callop) {
+
+					calladdr += 1;
+					BYTE* _b = (BYTE*)calladdr;
+					BYTE* _a = relative._bytes;
+					/*ConsoleOutput("%p", addr);
+					ConsoleOutput("%p %x", calladdress, relative._dw);
+					ConsoleOutput("%02x%02x%02x%02x %02x%02x%02x%02x", _a[0], _a[1], _a[2], _a[3], _b[0], _b[1], _b[2], _b[3]);*/
+					if ((_a[0] == _b[0]) && (_a[1] == _b[1]) && (_a[2] == _b[2]) && (_a[3] == _b[3])) {
+						save.push_back(start);
+					}
+				} 
+			}
+			return save;
+		}
+		DWORD reverseFindBytes(const BYTE* pattern, int length, DWORD start, DWORD end) {
+			for (end -= length; end >= start; end -= 1) {
+				 
+				if (memcmp(pattern, (const BYTE*)(end), length) == 0) {
+					return end;
+				}
+			}
+		}
+		bool InsertAGSHook()
+		{
+			 
+			const BYTE bytes1[] = {
+				/*.text:0043E3A0 55                            push    ebp
+.text : 0043E3A1 8B EC                         mov     ebp, esp
+.text : 0043E3A3 83 EC 38                      sub     esp, 38h
+.text : 0043E3A6 53                            push    ebx
+.text : 0043E3A7 56                            push    esi
+.text : 0043E3A8 8B F1                         mov     esi, ecx*/
+				0x55,
+				0x8b,0xec,
+				0x83,0xec,0x38,0x53,0x56,0x8b,0xf1
+			};
+			 
+			ULONG addr = MemDbg::findBytes(bytes1, sizeof(bytes1), processStartAddress, processStopAddress); 
+			if (!addr) { 
+				return false;
+			}  
+			const BYTE bytes2[] = {
+				/*	.text:0043E95E FF 75 08                      push[ebp + arg_0]
+	.text:0043E961 8B CE                         mov     ecx, esi
+	.text : 0043E963 E8 38 FA FF FF                call    sub_43E3A0*/
+					0xff,0x75,0x08,
+					0x8b,0xce
+			};
+			bool ok = false;
+			  
+			auto addrs = findrelativecall(bytes2, sizeof(bytes2), addr, processStartAddress, processStopAddress);
+			const BYTE funcstart[] = {
+				0x55,0x8b,0xec
+			};
+			for(auto addr :addrs){ 
+				addr = reverseFindBytes(funcstart, sizeof(funcstart), addr-0x100, addr);
+				if (!addr)continue; 
+				HookParam hp = {};
+				hp.address = addr;
+				hp.offset = -8;
+				hp.type = USING_STRING;
+				ConsoleOutput("Textractor: INSERT HOOK_AGS %p",addr);
+				NewHook(hp, "HOOK_AGS");
+				ok = true;
+			} 
+			
+			
+			return ok;
+
+		}
 
 	}
 
@@ -215,6 +298,10 @@ bool UnsafeDetermineEngineType()
 	if (Util::SearchResourceString(L"HorkEye")) { // appear in copyright: Copyright (C) HorkEye, http://horkeye.com
 		InsertHorkEye3Hook();
 		return true;
+	}
+	if (Util::CheckFile(L"voice/*.pk")|| Util::CheckFile(L"sound/*.pk")|| Util::CheckFile(L"misc/*.pk")) {
+		if(InsertAGSHook())
+			return true;
 	}
 	if (InsertlibcefHook(GetModuleHandleW(L"libcef.dll"))) {
 		return true;
