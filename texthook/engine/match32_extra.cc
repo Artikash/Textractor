@@ -376,6 +376,45 @@ namespace Engine{
 			}
 			return (iswendybell && InsertCsystemHook());
 		}
+		
+
+		bool Checkhibiki() {
+			//ＬＯＶＥＬＹ×Ｃ∧ＴＩＯＮ
+		/*seg000:0044FC05 83 FF 20                      cmp     edi, 20h ; ' '
+seg000:0044FC08 0F 84 E6 00 00 00             jz      loc_44FCF4
+seg000:0044FC08
+seg000:0044FC0E 81 FF 00 30 00 00             cmp     edi, 3000h
+seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
+			const BYTE bytes[] = {
+				   0x83,0xff,0x20,
+				   0x0f,0x84,XX4,
+				   0x81,0xff,0x00,0x30,0x00,0x00,
+				   0x0f,0x84,XX4
+			};
+
+			auto addrs = Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStopAddress);
+			int bad = 0;
+			for (auto addr :addrs) {
+				addr = MemDbg::findEnclosingAlignedFunction(addr);
+				if (!addr) { bad += 1; continue; }
+				HookParam hp = {};
+				hp.address =  addr;
+
+				hp.offset = 0x10;
+
+				hp.type = USING_UNICODE | DATA_INDIRECT;
+
+
+				ConsoleOutput("Textractor: INSERT hibiki_extra");
+				
+				NewHook(hp, "hibiki_extra"); 
+			 }
+				 
+				
+				
+			return  addrs.size()>bad;
+
+		}
 
 	}
 
@@ -390,6 +429,9 @@ bool UnsafeDetermineEngineType()
 	}
 	if (Util::SearchResourceString(L"HorkEye")) { // appear in copyright: Copyright (C) HorkEye, http://horkeye.com
 		Extra::InsertHorkEye3Hook();
+		return true;
+	}
+	if (Util::CheckFile(L"arc/*.dat") && Extra::Checkhibiki()) {
 		return true;
 	}
 	if (Util::CheckFile(L"voice/*.pk")|| Util::CheckFile(L"sound/*.pk")|| Util::CheckFile(L"misc/*.pk")) {
