@@ -413,7 +413,7 @@ seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
 			return  addrs.size()>bad;
 
 		}
-		bool hookv8orcef(HMODULE module) { 
+		bool hookv8addr(HMODULE module) {
 			auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
 			const BYTE bytes[] = {
 				0x89,0xc1,
@@ -456,19 +456,22 @@ seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
 
 			hp.type = USING_UNICODE | NO_CONTEXT; 
 			hp.length_offset = 1;
-			ConsoleOutput("Textractor: INSERT extra_v8orcef  %p", addr);
+			ConsoleOutput("Textractor: INSERT extra_v8addr  %p", addr);
 
-			NewHook(hp, "extra_v8orcef");
+			NewHook(hp, "extra_v8addr");
 			return true;
 		}
 		bool checkv8orcef() {
 			for (HMODULE module : { (HMODULE)processStartAddress, GetModuleHandleW(L"node.dll"), GetModuleHandleW(L"nw.dll") })
-				if (GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z") && hookv8orcef(module))return true;
+				if (GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z")) {
+					bool ok1 = hookv8addr(module);
+					if (ok1  )return true;
+				}
 			auto hm = GetModuleHandleW(L"libcef.dll");
 			if (hm) {
-				ConsoleOutput("libcef  %p", hm);
-				if (hookv8orcef(hm))return true;
-				//else if (Extra::InsertlibcefHook(hm))return true;
+				bool ok1 = hookv8addr(hm);
+				bool ok2 = Extra::InsertlibcefHook(hm);
+				if (ok1 || ok2)return true;
 			}
 			return false;
 		}
