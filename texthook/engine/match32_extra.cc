@@ -109,9 +109,7 @@ namespace Engine{
 		}
 		bool InsertlibcefHook(HMODULE module)
 		{
-			if (!module)return false;
-			auto cef_string_ascii_to_utf16 = GetProcAddress(module, "cef_string_ascii_to_utf16");
-			 
+			if (!module)return false; 
 			bool ret = false;
 			
 
@@ -400,12 +398,12 @@ seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
 				HookParam hp = {};
 				hp.address =  addr;
 
-				hp.offset = 0x10;
+				hp.offset = 12;
+				hp.length_offset = 1;
+				hp.type = USING_UNICODE;
 
-				hp.type = USING_UNICODE | DATA_INDIRECT;
 
-
-				ConsoleOutput("Textractor: INSERT hibiki_extra");
+				ConsoleOutput("Textractor: INSERT hibiki_extra %p",addr);
 				
 				NewHook(hp, "hibiki_extra"); 
 			 }
@@ -414,6 +412,65 @@ seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
 				
 			return  addrs.size()>bad;
 
+		}
+		bool hookv8orcef(HMODULE module) { 
+			auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+			const BYTE bytes[] = {
+				0x89,0xc1,
+				0x0f,0xb7,0xd8,
+				0x81,0xe1,0x00,0xfc,0x00,0x00,
+				0x81,0xf9,0x00,0xd8,0x00,0x00
+// 下戸勇者
+// .text:0162CE77 89 C1                         mov     ecx, eax
+//.text : 0162CE79 0F B7 D8                      movzx   ebx, ax
+//.text : 0162CE7C 81 E1 00 FC 00 00 and ecx, 0FC00h
+//.text : 0162CE82 81 F9 00 D8 00 00             cmp     ecx, 0D800h
+//.text : 0162CE88 74 56                         jz      short loc_162CEE0
+//.text : 0162CE88
+//.text : 0162CE8A 0F B7 C9                      movzx   ecx, cx
+//.text : 0162CE8D 81 F9 00 DC 00 00             cmp     ecx, 0DC00h
+//.text : 0162CE93 0F 84 43 03 00 00             jz      loc_162D1DC
+//.text : 0162CE93
+//.text : 0162CE99 8D 4B D0                      lea     ecx,[ebx - 30h]
+//.text : 0162CE9C 83 F9 0A                      cmp     ecx, 0Ah
+//.text : 0162CE9F 72 24                         jb      short loc_162CEC5; jumptable 0162CEBE cases 33,39 - 42,45,46,95
+//.text:0162CE9F
+//.text : 0162CEA1 89 D9                         mov     ecx, ebx
+//.text : 0162CEA3 83 C9 20 or ecx, 20h
+//.text : 0162CEA6 83 C1 9F                      add     ecx, 0FFFFFF9Fh
+//.text : 0162CEA9 83 F9 1A                      cmp     ecx, 1Ah
+//.text : 0162CEAC 72 17                         jb      short loc_162CEC5; jumptable 0162CEBE cases 33,39 - 42,45,46,95
+//.text:0162CEAC
+//.text : 0162CEAE 8D 4B DF                      lea     ecx,[ebx - 21h]; switch 63 cases
+//.text:0162CEB1 66 83 F9 3E                   cmp     cx, 3Eh
+//.text : 0162CEB5 0F 87 AD 01 00 00             ja      def_162CEBE; jumptable 0162CEBE default case
+			};
+			ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+			if (!addr) {
+				return false;
+			}
+			HookParam hp = {};
+			hp.address = addr;
+
+			hp.offset =-8;
+
+			hp.type = USING_UNICODE | NO_CONTEXT; 
+			hp.length_offset = 1;
+			ConsoleOutput("Textractor: INSERT extra_v8orcef  %p", addr);
+
+			NewHook(hp, "extra_v8orcef");
+			return true;
+		}
+		bool checkv8orcef() {
+			for (HMODULE module : { (HMODULE)processStartAddress, GetModuleHandleW(L"node.dll"), GetModuleHandleW(L"nw.dll") })
+				if (GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z") && hookv8orcef(module))return true;
+			auto hm = GetModuleHandleW(L"libcef.dll");
+			if (hm) {
+				ConsoleOutput("libcef  %p", hm);
+				if (hookv8orcef(hm))return true;
+				//else if (Extra::InsertlibcefHook(hm))return true;
+			}
+			return false;
 		}
 
 	}
@@ -438,9 +495,9 @@ bool UnsafeDetermineEngineType()
 		if(Extra::InsertAGSHook())
 			return true;
 	}
-	if (Extra::InsertlibcefHook(GetModuleHandleW(L"libcef.dll"))) {
-		return true;
-	}
+
+	if (Extra::checkv8orcef())return true;
+
 	return false;
 }
 
