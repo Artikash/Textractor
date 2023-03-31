@@ -16,6 +16,7 @@ namespace Engine
 	char configFileData[1000]{};
 
 	bool UnsafeDetermineEngineType();
+	bool UnsafeDetermineEngineType_extra();
 
 	// jichi 10/21/2014: Return whether found the game engine
 	bool DetermineEngineType()
@@ -68,6 +69,7 @@ namespace Engine
 				ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 
 				DetermineEngineType();
+				UnsafeDetermineEngineType_extra();
 				if (processStartAddress + 0x40000 > processStopAddress) ConsoleOutput("Textractor: WARNING injected process is very small, possibly a dummy!");
 			}(), 0);
 	}

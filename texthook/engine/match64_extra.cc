@@ -154,7 +154,7 @@ namespace Engine
 			return false;
 		}
 	}
-	bool UnsafeDetermineEngineType()
+	bool UnsafeDetermineEngineType_extra()
 	{ 
 		if (Extra::checkv8orcef())return true;
 		if (Util::CheckFile(L"*.pfs")) {

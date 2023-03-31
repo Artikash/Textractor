@@ -478,7 +478,7 @@ seg000:0044FC14 0F 84 E9 00 00 00             jz      loc_44FD03*/
 
 	}
 
-bool UnsafeDetermineEngineType()
+bool UnsafeDetermineEngineType_extra()
 {
 	if (Util::CheckFile(L"Rio.arc") && Util::CheckFile(L"Chip*.arc")) {
 		Extra::InsertWillPlusHook();

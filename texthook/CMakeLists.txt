@@ -11,9 +11,8 @@ if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
 		main.cc
 		texthook.cc
 		hookfinder.cc
-		#engine/match.cc
-		engine/match_extra.cc
-		#engine/match64.cc
+		engine/match.cc
+		engine/match64.cc
 		engine/match64_extra.cc
 		engine/native/pchooks.cc
 		util/ithsys/ithsys.cc
@@ -30,10 +29,9 @@ else()
 		main.cc
 		texthook.cc
 		hookfinder.cc
-		#engine/engine.cc
-		#engine/match.cc
-		engine/match_extra.cc
-		#engine/match32.cc
+		engine/engine.cc
+		engine/match.cc
+		engine/match32.cc
 		engine/match32_extra.cc
 		engine/native/pchooks.cc
 		util/util.cc
