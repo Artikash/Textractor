@@ -9745,7 +9745,7 @@ static bool InsertNewWillPlusHook()
                                         //    8b4D A8        mov ecx,dword ptr ss:[ebp-??] hook here
                                         //    85C9           test ecx,ecx
     };
-    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    /*for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
     {
         if (*(WORD*)(addr + 0xb) != 0xC985)
             continue;
@@ -9784,7 +9784,7 @@ static bool InsertNewWillPlusHook()
             NewHook(hp, "WillPlus3");
             found = true;
         }
-    }
+    }*/
     if (!found) ConsoleOutput("Textractor: WillPlus: failed to find instructions");
     return found;
 }
