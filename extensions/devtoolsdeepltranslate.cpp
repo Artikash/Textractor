@@ -162,8 +162,6 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	else
 	{
 		currTranslateTo = tlp.translateTo;
-		for (int retry = 0; ++retry < 20; Sleep(100))
-			if (Copy(DevTools::SendRequest("Runtime.evaluate", LR"({"expression":"document.readyState"})")[L"result"][L"value"].String()) == L"complete") break;
 		DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo), Escape(escaped)));
 	}
 
