@@ -157,25 +157,14 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 	std::scoped_lock lock(translationMutex);
 	std::wstring escaped; // DeepL breaks with slash in input
 	for (auto ch : text) ch == '/' ? escaped += L"\\/" : escaped += ch;
-	DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo).substr(0, 2), Escape(escaped)));
-	if (currTranslateTo != tlp.translateTo)
+	if (currTranslateTo == tlp.translateTo)
+		DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo).substr(0, 2), Escape(escaped)));
+	else
 	{
 		currTranslateTo = tlp.translateTo;
 		for (int retry = 0; ++retry < 20; Sleep(100))
 			if (Copy(DevTools::SendRequest("Runtime.evaluate", LR"({"expression":"document.readyState"})")[L"result"][L"value"].String()) == L"complete") break;
-
-		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
-			document.querySelector('.lmt__language_select--source').querySelector('button').click();
-			document.querySelector('[dl-test=translator-lang-option-%s').click();
-
-			document.querySelector('.lmt__language_select--target').querySelector('button').click();
-			document.querySelector('[dl-test=translator-lang-option-%s]').click();
-		"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo)));
-		//Fixed closure drop-down language selection due to site modification
-		DevTools::SendRequest("Runtime.evaluate", FormatString(LR"({"expression":"
-			document.querySelector('[class=lmt__textarea_container]').click();
-		"})"));
-		Sleep(200);
+		DevTools::SendRequest("Page.navigate", FormatString(LR"({"url":"https://www.deepl.com/en/translator#%s/%s/%s"})", (tlp.translateFrom == L"?") ? codes.at(tlp.translateFrom) : codes.at(tlp.translateFrom).substr(0, 2), codes.at(tlp.translateTo), Escape(escaped)));
 	}
 
 	for (int retry = 0; ++retry < 100; Sleep(100))
