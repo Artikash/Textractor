@@ -11516,8 +11516,78 @@ bool InsertAOS2Hook()
   return true;
 }
 
+bool InsertAOS2newHook() {
+	//by Blu3train
+	BYTE bytes[] = {
+		0x0F, 0xB6, 0x07,
+		0xC1, 0xE0, 0x08,
+		0x0B, 0xC1,
+		0x8B, 0x0D, XX4,
+		0x81, 0xE3, 0xFF, 0xFF, 0xFF, 0x00,
+		0x89, 0x6C, 0x24, 0x14,
+		0x89, 0x44, 0x24, 0x0C,
+		0x85, 0xED
+	};
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr) {
+		ConsoleOutput("vnreng:AOS2new: pattern not found");
+		return false;
+	}
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_edi_off - 4; //edi
+	hp.length_offset = 1;
+	hp.type  = NO_CONTEXT | DATA_INDIRECT;
+	hp.index =0;
+
+	ConsoleOutput("vnreng: INSERT AOS2new");
+
+	NewHook(hp, "AOS2new");
+	return true;
+
+}
+
+bool InsertAOS2Hooks() {
+  bool ok = InsertAOS2newHook();
+  ok = InsertAOS2Hook() || ok;
+  return ok;
+}
+
+bool InsertAOS3Hook() {
+	//by Blu3train
+	BYTE bytes[] = {
+		0x8B, 0x15, XX4,
+		0x0F, 0xBE, 0x02,
+		0xC1, 0xE0, 0x08,
+		0x8B, 0x0D, XX4,
+		0x0F, 0xBE, 0x51, 0x01,
+		0x0B, 0xC2,
+		0x66, 0x89, 0x85, 0x98, 0xFF, 0xFE, 0xFF,
+		0xA1, XX4,
+		0x50
+	};
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr) {
+		ConsoleOutput("vnreng:AOS3: pattern not found");
+		return false;
+	}
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_eax_off - 4; //eax
+	hp.length_offset = 1;
+	//hp.type  = NO_CONTEXT | DATA_INDIRECT;
+	hp.type  = DATA_INDIRECT;
+	hp.index =0;
+
+	ConsoleOutput("vnreng: INSERT AOS3");
+
+	NewHook(hp, "AOS3");
+	return true;
+
+}
+
 bool InsertAOSHook()
-{ return InsertAOS1Hook() ||  InsertAOS2Hook();}
+{ return InsertAOS1Hook() ||  InsertAOS2Hooks() || InsertAOS3Hook();}
 
   
 /**
