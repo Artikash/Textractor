@@ -10774,6 +10774,63 @@ bool InsertArtemis2Hook()
   return true;
 }
 
+bool InsertArtemis2EngHook()
+{
+  //by Blu3train
+  const BYTE bytes[] = {
+    0x55,                   // 55                       | push ebp                                |
+    0x8B, 0xEC,             // 8BEC                     | mov ebp,esp                             |
+    0x83, 0xE4, 0xF8,       // 83E4 F8                  | and esp,FFFFFFF8                        |
+    0x83, 0xEC, 0x3C,       // 83EC 3C                  | sub esp,3C                              |
+    0xA1, XX4,              // A1 6C908600              | mov eax,dword ptr ds:[86906C]           |
+    0x33, 0xC4,             // 33C4                     | xor eax,esp                             |
+    0x89, 0x44, 0x24, 0x38, // 894424 38                | mov dword ptr ss:[esp+38],eax           |
+    0x8B, 0x45, 0x0C,       // 8B 45 0C                 | mov eax,[ebp+0C]                        |
+    0x53,                   // 53                       | push ebx                                |
+    0x56,                   // 56                       | push esi                                |
+    0x8B, 0x75, 0x08,       // 8B 75 08                 | mov esi,[ebp+08]                        |
+    0x57,                   // 57                       | push edi                                |
+    0x33, 0xFF,             // 33 FF                    | xor edi,edi                             |
+    0x80, 0x3E, 0x00,       // 80 3E 00                 | cmp byte ptr [esi],00                   |
+    0x89, 0x4C, 0x24, 0x18, // 89 4C 24 18              | mov [esp+18],ecx                        |
+    0x89, 0x44, 0x24, 0x28, // 89 44 24 28              | mov [esp+28],eax                        |
+    0x89, 0x7C, 0x24, 0x14, // 89 7C 24 14              | mov [esp+14],edi                        |
+    0x89, 0x7C, 0x24, 0x10, // 89 7C 24 10              | mov [esp+10],edi                        |
+  };
+
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("Textractor:Artemis2Eng: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+  enum { push_ebp = 0x55 }; // beginning of the function
+  if (*(BYTE *)addr != push_ebp) {
+    ConsoleOutput("Textractor:Artemis2Eng: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off - 4;
+  hp.index = 0;
+  hp.type = USING_UTF8 | USING_STRING;
+
+  ConsoleOutput("Textractor: INSERT Artemis2Eng");
+  ConsoleOutput("To preserve spacing between words, besides selecting Artemis2Eng Hook, check \"Flush delay string spacing\" option in Textractor settings");
+  NewHook(hp, "Artemis2Eng");
+
+  return true;
+}
+
+bool InsertArtemis2Hooks() {
+  bool ok = InsertArtemis2Hook();
+  ok = InsertArtemis2EngHook() || ok;
+  return ok;
+}
+
 bool InsertArtemis3Hook()
 {
   const BYTE bytes[] = {
@@ -10825,8 +10882,65 @@ bool InsertArtemis3Hook()
   return true;
 }
 
+bool InsertArtemis3EngHook()
+{
+  //by Blu3train
+  const BYTE bytes[] = {
+    0x55,                   // 55                       | push ebp                                |
+    0x8B, 0xEC,             // 8BEC                     | mov ebp,esp                             |
+    0x53,                   // 53                       | push ebx                                |
+    0x56,                   // 56                       | push esi                                |
+    0x57,                   // 57                       | push edi                                |
+    0x8B, 0x7D, 0x08,       // 8B 7D 08                 | mov edi,[ebp+08]                        |
+	0x8D, 0x45, 0x08,       // 8D 45 08                 | lea eax,[ebp+08]                        |
+    0x57,                   // 57                       | push edi                                |
+    0x50,                   // 50                       | push eax                                |
+    0x8B, 0xD9,             // 8BD9                     | mov ebx,ecx                             |
+    0xE8, 0x0B, 0x49, 0x00, 0x00,  // E8 0B490000              |call exe+16A9D0                          |
+    0x8B, 0x75, 0x08,       // 8B 75 08                 | mov esi,[ebp+08]                        |
+    0x3B, 0x33,             // 3B 33                    | cmp esi,[ebx]                           |
+    0x74, XX,               // 74 33                    | je XX                                   |
+    0x83, 0x7E, 0x24, 0x10, // 83 7E 24 10              | cmp dword ptr [esi+24],10               |
+	0x8D, 0x56, 0x10,       // 8D 56 10                 | lea edx,[esi+10]                        |
+    0x72, XX,               // 72 03                    | jb xx                                   |
+    0x8B, 0x56, 0x10,       // 8B 56 10                 | mov edx,[esi+10]                        |
+  };
+
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("Textractor:Artemis3Eng: pattern not found");
+    return false;
+  }
+  addr += addr_offset;
+  enum { push_ebp = 0x55 }; // beginning of the function
+  if (*(BYTE *)addr != push_ebp) {
+    ConsoleOutput("Textractor:Artemis3Eng: beginning of the function not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off - 4;
+  hp.index = 0;
+  hp.type = USING_UTF8 | USING_STRING;
+
+  ConsoleOutput("Textractor: INSERT Artemis3Eng");
+  ConsoleOutput("To preserve spacing between words, besides selecting Artemis3Eng Hook, check \"Flush delay string spacing\" option in Textractor settings");
+  NewHook(hp, "Artemis3Eng");
+
+  return true;
+}
+
+bool InsertArtemis3Hooks() {
+  bool ok = InsertArtemis3Hook();
+  ok = InsertArtemis3EngHook() || ok;
+  return ok;
+}
+
 bool InsertArtemisHook()
-{ return InsertArtemis1Hook() ||  InsertArtemis2Hook() || InsertArtemis3Hook(); }
+{ return InsertArtemis1Hook() ||  InsertArtemis2Hooks() || InsertArtemis3Hooks(); }
 
 /**
  *  jichi 1/2/2014: Taskforce2 Engine
