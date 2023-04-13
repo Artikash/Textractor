@@ -21728,6 +21728,44 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertAges7Hook()
+{
+  //by Blu3train
+  const BYTE bytes[] = {
+    0x55,                   // 55                       | push ebp                                |
+    0x8B, 0xEC,             // 8BEC                     | mov ebp,esp                             |
+    0x6A, 0xFF,             // 6A FF                    | push -01                                |
+    0x68, XX4,              // 68 XX4                   | push exe+1FF8E2                         |
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, //64 A1 00000000| mov eax,fs:[00000000]                   |
+    0x50,                   // 50                       | push eax                                |
+    0x83, 0xEC, 0x34,       // 83 EC 34                 | sub esp,34                              |
+    0x53,                   // 53                       | push ebx                                |
+    0x56,                   // 56                       | push esi                                |
+    0x57,                   // 57                       | push edi                                |
+    0xA1, XX4,              // A1 XX4                   | mov eax,[exe+260014]                    |
+    0x33, 0xC5,             // 33 C5                    | xor eax,ebp                             |
+    0x50,                   // 50                       | push eax                                |
+    0x8D, 0x45, 0xF4,       // 8D 45 F4                 | lea eax,[ebp-0C]                        |
+    0x64, 0xA3, 0x00, 0x00, 0x00, 0x00, //64 A3 00000000| mov fs:[00000000],eax                   |
+    0x8B, 0xF9,             // 8B F9                    | mov edi,ecx                             |
+    0x83, 0x7D, 0x0C, 0x00  // 83 7D 0C 00              | cmp dword ptr [ebp+0C],00               |
+  };
+	bool ok = false;
+
+	auto addrs = Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStopAddress);
+	for(auto addr : addrs){ 
+		HookParam hp = {};
+		hp.address = addr;
+		hp.offset = 0xC;
+		hp.type = USING_UNICODE | USING_STRING;
+		NewHook(hp, "Ages7");
+		ok = true;
+	}
+	if (!ok)
+		ConsoleOutput("vnreng: Ages7: pattern not found");
+	return ok;
+}
+
 } // namespace Engine
 
 // EOF
