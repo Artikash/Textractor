@@ -6573,9 +6573,13 @@ bool InsertCatSystemHook()
   // jichi 12/23/2014: Modify split for new catsystem
   bool newEngine = Util::CheckFile(L"cs2conf.dll");
   if (newEngine) {
-    hp.text_fun = SpecialHookCatSystem3; // type not needed
-    NewHook(hp, "CatSystem3");
-    ConsoleOutput("vnreng: INSERT CatSystem3");
+    //hp.text_fun = SpecialHookCatSystem3; // type not needed
+    //NewHook(hp, "CatSystem3");
+    //ConsoleOutput("vnreng: INSERT CatSystem3");
+    hp.type = BIG_ENDIAN|USING_SPLIT;
+    hp.split = pusha_esi_off - 4;
+    NewHook(hp, "CatSystem3new");
+    ConsoleOutput("vnreng: INSERT CatSystem3new");
   } else {
     hp.type = BIG_ENDIAN|USING_SPLIT;
     hp.split = pusha_edx_off - 4; // -0x10
