@@ -6352,8 +6352,41 @@ static bool InsertYuris2Hook()
   return true;
 }
 
+static bool Yuris3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  static bool bEven = false;
+  static wchar_t even_text;
+  wchar_t* pText = reinterpret_cast<wchar_t*>(data);
+
+  if (bEven = !bEven)
+	  even_text = *pText;
+  else 
+	  if (even_text == *pText)
+		  return false;
+  return true;
+}
+
+static bool InsertYuris3Hook()
+{
+  //by Blu3train
+  HookParam hp = {};
+  wcsncpy_s(hp.module, L"kernel32.dll", MAX_MODULE_SIZE - 1);
+  strncpy_s(hp.function, "MultiByteToWideChar", MAX_MODULE_SIZE - 1);
+  hp.address = 6;
+  hp.offset = 0xC; //arg3
+  hp.index = 0;
+  hp.split = 0x1C;
+  hp.split_index = 0;
+  hp.filter_fun = Yuris3Filter;
+  hp.type = USING_STRING | USING_SPLIT | MODULE_OFFSET | FUNCTION_OFFSET;
+  hp.length_offset = 0x10/(short)sizeof(void*); // arg4/arg_sz
+  ConsoleOutput("vnreng: INSERT YU-RIS 3");
+  NewHook(hp, "YU-RIS3");
+  return true;
+}
+
 bool InsertYurisHook()
-{ return InsertYuris1Hook() || InsertYuris2Hook(); }
+{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 
 bool InsertCotophaHook1()
 {
