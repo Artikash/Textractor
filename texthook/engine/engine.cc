@@ -6354,15 +6354,15 @@ static bool InsertYuris2Hook()
 
 static bool Yuris3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {
-  static bool bEven = false;
-  static wchar_t even_text;
+  static wchar_t prev_text;
   wchar_t* pText = reinterpret_cast<wchar_t*>(data);
 
-  if (bEven = !bEven)
-	  even_text = *pText;
-  else 
-	  if (even_text == *pText)
-		  return false;
+  if (prev_text == *pText)
+  {
+    prev_text = '\0';
+    return false;
+  }
+  prev_text = *pText;
   return true;
 }
 
