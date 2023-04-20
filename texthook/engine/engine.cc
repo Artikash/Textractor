@@ -10924,7 +10924,7 @@ bool InsertArtemis3EngHook()
   hp.address = addr;
   hp.offset = pusha_ebx_off - 4;
   hp.index = 0;
-  hp.type = USING_UTF8 | USING_STRING;
+  hp.type = USING_UTF8 | USING_STRING | KNOWN_UNSTABLE;
 
   ConsoleOutput("Textractor: INSERT Artemis3Eng");
   ConsoleOutput("To preserve spacing between words, besides selecting Artemis3Eng Hook, check \"Flush delay string spacing\" option in Textractor settings");
