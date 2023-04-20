@@ -6385,8 +6385,49 @@ static bool InsertYuris3Hook()
   return true;
 }
 
+bool InsertYuris4Hook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v6540
+  */
+  bool found = false;
+  const BYTE pattern[] = {
+        0x52,                               // 52               push edx
+        0x68, 0x00, 0x42, 0x5C, 0x00,       // 68 00425C00      push euphoria.exe+1C4200
+        0xFF, 0x15, 0x90, 0x44, 0x7E, 0x00, // FF 15 90447E00   call dword ptr [euphoria.exe+3E4490]
+        0x83, 0xC4, 0x0C,                   // 83 C4 0C         add esp,0C
+        0xEB, 0x5F,                         // EB 5F            jmp euphoria.exe+4F4C5
+        0xFF, 0x35, 0xA4, 0x19, 0x66, 0x00, // FF 35 A4196600   push [euphoria.exe+2619A4]
+        0x52                                // 52               push edx
+  };
+  enum { addr_offset = 12 }; // distance to the beginning of the function, which is 0x83, 0xC4, 0x0C (add esp,0C)
+
+  for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+  {
+    HookParam hp = {};
+    hp.address = addr+addr_offset;
+    hp.offset = pusha_edx_off - 4;
+    hp.type = USING_STRING ;
+    ConsoleOutput("Textractor: INSERT YU-RIS 4");
+    NewHook(hp, "YU-RIS4");
+    found = true;
+  }
+  if (!found) ConsoleOutput("Textractor:YU-RIS 4: pattern not found");
+  return found;
+}
+
+//bool InsertYurisHook()
+//{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 bool InsertYurisHook()
-{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
+{ 
+  bool ok = InsertYuris1Hook();
+  ok = InsertYuris2Hook() || ok;
+  ok = InsertYuris3Hook() || ok;
+  ok = InsertYuris4Hook() || ok;
+  return ok;
+}
 
 bool InsertCotophaHook1()
 {
