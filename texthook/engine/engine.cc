@@ -2141,6 +2141,48 @@ bool InsertBGI3Hook()
   return true;
 }
 #endif // 0
+
+bool InsertBGI4Hook()
+{
+    /*
+    * Sample games:
+    * https://vndb.org/v26664
+    */
+    bool found = false;
+    const BYTE pattern[] = {
+        0x55,                           // 55               push ebp
+        0x8b,0xec,                      // 8BEC             mov ebp,esp
+        0x53,                           // 53               push ebx
+        0x56,                           // 56               push esi
+        0x57,                           // 57               push edi
+        0x33, 0xFF,                     // 33 FF            xor edi,edi
+        0xE8, 0x23, 0xFD, 0xFF, 0xFF,   // E8 23FDFFFF      call saclet.exe+A0990
+        0x8B, 0xF0,                     // 8B F0            mov esi,eax
+        0x8B, 0x45, 0x10,               // 8B 45 10         mov eax,[ebp+10]
+        0x2B, 0xC7,                     // 2B C7            sub eax,edi
+        0x74, 0x0C,                     // 74 0C            je saclet.exe+A0C82
+        0x83, 0xE8, 0x01,               // 83 E8 01         sub eax,01
+        0x75, 0x0C,                     // 75 0C            jne saclet.exe+A0C87
+        0xBE, 0xE9, 0xFD, 0x00, 0x00,   // BE E9FD0000      mov esi,0000FDE9
+        0xEB, 0x05,                     //  EB 05           jmp saclet.exe+A0C87
+        0xBE, 0xA4, 0x03, 0x00, 0x00    // BE A4030000      mov esi,000003A4
+    };
+
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.offset = pusha_eax_off - 4;
+        hp.split = pusha_esp_off - 4;
+        hp.type = USING_UNICODE | USING_STRING | USING_SPLIT | KNOWN_UNSTABLE;
+        ConsoleOutput("Textractor: INSERT BGI4");
+        NewHook(hp, "BGI4");
+        found = true;
+    }
+    if (!found) ConsoleOutput("Textractor:BGI4: pattern not found");
+    return found;
+}
+
 } // unnamed
 
 // jichi 5/12/2014: BGI1 and BGI2 game can co-exist, such as 世界と世界の真ん中で
@@ -2149,7 +2191,7 @@ bool InsertBGI3Hook()
 // Insert BGI2 first.
 // Artikash 6/12/2019: In newer games neither exists, but WideCharToMultiByte works, so insert that if BGI2 fails.
 bool InsertBGIHook()
-{ return InsertBGI2Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
+{ return InsertBGI4Hook() || InsertBGI2Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
 
 /********************************************************************************************
 Reallive hook:
