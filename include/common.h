@@ -120,6 +120,12 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 }
 #pragma warning(pop)
 
+inline void Trim(std::wstring& text)
+{
+	text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
+	text.erase(std::find_if_not(text.rbegin(), text.rend(), iswspace).base(), text.end());
+}
+
 inline std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
 {
 	std::vector<wchar_t> buffer(text.size() + 1);

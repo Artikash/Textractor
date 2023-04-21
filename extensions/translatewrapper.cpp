@@ -174,12 +174,6 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		concurrency::concurrent_priority_queue<DWORD64, std::greater<DWORD64>> tokens;
 	} rateLimiter;
 
-	auto Trim = [](std::wstring& text)
-	{
-		text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
-		text.erase(std::find_if_not(text.rbegin(), text.rend(), iswspace).base(), text.end());
-	};
-
 	bool cache = false;
 	std::wstring translation;
 	if (useFilter)
