@@ -6,3 +6,4 @@
 *.vscode/
 *.user
 *.aps
+CMakeSettings.json

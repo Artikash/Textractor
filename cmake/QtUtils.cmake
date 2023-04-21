@@ -1,12 +1,14 @@
 macro(msvc_registry_search)
 	if(NOT DEFINED Qt5_DIR)
-		# look for user-registry pointing to qtcreator
-		get_filename_component(QT_BIN [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.pro\\shell\\Open\\Command] PATH)
+		if (NOT EXISTS ${QT_ROOT})
+			# look for user-registry pointing to qtcreator
+			get_filename_component(QT_ROOT [HKEY_CURRENT_USER\\Software\\Classes\\Applications\\QtProject.QtCreator.pro\\shell\\Open\\Command] PATH)
 
-		# get root path so we can search for 5.3, 5.4, 5.5, etc
-		string(REPLACE "/Tools" ";" QT_BIN "${QT_BIN}")
-		list(GET QT_BIN 0 QT_BIN)
-		file(GLOB QT_VERSIONS "${QT_BIN}/5.1*")
+			# get root path
+			string(REPLACE "/Tools" ";" QT_ROOT "${QT_ROOT}")
+			list(GET QT_ROOT 0 QT_ROOT)
+		endif()
+		file(GLOB QT_VERSIONS "${QT_ROOT}/5.13*")
 		list(SORT QT_VERSIONS)
 
 		# assume the latest version will be last alphabetically

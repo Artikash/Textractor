@@ -1,7 +1,3 @@
-include(QtUtils)
-msvc_registry_search()
-find_qt5(Core Widgets WinExtras)
-
 add_executable(Textractor WIN32 
 	main.cpp
 	exception.cpp

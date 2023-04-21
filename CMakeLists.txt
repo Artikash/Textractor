@@ -35,6 +35,10 @@ target_precompile_headers(pch PUBLIC include/common.h)
 file(GLOB ASSETS assets/*)
 file(COPY ${ASSETS} DESTINATION ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 
+include(QtUtils)
+msvc_registry_search()
+find_qt5(Core Widgets WinExtras WebSockets)
+
 add_library(text text.cpp)
 target_compile_definitions(text PRIVATE ${TEXT_LANGUAGE})
 link_libraries(text)
