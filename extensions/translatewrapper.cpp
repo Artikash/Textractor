@@ -18,6 +18,8 @@ extern const char* MAX_TRANSLATIONS_IN_TIMESPAN;
 extern const char* TIMESPAN;
 extern const char* MAX_SENTENCE_SIZE;
 extern const char* API_KEY;
+extern const wchar_t* SENTENCE_TOO_LARGE_TO_TRANS;
+extern const wchar_t* TRANSLATION_ERROR;
 extern const wchar_t* TOO_MANY_TRANS_REQUESTS;
 
 extern const char* TRANSLATION_PROVIDER;
@@ -34,7 +36,6 @@ namespace
 {
 	Synchronized<TranslationParam> tlp;
 	Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
-	int savedSize = 0;
 
 	std::string CacheFile()
 	{
@@ -46,7 +47,6 @@ namespace
 		for (const auto& [sentence, translation] : translationCache.Acquire().contents)
 			allTranslations.append(L"|SENTENCE|").append(sentence).append(L"|TRANSLATION|").append(translation).append(L"|END|\r\n");
 		std::ofstream(CacheFile(), std::ios::binary | std::ios::trunc).write((const char*)allTranslations.c_str(), allTranslations.size() * sizeof(wchar_t));
-		savedSize = translationCache->size();
 	}
 	void LoadCache()
 	{
@@ -59,7 +59,6 @@ namespace
 			auto& [sentence, translation] = read.value();
 			translationCache->try_emplace(std::move(sentence), std::move(translation));
 		}
-		savedSize = translationCache->size();
 	}
 }
 
@@ -141,7 +140,7 @@ public:
 private:
 	void SaveTranslateTo(QString language)
 	{
-		if (translationCache->size() > savedSize) SaveCache();
+		SaveCache();
 		settings.setValue(TRANSLATE_TO, S(tlp->translateTo = S(language)));
 		LoadCache();
 	}
@@ -153,7 +152,7 @@ private:
 
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
-	if (sentenceInfo["text number"] == 0 || sentence.size() > maxSentenceSize) return false;
+	if (sentenceInfo["text number"] == 0) return false;
 
 	static class
 	{
@@ -189,6 +188,7 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 		sentence.erase(std::remove_if(sentence.begin(), sentence.end(), [](wchar_t ch) { return ch < ' ' && ch != '\n'; }), sentence.end());
 	}
 	if (sentence.empty()) return true;
+	if (sentence.size() > maxSentenceSize) translation = SENTENCE_TOO_LARGE_TO_TRANS;
 	if (useCache)
 	{
 		auto translationCache = ::translationCache.Acquire();
@@ -197,12 +197,12 @@ bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 	if (translation.empty() && (!translateSelectedOnly || sentenceInfo["current select"]))
 		if (rateLimiter.Request() || !useRateLimiter || (!rateLimitSelected && sentenceInfo["current select"])) std::tie(cache, translation) = Translate(sentence, tlp.Copy());
 		else translation = TOO_MANY_TRANS_REQUESTS;
-	if (useFilter) Trim(translation);
-	if (cache) translationCache->try_emplace(sentence, translation);
-	if (cache && translationCache->size() > savedSize + 50) SaveCache();
+	if (cache) translationCache->operator[](sentence) = translation;
 
+	if (useFilter) Trim(translation);
 	for (int i = 0; i < translation.size(); ++i) if (translation[i] == '\r' && translation[i + 1] == '\n') translation[i] = 0x200b; // for some reason \r appears as newline - no need to double
-	if (!translation.empty()) (sentence += L"\x200b \n") += translation;
+	if (translation.empty()) translation = TRANSLATION_ERROR;
+	(sentence += L"\x200b \n") += translation;
 	return true;
 }
 

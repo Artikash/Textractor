@@ -143,6 +143,7 @@ const char* RATE_LIMIT_SELECTED_THREAD = u8"Rate limit selected text thread";
 const char* USE_TRANS_CACHE = u8"Use translation cache";
 const char* MAX_TRANSLATIONS_IN_TIMESPAN = u8"Max translation requests in timespan";
 const char* TIMESPAN = u8"Timespan (ms)";
+const wchar_t* SENTENCE_TOO_LARGE_TO_TRANS = L"Sentence too large to translate";
 const wchar_t* TOO_MANY_TRANS_REQUESTS = L"Rate limit exceeded: refuse to make more translation requests";
 const wchar_t* TRANSLATION_ERROR = L"Error while translating";
 const char* USE_PREV_SENTENCE_CONTEXT = u8"Use previous sentence as context";
