@@ -45,13 +45,13 @@ namespace Engine
 			if (AutoHandle<> configFile = CreateFileW(configFilename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL))
 			{
 				ReadFile(configFile, configFileData, sizeof(configFileData) - 1, DUMMY, nullptr);
-				if (strncmp(configFileData, "Engine:", 7) == 0)
+				if (strnicmp(configFileData, "engine:", 7) == 0)
 				{
-					if (loadedConfig = strchr(configFileData, '\n')) *(char*)loadedConfig++ = 0;
-					ConsoleOutput("Textractor: Engine = %s", requestedEngine = configFileData + 7);
+					if (const char* config = strchr(configFileData, '\n')) *(char*)(loadedConfig = config)++ = 0;
+					ConsoleOutput("Textractor: Engine = %s", requestedEngine = strlwr(configFileData + 7));
 				}
 				else loadedConfig = configFileData;
-				if ((loadedConfig && !*loadedConfig) || strstr(configFileData, "https://")) loadedConfig = nullptr;
+				if (!*loadedConfig || strstr(configFileData, "https://")) loadedConfig = "";
 				else ConsoleOutput("Textractor: game configuration loaded");
 			}
 
@@ -67,14 +67,14 @@ namespace Engine
 			spDefault.maxAddress = processStopAddress;
 			ConsoleOutput("Textractor: hijacking process located from 0x%p to 0x%p", processStartAddress, processStopAddress);
 
-			DetermineEngineType();
+			if (!strstr(requestedEngine, "none")) DetermineEngineType();
 			if (processStartAddress + 0x40000 > processStopAddress) ConsoleOutput("Textractor: WARNING injected process is very small, possibly a dummy!");
 		}(), 0);
 	}
 
 	bool ShouldMonoHook(const char* name)
 	{
-		if (!loadedConfig) return strstr(name, "string:") && !strstr(name, "string:mem");
+		if (!*loadedConfig) return strstr(name, "string:") && !strstr(name, "string:mem");
 		for (const char* hook = loadedConfig; hook; hook = strchr(hook + 1, '\t'))
 			for (auto start = name; *start; ++start)
 				for (int i = 0; ; ++i)

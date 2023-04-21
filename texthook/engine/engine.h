@@ -14,7 +14,7 @@ namespace Engine {
 // Global variables
 extern wchar_t *processName, // cached
                processPath[MAX_PATH]; // cached
-inline const char *requestedEngine = nullptr, *loadedConfig = nullptr;
+inline const char *requestedEngine = "", * loadedConfig = "";
 
 bool InsertMonoHooks(); // Mono
 
