@@ -21728,6 +21728,103 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool DmmFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+  StringCharReplacer(text, len, "\\k", 2, ' ');
+
+  if (cpp_strnstr(text, "{W", *len)) {
+    StringFilterBetween(text, len, "{", 1, "}", 1);
+  }
+  return true;
+}
+
+bool InsertDmm1Hook()
+{
+    //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r76933
+    * https://vndb.org/v18717
+    */
+    bool found = false;
+    const BYTE pattern[] = {
+        0x8A, 0x02,
+        0x42,
+        0x84, 0xC0,
+        0x75, 0xF9,
+        0x2B, 0xD6,
+        0x8D, 0xBB, XX4,
+        0x8A, 0x47, 0x01,
+        0x47,
+        0x84, 0xC0,
+        0x75, 0xF8,
+        0x8B, 0xCA,
+        0xC1, 0xE9, 0x02,	// <--
+        0xF3, 0xA5,
+        0x8B, 0xCA
+    };
+  enum { addr_offset = 25 };
+
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr+addr_offset;
+        hp.offset = pusha_esi_off - 4;
+        hp.codepage = 65001;
+        hp.type = USING_STRING | NO_CONTEXT;
+		hp.filter_fun = DmmFilter;
+        ConsoleOutput("Textractor: INSERT DMM1");
+        NewHook(hp, "DMM1");
+        found = true;
+    }
+    if (!found) ConsoleOutput("Textractor:DMM1: pattern not found");
+    return found;
+}
+
+bool InsertDmm2Hook()
+{
+    //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r76933
+    */
+    bool found = false;
+    const BYTE pattern[] = {
+        0x52,
+        0xFF, 0x71, 0x24,
+        0x50,
+        0xFF, 0xB7, 0x38, 0x02, 0x00, 0x00,
+        0xE8, 0x17, 0x66, 0xFF, 0xFF,
+        0x5F,     // <--
+        0xB0, 0x01,
+        0x5E,
+        0xC3,
+        0x51
+    };
+  enum { addr_offset = 16 };
+
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr+addr_offset;
+        hp.offset = pusha_ebp_off - 4;
+        hp.codepage = 65001;
+        hp.type = USING_STRING | NO_CONTEXT;
+		hp.filter_fun = DmmFilter;
+        ConsoleOutput("Textractor: INSERT DMM2");
+        NewHook(hp, "DMM2");
+        found = true;
+    }
+    if (!found) ConsoleOutput("Textractor:DMM2: pattern not found");
+    return found;
+}
+
+bool InsertDmmHooks()
+{ return InsertDmm1Hook() || InsertDmm2Hook();}
+
 } // namespace Engine
 
 // EOF
