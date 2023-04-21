@@ -193,6 +193,7 @@ void TextHook::Send(uintptr_t dwDataBase)
 
 		TextOutput(tp, buffer, count);
 #endif // _WIN64
+		++*pbData;
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
