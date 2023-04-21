@@ -88,7 +88,7 @@ void SpawnThread(const F& f) // works in DllMain unlike std thread
 	}, copy, 0, nullptr));
 }
 
-static struct // should be inline but MSVC (linker) is bugged
+inline struct
 {
 	inline static BYTE DUMMY[100];
 	template <typename T> operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
