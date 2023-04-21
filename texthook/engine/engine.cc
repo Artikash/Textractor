@@ -21735,7 +21735,7 @@ bool DmmFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
   StringCharReplacer(text, len, "\\n", 2, ' ');
   StringCharReplacer(text, len, "\\k", 2, ' ');
 
-  if (cpp_strnstr(text, "{W", *len)) {
+  if (cpp_strnstr(text, "{", *len)) {
     StringFilterBetween(text, len, "{", 1, "}", 1);
   }
   return true;
