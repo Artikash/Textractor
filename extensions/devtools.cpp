@@ -93,7 +93,7 @@ namespace DevTools
 		if (chromePath.isEmpty())
 		{
 			for (auto [_, process] : GetAllProcesses())
-				if (process && process->find(L"\\chrome.exe") != std::string::npos) chromePath = S(process.value());
+				if (process && (process->find(L"\\chrome.exe") != std::string::npos || process->find(L"\\msedge.exe") != std::string::npos)) chromePath = S(process.value());
 			wchar_t programFiles[MAX_PATH + 100] = {};
 			for (auto folder : { CSIDL_PROGRAM_FILESX86, CSIDL_PROGRAM_FILES, CSIDL_LOCAL_APPDATA })
 			{
