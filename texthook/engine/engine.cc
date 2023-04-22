@@ -1439,11 +1439,83 @@ bool InsertKiriKiriZHook2()
   return true;
 }
 
+bool KiriKiriZ_msvcFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::wstring prevText;
+
+  if (!*len)
+    return false;
+  text[*len/sizeof(wchar_t)] = L'\0';  // clean text
+
+  if (!prevText.compare(text))
+    return false;
+  prevText = text;
+
+  if (cpp_wcsnstr(text, L"%", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"%", 1, L";", 1);
+  }
+  return true;
+}
+
+bool InsertKiriKiriZHook_msvc()
+{
+  //by Blu3train
+  auto module = GetModuleHandleW(L"textrender.dll");
+  if (!module) {
+    ConsoleOutput("vnreng:KiriKiriZ_msvc: textrender.dll does not exist");
+    return false;
+  }
+
+  const BYTE pattern[] = {
+/*
+        0xFF, 0xD2,
+        0x88, 0x44, 0x24, 0x18,
+        0x8B, 0x44, 0x24, 0x10,
+        0x85, 0xC0,
+        0x74, 0x0B,
+        0x8D, 0x4C, 0x24, 0x18,
+        0x51,
+        0x50,
+        0xE8, 0xD3, 0xE4, 0xFF, 0xFF,
+        0xB0, 0x01,
+		0xC3
+*/
+        0xFF, XX,
+        0x88, XX, XX, XX,
+		XX, XX, XX, XX,
+		XX, XX,
+        0x74, XX,
+		XX, XX, XX, XX,
+		XX,
+		XX,
+        0xE8, XX, XX, XX, XX,
+        0xB0, 0x01,
+		0xC3
+  };
+  enum { addr_offset = -0x0B };
+
+  ULONG addr = MemDbg::findBytes(pattern, sizeof(pattern), (DWORD)module, Util::QueryModuleLimits(module).second);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ_msvc: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off - 4;
+  hp.type = USING_UNICODE | USING_STRING;
+  hp.filter_fun = KiriKiriZ_msvcFilter;
+  ConsoleOutput("Textractor: INSERT KiriKiriZ_msvc");
+  NewHook(hp, "KiriKiriZ_msvc");
+  return true;
+}
+
 } // unnamed namespace
 
 // jichi 1/30/2015: Do KiriKiriZ2 first, which might insert to the same location as KiriKiri1.
 bool InsertKiriKiriZHook()
-{ return InsertKiriKiriZHook2() || InsertKiriKiriZHook1(); }
+{ return InsertKiriKiriZHook_msvc() || InsertKiriKiriZHook2() || InsertKiriKiriZHook1(); }
 
 /********************************************************************************************
 BGI hook:
