@@ -1463,10 +1463,8 @@ bool InsertKiriKiriZHook_msvc()
 {
   //by Blu3train
   auto module = GetModuleHandleW(L"textrender.dll");
-  if (!module) {
-    ConsoleOutput("vnreng:KiriKiriZ_msvc: textrender.dll does not exist");
+  if (!module)
     return false;
-  }
 
   const BYTE pattern[] = {
 /*
