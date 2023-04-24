@@ -1462,37 +1462,58 @@ bool KiriKiriZ_msvcFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 bool InsertKiriKiriZHook_msvc()
 {
   //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r76735
+  * https://vndb.org/v22020
+  * https://vndb.org/v26052
+  * https://vndb.org/v17763
+  * https://vndb.org/v15538
+  * https://vndb.org/v18713
+  * https://vndb.org/v19385
+  * https://vndb.org/v18148
+  * https://vndb.org/v19841
+  * https://vndb.org/v24717
+  * https://vndb.org/v30458
+  * https://vndb.org/v33036
+  * https://vndb.org/v27448
+  * https://vndb.org/r67327
+  */
   auto module = GetModuleHandleW(L"textrender.dll");
   if (!module)
     return false;
 
   const BYTE pattern[] = {
 /*
-        0xFF, 0xD2,
-        0x88, 0x44, 0x24, 0x18,
-        0x8B, 0x44, 0x24, 0x10,
-        0x85, 0xC0,
-        0x74, 0x0B,
-        0x8D, 0x4C, 0x24, 0x18,
-        0x51,
-        0x50,
-        0xE8, 0xD3, 0xE4, 0xFF, 0xFF,
-        0xB0, 0x01,
-		0xC3
+textrender.dll+BE39 - 8B 4C 24 2C           - mov ecx,[esp+2C]  << hook here
+textrender.dll+BE3D - 50                    - push eax
+textrender.dll+BE3E - 8B 44 24 2C           - mov eax,[esp+2C]
+textrender.dll+BE42 - 8B 10                 - mov edx,[eax]
+textrender.dll+BE44 - FF D2                 - call edx          << start pattern
+textrender.dll+BE46 - 88 44 24 18           - mov [esp+18],al
+textrender.dll+BE4A - 8B 44 24 10           - mov eax,[esp+10]
+textrender.dll+BE4E - 85 C0                 - test eax,eax
+textrender.dll+BE50 - 74 0B                 - je textrender.dll+BE5D
+textrender.dll+BE52 - 8D 4C 24 18           - lea ecx,[esp+18]
+textrender.dll+BE56 - 51                    - push ecx
+textrender.dll+BE57 - 50                    - push eax
+textrender.dll+BE58 - E8 33E5FFFF           - call textrender.dll+A390
+textrender.dll+BE5D - B0 01                 - mov al,01
+textrender.dll+BE5F - C3                    - ret 
 */
-        0xFF, XX,
-        0x88, XX, XX, XX,
-		XX, XX, XX, XX,
-		XX, XX,
-        0x74, XX,
-		XX, XX, XX, XX,
-		XX,
-		XX,
-        0xE8, XX, XX, XX, XX,
-        0xB0, 0x01,
-		0xC3
+    0xFF, XX,
+    0x88, XX, XX, XX,
+    XX, XX, XX, XX,
+    XX, XX,
+    0x74, XX,
+    XX, XX, XX, XX,
+    XX,
+    XX,
+    0xE8, XX, XX, XX, XX,
+    0xB0, 0x01,
+    0xC3
   };
-  enum { addr_offset = -0x0B };
+  enum { addr_offset = -0x0B };  // 8B 4C 24 2C   - mov ecx,[esp+2C]  << hook here
 
   ULONG addr = MemDbg::findBytes(pattern, sizeof(pattern), (DWORD)module, Util::QueryModuleLimits(module).second);
   if (!addr) {
