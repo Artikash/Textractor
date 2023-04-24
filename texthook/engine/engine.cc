@@ -12891,6 +12891,40 @@ static bool InsertNewPal2Hook()
   NewHook(hp, "Pal");
   return true;
 }
+
+static bool InsertNewPal3Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v11093
+  * https://vndb.org/v16212
+  */
+  const BYTE bytes[] = {
+    0x8D, 0xBB, 0x98, 0x22, 0x00, 0x00,  // lea edi,[ebx+00002298]
+    0x83, 0xE7, 0xFC,                    // and edi,-04
+    0x89, 0x83, 0x94, 0x22, 0x00, 0x00,  // mov [ebx+00002294],eax
+    0x8B, 0x74, 0x24, 0x28,              // mov esi,[esp+28]
+    0x8B, 0x44, 0x0E, 0xFC               // mov eax,[esi+ecx-04]  << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 4 };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Pal3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_esi_off -4;
+  hp.codepage = 65001;
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT Pal3");
+  NewHook(hp, "Pal3");
+  return true;
+}
+
 bool InsertPalHook() // use Old Pal first, which does not have ruby
 { 
 	PcHooks::hookOtherPcFunctions();
@@ -12900,7 +12934,7 @@ bool InsertPalHook() // use Old Pal first, which does not have ruby
 	strcpy_s(hp.function, "PalFontDrawText");
 	hp.offset = 8;
 	NewHook(hp, "PalFontDrawText");
-	return InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); 
+	return InsertNewPal3Hook() || InsertOldPalHook() || InsertNewPal1Hook() || InsertNewPal2Hook(); 
 }
 
 bool InsertPONScripterHook()
