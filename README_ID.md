@@ -2,7 +2,7 @@
 
 ![How it looks](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md) ● [Deutsch](README_DE.md)
 
 **Textractor** (a.k.a NextHooker) adalah teks hooker video game untuk Windows/Wine x86/x64 berbasis open-source yang didasari oleh [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Lihat [video tutorial](docs/TUTORIAL.md) untuk mengetahui bagaimana cara menggunakannya.
@@ -33,7 +33,7 @@ Lihat ekstensi folder untuk melihat sampel ekstensi.
 
 Seluruh kontribusi diapresiasi! Tolong email saya di akashmozumdar@gmail.com jika kamu memiliki pertanyaan mengenai kode dasar nya.<br>
 Kamu harus menggunakan proses standar dalam membuat permintaan pull(fork, cabang, perubahan commit, membuat PR dari cabang kamu ke master saya).<br>
-Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari [text.cpp](./text.cpp) lalu terjemahkan README ini.
+Berkontribusi dalam penerjemahan dapat dilakukan dengan mudah : cukup terjemahkan string dari [text.cpp](text.cpp) lalu terjemahkan README ini.
 
 ## Mengcompile
 
