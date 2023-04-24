@@ -21728,6 +21728,130 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool SystemNNNFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  StringCharReplacer(text, len, "\r\n", 2, ' ');
+  StringCharReplacer(text, len, "\x00FC\x00FE", 2, '\'');           // "\x00FC\x00FE"->italic
+  StringReplacer(text, len, "\x0081\x000E", 2, "\x0084\x009F", 2);  // "\x0081\x000E"->"─"
+
+  // Remove ruby: Shift-JIS "\x0023\x0081\x006D"->"#［" "\x0081\x006E"->"］"
+  if (cpp_strnstr(text, "\x0023\x0081\x006D", *len)) {
+    StringFilterBetween(text, len, "\x0023\x0081\x006D", 3, "\x0081\x006E", 2);
+  }
+  return true;
+}
+
+bool InsertSystemNNN1Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v33721
+    * https://vndb.org/v29300
+    * https://vndb.org/v26721
+    */
+  const BYTE bytes[] = {
+    0x8B, 0xDF,               // mov ebx,edi
+    0x8D, 0x4B, 0x01,         // lea ecx,[ebx+01]  << hook here
+    0x0F, 0x1F, 0x40, 0x00,   // nop dword ptr [eax+00]
+    0x8A, 0x03,               // mov al,[ebx]
+    0x43,                     // inc ebx
+    0x84, 0xC0,               // test al,al
+    0x75, 0xF9,               // jne exe+69320
+    0x2B, 0xD9                // sub ebx,ecx
+  };
+  //enum { addr_offset = sizeof(bytes) - 2 };
+  enum { addr_offset = 2 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:System-NNN1: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_ebx_off -4;
+  hp.type = USING_STRING | NO_CONTEXT;
+  hp.filter_fun = SystemNNNFilter;
+  ConsoleOutput("vnreng: INSERT System-NNN1");
+  NewHook(hp, "System-NNN1");
+  return true;
+}
+
+bool SystemNNNqFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  text[*len] = '\n';
+  (*len)++;
+  return true;
+}
+
+bool InsertSystemNNN2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v933
+    */
+  const BYTE bytes[] = {
+    0x33, 0xC0,                          // xor eax,eax  << hook here
+    0xF2, 0xAE,                          // repne scasb 
+    0xF7, 0xD1,                          // not ecx
+    0x49,                                // dec ecx
+    0x89, 0x74, 0x24, 0x0C,              // mov [esp+0C],esi
+    0x3B, 0xCE,                          // cmp ecx,esi
+    0x89, 0x4C, 0x24, 0x10,              // mov [esp+10],ecx
+    0x0F, 0x8E, XX4                      // jng gss.exe+1A0DC
+  };
+  enum { addr_offset = 0};
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:System-NNN2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_edi_off -4;
+  hp.type = USING_STRING | NO_CONTEXT;
+  hp.filter_fun = SystemNNNFilter;
+  ConsoleOutput("vnreng: INSERT System-NNN2");
+  NewHook(hp, "System-NNN2");
+  
+  const BYTE bytes2[] = {
+    0xC1, 0xE9, 0x02,        // shr ecx,02
+    0xF3, 0xA5,              // repe movsd 
+    0x8B, 0xCB,              // mov ecx,ebx
+    0x8B, 0x54, 0x24, 0x1C,  // mov edx,[esp+1C]
+    0x83, 0xE1, 0x03,        // and ecx,03
+    0x03, 0xC5,              // add eax,ebp
+    0x33, 0xDB               // xor ebx,ebx
+  };
+  range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  addr = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range);
+  if (addr) {
+    HookParam hp = {};
+    hp.address = addr;
+    hp.offset = pusha_esi_off -4;
+    hp.type = USING_STRING;
+    hp.filter_fun = SystemNNNqFilter;
+    ConsoleOutput("vnreng: INSERT System-NNN2q");
+    NewHook(hp, "System-NNN2q");
+  }
+
+  return true;
+}
+
+bool InsertSystemNNNHooks()
+{ return InsertSystemNNN1Hook() || InsertSystemNNN2Hook();}
+
 } // namespace Engine
 
 // EOF
