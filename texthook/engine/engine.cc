@@ -2156,16 +2156,8 @@ bool InsertBGI4Hook()
         0x56,                           // 56               push esi
         0x57,                           // 57               push edi
         0x33, 0xFF,                     // 33 FF            xor edi,edi
-        0xE8, 0x23, 0xFD, 0xFF, 0xFF,   // E8 23FDFFFF      call saclet.exe+A0990
-        0x8B, 0xF0,                     // 8B F0            mov esi,eax
-        0x8B, 0x45, 0x10,               // 8B 45 10         mov eax,[ebp+10]
-        0x2B, 0xC7,                     // 2B C7            sub eax,edi
-        0x74, 0x0C,                     // 74 0C            je saclet.exe+A0C82
-        0x83, 0xE8, 0x01,               // 83 E8 01         sub eax,01
-        0x75, 0x0C,                     // 75 0C            jne saclet.exe+A0C87
-        0xBE, 0xE9, 0xFD, 0x00, 0x00,   // BE E9FD0000      mov esi,0000FDE9
-        0xEB, 0x05,                     //  EB 05           jmp saclet.exe+A0C87
-        0xBE, 0xA4, 0x03, 0x00, 0x00    // BE A4030000      mov esi,000003A4
+        0xE8, XX4,                      // E8 23FDFFFF      call saclet.exe+A0990
+        0x8B, 0xF0                      // 8B F0            mov esi,eax
     };
 
     for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
