@@ -21731,6 +21731,12 @@ bool InsertNamcoPS2Hook()
 bool InsertAges7Hook()
 {
   //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v93
+  * https://vndb.org/v92
+  * https://vndb.org/r38978
+  */
   const BYTE bytes[] = {
     0x55,                   // 55                       | push ebp                                |
     0x8B, 0xEC,             // 8BEC                     | mov ebp,esp                             |
@@ -21738,7 +21744,7 @@ bool InsertAges7Hook()
     0x68, XX4,              // 68 XX4                   | push exe+1FF8E2                         |
     0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, //64 A1 00000000| mov eax,fs:[00000000]                   |
     0x50,                   // 50                       | push eax                                |
-    0x83, 0xEC, 0x34,       // 83 EC 34                 | sub esp,34                              |
+    0x83, 0xEC, XX,         // 83 EC 34                 | sub esp,34                              |
     0x53,                   // 53                       | push ebx                                |
     0x56,                   // 56                       | push esi                                |
     0x57,                   // 57                       | push edi                                |
