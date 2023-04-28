@@ -3863,6 +3863,39 @@ bool InsertSiglus1Hook()
   return false;
 }
 
+bool InsertSiglus5Hook()
+{
+  //by Blu3train
+  /*
+   * Sample games:
+   * https://vndb.org/v10926
+   */
+  const BYTE bytes[] = {
+    0x75, 0x10,             // SiglusEngine.exe+148A9 - 75 10          jne SiglusEngine.exe+148BB
+    0x83, 0x7A, 0x14, 0x08, // SiglusEngine.exe+148AB - 83 7A 14 08    cmp dword ptr [edx+14],08
+    0x72, 0x02,             // SiglusEngine.exe+148AF - 72 02          jb SiglusEngine.exe+148B3
+    0x8B, 0x12,             // SiglusEngine.exe+148B1 - 8B 12          mov edx,[edx]
+    0x66, 0x89, 0x04, 0x72  // SiglusEngine.exe+148B3 - 66 89 04 72    mov [edx+esi*2],ax << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 4 };
+  ULONG range = max(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Siglus5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off - 4;
+  hp.type = USING_UNICODE;
+  hp.length_offset = 1;
+  ConsoleOutput("vnreng: INSERT Siglus5");
+  NewHook(hp, "SiglusEngine5");
+  
+  return true;
+}
+
 } // unnamed namespace
 
 // jichi 8/17/2013: Insert old first. As the pattern could also be found in the old engine.
@@ -3873,6 +3906,7 @@ bool InsertSiglusHook()
   bool ok = InsertSiglus2Hook();
   ok = InsertSiglus3Hook() || ok;
   ok = InsertSiglus4Hook() || ok;
+  ok = InsertSiglus5Hook() || ok;
   return ok;
 }
 
