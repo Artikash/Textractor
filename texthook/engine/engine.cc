@@ -21834,7 +21834,6 @@ bool InsertSystemNNN2Hook()
     0x03, 0xC5,              // add eax,ebp
     0x33, 0xDB               // xor ebx,ebx
   };
-  range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   addr = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range);
   if (addr) {
     HookParam hp = {};
