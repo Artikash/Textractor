@@ -21792,21 +21792,23 @@ bool InsertMinori1Hook()
   ConsoleOutput("vnreng: INSERT Minori1");
   NewHook(hp, "Minori1");
 
-  const BYTE bytes2[] = {
-    0x84, 0xC0,             // test al,al
-    0x0F, 0x85, XX4,        // jne trinoline_en_AA.exe+243E1
-    0x68, XX4,              // push trinoline_en_AA.exe+118BF8
-    0x33, 0xFF              // xor edi,edi
-  };
-  ULONG addr2 = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range);
-  if (addr) {
-    HookParam hp = {};
-    hp.address = addr + alt_addr_offset;
-    hp.offset = pusha_edx_off -4;
-    hp.type = USING_STRING;
-    hp.filter_fun = Minori1EngFilter;
-    ConsoleOutput("vnreng: INSERT Minori1eng");
-    NewHook(hp, "Minori1eng");
+  hp.address = addr + alt_addr_offset;
+  hp.codepage = 0;
+  hp.filter_fun = Minori1EngFilter;
+  ConsoleOutput("vnreng: INSERT Minori1eng");
+  NewHook(hp, "Minori1eng");
+
+  return true;
+}
+
+bool Minori2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+
+  if (cpp_strnstr(text, "{", *len)) {
+    StringFilterBetween(text, len, "{", 1, "}", 1);
   }
 
   return true;
@@ -21820,14 +21822,14 @@ bool InsertMinori2Hook()
     * https://vndb.org/v35
     */
   const BYTE bytes[] = {
-    0x80, 0x38, 0x00,              // cmp byte ptr [eax],00
+    0x80, 0x38, 0x00,              // cmp byte ptr [eax],00  << hook here
     0x0F, 0x84, XX4,               // je WindRP.exe+2832A
     0xB8, 0x20, 0x03, 0x00, 0x00,  // mov eax,00000320
     0x89, 0x44, 0x24, 0x10,        // mov [esp+10],eax
     0x89, 0x44, 0x24, 0x14,        // mov [esp+14],eax
     0x8B, 0x47, 0x20               // mov eax,[edi+20]
   };
-  enum { addr_offset = 0 };
+  enum { alt_addr_offset = 9 };
 
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
@@ -21836,13 +21838,14 @@ bool InsertMinori2Hook()
     return false;
   }
 
-  HookParam hp = {};
-  hp.address = addr + addr_offset;
-  hp.offset = pusha_eax_off -4;
-  hp.index = 0;
-  hp.length_offset = 1;
-  hp.type = NO_CONTEXT | DATA_INDIRECT;
   ConsoleOutput("vnreng: INSERT Minori2");
+  HookParam hp = {};
+  hp.address = addr + alt_addr_offset;
+  hp.offset = pusha_eax_off -4;
+  hp.type = USING_STRING;
+  hp.filter_fun = Minori2Filter;
+  ConsoleOutput("vnreng: INSERT Minori2");
+  ConsoleOutput("vnreng:Minori2: Please, set text to max speed");
   NewHook(hp, "Minori2");
   return true;
 }
