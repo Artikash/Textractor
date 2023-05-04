@@ -21731,6 +21731,10 @@ bool InsertNamcoPS2Hook()
 bool InsertRpgmXPHook()
 {
   //by Blu3train
+  /*
+  * Sample games:
+  * セントヘレナ(RJ137364)
+  */
   HookParam hp = {};
   wcsncpy_s(hp.module, L"gdi32.dll", MAX_MODULE_SIZE - 1);
   strncpy_s(hp.function, "GetGlyphOutlineW", MAX_MODULE_SIZE - 1);
