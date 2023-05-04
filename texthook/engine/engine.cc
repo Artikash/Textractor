@@ -6451,6 +6451,46 @@ bool InsertYuris5Hook()
   return true;
 }
 
+bool InsertYuris6Hook()
+{
+  //by Blu3train
+  /*
+  * work with Windows 11
+  * Sample games:
+  * https://vndb.org/v40058
+  * https://vndb.org/v42883
+  * https://vndb.org/v44092
+  */
+  const BYTE bytes[] = {
+    0xE9, XX4,           // jmp oshitona01.exe+1B629     << hook here
+    0xBF, XX4,           // mov edi,oshitona01.exe+24EEA0
+    0x8A, 0x17,          // mov dl,[edi]
+    0x47,                // inc edi
+    0x88, 0x16,          // mov [esi],dl
+    0x46,                // inc esi
+    0x84, 0xD2           // test dl,dl
+  };
+
+  enum { addr_offset = 0 };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_ecx_off - 4;
+  hp.index = 0;
+  hp.split = pusha_esp_off - 4;
+  hp.split_index = 0;
+  hp.type = USING_STRING | USING_SPLIT;
+
+  ConsoleOutput("Textractor: INSERT YU-RIS 6");
+  NewHook(hp, "YU-RIS6");
+
+  return true;
+}
+
 //bool InsertYurisHook()
 //{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 bool InsertYurisHook()
@@ -6460,6 +6500,7 @@ bool InsertYurisHook()
   ok = InsertYuris3Hook() || ok;
   ok = InsertYuris4Hook() || ok;
   ok = InsertYuris5Hook() || ok;
+  ok = InsertYuris6Hook() || ok;
   return ok;
 }
 
