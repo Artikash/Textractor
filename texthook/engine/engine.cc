@@ -9632,11 +9632,11 @@ bool WillPlus4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {
   auto text = reinterpret_cast<LPWSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
-  wchar_t *pFilter;
 
   WideStringCharReplacer(text, len, L"\\n", 2, L' ');
-  WideStringCharReplacer(text, len, L"%K", 2, L' ');
-  WideStringCharReplacer(text, len, L"%P", 2, L' ');
+  WideStringFilter(text, len, L"%LF", 3);
+  WideStringFilter(text, len, L"%K", 2);
+  WideStringFilter(text, len, L"%P", 2);
 
   return true;
 }
