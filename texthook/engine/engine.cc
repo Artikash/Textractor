@@ -9628,12 +9628,55 @@ static bool InsertNewWillPlusHook()
 	return found;
 }
 
+bool WillPlus4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  wchar_t *pFilter;
+
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringCharReplacer(text, len, L"%K", 2, L' ');
+  WideStringCharReplacer(text, len, L"%P", 2, L' ');
+
+  return true;
+}
+
+static bool InsertWillPlus4() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r71235
+  */
+  const BYTE bytes[] = {
+    0x33, 0xC9,                         // xor ecx,ecx  <-- hook
+    0x8B, 0xC7,                         // mov eax,edi
+    0xC7, 0x84, 0x24, XX4, XX4,         // mov [esp+000001E0],00000007
+    0x89, 0x9C, 0x24, XX4               // mov [esp+000001DC],ebx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:WillPlus4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edi_off -4;
+  hp.type = USING_UNICODE | USING_STRING;
+  hp.filter_fun = WillPlus4Filter;
+  ConsoleOutput("vnreng: INSERT WillPlus4");
+  NewHook(hp, "WillPlus4");
+  return true;
+}
+
 } // unnamed namespace
 
 bool InsertWillPlusHook()
 {
   bool ok = InsertOldWillPlusHook();
-  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || ok;
+  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || InsertWillPlus4() || ok;
   if (!ok) PcHooks::hookOtherPcFunctions();
   return ok;
 }
