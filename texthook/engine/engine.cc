@@ -11586,8 +11586,46 @@ bool InsertAOS3Hook() {
 
 }
 
+bool CarriageReturnCharToSpaceFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  CharReplacer(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size), '\r', ' ');
+  return true;
+}
+
+bool InsertAOS4Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v15699
+	*/
+	BYTE bytes[] = {
+		0x55,                        // push ebp        << hook here
+		0x8B, 0xEC,                  // mov ebp,esp
+		0x83, 0xEC, 0x14,            // sub esp,14
+		0xA1, XX4                    // mov eax,[spiral.exe+C0104]
+	};
+	ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+	if (!addr) {
+		ConsoleOutput("vnreng:AOS4: pattern not found");
+		return false;
+	}
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_edx_off - 4; //edx
+	hp.length_offset = 1;
+	hp.type  = NO_CONTEXT | DATA_INDIRECT;
+	hp.filter_fun = CarriageReturnCharToSpaceFilter; 
+	hp.index =0;
+
+	ConsoleOutput("vnreng: INSERT AOS4");
+
+	NewHook(hp, "AOS4");
+	return true;
+}
+
 bool InsertAOSHook()
-{ return InsertAOS1Hook() ||  InsertAOS2Hooks() || InsertAOS3Hook();}
+{ return InsertAOS1Hook() ||  InsertAOS2Hooks() || InsertAOS3Hook() || InsertAOS4Hook();}
 
   
 /**
