@@ -21737,7 +21737,6 @@ bool KaleidoFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
   StringCharReplacer(text, len, " \\n ", 4, ' ');
   StringCharReplacer(text, len, " \\n", 3, ' ');
   StringCharReplacer(text, len, "\\n", 2, ' ');
-  StringCharReplacer(text, len, "\xEF\xBC\x9F", 3, '?');
   
   return true;
 }
@@ -21748,6 +21747,7 @@ bool InsertKaleidoHook()
     /*
     * Sample games:
     * https://vndb.org/v29889
+    * https://vndb.org/r56675
     */
   const BYTE bytes[] = {
     0xFF, 0x75, 0xD4,              // push [ebp-2C]
@@ -21773,7 +21773,7 @@ bool InsertKaleidoHook()
   hp.index = 0;
   hp.split = 0x0C;
   hp.split_index = 0;
-  hp.type = USING_STRING | USING_SPLIT ;
+  hp.type = USING_UTF8 | USING_STRING | USING_SPLIT ;
   hp.filter_fun = KaleidoFilter;
   ConsoleOutput("vnreng: INSERT Kaleido");
   NewHook(hp, "Kaleido");
