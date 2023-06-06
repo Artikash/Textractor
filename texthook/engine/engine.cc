@@ -21744,6 +21744,7 @@ bool InsertCodeXHook()
     /*
     * Sample games:
     * https://vndb.org/v41664
+    * https://vndb.org/v36122
     */
   const BYTE bytes[] = {
     0x83, 0xC4, 0x08,           // add esp,08                  << hook here
