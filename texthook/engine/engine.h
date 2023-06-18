@@ -146,7 +146,7 @@ bool InsertSyuntadaHook();      // Syuntada: dSoh.dat
 bool InsertSystem43Hook();      // System43@AliceSoft: AliceStart.ini
 bool InsertSystemAoiHook();     // SystemAoi: *.vfs
 bool InsertTamamoHook();        // Tamamo
-bool InsertTanukiHook();        // Tanuki: *.tak
+bool InsertTanukiHooks();       // Tanuki: *.tak
 bool InsertTaskforce2Hook();    // Taskforce2.exe
 bool InsertTencoHook();         // Tenco: Check.mdx
 bool InsertTriangleHook();      // Triangle: Execle.exe

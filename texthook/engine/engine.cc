@@ -9676,6 +9676,47 @@ bool InsertTanukiHook()
   ConsoleOutput("vnreng:TanukiSoft: failed");
   return false;
 }
+bool InsertTanuki2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v26448
+    */
+  const BYTE bytes[] = {
+    0xCC,                                // int 3 
+    0x55,                                // push ebp        << hook here
+    0x8B, 0xEC,                          // mov ebp,esp
+    0x6A, 0xFF,                          // push -01
+    0x68, XX4,                           // push noshoujo.exe+33E932
+    0x64, 0xA1, XX4,                     // mov eax,fs:[00000000]
+    0x50,                                // push eax
+    0x81, 0xEC, 0xD4, 0x00, 0x00, 0x00,  // sub esp,000000D4
+    0xA1, XX4,                           // mov eax,[noshoujo.exe+3DC650]
+    0x33, 0xC5,                          // xor eax,ebp
+    0x89, 0x45, 0xF0,                    // mov [ebp-10],eax
+    0x56,                                // push esi
+    0x57,                                // push edi
+    0x50                                 // push eax
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:TanukiSoft2: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = 4 * 2; // arg2
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT TanukiSoft2");
+  NewHook(hp, "TanukiSoft2");
+  return true;
+}
+bool InsertTanukiHooks()
+{ return InsertTanuki2Hook() || InsertTanukiHook();}
+
 static void SpecialHookRyokucha(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
   const DWORD *base = (const DWORD *)esp_base;
