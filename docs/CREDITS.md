@@ -14,7 +14,7 @@
   - French translation by [Racky](mailto:maitrenoah@gmail.com) and [Gratusfr](https://github.com/Gratusfr)
   - Spanish translation by [scese250](https://github.com/scese250)
   - Turkish translation by [niisokusu](https://reddit.com/u/niisokusu)
-  - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter) and [lgztx96](https://github.com/lgztx96)
+  - Simplified Chinese translation by [tinyAdapter](https://github.com/tinyAdapter), [lgztx96](https://github.com/lgztx96) and [chinanoahli](https://github.com/chinanoahli)
   - Russian translation by [TokcDK](https://github.com/TokcDK)
   - Indonesian translation by [Hawxone](https://github.com/Hawxone)
   - Portuguese translation by [TsumiHokiro](https://github.com/TsumiHokiro)

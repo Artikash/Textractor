@@ -276,7 +276,9 @@ namespace HookCode
 {
 	std::optional<HookParam> Parse(std::wstring code)
 	{
-		if (code[0] == L'/') code.erase(0, 1); // legacy/AGTH compatibility
+		if (code[0] == L'/') code.erase(0, 1);
+		code.erase(std::find(code.begin(), code.end(), L'/'), code.end()); // legacy/AGTH compatibility
+		Trim(code);
 		if (code[0] == L'R') return ParseRCode(code.erase(0, 1));
 		else if (code[0] == L'H') return ParseHCode(code.erase(0, 1));
 		return {};
@@ -292,6 +294,7 @@ namespace HookCode
 		assert(HexString(-12) == L"-C"),
 		assert(HexString(12) == L"C"),
 		assert(Parse(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA")),
+		assert(Parse(L"/HQN936#-c*C:C*1C@4AA:gdi.dll:GetTextOutA /KF")),
 		assert(Parse(L"HB4@0")),
 		assert(Parse(L"/RS65001#@44")),
 		assert(Parse(L"HQ@4")),

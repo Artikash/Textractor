@@ -2,7 +2,7 @@
 
 ![Как это выглядит](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md) ● [Deutsch](README_DE.md)
 
 **Textractor** (a.k.a. NextHooker) это проект x86/x64 Windows/Wine программы для захвата текста из видеоигр, основанный на [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Смотреть [обучающее видео](docs/TUTORIAL.md) для быстрого ознакомления.
@@ -33,7 +33,7 @@
 
 Любой вклад приветствуется! Пишите мне(автору) на akashmozumdar@gmail.com, если у вас есть любые вопросы о кодовой базе.<br>
 Используйте стандартные действия для создания pull request (fork, branch, commit changes, создайте PR из своей ветки branch на мой master).<br>
-Вклад в перевод совсем не сложен: просто переведите строки в text.cpp, также, как и этот README.
+Вклад в перевод совсем не сложен: просто переведите строки в [text.cpp](text.cpp), также, как и этот README.
 
 ## Компиляция
 

@@ -88,7 +88,7 @@ void SpawnThread(const F& f) // works in DllMain unlike std thread
 	}, copy, 0, nullptr));
 }
 
-static struct // should be inline but MSVC (linker) is bugged
+inline struct
 {
 	inline static BYTE DUMMY[100];
 	template <typename T> operator T*() { static_assert(sizeof(T) < sizeof(DUMMY)); return (T*)DUMMY; }
@@ -119,6 +119,12 @@ inline std::wstring FormatString(const wchar_t* format, const Args&... args)
 	return buffer;
 }
 #pragma warning(pop)
+
+inline void Trim(std::wstring& text)
+{
+	text.erase(text.begin(), std::find_if_not(text.begin(), text.end(), iswspace));
+	text.erase(std::find_if_not(text.rbegin(), text.rend(), iswspace).base(), text.end());
+}
 
 inline std::optional<std::wstring> StringToWideString(const std::string& text, UINT encoding)
 {

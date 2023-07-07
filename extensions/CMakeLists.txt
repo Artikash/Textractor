@@ -1,6 +1,3 @@
-include(QtUtils)
-msvc_registry_search()
-find_qt5(Core Widgets WebSockets)
 cmake_policy(SET CMP0037 OLD)
 
 add_library(Bing\ Translate MODULE bingtranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)

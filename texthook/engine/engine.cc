@@ -5803,7 +5803,7 @@ bool InsertShinaHook()
 	  trigger_fun = [](LPVOID funcAddr, DWORD, DWORD stack)
 	  {
 		  bool ret = false;
-		  if (funcAddr != GetGlyphOutlineA) return false;
+		  if (funcAddr != GetGlyphOutlineA && funcAddr != GetTextExtentPoint32A) return false;
 		  for (int i = 0; i < 100; ++i)
 		  {
 			  // Address of text is somewhere on stack in call to func. Search for it.
@@ -5817,7 +5817,7 @@ bool InsertShinaHook()
 					  hp.type = DIRECT_READ;
 					  hp.address = addr;
 					  ConsoleOutput("Textractor: triggered: adding dynamic reader");
-					  NewHook(hp, "READ");
+					  NewHook(hp, "ShinaRio READ");
 					  ret = true;
 				  }
 			  };
@@ -17001,7 +17001,7 @@ void InsertMonoHook(HMODULE h)
 		if (!getDomain || !getName || !getJitInfo) goto failed;
 		static auto domain = getDomain();
 		if (!domain) goto failed;
-        ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", loadedConfig ? loadedConfig : "brute force");
+        ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", *loadedConfig ? loadedConfig : "brute force");
 		const BYTE prolog[] = { 0x55, 0x8b, 0xec };
 		for (auto addr : Util::SearchMemory(prolog, sizeof(prolog), PAGE_EXECUTE_READWRITE))
 		{
@@ -17016,7 +17016,7 @@ void InsertMonoHook(HMODULE h)
 								HookParam hp = {};
 								hp.address = addr;
 								hp.type = USING_UNICODE | FULL_STRING;
-                                if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
+                                if (!*loadedConfig) hp.type |= KNOWN_UNSTABLE;
 								hp.offset = 4;
                                 char nameForUser[HOOK_NAME_SIZE] = {};
                                 strncpy_s(nameForUser, name + 1, HOOK_NAME_SIZE - 1);
@@ -17034,7 +17034,7 @@ void InsertMonoHook(HMODULE h)
 				__except (EXCEPTION_EXECUTE_HANDLER) {}
 			}(addr);
 		}
-        if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
+        if (!*loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 		return true;
 	failed:
 		ConsoleOutput("Textractor: Mono Dynamic failed");
@@ -17091,7 +17091,7 @@ bool InsertMonoHooks()
     if (FARPROC addr = ::GetProcAddress(h, func.functionName)) {
       hp.address = (DWORD)addr;
 	  hp.type = func.hookType;
-      if (loadedConfig) hp.type |= HOOK_EMPTY;
+      if (*loadedConfig) hp.type |= HOOK_EMPTY;
 	  hp.filter_fun = NoAsciiFilter;
       hp.offset = func.textIndex * 4;
       hp.length_offset = func.lengthIndex * 4;

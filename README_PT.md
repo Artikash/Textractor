@@ -2,7 +2,7 @@
 
 ![Como se Parece](screenshot.png)
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md)
+[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md) ● [Deutsch](README_DE.md)
 
 **Textractor** (também conhecido como NextHooker) é um extrator de textos de video-games x86/x64  para Windows/Wine baseado no [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
 Assista ao [vídeo tutorial](docs/TUTORIAL.md) para uma rápida apresentação de como utilizá-lo.
@@ -33,7 +33,7 @@ Veja a pasta de extensões para mais exemplos do que as extensões são capazes 
 
 Todas contribuições são bem-vindas! Por favor, me mande um e-mail no endereço akashmozumdar@gmail.com caso tenha alguma dúvida quanto ao codebase.<br>
 Você deve seguir o processo padrão de fazer um pull request (fork, branch, realizar mudanças, realizar o PR do seu branch para o meu master).<br>
-Contribuir com uma tradução é fácil: basta traduzir as linhas do text.cpp assim como esse README.
+Contribuir com uma tradução é fácil: basta traduzir as linhas do [text.cpp](text.cpp) assim como esse README.
 
 ## Compilando
 

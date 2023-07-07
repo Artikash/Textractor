@@ -80,7 +80,7 @@ namespace Engine
 			if (!getDomain || !getName || !getJitInfo) goto failed;
 			static auto domain = getDomain();
 			if (!domain) goto failed;
-			ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", loadedConfig ? loadedConfig : "brute force");
+			ConsoleOutput("Textractor: Mono Dynamic ENTER (hooks = %s)", *loadedConfig ? loadedConfig : "brute force");
 			const BYTE prolog1[] = { 0x55, 0x48, 0x8b, 0xec };
 			const BYTE prolog2[] = { 0x48, 0x83, 0xec };
 			for (auto [prolog, size] : Array<const BYTE*, size_t>{ { prolog1, sizeof(prolog1) }, { prolog2, sizeof(prolog2) } })
@@ -97,7 +97,7 @@ namespace Engine
 									HookParam hp = {};
 									hp.address = addr;
 									hp.type = USING_STRING | USING_UNICODE | FULL_STRING;
-									if (!loadedConfig) hp.type |= KNOWN_UNSTABLE;
+									if (!*loadedConfig) hp.type |= KNOWN_UNSTABLE;
 									hp.offset = -0x20; // rcx
 									hp.padding = 20;
 									char nameForUser[HOOK_NAME_SIZE] = {};
@@ -119,7 +119,7 @@ namespace Engine
 				}(addr);
 			}
 
-			if (!loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
+			if (!*loadedConfig) ConsoleOutput("Textractor: Mono Dynamic used brute force: if performance issues arise, please specify the correct hook in the game configuration");
 			return true;
 		failed:
 			ConsoleOutput("Textractor: Mono Dynamic failed");
