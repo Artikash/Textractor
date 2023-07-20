@@ -21728,6 +21728,20 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool Ages7Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharFilter(text, len, L'\x3000');	//IDSP
+  WideCharFilter(text, len, L'\x0001');
+  WideCharFilter(text, len, L'\x0002');
+  WideCharFilter(text, len, L'\x0003');
+  WideCharReplacer(text, len, 0x000A, L' ');
+
+  return true;
+}
+
 bool InsertAges7Hook()
 {
   //by Blu3train
@@ -21763,7 +21777,9 @@ bool InsertAges7Hook()
 		HookParam hp = {};
 		hp.address = addr;
 		hp.offset = 0xC;
-		hp.type = USING_UNICODE | USING_STRING;
+		hp.type = USING_UNICODE | USING_STRING | USING_SPLIT;
+		hp.split = 0x4;
+		hp.filter_fun = Ages7Filter;
 		NewHook(hp, "Ages7");
 		ok = true;
 	}
