@@ -5529,8 +5529,58 @@ static bool InsertSystem43NewHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
   return true;
 }
 
+bool System43New2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  CharReplacer(text, len, '\n', ' ');
+
+  if (cpp_strnstr(text, "${", *len)) {
+    StringFilterBetween(text, len, "${", 3, "}", 1);
+  }
+
+  return true;
+}
+
+bool InsertSystem43New2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r84067
+    */
+  const BYTE bytes[] = {
+    0xC7, 0x46, 0x10, XX4,         // mov [esi+10],00000000
+    0x72, 0x02,                    // jb dohnadohna.exe+1BFA7E
+    0x8B, 0x36,                    // mov esi,[esi]
+    0x8B, 0x4C, 0x24, 0x14,        // mov ecx,[esp+14]
+    0x57,                          // push edi
+    0xC6, 0x06, 0x00               // mov byte ptr [esi],00   << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 3 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:System43new: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_edx_off - 4;
+  hp.split = pusha_esp_off - 4;
+  hp.type = NO_CONTEXT | USING_STRING | USING_SPLIT;
+  hp.filter_fun = System43New2Filter;
+  ConsoleOutput("vnreng: INSERT System43new");
+  NewHook(hp, "System43new");
+  return true;
+}
+
 bool InsertSystem43Hook()
 {
+  if (InsertSystem43New2Hook())
+    return true;
   //bool patched = Util::CheckFile(L"AliceRunPatch.dll");
   bool patched = ::GetModuleHandleA("AliceRunPatch.dll");
   // Insert new hook first
