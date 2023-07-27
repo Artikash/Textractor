@@ -90,7 +90,7 @@ bool DetermineEngineByFile1()
 {
 	if (Util::SearchResourceString(L"Proportional ONScripter") || Util::SearchResourceString(L"ponscr.exe"))
 	{
-		InsertPONScripterHook();
+		InsertPONScripterHooks();
 		return true;
 	}
   // Artikash 7/14/2018: AIRNovel - sample game https://vndb.org/v18814
