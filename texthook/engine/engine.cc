@@ -5583,6 +5583,44 @@ bool InsertAtelierHook()
   return false;
   //ConsoleOutput("Unknown Atelier KAGUYA engine.");
 }
+
+bool InsertAtelierKaguya2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v22713
+    */
+  const BYTE bytes[] = {
+    0x51,                      // push ecx
+    0x50,                      // push eax
+    0xE8, XX4,                 // call Start.exe+114307
+    0x83, 0xC4, 0x08,          // add esp,08
+    0x85, 0xC0,                // test eax,eax
+    0x78, 0xA1                 // js Start.exe+48947
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA2");
+  NewHook(hp, "Atelier KAGUYA2");
+  return true;
+}
+
+bool InsertAtelierHooks()
+{return  InsertAtelierHook() || InsertAtelierKaguya2Hook();}
+
 /********************************************************************************************
 CIRCUS hook:
   Game folder contains advdata folder. Used by CIRCUS games.
