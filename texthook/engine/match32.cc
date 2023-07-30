@@ -192,7 +192,7 @@ bool DetermineEngineByFile1()
     InsertArtemisHook();
     return true;
   }
-  if (Util::CheckFile(L"*.int") && InsertCatSystemHook()) {
+  if (Util::CheckFile(L"*.int") && InsertCatSystemHooks()) {
     return true;
   }
   if (Util::CheckFile(L"message.dat")) {

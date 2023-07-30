@@ -93,7 +93,7 @@ bool InsertBootupHook();        // Bootup: Bootup.dat
 bool InsertC4Hook();            // C4: C4.EXE or XEX.EXE
 bool InsertCaramelBoxHook();    // Caramel: *.bin
 bool InsertCandyHook();         // SystemC@CandySoft: *.fpk
-bool InsertCatSystemHook();     // CatSystem2: *.int
+bool InsertCatSystemHooks();     // CatSystem2: *.int
 bool InsertCMVSHook();          // CMVS: data/pack/*.cpz; do not support the latest cmvs32.exe and cmvs64.exe
 bool InsertCotophaHook();       // Cotopha: *.noa
 bool InsertDebonosuHook();      // Debonosu: bmp.bak and dsetup.dll

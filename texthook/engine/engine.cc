@@ -6586,6 +6586,45 @@ bool InsertCatSystemHook()
   return true;
 }
 
+bool InsertCatSystem2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v26987
+    */
+  const BYTE bytes[] = {
+    0x38, 0x08,                                // cmp [eax],cl
+    0x0F, 0x84, XX4,                           // je cs2.exe+23E490
+    0x66, 0x66, 0x0F, 0x1F, 0x84, 0x00, XX4,   // nop word ptr [eax+eax+00000000]
+    0x4F,                                      // dec edi
+    0xC7, 0x85, XX4, XX4,                      // mov [ebp-000005A0],00000000
+    0x33, 0xF6,                                // xor esi,esi
+    0xC7, 0x85, XX4, XX4,                      // mov [ebp-0000057C],00000000
+    0x85, 0xFF                                 // test edi,edi
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:CatSystem2new: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.codepage = 65001;
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT CatSystem2new");
+  NewHook(hp, "CatSystem2new");
+  return true;
+}
+
+bool InsertCatSystemHooks()
+{return  InsertCatSystemHook() || InsertCatSystem2Hook();}
+
 bool InsertNitroplusHook()
 {
   const BYTE bytes[] = {0xb0, 0x74, 0x53};
