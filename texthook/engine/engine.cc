@@ -5590,6 +5590,7 @@ bool InsertAtelierKaguya2Hook()
     /*
     * Sample games:
     * https://vndb.org/v22713
+    * https://vndb.org/v31685
     * https://vndb.org/v37081
     */
   const BYTE bytes[] = {
