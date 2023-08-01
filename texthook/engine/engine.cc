@@ -21728,6 +21728,40 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertA98sysHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v2477
+    */
+  const BYTE bytes[] = {
+    0x56,                    // push esi                   << hook here
+    0xE8, XX4,               // call HEARTWORK.EXE+134F0
+    0x83, 0xC4, 0x38,        // add esp,38
+    0x5F,                    // pop edi
+    0x5D,                    // pop ebp
+    0x5B,                    // pop ebx
+    0xE8, XX4                // call HEARTWORK.EXE+1AF80
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:A98sys: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ecx_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT A98sys");
+  NewHook(hp, "A98sys");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
