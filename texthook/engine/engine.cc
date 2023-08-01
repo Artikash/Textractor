@@ -1355,6 +1355,36 @@ namespace { // unnamed
 //}
 //
 
+bool KiriKiriZHookModFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharReplacer(text, len, L'\r', L' ');
+  WideCharReplacer(text, len, L'\n', L' ');
+
+  return true;
+}
+
+void NewKiriKiriZHookMod(DWORD addr)
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v20196
+  */
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ecx_off - 4;
+  hp.split = pusha_edi_off - 4;    // the same logic but diff value as NewKiriKiriZHook, use [edi] as split
+  hp.index = 0x14;        // the same as KiriKiri1
+  hp.length_offset = 1; // the same as KiriKiri1
+  hp.type = USING_UNICODE | DATA_INDIRECT | USING_SPLIT;
+  hp.filter_fun = KiriKiriZHookModFilter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ Mod");
+  NewHook(hp, "KiriKiriZ Mod");  
+}
+
 void NewKiriKiriZHook(DWORD addr)
 {
   HookParam hp = {};
@@ -1435,6 +1465,7 @@ bool InsertKiriKiriZHook2()
   }
 
   NewKiriKiriZHook(addr);
+  NewKiriKiriZHookMod(addr + 5); 	//by Blu3train
   ConsoleOutput("vnreng: KiriKiriZ2 inserted");
   return true;
 }
