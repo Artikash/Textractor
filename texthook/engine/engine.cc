@@ -1535,7 +1535,10 @@ textrender.dll+BE5F - C3                    - ret
 
 // jichi 1/30/2015: Do KiriKiriZ2 first, which might insert to the same location as KiriKiri1.
 bool InsertKiriKiriZHook()
-{ return InsertKiriKiriZHook_msvc() || InsertKiriKiriZHook2() || InsertKiriKiriZHook1(); }
+{
+  bool ok = InsertKiriKiriZHook_msvc();
+  return InsertKiriKiriZHook2() || InsertKiriKiriZHook1() || ok;
+}
 
 /********************************************************************************************
 BGI hook:
