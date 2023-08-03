@@ -5529,7 +5529,7 @@ static bool InsertSystem43NewHook(ULONG startAddress, ULONG stopAddress, LPCSTR 
   return true;
 }
 
-bool System43New2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+bool System43aFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {
   auto text = reinterpret_cast<LPSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
@@ -5543,7 +5543,7 @@ bool System43New2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   return true;
 }
 
-bool InsertSystem43New2Hook() 
+bool InsertSystem43aHook() 
 {
   //by Blu3train
     /*
@@ -5563,7 +5563,7 @@ bool InsertSystem43New2Hook()
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    ConsoleOutput("vnreng:System43new: pattern not found");
+    ConsoleOutput("vnreng:System43a: pattern not found");
     return false;
   }
   HookParam hp = {};
@@ -5571,15 +5571,47 @@ bool InsertSystem43New2Hook()
   hp.offset = pusha_edx_off - 4;
   hp.split = pusha_esp_off - 4;
   hp.type = NO_CONTEXT | USING_STRING | USING_SPLIT;
-  hp.filter_fun = System43New2Filter;
-  ConsoleOutput("vnreng: INSERT System43new");
-  NewHook(hp, "System43new");
+  hp.filter_fun = System43aFilter;
+  ConsoleOutput("vnreng: INSERT System43a");
+  NewHook(hp, "System43a");
+  return true;
+}
+
+bool InsertSystem43bHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v10732
+    */
+  const BYTE bytes[] = {
+    0x8B, 0xCE,                    // mov ecx,esi            << hook here
+    0xE8, XX4,                     // call Oyakorankan.exe+13D890
+    0x8B, 0x43, 0x04,              // mov eax,[ebx+04]
+    0x8D, 0x4C, 0x24, 0x10,        // lea ecx,[esp+10]
+    0x3B, 0xC8,                    // cmp ecx,eax
+    0x73, 0x64                     // jae Oyakorankan.exe+1403B2
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:System43b: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off - 4;
+  hp.split = 4 * 12; //arg12
+  hp.type = USING_STRING | USING_SPLIT;
+  ConsoleOutput("vnreng: INSERT System43b");
+  NewHook(hp, "System43b");
   return true;
 }
 
 bool InsertSystem43Hook()
 {
-  if (InsertSystem43New2Hook())
+  if (InsertSystem43aHook() || InsertSystem43bHook())
     return true;
   //bool patched = Util::CheckFile(L"AliceRunPatch.dll");
   bool patched = ::GetModuleHandleA("AliceRunPatch.dll");
