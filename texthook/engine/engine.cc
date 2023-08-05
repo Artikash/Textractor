@@ -21735,12 +21735,10 @@ bool CielFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 
   if (*len == 1) return false;
 
-  //StringCharReplacer(text, len, "^n", 2, ' ');
-
   return true;
 }
 
-bool InsertCielHook() 
+bool InsertCiel1Hook() 
 {
   //by Blu3train
     /*
@@ -21761,7 +21759,7 @@ bool InsertCielHook()
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    ConsoleOutput("vnreng:Ciel: pattern not found");
+    ConsoleOutput("vnreng:Ciel1: pattern not found");
     return false;
   }
 
@@ -21772,10 +21770,48 @@ bool InsertCielHook()
   hp.length_offset = 1;
   hp.type = DATA_INDIRECT;
   hp.filter_fun = CielFilter;
-  ConsoleOutput("vnreng: INSERT Ciel");
-  NewHook(hp, "Ciel");
+  ConsoleOutput("vnreng: INSERT Ciel1");
+  NewHook(hp, "Ciel1");
   return true;
 }
+
+bool InsertCiel2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r5101
+    */
+  const BYTE bytes[] = {
+    0x68, XX4,               // push after.exe+94518     << hook here
+    0x50,                    // push eax
+    0xE8, XX4,               // call after.exe+711F0
+    0x83, 0xC4, 0x0C,        // add esp,0C
+    0x85, 0xC0,              // test eax,eax
+    0x0F, 0x85, XX4,         // jne after.exe+A2E4
+    0x8B, 0x93, XX4          // mov edx,[ebx+000BE000]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Ciel2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.length_offset = 1;
+  hp.type = DATA_INDIRECT;
+  ConsoleOutput("vnreng: INSERT Ciel2");
+  NewHook(hp, "Ciel2");
+  return true;
+}
+
+bool InsertCielHooks()
+{ return InsertCiel1Hook() || InsertCiel2Hook();}
 
 } // namespace Engine
 

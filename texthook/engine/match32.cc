@@ -371,7 +371,7 @@ bool DetermineEngineByFile3()
 bool DetermineEngineByFile4()
 {
   if (Util::CheckFile(L"sys/kidoku.dat")) {
-    if (InsertCielHook())
+    if (InsertCielHooks())
       return true;
   }
   if (Util::CheckFile(L"EAGLS.dll")) { // jichi 3/24/2014: E.A.G.L.S
