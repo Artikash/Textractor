@@ -21728,6 +21728,103 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool AquaplusFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  CharReplacer(text, len, '^', '\"');
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+  StringFilter(text, len, "\\k", 2);
+  StringFilter(text, len, "\\p", 2);
+  if (cpp_strnstr(text, "<R", *len)) {  // ex. <R華奢|きゃしゃ>
+    StringFilter(text, len, "<R", 2);
+    StringFilterBetween(text, len, "|", 1, ">", 1);
+  }
+  StringFilter(text, len, "<c", 3); // remove "<c" followed by 1 char
+  CharFilter(text, len, '>');
+
+  if (*len == 0) return false;
+
+  return true;
+}
+
+bool InsertAquaplus1Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r20439
+    */
+  const BYTE bytes[] = {
+    0xCC,                         // int 3 
+    0x53,                         // push ebx             << hook here
+    0x8B, 0x5C, 0x24, 0x0C,       // mov ebx,[esp+0C]
+    0x55,                         // push ebp
+    0x8B, 0x6C, 0x24, 0x0C,       // mov ebp,[esp+0C]
+    0x56,                         // push esi
+    0x57,                         // push edi
+    0x8B, 0x7D, 0x24,             // mov edi,[ebp+24]
+    0x85, 0xFF                    // test edi,edi
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Aquaplus1: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = 0x4 * 2; //arg2
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = AquaplusFilter;
+  ConsoleOutput("vnreng: INSERT Aquaplus1");
+  NewHook(hp, "Aquaplus1");
+  return true;
+}
+
+bool InsertAquaplus2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r108249
+    */
+  const BYTE bytes[] = {
+    0xC6, 0x04, 0x30 , 0x00,      // mov byte ptr [eax+esi],00           << hook here
+    0x8B, 0xF2,                   // mov esi,edx
+    0x8A, 0x02,                   // mov al,[edx]
+    0x42,                         // inc edx
+    0x84, 0xC0,                   // test al,al
+    0x75, 0xF9                    // jne "WHITE ALBUM Memories like Falling Snow.exe"+85253
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Aquaplus2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off -4;
+  hp.index = 0;
+  hp.split = pusha_esp_off -4;
+  hp.split_index = 0;
+  hp.type = USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = AquaplusFilter;
+  ConsoleOutput("vnreng: INSERT Aquaplus2");
+  NewHook(hp, "Aquaplus2");
+  return true;
+}
+
+bool InsertAquaplusHooks()
+{ return InsertAquaplus1Hook() || InsertAquaplus2Hook();}
+
 } // namespace Engine
 
 // EOF
