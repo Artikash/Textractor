@@ -2147,13 +2147,17 @@ bool BGI4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto text = reinterpret_cast<LPWSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
 
-  WideCharFilter(text, len, L'\x3000');	//IDSP
   WideCharFilter(text, len, L'\x0001');
   WideCharFilter(text, len, L'\x0002');
   WideCharFilter(text, len, L'\x0003');
   WideCharFilter(text, len, L'\x0004');
   WideCharFilter(text, len, L'\x0005');
   WideCharFilter(text, len, L'\x000A');
+  if (text[0] == L'\x3000') {
+    *len -= 2; 
+    ::memmove(text, text+1, *len);
+  }
+  WideCharReplacer(text, len, L'\x3000', L' ');	//IDSP
 
   if (cpp_wcsnstr(text, L"<", *len/sizeof(wchar_t))) {
     WideStringFilterBetween(text, len, L"<", 1, L">", 1);
