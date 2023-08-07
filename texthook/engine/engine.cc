@@ -2142,15 +2142,37 @@ bool InsertBGI3Hook()
 }
 #endif // 0
 
+bool BGI4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharFilter(text, len, L'\x3000');	//IDSP
+  WideCharFilter(text, len, L'\x0001');
+  WideCharFilter(text, len, L'\x0002');
+  WideCharFilter(text, len, L'\x0003');
+  WideCharFilter(text, len, L'\x0004');
+  WideCharFilter(text, len, L'\x0005');
+  WideCharFilter(text, len, L'\x000A');
+
+  if (cpp_wcsnstr(text, L"<", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"<", 1, L">", 1);
+  }
+
+  return true;
+}
+
 bool InsertBGI4Hook()
 {
+    //by Blu3train
     /*
     * Sample games:
     * https://vndb.org/v26664
+    * https://vndb.org/v44105
     */
     bool found = false;
     const BYTE pattern[] = {
-        0x55,                           // 55               push ebp
+        0x55,                           // 55               push ebp         << hook here
         0x8b,0xec,                      // 8BEC             mov ebp,esp
         0x53,                           // 53               push ebx
         0x56,                           // 56               push esi
@@ -2167,6 +2189,7 @@ bool InsertBGI4Hook()
         hp.offset = pusha_eax_off - 4;
         hp.split = pusha_esp_off - 4;
         hp.type = USING_UNICODE | USING_STRING | USING_SPLIT | KNOWN_UNSTABLE;
+        hp.filter_fun = BGI4Filter;
         ConsoleOutput("Textractor: INSERT BGI4");
         NewHook(hp, "BGI4");
         found = true;
