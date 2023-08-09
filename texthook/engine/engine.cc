@@ -5583,6 +5583,42 @@ bool InsertAtelierHook()
   return false;
   //ConsoleOutput("Unknown Atelier KAGUYA engine.");
 }
+
+bool InsertAtelierGSHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v403
+    */
+  const BYTE bytes[] = {
+    0xC7, 0x44, 0x24, 0x34, XX4,   // mov [esp+34],0000000F        << hook here
+    0x89, 0x5C, 0x24, 0x30,        // mov [esp+30],ebx
+    0x88, 0x5C, 0x24, 0x20,        // mov [esp+20],bl
+    0x8D, 0x48, 0x01,              // lea ecx,[eax+01]
+    0x8A, 0x10,                    // mov dl,[eax]
+    0x40,                          // inc eax
+    0x3A, 0xD3,                    // cmp dl,bl
+    0x75, 0xF9                     // jne GAME_SYS.EXE+F0B5
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA GAME_SYS: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING | NO_CONTEXT;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA GAME_SYS");
+  NewHook(hp, "Atelier KAGUYA GS");
+  return true;
+}
+
 /********************************************************************************************
 CIRCUS hook:
   Game folder contains advdata folder. Used by CIRCUS games.
