@@ -6451,18 +6451,30 @@ bool InsertYuris5Hook()
   return true;
 }
 
+static bool Yuris6Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  StringCharReplacer(text, len, "\xEF\xF0", 2, ' ');
+  StringFilter(text, len, "\xEF\xF2", 2);
+  StringFilter(text, len, "\xEF\xF5", 2);
+
+  return true;
+}
+
 bool InsertYuris6Hook()
 {
   //by Blu3train
   /*
-  * work with Windows 11
   * Sample games:
   * https://vndb.org/v40058
   * https://vndb.org/v42883
   * https://vndb.org/v44092
+  * https://vndb.org/v21171
   */
   const BYTE bytes[] = {
-    0xE9, XX4,           // jmp oshitona01.exe+1B629     << hook here
+    0xE9, XX4,           // jmp oshitona01.exe+1B629
     0xBF, XX4,           // mov edi,oshitona01.exe+24EEA0
     0x8A, 0x17,          // mov dl,[edi]
     0x47,                // inc edi
@@ -6483,6 +6495,7 @@ bool InsertYuris6Hook()
   hp.index = 0;
   hp.split = pusha_esp_off - 4;
   hp.split_index = 0;
+  hp.filter_fun = Yuris6Filter;
   hp.type = USING_STRING | USING_SPLIT;
 
   ConsoleOutput("Textractor: INSERT YU-RIS 6");
