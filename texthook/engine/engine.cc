@@ -21728,6 +21728,18 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool BishopFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringFilter(text, len, L"\\b", 2);
+  WideCharFilter(text, len, L'\xE000');  // heart symbol
+
+  return true;
+}
+
 bool InsertBishopHook() 
 {
   //by Blu3train
