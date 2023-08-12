@@ -165,7 +165,7 @@ void InsertRealliveHook();      // RealLive: RealLive*.exe
 void InsertStuffScriptHook();   // Stuff: *.mpk
 bool InsertTinkerBellHook();    // TinkerBell: arc00.dat
 bool InsertWaffleHook();        // WAFFLE: cg.pak
-bool InsertAtelierGSHook();     // Atelier GAME_SYS: game_sys.exe, resource string
+bool InsertAtelierGSHooks();     // Atelier GAME_SYS: game_sys.exe, resource string
 
 // CIRCUS: avdata/
 bool InsertCircusHook1();
