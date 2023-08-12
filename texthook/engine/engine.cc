@@ -21728,6 +21728,43 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertBishopHook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r49553
+  */
+  const BYTE bytes[] = {
+    0xDD, 0x9E, XX4,              // fstp qword ptr [esi+000001C8]
+    0xC7, 0x86, XX4, XX4,         // mov [esi+000001C0],00000000
+    0xE8, XX4,                    // call smie.exe+3170
+    0x5F,                         // pop edi
+    0x5B,                         // pop ebx
+    0x8B, 0xE5                    // mov esp,ebp          << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 2 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Bishop: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_ebx_off -4;
+  hp.index = 0;
+  hp.split = pusha_esp_off -4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = BishopFilter;
+  ConsoleOutput("vnreng: INSERT Bishop");
+  NewHook(hp, "Bishop");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
