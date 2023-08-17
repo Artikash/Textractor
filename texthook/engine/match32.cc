@@ -203,6 +203,10 @@ bool DetermineEngineByFile1()
     if (InsertAtelierGSHooks() )
       return true;
   }
+  if (Util::CheckFile(L"ADV10.EXE") && Util::SearchResourceString(L"KaGuYa")) {
+    if (InsertAtelierADV10Hook() )
+      return true;
+  }
   if (Util::CheckFile(L"Check.mdx")) { // jichi 4/1/2014: AUGame
     InsertTencoHook();
     return true;
