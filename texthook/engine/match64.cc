@@ -9,6 +9,7 @@
 
 namespace Engine
 {
+	enum : DWORD { X64_MAX_REL_ADDR = 0x00300000 };
 	/** Artikash 6/7/2019
 *   PPSSPP JIT code has pointers, but they are all added to an offset before being used.
 	Find that offset so that hook searching works properly.
