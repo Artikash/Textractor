@@ -599,8 +599,13 @@ bool KiriKiri3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
 
   if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
     WideStringFilterBetween(text, len, L"[", 1, L"]\\", 2);
-    WideStringFilterBetween(text, len, L"[", 1, L"]", 1);
+    WideStringFilterBetween(text, len, L"[m", 2, L"t=\"", 3); // [mruby r="ゆきみ" text="由紀美"]
+    WideStringFilter(text, len, L"\"]", 2);
+    WideStringFilter(text, len, L"[heart]", 7);
   }
+  if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) // detect garbage sentence. [ruby text=%r][ch text=%text][macropop]
+    return false;
+
   return true;
 }
 
@@ -610,17 +615,22 @@ bool InsertKiriKiri3Hook()
   /*
   * Sample games:
   * https://vndb.org/v16190
+  * https://vndb.org/v43048
+  * https://vndb.org/v46112
+  * https://vndb.org/v20491
+  * https://vndb.org/v28695
+  * https://vndb.org/v5549
   */
   const BYTE bytes[] = {
-    0x66, 0x83, 0x3C, 0x41 , 0x5B,    // cmp word ptr [ecx+eax*2],5B       << hook here
-    0x75, 0x09,                       // jne LBK-30067.exe+1EB26F
-    0x8B, 0x85, XX4                  // mov eax,[ebp-00000254]
+    0x75, 0x09,                      // jne GAME.EXE+1D5B37
+    0x8B, 0x85, XX4,                 // mov eax,[ebp-00000254]
+    0xFF, 0x40, 0x78                 // inc [eax+78]
   };
 
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    //ConsoleOutput("vnreng:KiriKiri3: pattern not found");
+    ConsoleOutput("vnreng:KiriKiri3: pattern not found");
     return false;
   }
 
@@ -628,8 +638,7 @@ bool InsertKiriKiri3Hook()
   hp.address = addr;
   hp.offset = pusha_ecx_off -4;
   hp.index = 0;
-  //hp.split = -4 -4;
-  hp.split = 5 * 4; //arg5
+  hp.split = pusha_eax_off-4;
   hp.split_index = 0;
   hp.type = USING_UNICODE | USING_STRING | USING_SPLIT;
   hp.filter_fun = KiriKiri3Filter;
