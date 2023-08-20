@@ -21734,7 +21734,7 @@ bool BishopFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto len = reinterpret_cast<size_t *>(size);
 
   WideStringCharReplacer(text, len, L"\\n", 2, L' ');
-  WideStringFilter(text, len, L"\\b", 2);
+  WideStringFilter(text, len, L"\\", 2); // remove \ followed by 1 char
   WideCharFilter(text, len, L'\xE000');  // heart symbol
 
   return true;
