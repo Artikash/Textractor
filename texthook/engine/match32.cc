@@ -410,8 +410,8 @@ bool DetermineEngineByFile4()
   }
   if (Util::CheckFile(L"*.ykc")) { // jichi 7/15/2014: YukaSystem1 is not supported, though
     //ConsoleOutput("vnreng: IGNORE YKC:Feng/HookSoft(SMEE)");
-    InsertYukaSystem2Hook();
-    return true;
+    if (InsertYukaSystemHooks())
+      return true;
   }
   if (Util::CheckFile(L"model\\*.hed")) { // jichi 9/8/2014: EXP
     InsertExpHook();

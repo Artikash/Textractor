@@ -154,7 +154,7 @@ bool InsertV8Hook(HMODULE module); // V8 JavaScript runtime: has mangled v8::Str
 bool InsertUnicornHook();       // Gsen18: *.szs|Data/*.szs
 bool InsertWillPlusHook();      // WillPlus: Rio.arc
 bool InsertWolfHook();          // Wolf: Data.wolf
-bool InsertYukaSystem2Hook();   // YukaSystem2: *.ykc
+bool InsertYukaSystemHooks();   // YukaSystem2: *.ykc
 bool InsertYurisHook();         // YU-RIS: *.ypf
 
 void InsertBrunsHook();         // Bruns: bruns.exe

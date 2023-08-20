@@ -13272,6 +13272,7 @@ bool InsertNeXASHook()
  *  004010ef     cc             int3
  */
 
+/*
 // Ignore image and music file names
 // Sample text: "Voice\tou00012.ogg""運命論って云うのかなあ……神さまを信じてる人が多かったからだろうね、何があっても、それ�神さまが�刁�ちに与えられた試練なんだって、そ぀�ってたみたい。勿論、今でもそ぀��てあ�人はぁ�ぱぁ�るん�けど�
 // Though the input string is UTF-8, it should be ASCII compatible.
@@ -13333,6 +13334,124 @@ bool InsertYukaSystem2Hook()
   NewHook(hp, "YukaSystem2");
   return true;
 }
+*/
+
+bool YukaSystem2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  // Try to identify if the first two characters are urf-8
+  if (*len < 3) return false;
+
+  for (int i=0; i<*len; i++)
+    if (text[i] > 0 && (text[i]!='@' && text[i]!='r' && text[i]!='(' && text[i]!=',' && text[i]!=')' && text[i]!=' '))
+	  return false; //ascii uses only 7 bits. Skip "@r(,) "
+
+  //Check characters (3 bytes) for utf-8
+  if (*len < 4) {
+    if (text[0]<'\xe2' || text[0]>'\xef') return false;
+  }
+  else 
+    if (text[0]<'\xe2' || text[0]>'\xef' || text[3]<'\xe2' || text[3]>'\xef') return false;
+
+  if (cpp_strnstr(text, "@r(", *len)) {
+    StringFilter(text, len, "@r(", 3);
+    StringFilterBetween(text, len, ",", 1, ")", 1);
+  }
+
+  return true;
+}
+
+bool InsertYukaSystem2Hook()
+{
+  //mod by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v14760
+  */
+  const BYTE bytes[] = {
+    0x55,            // 004010e0  /$ 55             push ebp ; jichi; hook here
+    0x8b,0xec,       // 004010e1  |. 8bec           mov ebp,esp
+    0x8b,0x45, 0x08, // 004010e3  |. 8b45 08        mov eax,dword ptr ss:[ebp+0x8] ; jichi: ebp+0x8 = arg2
+    0x8b,0x4d, 0x0c, // 004010e6  |. 8b4d 0c        mov ecx,dword ptr ss:[ebp+0xc]
+    0x8a,0x11,       // 004010e9  |. 8a11           mov dl,byte ptr ds:[ecx]
+    0x88,0x10,       // 004010eb  |. 8810           mov byte ptr ds:[eax],dl    ; jichi: eax is the address to text
+    0x5d,            // 004010ed  |. 5d             pop ebp
+    0xc3             // 004010ee  \. c3             retn
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  //GROWL_DWORD(addr); // supposed to be 0x4010e0
+  if (!addr) {
+    ConsoleOutput("vnreng:YukaSystem2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = 1 * 4; //arg 1
+  hp.split  = 2 * 4; //arg 2
+  hp.type = NO_CONTEXT | USING_STRING | USING_UTF8 | USING_SPLIT; // UTF-8, though
+  hp.filter_fun = YukaSystem2Filter;
+  ConsoleOutput("vnreng: INSERT YukaSystem2");
+  NewHook(hp, "YukaSystem2");
+
+  return true;
+}
+
+bool YukaSystem1Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (*len == 0) return false;
+
+  // if acii add a space at the end of the sentence overwriting null terminator
+  if (*len >=2 && text[*len-2]>0)
+    text[(*len)++] = ' ';
+
+  if (cpp_strnstr(text, "@r(", *len)) {
+    StringFilterBetween(text, len, "@r(", 3, ")", 1); // @r(2,はと)
+  }
+
+  return true;
+}
+
+bool InsertYukaSystem1Hook()
+{
+  //mod by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r71601
+  * https://vndb.org/v7507
+  */
+  const BYTE bytes[] = {
+    0x80, 0x3D, XX4, 0x01,      // cmp byte ptr [kimihime.exe+16809C],01     << hook here
+    0x75, 0x11,                 // jne kimihime.exe+42D74
+    0xB9, XX4,                  // mov ecx,kimihime.exe+C7F8C
+    0xC6, 0x05, XX4, 0x00       // mov byte ptr [kimihime.exe+1516C5],00
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:YukaSystem1: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off - 4;
+  hp.type = USING_STRING | KNOWN_UNSTABLE;
+  hp.filter_fun = YukaSystem1Filter;
+  ConsoleOutput("vnreng: INSERT YukaSystem1");
+  NewHook(hp, "YukaSystem1");
+
+  return true;
+}
+
+bool InsertYukaSystemHooks()
+{ return InsertYukaSystem1Hook() || InsertYukaSystem2Hook();}
 
 /** jichi 8/2/2014 2RM
  *  Sample games:
