@@ -363,7 +363,7 @@ void WideStringCharReplacer(wchar_t *str, size_t *size, const wchar_t *src, size
     curlen = len - (cur - str);
     if (curlen == 0)
       break;
-    ::memmove(cur, cur + srclen, 2 * curlen);
+    ::memmove(cur, cur + srclen -1, 2 * curlen);
   }
   *size = len * 2;
 }
@@ -21734,8 +21734,7 @@ bool BishopFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto len = reinterpret_cast<size_t *>(size);
 
   WideStringCharReplacer(text, len, L"\\n", 2, L' ');
-  WideStringFilter(text, len, L"\\b", 2);
-  WideStringFilter(text, len, L"\\s", 2);
+  WideStringFilter(text, len, L"\\", 2); // remove \ followed by 1 char
   WideCharFilter(text, len, L'\xE000');  // heart symbol
 
   return true;
@@ -21747,6 +21746,20 @@ bool InsertBishopHook()
   /*
   * Sample games:
   * https://vndb.org/r49553
+  * https://vndb.org/v38604
+  * https://vndb.org/v16953
+  * https://vndb.org/v33842
+  * https://vndb.org/v29168
+  * https://vndb.org/v22697
+  * https://vndb.org/v27492
+  * https://vndb.org/v26206
+  * https://vndb.org/v21769
+  * https://vndb.org/v24825
+  * https://vndb.org/v31037
+  * https://vndb.org/v20734
+  * https://vndb.org/v19583
+  * https://vndb.org/v18591
+  * https://vndb.org/v16104
   */
   const BYTE bytes[] = {
     0xDD, 0x9E, XX4,              // fstp qword ptr [esi+000001C8]
