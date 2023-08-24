@@ -598,6 +598,7 @@ bool KiriKiri3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   prevText = text;
 
   if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
+    WideStringCharReplacer(text, len, L"[r]", 3, L' ');
     WideStringFilterBetween(text, len, L"[", 1, L"]\\", 2);
     WideStringFilterBetween(text, len, L"[m", 2, L"t=\"", 3); // [mruby r="ゆきみ" text="由紀美"]
     WideStringFilter(text, len, L"\"]", 2);
@@ -620,6 +621,7 @@ bool InsertKiriKiri3Hook()
   * https://vndb.org/v20491
   * https://vndb.org/v28695
   * https://vndb.org/v5549
+  * https://vndb.org/v28513
   */
   const BYTE bytes[] = {
     0x75, 0x09,                      // jne GAME.EXE+1D5B37
