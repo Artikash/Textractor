@@ -363,7 +363,7 @@ void WideStringCharReplacer(wchar_t *str, size_t *size, const wchar_t *src, size
     curlen = len - (cur - str);
     if (curlen == 0)
       break;
-    ::memmove(cur, cur + srclen, 2 * curlen);
+    ::memmove(cur, cur + srclen -1, 2 * curlen);
   }
   *size = len * 2;
 }
