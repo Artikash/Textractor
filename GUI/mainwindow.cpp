@@ -88,6 +88,8 @@ namespace
 	TextThread* current = nullptr;
 	MainWindow* This = nullptr;
 
+	void FindHooks();
+
 	QString TextThreadString(TextThread& thread)
 	{
 		return QString("%1:%2:%3:%4:%5: %6").arg(
@@ -274,7 +276,8 @@ namespace
 	void AddHook(QString hook)
 	{
 		if (QString hookCode = QInputDialog::getText(This, ADD_HOOK, CODE_INFODUMP, QLineEdit::Normal, hook, &ok, Qt::WindowCloseButtonHint); ok)
-			if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); } catch (std::out_of_range) {}
+			if (hookCode.startsWith("S") || hookCode.startsWith("/S")) FindHooks(); // backwards compatibility for old hook search UX
+			else if (auto hp = HookCode::Parse(S(hookCode))) try { Host::InsertHook(selectedProcessId, hp.value()); } catch (std::out_of_range) {}
 			else Host::AddConsoleOutput(INVALID_CODE);
 	}
 
