@@ -165,6 +165,7 @@ void InsertRealliveHook();      // RealLive: RealLive*.exe
 void InsertStuffScriptHook();   // Stuff: *.mpk
 bool InsertTinkerBellHook();    // TinkerBell: arc00.dat
 bool InsertWaffleHook();        // WAFFLE: cg.pak
+bool InsertKaleidoHook();       // Kaleido ADV Workshop: windata/script_body.bin
 
 // CIRCUS: avdata/
 bool InsertCircusHook1();

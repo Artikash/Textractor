@@ -21728,6 +21728,58 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool KaleidoFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  // Unofficial eng TL with garbage newline spaces
+  StringCharReplacer(text, len, " \\n ", 4, ' ');
+  StringCharReplacer(text, len, " \\n", 3, ' ');
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+  
+  return true;
+}
+
+bool InsertKaleidoHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v29889
+    * https://vndb.org/r56675
+    */
+  const BYTE bytes[] = {
+    0xFF, 0x75, 0xD4,              // push [ebp-2C]
+    0xE8, XX4,                     // call 5toubun.exe+1DD0
+    0x83, 0xC4, 0x0C,              // add esp,0C
+    0x8A, 0xC3,                    // mov al,bl
+    0x8B, 0x4D, 0xF4,              // mov ecx,[ebp-0C]
+    0x64, 0x89, 0x0D, XX4,         // mov fs:[00000000],ecx
+    0x59                           // pop ecx          << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 1 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Kaleido: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_esi_off -4;
+  hp.index = 0;
+  hp.split = 0x0C;
+  hp.split_index = 0;
+  hp.type = USING_UTF8 | USING_STRING | USING_SPLIT ;
+  hp.filter_fun = KaleidoFilter;
+  ConsoleOutput("vnreng: INSERT Kaleido");
+  NewHook(hp, "Kaleido");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
