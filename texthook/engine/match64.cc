@@ -9,6 +9,7 @@
 
 namespace Engine
 {
+	enum : DWORD { X64_MAX_REL_ADDR = 0x00300000 };
 	/** Artikash 6/7/2019
 *   PPSSPP JIT code has pointers, but they are all added to an offset before being used.
 	Find that offset so that hook searching works properly.
@@ -214,6 +215,45 @@ namespace Engine
 		return false;
 	}
 
+	bool InsertKiriKiriZHook()
+	{
+		//by Blu3train
+		/*
+		* Sample games:
+		* RJ351843
+		*/
+		const BYTE bytes[] = {
+			0xCC,                                                // int 3 
+			0x4C, 0x89, 0x44, 0x24, 0x18,                        // mov [rsp+18],r8       <- hook here
+			0x48, 0x89, 0x54, 0x24, 0x10,                        // mov [rsp+10],rdx
+			0x53,                                                // push rbx
+			0x56,                                                // push rsi
+			0x57,                                                // push rdi
+			0x41, 0x54,                                          // push r12
+			0x41, 0x55,                                          // push r13
+			0x41, 0x56,                                          // push r14
+			0x41, 0x57,                                          // push r15
+			0x48, 0x83, 0xEC, 0x40,                              // sub rsp,40
+			0x48, 0xC7, 0x44, 0x24, 0x30, 0xFE, 0xFF, 0xFF, 0xFF // mov qword ptr [rsp+30],FFFFFFFFFFFFFFFE
+		};
+
+		ULONG64 range = min(processStopAddress - processStartAddress, X64_MAX_REL_ADDR);
+		for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStartAddress + range)) {
+			HookParam hp = {};
+			hp.address = addr + 1;
+			hp.offset = -0x1C -4; //RCX
+			hp.index = 0x18;
+			hp.length_offset = 1;
+			hp.type = USING_UNICODE | DATA_INDIRECT;
+			ConsoleOutput("vnreng: INSERT KiriKiriZ Hook ");
+			NewHook(hp, "KiriKiriZ");
+			return true;
+		}
+
+		ConsoleOutput("vnreng:KiriKiriZ: pattern not found");
+		return false;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
@@ -231,6 +271,11 @@ namespace Engine
 		if (Util::CheckFile(L"*.py") && InsertRenpyHook()) return true;
 
 		for (const wchar_t* monoName : { L"mono.dll", L"mono-2.0-bdwgc.dll" }) if (HMODULE module = GetModuleHandleW(monoName)) if (InsertMonoHooks(module)) return true;
+
+		if (Util::CheckFile(L"*.xp3") || Util::SearchResourceString(L"TVP(KIRIKIRI) Z ")) { // TVP(KIRIKIRI) Z CORE
+			if (InsertKiriKiriZHook())
+				return true;
+		}
 
 		for (std::wstring DXVersion : { L"d3dx9", L"d3dx10" })
 			if (HMODULE module = GetModuleHandleW(DXVersion.c_str())) PcHooks::hookD3DXFunctions(module);
