@@ -21728,6 +21728,67 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool YaneSDKFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::wstring prevText;
+
+  if (!*len)
+    return false;
+  text[*len/sizeof(wchar_t)] = L'\0';  // clean text
+
+  if (!prevText.compare(text))
+    return false;
+  prevText = text;
+
+  WideStringCharReplacer(text, len, L"[r]", 3, L' ');
+  WideStringFilter(text, len, L"[np]", 4);
+
+  if (cpp_wcsnstr(text, L"'", *len/sizeof(wchar_t))) { // [桜木'さくらぎ]
+    WideStringFilterBetween(text, len, L"'", 1, L"]", 1);
+  }
+  WideCharFilter(text, len, L'[');
+  WideCharFilter(text, len, L']');
+
+  return true;
+}
+
+bool InsertYaneSDKHook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v21734
+  * https://vndb.org/v21455
+  * https://vndb.org/v20406
+  */
+  const BYTE bytes[] = {
+    0x83, 0xF9, 0x08,             // cmp ecx,08         << hook here
+    0x8D, 0x45, 0x0C,             // lea eax,[ebp+0C]
+    0x8D, 0x4D, 0xBC,             // lea ecx,[ebp-44]
+    0x0F, 0x43, 0xC2,             // cmovae eax,edx
+    0x0F, 0xB7, 0x04, 0x70        // movzx eax,word ptr [eax+esi*2]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:YaneSDK: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.filter_fun = YaneSDKFilter;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  ConsoleOutput("vnreng: INSERT YaneSDK");
+  NewHook(hp, "YaneSDK");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
