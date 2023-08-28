@@ -187,7 +187,11 @@ void TextHook::Send(uintptr_t dwDataBase)
 			if (count == 1) data &= 0xff;
 			*(WORD*)pbData = data & 0xffff;
 		}
-		else ::memcpy(pbData, (void*)data, count);
+		else
+		{
+			if (data == 0) goto done;
+			::memcpy(pbData, (void*)data, count);
+		}
 
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) tp.ctx = 0;
 
