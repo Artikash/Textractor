@@ -363,7 +363,7 @@ void WideStringCharReplacer(wchar_t *str, size_t *size, const wchar_t *src, size
     curlen = len - (cur - str);
     if (curlen == 0)
       break;
-    ::memmove(cur, cur + srclen, 2 * curlen);
+    ::memmove(cur, cur + srclen -1, 2 * curlen);
   }
   *size = len * 2;
 }
@@ -21727,6 +21727,69 @@ bool InsertNamcoPS2Hook()
   return addr;
 }
 #endif // 0
+
+bool BishopFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringFilter(text, len, L"\\", 2); // remove \ followed by 1 char
+  WideCharFilter(text, len, L'\xE000');  // heart symbol
+
+  return true;
+}
+
+bool InsertBishopHook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r49553
+  * https://vndb.org/v38604
+  * https://vndb.org/v16953
+  * https://vndb.org/v33842
+  * https://vndb.org/v29168
+  * https://vndb.org/v22697
+  * https://vndb.org/v27492
+  * https://vndb.org/v26206
+  * https://vndb.org/v21769
+  * https://vndb.org/v24825
+  * https://vndb.org/v31037
+  * https://vndb.org/v20734
+  * https://vndb.org/v19583
+  * https://vndb.org/v18591
+  * https://vndb.org/v16104
+  */
+  const BYTE bytes[] = {
+    0xDD, 0x9E, XX4,              // fstp qword ptr [esi+000001C8]
+    0xC7, 0x86, XX4, XX4,         // mov [esi+000001C0],00000000
+    0xE8, XX4,                    // call smie.exe+3170
+    0x5F,                         // pop edi
+    0x5B,                         // pop ebx
+    0x8B, 0xE5                    // mov esp,ebp          << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 2 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Bishop: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_ebx_off -4;
+  hp.index = 0;
+  hp.split = pusha_esp_off -4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = BishopFilter;
+  ConsoleOutput("vnreng: INSERT Bishop");
+  NewHook(hp, "Bishop");
+  return true;
+}
 
 } // namespace Engine
 
