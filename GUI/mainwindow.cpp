@@ -64,6 +64,7 @@ extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
 extern const char* MAX_BUFFER_SIZE;
 extern const char* MAX_HISTORY_SIZE;
+extern const char* LIMIT_STRING_LENGTH;
 extern const char* CONFIG_JP_LOCALE;
 extern const wchar_t* ABOUT;
 extern const wchar_t* CL_OPTIONS;
@@ -503,6 +504,7 @@ namespace
 			{ TextThread::maxBufferSize, MAX_BUFFER_SIZE },
 			{ TextThread::flushDelay, FLUSH_DELAY },
 			{ TextThread::maxHistorySize, MAX_HISTORY_SIZE },
+			{ TextThread::limitStringLength, LIMIT_STRING_LENGTH },
 			{ Host::defaultCodepage, DEFAULT_CODEPAGE },
 		})
 		{
@@ -666,6 +668,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	TextThread::maxHistorySize = settings.value(MAX_HISTORY_SIZE, TextThread::maxHistorySize).toInt();
+	TextThread::limitStringLength = settings.value(LIMIT_STRING_LENGTH, TextThread::limitStringLength).toInt();
 	Host::defaultCodepage = settings.value(DEFAULT_CODEPAGE, Host::defaultCodepage).toInt();
 
 	Host::Start(ProcessConnected, ProcessDisconnected, ThreadAdded, ThreadRemoved, SentenceReceived);
