@@ -112,7 +112,8 @@ void TextThread::Flush()
 	if (buffer.empty()) return;
 	if (buffer.size() > maxBufferSize || GetTickCount64() - lastPushTime > flushDelay)
 	{
-		AddSentence(std::move(buffer));
+		if (limitStringLength==0 || buffer.length()<limitStringLength) // Limit string length (0=disabled)
+			AddSentence(std::move(buffer));
 		buffer.clear();
 	}
 }
