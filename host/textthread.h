@@ -9,6 +9,7 @@ public:
 	inline static OutputCallback Output;
 
 	inline static bool filterRepetition = false;
+	inline static bool flushDelaySpacing = false;
 	inline static int flushDelay = 500; // flush every 500ms by default
 	inline static int maxBufferSize = 3000;
 	inline static int maxHistorySize = 10'000'000;

@@ -58,6 +58,7 @@ void TextThread::Push(BYTE* data, int length)
 		}
 	}
 
+	if (flushDelaySpacing && !buffer.empty() && (hp.type & (USING_STRING))) buffer += L"\x200b "; // insert \x200b to recognize it in case it has to be found with a filter
 	if (hp.type & HEX_DUMP) for (int i = 0; i < length; i += sizeof(short)) buffer.append(FormatString(L"%04hX ", *(short*)(data + i)));
 	else if (hp.type & USING_UNICODE) buffer.append((wchar_t*)data, length / sizeof(wchar_t));
 	else if (auto converted = StringToWideString(std::string((char*)data, length), hp.codepage ? hp.codepage : Host::defaultCodepage)) buffer.append(converted.value());

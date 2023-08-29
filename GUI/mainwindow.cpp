@@ -62,6 +62,7 @@ extern const char* ATTACH_SAVED_ONLY;
 extern const char* SHOW_SYSTEM_PROCESSES;
 extern const char* DEFAULT_CODEPAGE;
 extern const char* FLUSH_DELAY;
+extern const char* FLUSH_DELAY_SPACING;
 extern const char* MAX_BUFFER_SIZE;
 extern const char* MAX_HISTORY_SIZE;
 extern const char* CONFIG_JP_LOCALE;
@@ -495,6 +496,7 @@ namespace
 			{ autoAttach, AUTO_ATTACH },
 			{ autoAttachSavedOnly, ATTACH_SAVED_ONLY },
 			{ showSystemProcesses, SHOW_SYSTEM_PROCESSES },
+			{ TextThread::flushDelaySpacing, FLUSH_DELAY_SPACING },
 		})
 		{
 			auto checkBox = new QCheckBox(&dialog);
@@ -666,6 +668,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	autoAttach = settings.value(AUTO_ATTACH, autoAttach).toBool();
 	autoAttachSavedOnly = settings.value(ATTACH_SAVED_ONLY, autoAttachSavedOnly).toBool();
 	showSystemProcesses = settings.value(SHOW_SYSTEM_PROCESSES, showSystemProcesses).toBool();
+	TextThread::flushDelaySpacing = settings.value(FLUSH_DELAY_SPACING, TextThread::flushDelaySpacing).toBool();
 	TextThread::flushDelay = settings.value(FLUSH_DELAY, TextThread::flushDelay).toInt();
 	TextThread::maxBufferSize = settings.value(MAX_BUFFER_SIZE, TextThread::maxBufferSize).toInt();
 	TextThread::maxHistorySize = settings.value(MAX_HISTORY_SIZE, TextThread::maxHistorySize).toInt();
