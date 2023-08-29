@@ -1439,6 +1439,53 @@ bool InsertKiriKiriZHook2()
   return true;
 }
 
+bool KiriKiriZ3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharFilter(text, len, L'\x000A');
+  if (cpp_wcsnstr(text, L"%", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"%", 1, L"%", 1);
+  }
+
+  return true;
+}
+
+bool InsertKiriKiriZHook3() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r109253
+    */
+  const BYTE bytes[] = {
+    0x66, 0x83, 0x3F, 0x00,    // cmp word ptr [edi],00          << hook here
+    0x75, 0x06,                // jne Imouto_no_Seiiki.exe+195C1
+    0x33, 0xDB,                // xor ebx,ebx
+    0x89, 0x1E,                // mov [esi],ebx
+    0xEB, 0x1B                 // jmp Imouto_no_Seiiki.exe+195DC
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edi_off -4;
+  hp.split  = pusha_edx_off -4;
+  hp.type =  NO_CONTEXT | USING_UNICODE | USING_STRING | USING_SPLIT;
+  hp.filter_fun = KiriKiriZ3Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ3");
+  NewHook(hp, "KiriKiriZ3");
+
+  return true;
+}
+
 bool KiriKiriZ_msvcFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {
   auto text = reinterpret_cast<LPWSTR>(data);
@@ -1537,6 +1584,7 @@ textrender.dll+BE5F - C3                    - ret
 bool InsertKiriKiriZHook()
 {
   bool ok = InsertKiriKiriZHook_msvc();
+  ok = InsertKiriKiriZHook3() || ok;
   return InsertKiriKiriZHook2() || InsertKiriKiriZHook1() || ok;
 }
 
