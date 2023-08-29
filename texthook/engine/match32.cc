@@ -80,6 +80,12 @@ bool DeterminePCEngine()
       return true;
   }
 
+  if (Util::SearchResourceString(L"ONScripter-RU") || Util::SearchResourceString(L"onscripter-ru.exe"))
+  {
+    InsertONScripterruHooks();
+    return true;
+  }
+
   // PC games
   PcHooks::hookGDIFunctions();
   PcHooks::hookGDIPlusFunctions();
