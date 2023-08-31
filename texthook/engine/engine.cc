@@ -21728,6 +21728,46 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertOtomeHook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r57599
+  * https://vndb.org/r57600
+  * https://vndb.org/r57601
+  */
+  const BYTE bytes[] = {
+    0x33, 0xFF,                   // xor edi,edi         << hook here
+    0x66, 0x39, 0x3B,             // cmp [ebx],di
+    0x74, 0x2E,                   // je JyakounoLylaVol3.exe+9E8F2
+    0x8B, 0xD3,                   // mov edx,ebx
+    0xEB, 0x08                    // jmp JyakounoLylaVol3.exe+9E8D0
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Otome: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off -4;
+  hp.index = 0;
+  hp.filter_fun = [](LPVOID data, DWORD* len, HookParam*, BYTE)
+  {
+    WideCharReplacer((wchar_t*)data, reinterpret_cast<size_t *>(len), L'\n', L' ');
+    return true;
+  };
+
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  ConsoleOutput("vnreng: INSERT Otome");
+  NewHook(hp, "Otome");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
