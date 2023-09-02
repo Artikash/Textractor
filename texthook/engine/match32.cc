@@ -296,8 +296,8 @@ bool DetermineEngineByFile2()
   if (Util::CheckFile(L"pac\\*.ypf") || Util::CheckFile(L"*.ypf")) {
     // jichi 8/14/2013: CLOCLUP: "ノーブレスオブリージュ" would crash the game.
     if (!Util::CheckFile(L"noblesse.exe"))
-      InsertYurisHook();
-    return true;
+      if (InsertYurisHook())
+        return true;
   }
   if (Util::CheckFile(L"*.npa")) {
     InsertNitroplusHook();
