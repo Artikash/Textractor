@@ -128,7 +128,7 @@ bool InsertNitroplusHook();     // Nitroplus: *.npa
 bool InsertTokyoNecroHook();    // Nitroplus TokyoNecro: *.npk, resource string
 bool InsertPalHook();           // AMUSE CRAFT: *.pac
 bool InsertPensilHook();        // Pensil: PSetup.exe
-bool InsertPONScripterHook();
+bool InsertPONScripterHooks();
 bool InsertQLIEHook();          // QLiE: GameData/*.pack
 //bool InsertRai7Hook();          // Rai7puk: rai7.exe
 bool InsertRejetHook();         // Rejet: Module/{gd.dat,pf.dat,sd.dat}
