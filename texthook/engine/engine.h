@@ -156,6 +156,7 @@ bool InsertWillPlusHook();      // WillPlus: Rio.arc
 bool InsertWolfHook();          // Wolf: Data.wolf
 bool InsertYukaSystem2Hook();   // YukaSystem2: *.ykc
 bool InsertYurisHook();         // YU-RIS: *.ypf
+bool InsertGameMakerHook();     // GameMaker: GMResource.dll
 
 void InsertBrunsHook();         // Bruns: bruns.exe
 void InsertIronGameSystemHook();// IroneGameSystem: igs_sample.exe
