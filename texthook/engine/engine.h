@@ -170,6 +170,8 @@ bool InsertWaffleHook();        // WAFFLE: cg.pak
 bool InsertCircusHook1();
 bool InsertCircusHook2();
 
+bool InsertDmmHooks();          // DMM: Data/Exi_UT2.sdat
+
 } // namespace Engine
 
 // EOF
