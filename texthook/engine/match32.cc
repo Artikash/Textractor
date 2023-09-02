@@ -281,8 +281,9 @@ bool DetermineEngineByFile2()
     InsertWaffleHook();
     return true;
   }
-  if (Util::CheckFile(L"Arc00.dat") && InsertTinkerBellHook()) {
-    return true;
+  if (Util::CheckFile(L"Arc00.dat") || Util::SearchResourceString(L"TinkerBell")) {
+    if(InsertTinkerBellHook())
+      return true;
   }
   if (Util::CheckFile(L"*.vfs")) { // jichi 7/6/2014: Better to test AoiLib.dll? ja.wikipedia.org/wiki/ソフトハウスキャラ
     InsertSystemAoiHook();
