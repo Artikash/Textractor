@@ -21728,6 +21728,28 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertRpgmXPHook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * セントヘレナ(RJ137364)
+  */
+  HookParam hp = {};
+  wcsncpy_s(hp.module, L"gdi32.dll", MAX_MODULE_SIZE - 1);
+  strncpy_s(hp.function, "GetGlyphOutlineW", MAX_MODULE_SIZE - 1);
+  hp.address = 0;
+  hp.offset = 0x8; //arg2
+  hp.index = 0;
+  hp.split = pusha_esi_off - 4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_SPLIT | MODULE_OFFSET | FUNCTION_OFFSET;
+  hp.length_offset = 1;
+  ConsoleOutput("vnreng: INSERT RpgmXP");
+  NewHook(hp, "RpgmXP");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
