@@ -21728,6 +21728,53 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool CodeXFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  StringCharReplacer(text, len, "^n", 2, ' ');
+
+  return true;
+}
+
+bool InsertCodeXHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v41664
+    * https://vndb.org/v36122
+    */
+  const BYTE bytes[] = {
+    0x83, 0xC4, 0x08,           // add esp,08                  << hook here
+    0x8D, 0x85, XX4,            // lea eax,[ebp-00000218]
+    0x50,                       // push eax
+    0x68, XX4,                  // push ???????????!.exe+10A76C
+    0x85, 0xF6,                 // test esi,esi
+    0x74, 0x4F,                 // je ???????????!.exe+2A95B
+    0xFF, 0x15, XX4,            // call dword ptr [???????????!.exe+C8140]
+    0x8B, 0x85, XX4             // mov eax,[ebp-00000220]      << alternative hook here
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:CodeX: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = CodeXFilter;
+  ConsoleOutput("vnreng: INSERT CodeX");
+  NewHook(hp, "CodeX");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
