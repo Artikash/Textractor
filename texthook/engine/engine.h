@@ -165,6 +165,7 @@ void InsertRealliveHook();      // RealLive: RealLive*.exe
 void InsertStuffScriptHook();   // Stuff: *.mpk
 bool InsertTinkerBellHook();    // TinkerBell: arc00.dat
 bool InsertWaffleHook();        // WAFFLE: cg.pak
+bool InsertAquaplusHooks();     // Aquaplus: Data/*.pck
 
 // CIRCUS: avdata/
 bool InsertCircusHook1();
