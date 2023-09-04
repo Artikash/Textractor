@@ -1491,7 +1491,7 @@ bool KiriKiriZ4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto text = reinterpret_cast<LPWSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
 
-  if (text[0] == L' ' || text[0] == L'@' || text[0] == L'[' || text[0] == L']')
+  if (text[0] == L' ' || text[0] == L':' || text[0] == L'@' || text[0] == L'[' || text[0] == L']')
 	return false;
 
   if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
@@ -1508,6 +1508,7 @@ bool InsertKiriKiriZHook4()
     /*
     * Sample games:
     * https://vndb.org/r111774
+    * https://vndb.org/v38021
     */
   const BYTE bytes[] = {
     0xE8, 0xE8, 0xBA, 0xFE, 0xFF,    // call Shironagasu.exe+227B0       << hook here
