@@ -21822,8 +21822,41 @@ bool InsertAquaplus2Hook()
   return true;
 }
 
+bool InsertAquaplus3Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * Dungeon Travelers 2: The Royal Library & the Monster Seal
+    */
+  const BYTE bytes[] = {
+    0xCC,                       // int 3 
+    0x80, 0x3D, XX4, 0x00,      // cmp byte ptr [DT2_en.exe+3052EC],00    << hook here
+    0x75, 0x67,                 // jne DT2_en.exe+89DC0
+    0x56,                       // push esi
+    0xBA, XX4                   // mov edx,DT2_en.exe+3051E0
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Aquaplus3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_UTF8 | USING_STRING | NO_CONTEXT;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Aquaplus3");
+  NewHook(hp, "Aquaplus3");
+  return true;
+}
+
 bool InsertAquaplusHooks()
-{ return InsertAquaplus1Hook() || InsertAquaplus2Hook();}
+{ return InsertAquaplus1Hook() || InsertAquaplus2Hook() || InsertAquaplus3Hook();}
 
 } // namespace Engine
 
