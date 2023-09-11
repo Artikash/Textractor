@@ -2141,6 +2141,147 @@ bool InsertBGI3Hook()
   return true;
 }
 #endif // 0
+
+bool BGI4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharFilter(text, len, L'\x0001');
+  WideCharFilter(text, len, L'\x0002');
+  WideCharFilter(text, len, L'\x0003');
+  WideCharFilter(text, len, L'\x0004');
+  WideCharFilter(text, len, L'\x0005');
+  WideCharFilter(text, len, L'\x000A');
+  if (text[0] == L'\x3000') {
+    *len -= 2; 
+    ::memmove(text, text+1, *len);
+  }
+  WideCharReplacer(text, len, L'\x3000', L' ');	//IDSP
+
+  if (cpp_wcsnstr(text, L"<", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"<", 1, L">", 1);
+  }
+
+  return true;
+}
+
+bool InsertBGI4Hook()
+{
+    //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v26664
+    * https://vndb.org/v44105
+    */
+    bool found = false;
+    const BYTE pattern[] = {
+        0x55,                           // 55               push ebp         << hook here
+        0x8b,0xec,                      // 8BEC             mov ebp,esp
+        0x53,                           // 53               push ebx
+        0x56,                           // 56               push esi
+        0x57,                           // 57               push edi
+        0x33, 0xFF,                     // 33 FF            xor edi,edi
+        0xE8, XX4,                      // E8 23FDFFFF      call saclet.exe+A0990
+        0x8B, 0xF0                      // 8B F0            mov esi,eax
+    };
+
+    for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+    {
+        HookParam hp = {};
+        hp.address = addr;
+        hp.offset = pusha_eax_off - 4;
+        hp.split = pusha_esp_off - 4;
+        hp.type = USING_UNICODE | USING_STRING | USING_SPLIT | KNOWN_UNSTABLE;
+        hp.filter_fun = BGI4Filter;
+        ConsoleOutput("Textractor: INSERT BGI4");
+        NewHook(hp, "BGI4");
+        found = true;
+    }
+    if (!found) ConsoleOutput("Textractor:BGI4: pattern not found");
+    return found;
+}
+
+bool BGI56Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == '@') {
+    *len -= 1;
+    ::memmove(text, text + 1, *len);
+  }
+
+  return true;
+}
+
+bool InsertBGI5Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v473
+    */
+  const BYTE bytes[] = {
+    0x90,                      // nop 
+    0x81, 0xEC, XX4,           // sub esp,00000920         << hook here
+    0x8B, 0x84, 0x24, XX4,     // mov eax,[esp+00000944]
+    0x55,                      // push ebp
+    0x8D, 0x8C, 0x24, XX4      // lea ecx,[esp+000000F4]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_ecx_off -4;
+  hp.index = 0;
+  hp.padding = 1;
+  hp.type = USING_STRING;
+  hp.filter_fun = BGI56Filter;
+  ConsoleOutput("vnreng: INSERT BGI5");
+  NewHook(hp, "BGI5");
+  return true;
+}
+
+bool InsertBGI6Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r96578
+    */
+  const BYTE bytes[] = {
+    0x90,                                      // nop 
+    0x6A, 0xFF,                                // push -01            << hook here
+    0x68, XX4,                                 // push BGI.exe+87AF8
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00,        // mov eax,fs:[00000000]
+    0x50,                                      // push eax
+    0x64, 0x89, 0x25, 0x00, 0x00, 0x00, 0x00,  // mov fs:[00000000],esp
+    0x81, 0xEC, XX4,                           // sub esp,000009B4
+    0x8B, 0x84, 0x24, 0xE4, 0x09, 0x00, 0x00   // mov eax,[esp+000009E4]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_ecx_off -4;
+  hp.index = 0;
+  hp.padding = 1;
+  hp.type = USING_STRING;
+  hp.filter_fun = BGI56Filter;
+  ConsoleOutput("vnreng: INSERT BGI6");
+  NewHook(hp, "BGI6");
+  return true;
+}
+
 } // unnamed
 
 // jichi 5/12/2014: BGI1 and BGI2 game can co-exist, such as 世界と世界の真ん中で
@@ -2149,7 +2290,7 @@ bool InsertBGI3Hook()
 // Insert BGI2 first.
 // Artikash 6/12/2019: In newer games neither exists, but WideCharToMultiByte works, so insert that if BGI2 fails.
 bool InsertBGIHook()
-{ return InsertBGI2Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
+{ return InsertBGI4Hook() || InsertBGI2Hook() || InsertBGI5Hook() || InsertBGI6Hook() ||  (PcHooks::hookOtherPcFunctions(), InsertBGI1Hook()); }
 
 /********************************************************************************************
 Reallive hook:
