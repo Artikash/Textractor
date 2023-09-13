@@ -15,6 +15,7 @@
 #include <QWheelEvent>
 #include <QScrollArea>
 #include <QAbstractNativeEventFilter>
+#include <QTimer>
 
 extern const char* EXTRA_WINDOW_INFO;
 extern const char* TOPMOST;
@@ -27,6 +28,7 @@ extern const char* CENTERED_TEXT;
 extern const char* AUTO_RESIZE_WINDOW_HEIGHT;
 extern const char* CLICK_THROUGH;
 extern const char* HIDE_MOUSEOVER;
+extern const char* HIDE_TEXT;
 extern const char* DICTIONARY;
 extern const char* DICTIONARY_INSTRUCTIONS;
 extern const char* BG_COLOR;
@@ -36,9 +38,16 @@ extern const char* OUTLINE_COLOR;
 extern const char* OUTLINE_SIZE;
 extern const char* OUTLINE_SIZE_INFO;
 extern const char* FONT;
+extern const char* TIMER_HIDE_TEXT;
+extern const char* TEXT_TIMEOUT;
+extern const char* TEXT_TIMEOUT_ADD_PER_CHAR;
 
 constexpr auto DICTIONARY_SAVE_FILE = u8"SavedDictionary.txt";
 constexpr int CLICK_THROUGH_HOTKEY = 0xc0d0;
+constexpr int HIDE_TEXT_HOTKEY = 0xc0d1;
+const qreal COLOR_ALFAF_HIDE_WINDOW = 0.05;
+const int TEXT_TIMEOUT_DEF = 0;
+const int TEXT_TIMEOUT_ADD_PER_CHAR_DEF = 0;
 
 QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool customOpacity = true)
 {
@@ -49,12 +58,17 @@ QColor colorPrompt(QWidget* parent, QColor default, const QString& title, bool c
 
 struct PrettyWindow : QDialog, Localizer
 {
+	QAction *hideTextAction;
+	QTimer *timerHideText = new QTimer(this);
+	int text_timeout, text_timeout_per_char;
+
 	PrettyWindow(const char* name)
 	{
 		ui.setupUi(this);
 		ui.display->setGraphicsEffect(outliner = new Outliner);
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_TranslucentBackground);
+		setWindowTitle("Extra Window");
 
 		settings.beginGroup(name);
 		QFont font = ui.display->font();
@@ -64,18 +78,24 @@ struct PrettyWindow : QDialog, Localizer
 		outliner->color = settings.value(OUTLINE_COLOR, outliner->color).value<QColor>();
 		outliner->size = settings.value(OUTLINE_SIZE, outliner->size).toDouble();
 		autoHide = settings.value(HIDE_MOUSEOVER, autoHide).toBool();
+		text_timeout = settings.value(TEXT_TIMEOUT, TEXT_TIMEOUT_DEF).toInt();
+		text_timeout_per_char = settings.value(TEXT_TIMEOUT_ADD_PER_CHAR, TEXT_TIMEOUT_ADD_PER_CHAR_DEF).toInt();
 		menu.addAction(FONT, this, &PrettyWindow::RequestFont);
-		menu.addAction(BG_COLOR, [this] { SetBackgroundColor(colorPrompt(this, backgroundColor, BG_COLOR)); });
-		menu.addAction(TEXT_COLOR, [this] { SetTextColor(colorPrompt(this, TextColor(), TEXT_COLOR)); });
+		menu.addAction(BG_COLOR, [this] { if (hideText) ToggleHideText(); SetBackgroundColor(colorPrompt(this, backgroundColor, BG_COLOR)); });
+		menu.addAction(TEXT_COLOR, [this] { if (hideText) ToggleHideText(); SetTextColor(colorPrompt(this, TextColor(), TEXT_COLOR)); });
 		QAction* outlineAction = menu.addAction(TEXT_OUTLINE, this, &PrettyWindow::SetOutline);
 		outlineAction->setCheckable(true);
 		outlineAction->setChecked(outliner->size >= 0);
-		QAction* autoHideAction = menu.addAction(HIDE_MOUSEOVER, this, [this](bool autoHide) { settings.setValue(HIDE_MOUSEOVER, this->autoHide = autoHide); });
+		menu.addAction(TIMER_HIDE_TEXT, this, &PrettyWindow::SetTimerHideText);
+		QAction* autoHideAction = menu.addAction(HIDE_MOUSEOVER, this, &PrettyWindow::SetHideMouseover);
 		autoHideAction->setCheckable(true);
 		autoHideAction->setChecked(autoHide);
 		connect(this, &QDialog::customContextMenuRequested, [this](QPoint point) { menu.exec(mapToGlobal(point)); });
 		connect(ui.display, &QLabel::customContextMenuRequested, [this](QPoint point) { menu.exec(ui.display->mapToGlobal(point)); });
 		startTimer(50);
+
+		timerHideText->setSingleShot(true);
+		connect(timerHideText, &QTimer::timeout, [=]() {on_timeoutHideText();});
 	}
 
 	~PrettyWindow()
@@ -85,29 +105,55 @@ struct PrettyWindow : QDialog, Localizer
 
 	Ui::ExtraWindow ui;
 
+
+
 protected:
+	bool hidden = false, autoHide = false, hideText=false;
+	qreal backgroundColorAlphaF = COLOR_ALFAF_HIDE_WINDOW;
+
+	void SetBackgroundColorHideText(bool hideText)
+	{
+		if (hideText)
+		{
+			if (settings.value(BG_COLOR).value<QColor>().alpha() > backgroundColorAlphaF) backgroundColor.setAlphaF(backgroundColorAlphaF);
+			if (settings.value(OUTLINE_COLOR).value<QColor>().alpha() > backgroundColorAlphaF) outliner->color.setAlphaF(backgroundColorAlphaF);
+			QColor hiddenTextColor = TextColor();
+			if (settings.value(TEXT_COLOR).value<QColor>().alpha() > backgroundColorAlphaF) hiddenTextColor.setAlphaF(backgroundColorAlphaF);
+			ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
+			repaint();
+		}
+		else
+		{
+			backgroundColor.setAlpha(settings.value(BG_COLOR).value<QColor>().alpha());
+			outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
+			ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
+			repaint();
+		}
+	}
+
+	void ToggleHideText()
+	{
+		if (!autoHide)
+		{
+			hideText = !hideText;
+			SetBackgroundColorHideText(hideText);
+		}
+	};
+
 	void timerEvent(QTimerEvent*) override
 	{
 		if (autoHide && geometry().contains(QCursor::pos()))
 		{
 			if (!hidden)
 			{
-				if (backgroundColor.alphaF() > 0.05) backgroundColor.setAlphaF(0.05);
-				if (outliner->color.alphaF() > 0.05) outliner->color.setAlphaF(0.05);
-				QColor hiddenTextColor = TextColor();
-				if (hiddenTextColor.alphaF() > 0.05) hiddenTextColor.setAlphaF(0.05);
-				ui.display->setPalette(QPalette(hiddenTextColor, {}, {}, {}, {}, {}, {}));
 				hidden = true;
-				repaint();
+				SetBackgroundColorHideText(true);
 			}
 		}
 		else if (hidden)
 		{
-			backgroundColor.setAlpha(settings.value(BG_COLOR).value<QColor>().alpha());
-			outliner->color.setAlpha(settings.value(OUTLINE_COLOR).value<QColor>().alpha());
-			ui.display->setPalette(QPalette(settings.value(TEXT_COLOR).value<QColor>(), {}, {}, {}, {}, {}, {}));
 			hidden = false;
-			repaint();
+			SetBackgroundColorHideText(false);
 		}
 	}
 
@@ -115,6 +161,12 @@ protected:
 	Settings settings{ this };
 
 private:
+	void on_timeoutHideText()
+	{
+		if (!hideText)
+			ToggleHideText();
+	}
+
 	void RequestFont()
 	{
 		if (QFont font = QFontDialog::getFont(&ok, ui.display->font(), this, FONT); ok)
@@ -147,6 +199,8 @@ private:
 
 	void SetOutline(bool enable)
 	{
+		if (hideText)
+			ToggleHideText();
 		if (enable)
 		{
 			QColor color = colorPrompt(this, outliner->color, OUTLINE_COLOR);
@@ -158,12 +212,28 @@ private:
 		settings.setValue(OUTLINE_SIZE, outliner->size);
 	}
 
+	void SetHideMouseover(bool autoHide)
+	{
+		if (hideText)
+			ToggleHideText();
+		settings.setValue(HIDE_MOUSEOVER, this->autoHide = autoHide);
+		hideTextAction->setDisabled(autoHide);
+	};
+
+	void SetTimerHideText()
+	{
+		text_timeout = QInputDialog::getInt(this, TIMER_HIDE_TEXT, TEXT_TIMEOUT, text_timeout, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
+		text_timeout_per_char = QInputDialog::getInt(this, TIMER_HIDE_TEXT, TEXT_TIMEOUT_ADD_PER_CHAR, text_timeout_per_char, 0, INT_MAX, 2, nullptr, Qt::WindowCloseButtonHint);
+
+		settings.setValue(TEXT_TIMEOUT, text_timeout);
+		settings.setValue(TEXT_TIMEOUT_ADD_PER_CHAR, text_timeout_per_char);
+	};
+
 	void paintEvent(QPaintEvent*) override
 	{
 		QPainter(this).fillRect(rect(), backgroundColor);
 	}
 
-	bool autoHide = false, hidden = false;
 	QColor backgroundColor{ palette().window().color() };
 	struct Outliner : QGraphicsEffect
 	{
@@ -214,6 +284,7 @@ public:
 			action->setChecked(default);
 		}
 
+		hideTextAction = menu.addAction(HIDE_TEXT, this, &ExtraWindow::ToggleHideText);
 		menu.addAction(CLICK_THROUGH, this, &ExtraWindow::ToggleClickThrough);
 
 		ui.display->installEventFilter(this);
@@ -221,6 +292,7 @@ public:
 
 		QMetaObject::invokeMethod(this, [this]
 		{
+			RegisterHotKey((HWND)winId(), HIDE_TEXT_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x54);
 			RegisterHotKey((HWND)winId(), CLICK_THROUGH_HOTKEY, MOD_ALT | MOD_NOREPEAT, 0x58);
 			show();
 			AddSentence(EXTRA_WINDOW_INFO);
@@ -229,6 +301,7 @@ public:
 
 	~ExtraWindow()
 	{
+		AddSentence(EXTRA_WINDOW_INFO);
 		settings.setValue(WINDOW, geometry());
 	}
 
@@ -273,6 +346,10 @@ private:
 			resize(width(), height() - ui.display->height() +
 				QFontMetrics(ui.display->font(), ui.display).boundingRect(0, 0, ui.display->width(), INT_MAX, Qt::TextWordWrap, sentence).height()
 			);
+		if (hideText)
+			ToggleHideText();
+		if (text_timeout > 0 && !autoHide)
+			timerHideText->start(text_timeout+sentence.size()*text_timeout_per_char);
 	}
 
 	void SetTopmost(bool topmost)
@@ -341,6 +418,8 @@ private:
 			else exStyle &= ~WS_EX_TRANSPARENT;
 			SetWindowLongPtrW((HWND)window, GWL_EXSTYLE, exStyle);
 		}
+		backgroundColorAlphaF = clickThrough ? 0.0 : COLOR_ALFAF_HIDE_WINDOW;
+		SetBackgroundColorHideText(hidden || hideText);
 	};
 
 	void ShowDictionary(QPoint mouse)
@@ -385,7 +464,10 @@ private:
 	{
 		auto msg = (MSG*)message;
 		if (msg->message == WM_HOTKEY)
+		{
+			if (msg->wParam == HIDE_TEXT_HOTKEY) return ToggleHideText(), true;
 			if (msg->wParam == CLICK_THROUGH_HOTKEY) return ToggleClickThrough(), true;
+		}
 		return false;
 	}
 

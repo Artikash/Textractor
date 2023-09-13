@@ -185,6 +185,7 @@ const char* CENTERED_TEXT = u8"Centered text";
 const char* AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize window height";
 const char* CLICK_THROUGH = u8"Click through\tAlt+X";
 const char* HIDE_MOUSEOVER = u8"Hide while mouse on top";
+const char* HIDE_TEXT = u8"Hide/Show text\tAlt+T";
 const char* OPACITY = u8"Opacity";
 const char* BG_COLOR = u8"Background color";
 const char* TEXT_COLOR = u8"Text color";
@@ -193,6 +194,9 @@ const char* OUTLINE_COLOR = u8"Outline color";
 const char* OUTLINE_SIZE = u8"Outline size";
 const char* OUTLINE_SIZE_INFO = u8"Size in pixels (recommended to stay below 20% of the font size)";
 const char* FONT = u8"Font";
+const char* TIMER_HIDE_TEXT = u8"Timer hide text";
+const char* TEXT_TIMEOUT = u8"Timeout (msec, 0=disabled)";
+const char* TEXT_TIMEOUT_ADD_PER_CHAR = u8"Additional timeout per char (msec)";
 const char* LUA_INTRO = u8R"(--[[
 ProcessSentence is called each time Textractor receives a sentence of text.
 
@@ -941,6 +945,7 @@ Funziona solo se questa estenzione è usata direttamente dopo un'estensione di t
 	AUTO_RESIZE_WINDOW_HEIGHT = u8"Auto resize altezza finestra";
 	CLICK_THROUGH = u8"Clicca attraverso\tAlt+X";
 	HIDE_MOUSEOVER = u8"Nascondi testo mouseover";
+	HIDE_TEXT = u8"Nascondi/Mostra testo\tAlt+T";
 	OPACITY = u8"Opacità";
 	BG_COLOR = u8"Colore dello sfondo";
 	TEXT_COLOR = u8"Colore del testo";
@@ -949,6 +954,9 @@ Funziona solo se questa estenzione è usata direttamente dopo un'estensione di t
 	OUTLINE_SIZE = u8"Dimensione del contorno";
 	OUTLINE_SIZE_INFO = u8"Dimensione in pixel (consigliato di rimanere sotto il 20% della dimensione del font)";
 	FONT = u8"Font";
+	TIMER_HIDE_TEXT = u8"Timer nascondi testo";
+	TEXT_TIMEOUT = u8"Timeout (msec, 0=disattivato)";
+	TEXT_TIMEOUT_ADD_PER_CHAR = u8"Timeout aggiuntivo per carattere (msec)";
 	LUA_INTRO = u8R"(--[[
 ProcessSentence è chiamato ogni volta che Textractor riceva una sentenza di testo.
 
