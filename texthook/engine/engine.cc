@@ -600,8 +600,14 @@ bool KiriKiri3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
     WideStringCharReplacer(text, len, L"[r]", 3, L' ');
     WideStringFilterBetween(text, len, L"[", 1, L"]\\", 2);
-    WideStringFilterBetween(text, len, L"[m", 2, L"t=\"", 3); // [mruby r="ゆきみ" text="由紀美"]
+    // ruby type 1
+    WideStringFilterBetween(text, len, L"[mruby r=", 9, L"\" text=\"", 8); // [mruby r="ゆきみ" text="由紀美"]
+    // ruby type 2
+    WideStringFilterBetween(text, len, L"[ruby text=", 11, L"]", 1); // [ruby text="せんがわ" align="e"][ch text="仙川"]
+    WideStringFilter(text, len, L"[ch text=\"", 10);                 // [ruby text="せんがわ" align="e"][ch text="仙川"]
+    // ruby type 1-2
     WideStringFilter(text, len, L"\"]", 2);
+    // end ruby
     WideStringFilter(text, len, L"[heart]", 7);
   }
   if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) // detect garbage sentence. [ruby text=%r][ch text=%text][macropop]
@@ -622,6 +628,7 @@ bool InsertKiriKiri3Hook()
   * https://vndb.org/v28695
   * https://vndb.org/v5549
   * https://vndb.org/v28513
+  * https://vndb.org/v46499
   */
   const BYTE bytes[] = {
     0x75, 0x09,                      // jne GAME.EXE+1D5B37
