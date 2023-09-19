@@ -6609,6 +6609,39 @@ bool InsertNitroplusHook()
   return true;
 }
 
+bool InsertNitroplus2Hook() {
+	//by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v428
+    */
+	BYTE bytes[] = {
+		0x8D, 0xB4, 0x29, XX4,      // lea esi,[ecx+ebp+0000415C]
+		0x74, 0x20,                 // je Django.exe+6126E
+		0x8D, 0xBC, 0xBD, XX4,      // lea edi,[ebp+edi*4+0006410C]
+		0x8B, 0x56, 0xB0,           // mov edx,[esi-50]
+		0xE8, XX4                   // call Django.exe+51150      << hook here
+	};
+    enum { addr_offset = sizeof(bytes) - 5 };
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr) {
+		ConsoleOutput("vnreng:Nitroplus2: pattern not found");
+		return false;
+	}
+	HookParam hp = {};
+	hp.address = addr + addr_offset;
+	hp.offset = pusha_edx_off - 4; //eax
+	hp.length_offset = 1;
+	hp.type  = BIG_ENDIAN;
+	ConsoleOutput("vnreng: INSERT Nitroplus2");
+    ConsoleOutput("vnreng: Please, set text to max speed");
+	NewHook(hp, "Nitroplus2");
+	return true;
+}
+
+bool InsertNitroplusHooks()
+{return  InsertNitroplusHook() || InsertNitroplus2Hook();}
+
 /**
  *  Jazzinghen 23/05/2020: Add TokyoNecro hook
  *

@@ -124,7 +124,7 @@ bool InsertNekopackHook();      // Nekopack: *.dat
 bool InsertNeXASHook();         // NeXAS: Thumbnail.pac
 bool InsertNextonHook();        // NEXTON: aInfo.db
 bool InsertNexton1Hook();
-bool InsertNitroplusHook();     // Nitroplus: *.npa
+bool InsertNitroplusHooks();    // Nitroplus: *.npa
 bool InsertTokyoNecroHook();    // Nitroplus TokyoNecro: *.npk, resource string
 bool InsertPalHook();           // AMUSE CRAFT: *.pac
 bool InsertPensilHook();        // Pensil: PSetup.exe
