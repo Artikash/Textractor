@@ -21733,6 +21733,40 @@ bool InsertSekaiProject1Hook()
   //by Blu3train
   /*
   * Sample games:
+  * https://vndb.org/v1193
+  */
+  const BYTE bytes[] = {
+    0xCC,                    // int 3 
+    0x83, 0xEC, 0x10,        // sub esp,10    << hook here
+    0x8B, 0x44, 0x24, 0x14,  // mov eax,[esp+14]
+    0x53,                    // push ebx
+    0x56,                    // push esi
+    0x50,                    // push eax
+    0x8B, 0xD9               // mov ebx,ecx
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:SekaiProject1: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = 0x4 * 1; //arg1
+  hp.index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  ConsoleOutput("vnreng: INSERT SekaiProject1");
+  NewHook(hp, "SekaiProject1");
+  return true;
+}
+
+bool InsertSekaiProject2Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
   * https://vndb.org/r21174
   */
   const BYTE bytes[] = {
@@ -21746,7 +21780,7 @@ bool InsertSekaiProject1Hook()
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    ConsoleOutput("vnreng:SekaiProject1: pattern not found");
+    ConsoleOutput("vnreng:SekaiProject2: pattern not found");
     return false;
   }
 
@@ -21755,12 +21789,12 @@ bool InsertSekaiProject1Hook()
   hp.offset = 0x4 * 21; //arg21
   hp.index = 0;
   hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
-  ConsoleOutput("vnreng: INSERT SekaiProject1");
-  NewHook(hp, "SekaiProject1");
+  ConsoleOutput("vnreng: INSERT SekaiProject2");
+  NewHook(hp, "SekaiProject2");
   return true;
 }
 
-bool InsertSekaiProject2Hook() 
+bool InsertSekaiProject3Hook() 
 {
   //by Blu3train
   /*
@@ -21780,7 +21814,7 @@ bool InsertSekaiProject2Hook()
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    ConsoleOutput("vnreng:SekaiProject2: pattern not found");
+    ConsoleOutput("vnreng:SekaiProject3: pattern not found");
     return false;
   }
 
@@ -21789,13 +21823,13 @@ bool InsertSekaiProject2Hook()
   hp.offset = 0x4 * 1; //arg1
   hp.index = 0;
   hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
-  ConsoleOutput("vnreng: INSERT SekaiProject2");
-  NewHook(hp, "SekaiProject2");
+  ConsoleOutput("vnreng: INSERT SekaiProject3");
+  NewHook(hp, "SekaiProject3");
   return true;
 }
 
 bool InsertSekaiProjectHooks()
-{ return InsertSekaiProject1Hook() || InsertSekaiProject2Hook();}
+{ return InsertSekaiProject1Hook() || InsertSekaiProject2Hook() || InsertSekaiProject3Hook();}
 
 } // namespace Engine
 
