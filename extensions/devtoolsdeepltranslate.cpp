@@ -167,7 +167,7 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 
 	for (int retry = 0; ++retry < 100; Sleep(100))
 		if (auto translation = Copy(DevTools::SendRequest("Runtime.evaluate",
-			LR"({"expression":"document.querySelector('.lmt__side_container--target [data-testid=translator-target-input]').textContent.trim() ","returnByValue":true})"
+			LR"({"expression":"document.querySelector('[data-testid=translator-target-input]').textContent.trim() ","returnByValue":true})"
 		)[L"result"][L"value"].String())) if (!translation->empty()) return { true, htmlDecode(translation.value()) };
 	if (auto errorMessage = Copy(DevTools::SendRequest("Runtime.evaluate",
 		LR"({"expression":"document.querySelector('div.lmt__system_notification').innerHTML","returnByValue":true})"
