@@ -150,7 +150,7 @@ bool DetermineEngineByFile1()
     return true;
   }
   if (Util::CheckFile(L"data*.arc") && Util::CheckFile(L"stream*.arc")) {
-    InsertMajiroHook();
+    InsertMajiroHooks();
     return true;
   }
   // jichi 5/31/2014
