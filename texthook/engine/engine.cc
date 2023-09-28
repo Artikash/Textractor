@@ -4143,6 +4143,49 @@ bool InsertMajiroHook()
   return true;
 }
 
+bool InsertMajiro3Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * Narcissu 10th Anniversary Anthology Project
+  * https://vndb.org/v10
+  * https://vndb.org/v70
+  * https://vndb.org/v18738
+  * https://vndb.org/v18739
+  * https://vndb.org/v18736
+  */
+  const BYTE bytes[] = {
+    0xC1, 0xE9, 0x02,        // shr ecx,02     << hook here
+    0xF3, 0xA5,              // repe movsd 
+    0x8B, 0xCA,              // mov ecx,edx
+    0x8D, 0x95, XX4          // lea edx,[ebp-00000404]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Majiro3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_esi_off - 4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT Majiro3");
+  ConsoleOutput("vnreng:Majiro3: To separate the text between lines flag the \"Flush delay string spacing\" option");
+  NewHook(hp, "Majiro3");
+  return true;
+}
+
+bool InsertMajiroHooks()
+{ 
+  bool ok = InsertMajiroHook();
+  return InsertMajiro3Hook() || ok;
+}
+
 /********************************************************************************************
 CMVS hook:
   Process name is cmvs.exe or cnvs.exe or cmvs*.exe. Used by PurpleSoftware games.

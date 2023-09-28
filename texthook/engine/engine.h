@@ -114,7 +114,7 @@ bool InsertLiveHook();          // Live: live.dll
 bool InsertLightvnHook();       // Light.vn: Engine.dll & BugTrapU.dll
 bool InsertLunaSoftHook();      // LunaSoft: Pac/*.pac
 bool InsertMalieHook();         // Malie@light: malie.ini
-bool InsertMajiroHook();        // Majiro: *.arc
+bool InsertMajiroHooks();       // Majiro: *.arc
 bool InsertMarineHeartHook();   // Marine Heart: SAISYS.exe
 bool InsertMBLHook();           // MBL: *.mbl
 bool InsertMEDHook();           // MED: *.med
