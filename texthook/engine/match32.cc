@@ -341,11 +341,11 @@ bool DetermineEngineByFile3()
     return true;
   }
   if (Util::CheckFile(L"*.mpk")) {
-    InsertStuffScriptHook();
+    InsertStuffScriptHooks();
     return true;
   }
   if (Util::CheckFile(L"USRDIR\\*.mpk")) { // jichi 12/2/2014
-    InsertStuffScriptHook();
+    InsertStuffScriptHooks();
     return true;
   }
   if (Util::CheckFile(L"Execle.exe")) {

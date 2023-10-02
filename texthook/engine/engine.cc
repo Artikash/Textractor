@@ -8430,6 +8430,73 @@ void InsertStuffScriptHook()
   NewHook(hp, "StuffScriptEngine");
   //RegisterEngine(ENGINE_STUFFSCRIPT);
 }
+bool StuffScript2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == '-') {
+    StringFilter(text, len, "-/-", 3);
+    StringFilterBetween(text, len, "-", 1, "-", 1);
+  }
+  StringCharReplacer(text, len, "_n_r", 4, '\n');
+  StringCharReplacer(text, len, "_r", 2, ' ');
+  StringFilter(text, len, "\\n", 2);
+  StringFilter(text, len, "_n", 2);
+
+  return true;
+}
+bool InsertStuffScript2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r41537
+    * https://vndb.org/r41539
+    */
+  const BYTE bytes[] = {
+    0x0F, XX, XX4,         // jne tokyobabel.exe+3D4E8
+    0xB9, XX4,             // mov ecx,tokyobabel.exe+54EAC
+    0x8D, 0x85, XX4,       // lea eax,[ebp+tokyobabel.exe+59B968]
+    0x8A, 0x10,            // mov dl,[eax]                         <-- hook here
+    0x3A, 0x11,            // cmp dl,[ecx]
+    0x75, 0x1A,            // jne tokyobabel.exe+3D1D7
+    0x84, 0xD2,            // test dl,dl
+    0x74, 0x12,            // je tokyobabel.exe+3D1D3
+    0x8A, 0x50, 0x01,      // mov dl,[eax+01]
+    0x3A, 0x51, 0x01,      // cmp dl,[ecx+01]
+    0x75, 0x0E,            // jne tokyobabel.exe+3D1D7
+    0x83, 0xC0, 0x02,      // add eax,02
+    0x83, 0xC1, 0x02,      // add ecx,02
+    0x84, 0xD2,            // test dl,dl
+    0x75, 0xE4,            // jne Agreement.exe+4F538
+    0x33, 0xC0,            // xor eax,eax
+    0xEB, 0x05,            // jmp Agreement.exe+4F55D
+    0x1B, 0xC0,            // sbb eax,eax
+    0x83, 0xD8, 0xFF,      // sbb eax,-01
+    XX2,                   // cmp eax,edi
+    0x0F, 0x84, XX4        // je tokyobabel.exe+3D4E8
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + 0x11;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING | NO_CONTEXT;
+  hp.filter_fun = StuffScript2Filter;
+  ConsoleOutput("vnreng: INSERT StuffScript2");
+  NewHook(hp, "StuffScript2");
+  return true;
+}
+void InsertStuffScriptHooks()
+{
+  InsertStuffScriptHook();
+  InsertStuffScript2Hook();
+}
 bool InsertTriangleHook()
 {
   for (DWORD i = processStartAddress; i < processStopAddress - 4; i++)
