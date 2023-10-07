@@ -692,6 +692,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
+	DetachProcess(); //force detach process
 	Settings().setValue(WINDOW, geometry());
 	CleanupExtensions();
 	SetErrorMode(SEM_NOGPFAULTERRORBOX);
