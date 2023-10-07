@@ -53,6 +53,7 @@ foreach ($language in @{
 			"Lua",
 			"Regex Filter",
 			"Regex Replacer",
+			"Regex Replacer Translated Text",
 			"Remove Repeated Characters",
 			"Remove Repeated Phrases",
 			"Remove Repeated Phrases 2",
