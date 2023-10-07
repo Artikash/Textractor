@@ -32,14 +32,22 @@ std::pair<bool, std::wstring> Translate(const std::wstring& text, TranslationPar
 QFormLayout* display;
 Settings settings;
 
+std::wstring  currConfigFolder;
+
+std::wstring  s2ws(const std::string &s)
+{
+	std::wstring wsTmp(s.begin(), s.end());
+	return wsTmp;
+}
+
 namespace
 {
 	Synchronized<TranslationParam> tlp;
 	Synchronized<std::unordered_map<std::wstring, std::wstring>> translationCache;
 
-	std::string CacheFile()
+	std::wstring CacheFile()
 	{
-		return FormatString("%s Cache (%S).txt", TRANSLATION_PROVIDER, tlp->translateTo);
+		return FormatString(L"%ls%s Cache (%lS).txt", currConfigFolder, s2ws(FormatString("%s", TRANSLATION_PROVIDER)), tlp->translateTo);
 	}
 	void SaveCache()
 	{
@@ -153,6 +161,14 @@ private:
 bool ProcessSentence(std::wstring& sentence, SentenceInfo sentenceInfo)
 {
 	if (sentenceInfo["text number"] == 0) return false;
+
+	wchar_t *configFolder = (wchar_t *)(sentenceInfo["config folder"]);
+	if (configFolder != currConfigFolder)
+	{
+		SaveCache();
+		currConfigFolder = configFolder;
+		LoadCache();
+	}
 
 	static class
 	{

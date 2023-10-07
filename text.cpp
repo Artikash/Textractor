@@ -19,6 +19,7 @@
 
 // If you are updating a previous translation see https://github.com/Artikash/Textractor/issues/313
 
+const wchar_t* REPOSITORY = L"./repository/";
 const char* NATIVE_LANGUAGE = "English";
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
@@ -105,7 +106,7 @@ Please contact Artikash with any problems, feature requests, or questions relati
 You can do so via the project homepage (issues section) or via email
 Source code available under GPLv3 at project homepage
 If you like this project, please tell everyone about it! It's time to put AGTH down :))";
-const wchar_t* CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+const wchar_t* CL_OPTIONS = LR"(usage: Textractor -e"ExtenDefPath" [-p{process ID|"process name"}]...
 example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 const wchar_t* UPDATE_AVAILABLE = L"Update available: download it from https://github.com/Artikash/Textractor/releases";
 const wchar_t* ALREADY_INJECTED = L"Textractor: already injected";
@@ -614,7 +615,7 @@ padding: длина добавочных данных перед строкой 
 Сделать это вы можете на домашней странице (секция issues) или через электронную почту
 Исходный код доступен по лицензии GPLv3 на домашней странице проекта
 Если эта программа вам понравилась, расскажите всем о ней :))";
-	CL_OPTIONS = LR"(использование: Textractor [-p{process ID|"process name"}]...
+	CL_OPTIONS = LR"(использование: Textractor -e"ExtenDefPath" [-p{process ID|"process name"}]...
 пример: Textractor -p4466 -p"My Game.exe" попробует присоединиться к процессу с ID 4466 или с именем My Game.exe)";
 	UPDATE_AVAILABLE = L"Доступно обновление: загрузите его на https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: уже присоединен";
@@ -871,7 +872,7 @@ Puoi farlo attraverso la pagina principale del progetto (sezione issues) o via e
 Il codice sorgente è disponibile sotto il GPLv3 nella pagina principale
 Al momento sono in cerca di un nuovo lavoro: contattatemi per email se conoscete qualcuno che ingaggia periti informatici statunitensi
 Se ti piace questo progetto, parlane con tutti per favore :))";
-	CL_OPTIONS = LR"(utilizzo: Textractor [-p{process ID|"process name"}]...
+	CL_OPTIONS = LR"(utilizzo: Textractor -e"ExtenDefPath" [-p{process ID|"process name"}]...
 esempio: Textractor -p4466 -p"My Game.exe" sta tentando di inniettare i processi con l'ID 4466 o con il nome My Game.exe)";
 	UPDATE_AVAILABLE = L"Aggiornamento disponibile: scaricala da https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: già inniettato";
@@ -1307,7 +1308,7 @@ Veuillez me contacter pour tout problème, demande de fonctionnalité ou questio
 Vous pouvez le faire via la page d'accueil du projet (section problèmes) ou par e-mail
 Code source disponible sous GPLv3 sur la page d'accueil du projet
 Si vous aimez ce projet, parlez-en à tout le monde :))";
-	CL_OPTIONS = LR"(usage: Textractor [-p{process ID|"process name"}]...
+	CL_OPTIONS = LR"(usage: Textractor -e"ExtenDefPath" [-p{process ID|"process name"}]...
 example: Textractor -p4466 -p"My Game.exe" tries to inject processes with ID 4466 or with name My Game.exe)";
 	UPDATE_AVAILABLE = L"Mise à jour disponible: téléchargez-la depuis https://github.com/Artikash/Textractor/releases";
 	ALREADY_INJECTED = L"Textractor: déjà injecté";
