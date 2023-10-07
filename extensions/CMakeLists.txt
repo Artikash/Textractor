@@ -19,6 +19,7 @@ add_library(Remove\ 30\ Repeated\ Sentences MODULE removerepeatsentence.cpp exte
 add_library(Replacer MODULE replacer.cpp extensionimpl.cpp)
 add_library(Styler MODULE styler.cpp extensionimpl.cpp)
 add_library(Thread\ Linker MODULE threadlinker.cpp extensionimpl.cpp)
+add_library(Yandex\ Translate MODULE yandextranslate.cpp translatewrapper.cpp network.cpp extensionimpl.cpp)
 
 target_precompile_headers(Bing\ Translate REUSE_FROM pch)
 target_precompile_headers(Copy\ to\ Clipboard REUSE_FROM pch)
@@ -39,6 +40,7 @@ target_precompile_headers(Remove\ 30\ Repeated\ Sentences REUSE_FROM pch)
 target_precompile_headers(Replacer REUSE_FROM pch)
 target_precompile_headers(Styler REUSE_FROM pch)
 target_precompile_headers(Thread\ Linker REUSE_FROM pch)
+target_precompile_headers(Yandex\ Translate REUSE_FROM pch)
 
 target_link_libraries(Bing\ Translate winhttp Qt5::Widgets)
 target_link_libraries(DeepL\ Translate winhttp Qt5::Widgets)
@@ -51,6 +53,7 @@ target_link_libraries(Lua lua53 Qt5::Widgets)
 target_link_libraries(Regex\ Filter Qt5::Widgets)
 target_link_libraries(Styler Qt5::Widgets)
 target_link_libraries(Thread\ Linker Qt5::Widgets)
+target_link_libraries(Yandex\ Translate winhttp Qt5::Widgets)
 
 add_custom_target(Cleaner ALL COMMAND del *.xdll WORKING_DIRECTORY ${CMAKE_FINAL_OUTPUT_DIRECTORY})
 

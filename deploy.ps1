@@ -59,7 +59,8 @@ foreach ($language in @{
 			"Remove 30 Repeated Sentences",
 			"Replacer",
 			"Styler",
-			"Thread Linker"
+			"Thread Linker",
+			"Yandex Translate"
 		))
 		{
 			copy -Force -Recurse -Verbose -Destination "$folder/$arch/$extension.xdll" -Path "Release_$arch/$extension.dll";
