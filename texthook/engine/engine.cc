@@ -21728,6 +21728,42 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertTrianglePixHook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v38070
+    * https://vndb.org/v42090
+    * https://vndb.org/v41025
+    */
+  const BYTE bytes[] = {
+    0x50,                      // push eax           << hook here
+    0xE8, XX4,                 // call FinalIgnition.exe+4DE10
+    0x8B, 0x83, XX4,           // mov eax,[ebx+0000DCA0]
+    0x8D, 0x8D, XX4,           // lea ecx,[ebp-0000022C]
+    0x83, 0x7D, 0x44, 0x10,    // cmp dword ptr [ebp+44],10
+    0xFF, 0x75, 0x40           // push [ebp+40]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:TrianglePix: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_UTF8 | USING_STRING | NO_CONTEXT;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT TrianglePix");
+  NewHook(hp, "TrianglePix");
+  return true;
+}
+
 } // namespace Engine
 
 // EOF
