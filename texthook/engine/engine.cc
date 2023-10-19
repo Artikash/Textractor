@@ -21728,6 +21728,56 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool NitroplusSysFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (*len <= 2) return false;
+
+  StringFilter(text, len, "\x81@", 2);
+  CharReplacer(text, len, '\r', ' ');
+  if (cpp_strnstr(text, "<", *len)) {
+    StringFilterBetween(text, len, "<", 1, ">", 1);
+  }
+  while (*len>1 && ::isspace(*text)) {
+    ::memmove(text, text+1, --(*len));
+  }
+
+  return true;
+}
+
+bool InsertNitroplusSysHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r76679
+	*/
+	const BYTE bytes[] = {
+		0x0F, 0x84, XX4,            // je system.dll+5B8CA        <- hook here
+		0xEB, 0x04,                 // jmp system.dll+5A791
+		0x8B, 0x44, 0x24, 0x20,     // mov eax,[esp+20]
+		0x8B, 0x4C, 0x24, 0x24      // mov ecx,[esp+24]
+	};
+
+	HMODULE module = GetModuleHandleW(L"system.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.type = USING_STRING;
+	hp.filter_fun = NitroplusSysFilter;
+	ConsoleOutput("vnreng: INSERT NitroplusSystem");
+	NewHook(hp, "NitroplusSystem");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
