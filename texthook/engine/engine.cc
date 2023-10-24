@@ -21728,6 +21728,131 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool ISMscriptFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  
+  // Remove flashing cursor
+  if ( *text == L'\x4081' || *text == L'\xa481'  || *text == L'\xa581' || *text == L'\x9e81'  ||
+       *text == L'\xe681' || *text == L'\xe781'  || *text == L'\xe881')
+    return false;
+
+  return true;
+}
+
+bool InsertISMscript1Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v973
+	*/
+	const BYTE bytes[] = {
+		0xCC,                    // int 3 
+		0x55,                    // push ebp        <- hook here
+		0x56,                    // push esi
+		0x8B, 0xF1,              // mov esi,ecx
+		0x8B, 0xAE, XX4,         // mov ebp,[esi+0000025C]
+		0x39, 0x2D, XX4          // cmp [ism.dll+BE2C4],ebp
+	};
+
+	HMODULE module = GetModuleHandleW(L"ism.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr + 1;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.length_offset = 1;
+	hp.type = BIG_ENDIAN | NO_CONTEXT;
+	hp.filter_fun = ISMscriptFilter;
+
+	ConsoleOutput("vnreng: INSERT ISM-script1");
+	NewHook(hp, "ISM-script1");
+
+	return true;
+}
+
+bool InsertISMscript2Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v3896
+	*/
+	const BYTE bytes[] = {
+		0x0B, 0xC1,                      // or eax,ecx
+		0x52,                            // push edx
+		0x50,                            // push eax
+		0x8B, 0xCE                       // mov ecx,esi        <- hook here
+	};
+	enum { addr_offset = sizeof(bytes) - 2 };
+
+	HMODULE module = GetModuleHandleW(L"ism.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr + addr_offset;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.length_offset = 1;
+	hp.split = 0x14 * 4; //arg 14
+	hp.split_index = 0;
+	hp.type = BIG_ENDIAN | NO_CONTEXT | USING_SPLIT;
+	hp.filter_fun = ISMscriptFilter;
+
+	ConsoleOutput("vnreng: INSERT ISM-script2");
+	NewHook(hp, "ISM-script2");
+
+	return true;
+}
+
+bool InsertISMscript3Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r1135
+	*/
+	const BYTE bytes[] = {
+		0xCC,                    // int 3 
+		0xA1, XX4,               // mov eax,[ISM.DLL+BDAD4]        <- hook here
+		0x57,                    // push edi
+		0x8B, 0x3D, XX4          // mov edi,[ISM.DLL+E8658]
+	};
+
+	HMODULE module = GetModuleHandleW(L"ism.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr + 1;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.length_offset = 1;
+	hp.type = BIG_ENDIAN | NO_CONTEXT;
+	hp.filter_fun = ISMscriptFilter;
+
+	ConsoleOutput("vnreng: INSERT ISM-script3");
+	NewHook(hp, "ISM-script3");
+
+	return true;
+}
+
+bool InsertISMscriptHooks()
+{ 
+  bool ok = InsertISMscript1Hook();
+  ok = InsertISMscript2Hook() || ok;
+  ok = InsertISMscript3Hook() || ok;
+  return ok;
+}
+
 } // namespace Engine
 
 // EOF
