@@ -221,7 +221,7 @@ bool DetermineEngineByFile1()
 
     if (Util::CheckFile(L"Thumbnail.pac")) {
       //ConsoleOutput("vnreng: IGNORE NeXAS");
-      InsertNeXASHook(); // jichi 7/6/2014: GIGA
+      InsertNeXASHooks(); // jichi 7/6/2014: GIGA
       return true;
     }
 
