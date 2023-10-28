@@ -21728,6 +21728,58 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool KidFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::string prevText;
+
+  if (LPSTR endText=cpp_strnstr(text, "\x02\x03", *len)) {
+    *endText = '\0';
+    *len = endText - text;
+  }
+  CharReplacer(text, len, '\x01', ' ');
+  StringReplacer(text, len, "\x87\x4c", 2, "--", 2);
+
+  if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+    return false;
+  prevText.assign(text, *len);
+
+  return true;
+}
+
+bool InsertKidHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r60521
+	*/
+	const BYTE bytes[] = {
+		0xBF, 0x01, 0x00, 0x00, 0x00,   // mov edi,00000001       <- hook here
+		0x8A, 0x08,                     // mov cl,[eax]
+		0x40,                           // inc eax
+		0xF6, 0xC1, 0x80                // test cl,-80
+	};
+
+	ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+	if (!addr) {
+		ConsoleOutput("vnreng:Kid: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.type = USING_STRING;
+	hp.filter_fun = KidFilter;
+	ConsoleOutput("vnreng: INSERT Kid");
+	NewHook(hp, "Kid");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
