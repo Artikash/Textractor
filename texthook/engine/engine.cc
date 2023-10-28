@@ -13209,6 +13209,63 @@ bool InsertNeXASHook()
   return true;
 }
 
+bool NeXAS2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::string prevText;
+
+  StringCharReplacer(text, len, "@n", 2, ' ');
+  StringFilter(text, len, "@v", 7); // remove "@v" followed by 5 char
+  StringFilter(text, len, "@p", 2);
+  StringFilter(text, len, "@k", 2);
+  if (cpp_strnstr(text, "@", *len))
+    return false;
+
+  if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+    return false;
+  prevText.assign(text, *len);
+ 
+  return true;
+}
+
+bool InsertNeXAS2Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r113353
+	*/
+	const BYTE bytes[] = {
+		0x50,                    // push eax             <- hook here
+		0xE8, XX4,               // call Aquarium.exe+2796B0
+		0x8B, 0x86, XX4,         // mov eax,[esi+000000A4]
+		0x8B, 0x40, 0xFC         // mov eax,[eax-04]
+	};
+
+	ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+	if (!addr) {
+		ConsoleOutput("vnreng:NeXAS2: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.split = pusha_edx_off -4;
+    hp.split_index = 0;
+	hp.type = USING_STRING | USING_UTF8 | USING_SPLIT;
+	hp.filter_fun = NeXAS2Filter;
+	ConsoleOutput("vnreng: INSERT NeXAS2");
+	NewHook(hp, "NeXAS2");
+
+	return true;
+}
+
+bool InsertNeXASHooks()
+{ return InsertNeXASHook() || InsertNeXAS2Hook();}
+
 /** jichi 7/6/2014 YukaSystem2
  *  Sample game: セミラミスの天秤
  *
