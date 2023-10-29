@@ -214,6 +214,35 @@ namespace Engine
 		return false;
 	}
 
+	bool InsertArtemisHook() {
+		//by Blu3train
+		/*
+		* Sample games:
+		* https://vndb.org/v45247
+		*/
+		const BYTE bytes[] = {
+			0xCC,                               // int 3
+			0x40, 0x57,                         // push rdi          <- hook here
+			0x48, 0x83, 0xEC, 0x40,             // sub rsp,40
+			0x48, 0xC7, 0x44, 0x24, 0x30, XX4,  // mov qword ptr [rsp+30],FFFFFFFFFFFFFFFE
+			0x48, 0x89, 0x5C, 0x24, 0x50        // mov [rsp+50],rbx
+		};
+
+		ULONG64 range = min(processStopAddress - processStartAddress, X64_MAX_REL_ADDR);
+		for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStartAddress + range)) {
+			HookParam hp = {};
+			hp.address = addr + 1;
+			hp.offset = -0x44 -4; //RDI
+			hp.type = USING_STRING | USING_UTF8 | NO_CONTEXT;
+			ConsoleOutput("vnreng: INSERT Artemis Hook ");
+			NewHook(hp, "Artemis");
+			return true;
+		}
+
+		ConsoleOutput("vnreng:Artemis: pattern not found");
+		return false;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
@@ -225,6 +254,11 @@ namespace Engine
 			ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
 			wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
 			spDefault.padding = 20;
+			return true;
+		}
+
+		if (Util::CheckFile(L"*.pfs")) {
+			InsertArtemisHook();
 			return true;
 		}
 
