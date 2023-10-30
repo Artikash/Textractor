@@ -14078,6 +14078,7 @@ bool InsertHorkEyeHook()
 	  hp.address = addr;
 	  hp.offset = 4;
 	  hp.type = USING_STRING;
+	  hp.filter_fun = HorkEyeFilter;
 	  ConsoleOutput("Textractor: INSERT HorkEye2");
 	  NewHook(hp, "HorkEye2");
 	  return true;
