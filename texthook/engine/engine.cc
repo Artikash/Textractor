@@ -9633,8 +9633,11 @@ bool WillPlus4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto text = reinterpret_cast<LPWSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
 
+  WideStringCharReplacer(text, len, L" \\n", 3, L' ');
   WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringCharReplacer(text, len, L"\\d", 2, L'\"');
   WideStringFilter(text, len, L"%LF", 3);
+  WideStringFilter(text, len, L"%LC", 3);
   WideStringFilter(text, len, L"%K", 2);
   WideStringFilter(text, len, L"%P", 2);
 
@@ -9671,12 +9674,49 @@ static bool InsertWillPlus4()
   return true;
 }
 
+static bool InsertWillPlus5() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v29881
+  */
+  const BYTE bytes[] = {
+    0xE8, XX4,                  // call AdvHD.exe+38550   <-- hook here
+    0x8B, 0x4B, 0x08,           // mov ecx,[ebx+08]
+    0x89, 0x8F, XX4,            // mov [edi+0000014C],ecx
+    0x85, 0xC9,                 // test ecx,ecx
+    0x74, 0x04                  // je AdvHD.exe+396C6
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:WillPlus5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_esi_off -4;
+  hp.index = 0;
+  hp.split = pusha_ebx_off -4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = WillPlus4Filter;
+  ConsoleOutput("vnreng: INSERT WillPlus5");
+  NewHook(hp, "WillPlus5");
+  return true;
+}
+
 } // unnamed namespace
 
 bool InsertWillPlusHook()
 {
   bool ok = InsertOldWillPlusHook();
-  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || InsertWillPlus4() || ok;
+  ok = InsertWillPlus4() || ok;
+  ok = InsertWillPlus5() || ok;
+  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || ok;
+  ok = InsertNewWillPlusHook() || ok;
   if (!ok) PcHooks::hookOtherPcFunctions();
   return ok;
 }
