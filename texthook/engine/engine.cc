@@ -9682,6 +9682,7 @@ bool InsertTanuki2Hook()
     /*
     * Sample games:
     * https://vndb.org/v26448
+	* https://vndb.org/v10928
     */
   const BYTE bytes[] = {
     0xCC,                                // int 3 
@@ -9699,12 +9700,35 @@ bool InsertTanuki2Hook()
     0x57,                                // push edi
     0x50                                 // push eax
   };
+  const BYTE bytes2[] = {
+    0xCC,                                // int 3 
+    0x55,                                // push ebp        << hook here
+    0x8B, 0xEC,                          // mov ebp,esp
+    0x6A, 0xFF,                          // push -01
+    0x68, XX4,                           // push tonarino.exe+295DF8
+    0x64, 0xA1, XX4,                     // mov eax,fs:[00000000]
+    0x50,                                // push eax
+    0x81, 0xEC, 0x94, 0x01, 0x00, 0x00,  // sub esp,00000194
+    0xA1, XX4,                           // mov eax,[tonarino.exe+3291D0]
+    0x33, 0xC5,                          // xor eax,ebp
+    0x89, 0x45, 0xF0,                    // mov [ebp-10],eax
+    0x53,                                // push ebx
+    0x56,                                // push esi
+    0x57,                                // push edi
+    0x50,                                // push eax
+    0x8D, 0x45, 0xF4,                    // lea eax,[ebp-0C]
+    0x64, 0xA3, XX4,                     // mov fs:[00000000],eax
+    0x8B, 0x45, 0x08                     // mov eax,[ebp+08]
+  };
 
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
-    ConsoleOutput("vnreng:TanukiSoft2: pattern not found");
-    return false;
+    addr = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range);
+    if (!addr) {
+      ConsoleOutput("vnreng:TanukiSoft2: pattern not found");
+      return false;
+    }
   }
   HookParam hp = {};
   hp.address = addr + 1;
