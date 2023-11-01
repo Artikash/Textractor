@@ -9676,6 +9676,53 @@ bool InsertTanukiHook()
   ConsoleOutput("vnreng:TanukiSoft: failed");
   return false;
 }
+bool Tanuki2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (cpp_strnstr(text, "\x81\x81", *len)) {
+    StringFilterBetween(text, len, "\x81\x81", 2, "\x81\x84", 2);
+    StringFilter(text, len, "\x81\x83", 2);
+  } else {
+    StringFilterBetween(text, len, "\x81\x83", 2, "\x81\x84", 2);
+  }
+
+  return true;
+}
+bool InsertTanuki2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v26448
+	* https://vndb.org/v10928
+    */
+  const BYTE bytes[] = {
+    0xE8, XX4,                // call noshoujo.exe+237500        << hook here
+    0x8B, XX,                 // mov ecx,esi
+    0x83, 0xC4, 0x0C,         // add esp,0C
+    0x8D, XX, 0x01            // lea edx,[ecx+01]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+      ConsoleOutput("vnreng:TanukiSoft2: pattern not found");
+      return false;
+  }
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_esi_off -4;
+  hp.type = USING_STRING | NO_CONTEXT;
+  hp.filter_fun = Tanuki2Filter;
+  ConsoleOutput("vnreng: INSERT TanukiSoft2");
+  NewHook(hp, "TanukiSoft2");
+  return true;
+}
+bool InsertTanukiHooks()
+{ return InsertTanuki2Hook() || InsertTanukiHook();}
+
 static void SpecialHookRyokucha(DWORD esp_base, HookParam *hp, BYTE, DWORD *data, DWORD *split, DWORD *len)
 {
   const DWORD *base = (const DWORD *)esp_base;

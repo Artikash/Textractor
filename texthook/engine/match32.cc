@@ -393,7 +393,7 @@ bool DetermineEngineByFile4()
     return true;
   }
   if (Util::CheckFile(L"*.tac")) {
-    InsertTanukiHook();
+    InsertTanukiHooks();
     return true;
   }
   if (Util::CheckFile(L"*.gxp")) {
@@ -624,7 +624,7 @@ bool DetermineEngineOther()
 bool DetermineEngineAtLast()
 {
 	if (Util::CheckFile(L"*.g2")) {
-		InsertTanukiHook();
+		InsertTanukiHooks();
 		return true;
 	}
   if (Util::CheckFile(L"MovieTexture.dll") && (InsertPensilHook() || Insert2RMHook())) // MovieTexture.dll also exists in 2RM games such as 母子愛2体験版, which is checked first
