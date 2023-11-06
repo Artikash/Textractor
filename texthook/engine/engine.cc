@@ -8751,7 +8751,7 @@ bool InsertSystemAoiDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
       HookParam hp = {};
       hp.offset = 0x4; // target text is on the top of the stack
       hp.text_fun = SpecialHookSystemAoi; // need to remove garbage
-      hp.type = utf16 ? USING_UNICODE : USING_STRING;
+      hp.type = utf16 ? USING_UNICODE|USING_STRING : USING_STRING;
 
       i = *(DWORD *)(k - 4); // get function call address
       if (*(DWORD *)(k - 5) == 0xe8) // short jump
@@ -8813,7 +8813,7 @@ bool InsertSystemAoiStatic(HMODULE hModule, bool wideChar) // attach scenario
   hp.offset = 4 * 1; // arg1
   //hp.split = 4 * 2; // arg2
   hp.text_fun = SpecialHookSystemAoi;
-  hp.type = wideChar ? USING_UNICODE : USING_STRING;
+  hp.type = wideChar ? USING_UNICODE|USING_STRING : USING_STRING;
   //hp.type |= NO_CONTEXT|USING_SPLIT|SPLIT_INDIRECT;
   ConsoleOutput("vnreng: INSERT static SystemAoi");
   if (wideChar)
