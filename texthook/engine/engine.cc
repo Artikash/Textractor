@@ -21728,6 +21728,51 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool KogadoFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  text[(*len)++] = ' ';
+
+  return true;
+}
+
+bool InsertKogadoHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r12750
+	*/
+	const BYTE bytes[] = {
+		0x8B, 0xC7,                 // mov eax,edi      <- hook here
+		0xF3, 0xA5,                 // repe movsd 
+		0x8B, 0xCA,                 // mov ecx,edx
+		0x83, 0xE1, 0x03,           // and ecx,03
+		0xF3, 0xA4,                 // repe movsb 
+		0x5F,                       // pop edi
+		0x5E                        // pop esi
+	};
+
+	ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+	if (!addr) {
+		ConsoleOutput("vnreng:Kogado: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_esi_off -4;
+    hp.index = 0;
+	hp.type = USING_UTF8 | USING_STRING | NO_CONTEXT;
+	hp.filter_fun = KogadoFilter;
+	ConsoleOutput("vnreng: INSERT Kogado");
+	NewHook(hp, "Kogado");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
