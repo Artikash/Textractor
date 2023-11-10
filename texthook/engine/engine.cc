@@ -12268,6 +12268,52 @@ bool InsertSilkysHook()
   return true;
 }
 
+bool Silkys2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideStringCharReplacer(text, len, L"\\i", 2, L'\'');
+
+  return true;
+}
+
+bool InsertSilkys2Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r89173
+  */
+  const BYTE bytes[] = {
+    0x75, 0x10,              // jne doukyuusei.exe+A5F7E
+    0x56,                    // push esi
+    0x57,                    // push edi
+    0xE8, XX4                // call doukyuusei.exe+A6120        << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 5 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Silkys2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_edi_off -4;
+  hp.index = 0;
+  hp.filter_fun = Silkys2Filter;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  ConsoleOutput("vnreng: INSERT Silkys2");
+  NewHook(hp, "Silkys2");
+  return true;
+}
+
+bool InsertSilkysHooks()
+{ return InsertSilkysHook() || InsertSilkys2Hook();}
+
 /** jichi 6/1/2014 Eushully
  *  Insert to the last GetTextExtentPoint32A
  *

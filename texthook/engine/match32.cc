@@ -163,7 +163,7 @@ bool DetermineEngineByFile1()
   // jichi 6/9/2015: Skip Silkys Sakura
   if ( // Almost the same as Silkys except mes.arc is replaced by Script.arc
       Util::CheckFile(L"data.arc") && Util::CheckFile(L"effect.arc") && Util::CheckFile(L"Script.arc")) {
-    InsertSilkysHook();
+    InsertSilkysHooks();
     return true;
   }
   if (Util::CheckFile(L"data\\pack\\*.cpz")) {
