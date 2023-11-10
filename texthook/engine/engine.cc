@@ -12286,10 +12286,10 @@ bool InsertSilkys2Hook()
   * https://vndb.org/r89173
   */
   const BYTE bytes[] = {
-    0x75, 0x10,                 // jne doukyuusei.exe+A5F7E
+    0x75, 0x10,              // jne doukyuusei.exe+A5F7E
     0x56,                    // push esi
     0x57,                    // push edi
-    0xE8, XX4            // call doukyuusei.exe+A6120        << hook here
+    0xE8, XX4                // call doukyuusei.exe+A6120        << hook here
   };
   enum { addr_offset = sizeof(bytes) - 5 };
 
