@@ -21728,6 +21728,88 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool LucaSystemFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if ( text[0] == '\x81' && text[1] == '\x94')
+    return false;
+
+  StringCharReplacer(text, len, "\x81\x90", 2, ' '); // new line
+  //replacement from Flowers 4 config.json
+  CharReplacer(text, len, '\xA5', ' ');
+  CharReplacer(text, len, '\xA2', '<');
+  CharReplacer(text, len, '\xA3', '>');
+  CharReplacer(text, len, '\xA1', '\"');
+  CharReplacer(text, len, '\xA4', '\'');
+  CharReplacer(text, len, '\xA7', 'à');
+  CharReplacer(text, len, '\xA8', 'è');
+  CharReplacer(text, len, '\xA9', 'é');
+  CharReplacer(text, len, '\xAA', 'ë');
+  CharReplacer(text, len, '\xAB', 'ō');
+  CharReplacer(text, len, '\xB0', '-');
+  CharReplacer(text, len, '\xBB', ' ');
+  
+  while(cpp_strnstr(text, "  ", *len)) // Erasing all but one whitespace from strings
+    StringCharReplacer(text, len, "  ", 2, ' ');
+
+  if (text[0] == ' ')
+    ::memmove(text, text + 1, --*len);
+
+  return true;
+}
+
+bool InsertLucaSystemHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v15395
+	* https://vndb.org/v14267
+	* https://vndb.org/v18152
+	* https://vndb.org/r82704
+	*/
+	const BYTE bytes[] = {
+		0xCC,                       // int 3 
+		0xE9, XX4,                  // jmp d3d9.dll+1E420
+		0x56,                       // push esi
+		0x57,                       // push edi
+		0x8B, 0x7C, 0x24, 0x20,     // mov edi,[esp+20]
+		0x8B, 0xD8,                 // mov ebx,eax
+		0x8B, 0x07                  // mov eax,[edi]
+	};
+	const BYTE bytes2[] = {
+		0xCC,                       // int 3 
+		0x83, 0xEC, 0x0C,           // sub esp,0C      <- hook here
+		0x53,                       // push ebx
+		0x55,                       // push ebp
+		0x56                        // push esi
+	};
+
+	HMODULE module = GetModuleHandleW(L"Script.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr) {
+		addr = MemDbg::findBytes(bytes2, sizeof(bytes2), minAddress, maxAddress);
+		if (!addr) {
+			ConsoleOutput("vnreng:LucaSystem: pattern not found");
+			return false;
+		}
+	}
+
+	HookParam hp = {};
+	hp.address = addr + 1;
+	hp.offset = 0x01 * 4; //arg 1
+	hp.index = 0;
+	hp.padding = 0x04;
+	hp.type = USING_STRING;
+	hp.filter_fun = LucaSystemFilter;
+	ConsoleOutput("vnreng: INSERT LucaSystem");
+	NewHook(hp, "LucaSystem");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
