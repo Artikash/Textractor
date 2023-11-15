@@ -6455,10 +6455,28 @@ static bool Yuris6Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
 {
   auto text = reinterpret_cast<LPSTR>(data);
   auto len = reinterpret_cast<size_t *>(size);
+  static std::string prevText;
 
+  if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+    return false;
+  prevText.assign(text, *len);
+
+  // ruby ＜手水舎／ちょうずや＞
+  if (cpp_strnstr(text, "\x81\x83", *len)) {		// \x81\x83 -> '＜'
+    StringFilterBetween(text, len, "\x81\x5E", 2, "\x81\x84", 2); // \x81\x5E -> '／' , \x81\x84 -> '＞'
+    StringFilter(text, len, "\x81\x83", 2);			// \x81\x83 -> '＜'
+  }
+  // ruby ≪美桜／姉さん≫
+  else if (cpp_strnstr(text, "\x81\xE1", *len)) {	// \x81\xE1 -> '≪'
+    StringFilterBetween(text, len, "\x81\x5E", 2, "\x81\xE2", 2); // \x81\x5E -> '／' , \x81\xE2 -> '≫'
+    StringFilter(text, len, "\x81\xE1", 2);			// \x81\xE1 -> '≪'
+  }
+
+  CharReplacer(text, len, '=', '-');
   StringCharReplacer(text, len, "\xEF\xF0", 2, ' ');
   StringFilter(text, len, "\xEF\xF2", 2);
   StringFilter(text, len, "\xEF\xF5", 2);
+  StringFilter(text, len, "\x81\x98", 2);
 
   return true;
 }
@@ -6472,6 +6490,7 @@ bool InsertYuris6Hook()
   * https://vndb.org/v42883
   * https://vndb.org/v44092
   * https://vndb.org/v21171
+  * https://vndb.org/r46910
   */
   const BYTE bytes[] = {
     0xE9, XX4,           // jmp oshitona01.exe+1B629
@@ -6483,20 +6502,17 @@ bool InsertYuris6Hook()
     0x84, 0xD2           // test dl,dl
   };
 
-  enum { addr_offset = 0 };
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr)
     return false;
 
   HookParam hp = {};
-  hp.address = addr + addr_offset;
-  hp.offset = pusha_ecx_off - 4;
-  hp.index = 0;
-  hp.split = pusha_esp_off - 4;
-  hp.split_index = 0;
+  hp.address = addr;
+  hp.offset = pusha_eax_off - 4;
+  hp.index = 0x38;
   hp.filter_fun = Yuris6Filter;
-  hp.type = USING_STRING | USING_SPLIT;
+  hp.type = USING_STRING | NO_CONTEXT | DATA_INDIRECT;
 
   ConsoleOutput("Textractor: INSERT YU-RIS 6");
   NewHook(hp, "YU-RIS6");
