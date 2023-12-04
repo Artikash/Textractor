@@ -9628,12 +9628,146 @@ static bool InsertNewWillPlusHook()
 	return found;
 }
 
+bool WillPlusWFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (*text == L'/' || *text == L'|')
+    return false;
+
+  WideStringCharReplacer(text, len, L" \\n", 3, L' ');
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringCharReplacer(text, len, L"\\d", 2, L'\"');
+  WideStringFilter(text, len, L"%LF", 3);
+  WideStringFilter(text, len, L"%LC", 3);
+  WideStringFilter(text, len, L"%K", 2);
+  WideStringFilter(text, len, L"%P", 2);
+  WideStringFilter(text, len, L"%XS", 5); // remove %XS followed by 2 chars
+  WideStringFilter(text, len, L"%XE", 3);
+
+  return true;
+}
+
+static bool InsertWillPlus4() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r71235
+  */
+  const BYTE bytes[] = {
+    0x33, 0xC9,                         // xor ecx,ecx  <-- hook
+    0x8B, 0xC7,                         // mov eax,edi
+    0xC7, 0x84, 0x24, XX4, XX4,         // mov [esp+000001E0],00000007
+    0x89, 0x9C, 0x24, XX4               // mov [esp+000001DC],ebx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:WillPlus4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edi_off -4;
+  hp.type = USING_UNICODE | USING_STRING;
+  hp.filter_fun = WillPlusWFilter;
+  ConsoleOutput("vnreng: INSERT WillPlus4");
+  NewHook(hp, "WillPlus4");
+  return true;
+}
+
+static bool InsertWillPlus5() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v29881
+  */
+  const BYTE bytes[] = {
+    0xE8, XX4,                  // call AdvHD.exe+38550   <-- hook here
+    0x8B, 0x4B, 0x08,           // mov ecx,[ebx+08]
+    0x89, 0x8F, XX4,            // mov [edi+0000014C],ecx
+    0x85, 0xC9,                 // test ecx,ecx
+    0x74, 0x04                  // je AdvHD.exe+396C6
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:WillPlus5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_esi_off -4;
+  hp.index = 0;
+  hp.split = pusha_ebx_off -4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = WillPlusWFilter;
+  ConsoleOutput("vnreng: INSERT WillPlus5");
+  NewHook(hp, "WillPlus5");
+  return true;
+}
+
+static bool InsertWillPlus6() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v47136
+  */
+  const BYTE bytes[] = {
+    0xCC,                               // int 3 
+    0x53,                               // push ebx   <-- hook here
+    0x8B, 0xDC,                         // mov ebx,esp
+    0x83, 0xEC, 0x08,                   // sub esp,08
+    0x83, 0xE4, 0xF8,                   // and esp,-08
+    0x83, 0xC4, 0x04,                   // add esp,04
+    0x55,                               // push ebp
+    0x8B, 0x6B, 0x04,                   // mov ebp,[ebx+04]
+    0x89, 0x6C, 0x24, 0x04,             // mov [esp+04],ebp
+    0x8B, 0xEC,                         // mov ebp,esp
+    0x6A, 0xFF,                         // push -01
+    0x68, XX4,                          // push AdvHD.exe+1965B0
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00, // mov eax,fs:[00000000]
+    0x50,                               // push eax
+    0x53,                               // push ebx
+    0x81, 0xEC, 0x28, 0x01, 0x00, 0x00  // sub esp,00000128
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:WillPlus6: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_esi_off -4;
+  hp.index = 0;
+  hp.split = pusha_ebx_off -4;
+  hp.split_index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT | USING_SPLIT;
+  hp.filter_fun = WillPlusWFilter;
+  ConsoleOutput("vnreng: INSERT WillPlus6");
+  NewHook(hp, "WillPlus6");
+  return true;
+}
+
 } // unnamed namespace
 
 bool InsertWillPlusHook()
 {
   bool ok = InsertOldWillPlusHook();
-  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || InsertNewWillPlusHook() || ok;
+  ok = InsertWillPlus4() || ok;
+  ok = InsertWillPlus5() || ok;
+  ok = InsertWillPlus6() || ok;
+  ok = InsertWillPlusWHook() || InsertWillPlusAHook() || ok;
+  ok = InsertNewWillPlusHook() || ok;
   if (!ok) PcHooks::hookOtherPcFunctions();
   return ok;
 }
