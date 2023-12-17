@@ -2239,8 +2239,63 @@ static bool InsertRealliveDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
   }
   return true; // jichi 12/25/2013: return true
 }
+
+bool RlBabelFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == '\x01') {
+    StringFilterBetween(text, len, "\x01", 1, "\x02", 1); // remove names
+  }
+
+  CharReplacer(text, len, '\x08', '"');
+  CharReplacer(text, len, '\x09', '\'');
+  CharReplacer(text, len, '\x0A', '\'');
+  CharFilter(text, len, '\x1F'); // remove color
+  StringReplacer(text, len, "\x89\x85", 2, "\x81\x63", 2);  // "\x89\x85"-> shift-JIS"…"
+  StringReplacer(text, len, "\x89\x97", 2, "--", 2);
+
+  return true;
+}
+
+bool InsertRlBabelHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/r78318
+	*/
+	const BYTE bytes[] = {
+		0xCC,                          // int 3 
+		0x55,                          // push ebp        <- hook here
+		0x8B, 0xEC,                    // mov ebp,esp
+		0x83, 0xEC, 0x20,              // sub esp,20
+		0xC7, 0x45, 0xFC, XX4          // mov [ebp-04],rlBabel.DLL+16804
+	};
+
+	HMODULE module = GetModuleHandleW(L"rlBabel.dll");
+	if (!module)
+		return false;
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr + 1;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.type = USING_STRING;
+	hp.filter_fun = RlBabelFilter;
+	ConsoleOutput("vnreng: INSERT RealLive Babel");
+	NewHook(hp, "RealLive Babel");
+
+	return true;
+}
+
 void InsertRealliveHook()
 {
+  InsertRlBabelHook();
   //ConsoleOutput("Probably Reallive. Wait for text.");
   ConsoleOutput("vnreng: TRIGGER Reallive");
   trigger_fun = InsertRealliveDynamicHook;
