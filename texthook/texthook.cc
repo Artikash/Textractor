@@ -169,15 +169,21 @@ void TextHook::Send(uintptr_t dwDataBase)
 		ThreadParam tp = { GetCurrentProcessId(), address, *(uintptr_t*)dwDataBase, 0 }; // first value on stack (if hooked start of function, this is return address)
 		uintptr_t data = *(uintptr_t*)(dwDataBase + hp.offset); // default value
 
-		if (hp.type & USING_SPLIT)
-		{
-			tp.ctx2 = *(uintptr_t*)(dwDataBase + hp.split);
-			if (hp.type & SPLIT_INDIRECT) tp.ctx2 = *(uintptr_t*)(tp.ctx2 + hp.split_index);
+		if (hp.text_fun) {
+			hp.text_fun(dwDataBase, &hp, 0, &static_cast<DWORD>(data), &static_cast<DWORD>(tp.ctx2), &static_cast<DWORD>(count));
 		}
-		if (hp.type & DATA_INDIRECT) data = *(uintptr_t*)(data + hp.index);
+		else {
+			if (hp.type & USING_SPLIT)
+			{
+				tp.ctx2 = *(uintptr_t*)(dwDataBase + hp.split);
+				if (hp.type & SPLIT_INDIRECT) tp.ctx2 = *(uintptr_t*)(tp.ctx2 + hp.split_index);
+			}
+			if (hp.type & DATA_INDIRECT) data = *(uintptr_t*)(data + hp.index);
 
-		data += hp.padding;
-		count = GetLength(dwDataBase, data);
+			data += hp.padding;
+			count = GetLength(dwDataBase, data);
+		}
+
 		if (count <= 0) goto done;
 		if (count > TEXT_BUFFER_SIZE) count = TEXT_BUFFER_SIZE;
 		if (hp.length_offset == 1)
@@ -188,6 +194,8 @@ void TextHook::Send(uintptr_t dwDataBase)
 			*(WORD*)pbData = data & 0xffff;
 		}
 		else ::memcpy(pbData, (void*)data, count);
+
+		if (hp.filter_fun && !hp.filter_fun(pbData, &static_cast<DWORD>(count), &hp, 0) || count <= 0) goto done;
 
 		if (hp.type & (NO_CONTEXT | FIXING_SPLIT)) tp.ctx = 0;
 
