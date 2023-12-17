@@ -435,6 +435,10 @@ bool DetermineEngineByFile4()
     return true;
   }
 
+  if (Util::CheckFile(L"voice\\*.pck")) {
+      return /*InsertAnimHook() || InsertAnim2Hook() ||*/ InsertAnim3Hook();    
+  }
+
   // jichi 11/22/2015: 凍京NECRO 体験版
   // Jazzinghen 23/05/2020: Add check for 凍京NECRO
   // ResEdit shows multiple potential strings:
