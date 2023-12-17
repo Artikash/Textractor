@@ -8220,6 +8220,42 @@ bool InsertCandyHook2()
   return false;
 }
 
+bool InsertCandyHook3() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v24878
+    */
+  const BYTE bytes[] = {
+    0xCC,                                // int 3 
+    0x55,                                // push ebp        << hook here
+    0x8B, 0xEC,                          // mov ebp,esp
+    0x6A, 0xFF,                          // push -01
+    0x68, XX4,                           // push iinari-omnibus.exe+C4366
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00,  // mov eax,fs:[00000000]
+    0x50,                                // push eax
+    0x83, 0xEC, 0x74,                    // sub esp,74
+    0x53,                                // push ebx
+    0x56,                                // push esi
+    0x57                                 // push edi
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:SystemC#3: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = 4 * 4; // arg4
+  hp.type = USING_STRING | USING_UNICODE;
+  ConsoleOutput("vnreng: INSERT SystemC#3");
+  NewHook(hp, "SystemC#3");
+  return true;
+}
+
 /** jichi 10/2/2013: CHECKPOINT
  *
  *  [5/31/2013] 恋もHもお勉強も、おまかせ�お姉ちも�部
@@ -8267,7 +8303,7 @@ bool InsertCandyHook()
   if (Util::CheckFile(L"SystemC.exe"))
     return InsertCandyHook1();
   else
-    return InsertCandyHook2();
+    return InsertCandyHook3() || InsertCandyHook2();
     //bool b2 = InsertCandyHook2(),
     //     b3 = InsertCandyHook3();
     //return b2 || b3;
