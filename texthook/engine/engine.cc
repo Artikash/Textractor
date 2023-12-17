@@ -17073,6 +17073,56 @@ bool NoAsciiFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
 	return false;
 }
 
+bool Anim3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  StringFilterBetween(text, len, "\x81\x40", 2, "@m", 2); // @r(2,はと)
+  StringFilterBetween(text, len, "\x81\x40", 2, "@n", 2); // @r(2,はと)
+  StringCharReplacer(text, len, "@b", 2, ' ');
+  StringCharReplacer(text, len, "\x81\x42", 2, '.');
+  StringCharReplacer(text, len, "\x81\x48", 2, '?');
+  StringCharReplacer(text, len, "\x81\x49", 2, '!');
+
+  return true;
+}
+
+bool InsertAnim3Hook()
+{
+  //mod by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v17427
+  * https://vndb.org/v18837
+  */
+  const BYTE bytes[] = {
+    0xCC,                       // int 3 
+    0x55,                       // push ebp      << hook here
+    0x8B, 0xEC,                 // mov ebp,esp
+    0x81, 0xEC, XX4,            // sub esp,00000830
+    0xA1, XX4,                  // mov eax,[musu_mama.exe+A91F0]
+    0x33, 0xC5,                 // xor eax,ebp
+    0x89, 0x45, 0xE8            // mov [ebp-18],eax
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Anim3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_edx_off - 4;
+  hp.type = USING_STRING;
+  hp.filter_fun = Anim3Filter;
+  ConsoleOutput("vnreng: INSERT Anim3");
+  NewHook(hp, "Anim3");
+
+  return true;
+}
+
 bool InsertMonoHooks()
 {
   HMODULE h = ::GetModuleHandleA("mono.dll");
