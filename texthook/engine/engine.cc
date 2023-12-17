@@ -16945,6 +16945,7 @@ bool InsertAdobeFlash10Hook()
 */
 bool InsertRenpyHook()
 {
+	bool ok = false;
     wchar_t python[] = L"python2X.dll", libpython[] = L"libpython2.X.dll";
     for (wchar_t* name : { python, libpython })
     {
@@ -16957,32 +16958,77 @@ bool InsertRenpyHook()
                 wcscpy_s(spDefault.exportModule, name);
                 HookParam hp = {};
                 hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Format");
-                if (!hp.address)
+                if (hp.address)
                 {
-                    ConsoleOutput("Textractor: Ren'py failed: failed to find PyUnicodeUCS2_Format");
-                    return false;
-                }
-                hp.offset = 4;
-                hp.index = 0xc;
-                hp.length_offset = 0;
-                //hp.split = pusha_ebx_off - 4;
-                hp.text_fun = [](auto, auto, auto, DWORD* data, DWORD* split, DWORD* count)
+					hp.offset = 4;
+					hp.index = 0xc;
+					hp.length_offset = 0;
+					//hp.split = pusha_ebx_off - 4;
+					hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT/* | USING_SPLIT*/;
+					hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
+					{
+						static std::wstring prevText;
+						auto text = reinterpret_cast<LPWSTR>(data);
+						auto len = reinterpret_cast<size_t *>(size);
+
+						if (cpp_wcsnstr(text, L"%", *len/sizeof(wchar_t)))
+							return false;
+						if (cpp_wcsnstr(text, L"{", *len/sizeof(wchar_t))) {
+							WideStringCharReplacer(text, len, L"{i}", 3, L'\'');
+							WideStringCharReplacer(text, len, L"{/i}", 4, L'\'');
+							WideStringFilterBetween(text, len, L"{", 1, L"}", 1);
+						}
+						WideStringFilter(text, len, L"^", 2); // remove ^ followed by 1 char
+						WideCharReplacer(text, len, L'\n', L' ');
+
+						if (prevText.length()==*len/sizeof(wchar_t) && prevText.find(text, 0, *len/sizeof(wchar_t))!=std::string::npos) // Check if the string is the same as the previous one
+							return false;
+						prevText.assign(text, *len/sizeof(wchar_t));
+						
+						return true;
+					};
+					NewHook(hp, "Ren'py UCS2Format");
+					ok = true;
+				}
+                hp.address = (DWORD)GetProcAddress(module, "PyUnicodeUCS2_Replace");
+                if (hp.address)
                 {
-                    *data = *(DWORD*)(*data + 0xc);
-                    *count = wcslen((wchar_t*)*data) * sizeof(wchar_t);
-                    *split = wcschr((wchar_t*)*data, L'%') == nullptr;
-                };
-                hp.type = USING_STRING | USING_UNICODE | NO_CONTEXT | DATA_INDIRECT/* | USING_SPLIT*/;
-                //hp.filter_fun = [](void* str, auto, auto, auto) { return *(wchar_t*)str != L'%'; };
-                NewHook(hp, "Ren'py");
-                return true;
+					hp.offset = 3 * 4; //arg 3;
+					hp.index = 0xC;
+					hp.length_offset = 0;
+					hp.split = 2 * 4; //arg 2;
+					hp.type = USING_STRING | USING_UNICODE | DATA_INDIRECT | USING_SPLIT;
+					hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
+					{
+						static std::wstring prevText;
+						auto text = reinterpret_cast<LPWSTR>(data);
+						auto len = reinterpret_cast<size_t *>(size);
+
+						if (cpp_wcsnstr(text, L"{fast}", *len/sizeof(wchar_t)))
+							return false;
+						if (cpp_wcsnstr(text, L"{", *len/sizeof(wchar_t))) {
+							WideStringCharReplacer(text, len, L"{i}", 3, L'\'');
+							WideStringCharReplacer(text, len, L"{/i}", 4, L'\'');
+							WideStringFilterBetween(text, len, L"{", 1, L"}", 1);
+						}
+						WideCharReplacer(text, len, L'\n', L' ');
+
+						if (prevText.length()==*len/sizeof(wchar_t) && prevText.find(text, 0, *len/sizeof(wchar_t))!=std::string::npos) // Check if the string is the same as the previous one
+							return false;
+						prevText.assign(text, *len/sizeof(wchar_t));
+						
+						return true;
+					};
+					NewHook(hp, "Ren'py UCS2Replace");
+					ok = true;
+				}
             }
         }
     }
-	ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
-	return false;
+	if ( !ok )
+		ConsoleOutput("Textractor: Ren'py failed: failed to find python2X.dll");
+	return ok;
 }
-
 void InsertMonoHook(HMODULE h)
 {
 	static HMODULE mono = h;
