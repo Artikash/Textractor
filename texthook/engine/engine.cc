@@ -5896,8 +5896,9 @@ bool Waffle3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto len = reinterpret_cast<size_t *>(size);
   static std::string prevText;
 
-  if (cpp_strnstr(text, "\\", *len))
-    return false;
+  if (LPSTR bs=cpp_strnstr(text, "\\", *len))
+	if ( bs > text && *--bs >= 65 && *bs <= 122) // garbage text
+      return false;
 
   if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
     return false;
