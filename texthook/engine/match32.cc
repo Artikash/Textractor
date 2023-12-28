@@ -557,17 +557,20 @@ bool DetermineEngineByProcessName()
 
 bool DetermineEngineOther()
 {
+  // jichi 12/26/2013: Add this after alicehook
+  if (Util::CheckFile(L"AliceStart.ini")) {
+    if (Util::CheckFile(L"DLL/Sys42VM.dll"))
+      if (InsertSystem42Hook())
+        return true;
+    if (InsertSystem43Hook())
+      return true;
+  }
   if (InsertAliceHook())
     return true;
   // jichi 1/19/2015: Disable inserting Lstr for System40
   // See: http://sakuradite.com/topic/618
   if (Util::CheckFile(L"System40.ini")) {
     ConsoleOutput("vnreng: IGNORE old System40.ini");
-    return true;
-  }
-  // jichi 12/26/2013: Add this after alicehook
-  if (Util::CheckFile(L"AliceStart.ini")) {
-    InsertSystem43Hook();
     return true;
   }
 
