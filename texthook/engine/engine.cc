@@ -5539,6 +5539,53 @@ bool InsertSystem43Hook()
   return ok;
 }
 
+bool System42Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (*len == 1)
+	 return false;
+  if (all_ascii(text, *len)) {
+    CharReplacer(text, len, '`', ' ');
+    CharReplacer(text, len, '\x7D', '-');
+  }
+
+  return true;
+}
+
+bool InsertSystem42Hook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v1427
+	*/
+	const BYTE bytes[] = {
+		0x8B, 0x46, 0x04,        // mov eax,[esi+04]
+		0x57,                    // push edi
+		0x52,                    // push edx
+		0x50,                    // push eax
+		0xE8, XX4                // call Sys42VM.DLL+4B5B0
+	};
+
+	HMODULE module = GetModuleHandleW(L"Sys42VM.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr)
+		return false;
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_edx_off -4;
+    hp.split = pusha_esp_off -4;
+	hp.type = NO_CONTEXT | USING_STRING | USING_SPLIT;
+	hp.filter_fun = System42Filter;
+	ConsoleOutput("vnreng: INSERT System42");
+	NewHook(hp, "System42");
+
+	return true;
+}
+
 /********************************************************************************************
 AtelierKaguya hook:
   Game folder contains message.dat. Used by AtelierKaguya games.
