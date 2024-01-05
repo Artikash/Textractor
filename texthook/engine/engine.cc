@@ -6520,6 +6520,40 @@ bool InsertYuris6Hook()
   return true;
 }
 
+bool InsertYuris7Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v45381
+  */
+  const BYTE bytes[] = {
+    0x03, 0xC1,                   // add eax,ecx
+    0x99,                         // cdq 
+    0xE9, XX4                     // jmp nekonin_spin.exe+55753     << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 5 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.length_offset = 1; // only 1 character
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD*, DWORD*, DWORD* len)
+  {
+	*len = (retof(esp_base) == 0) ? 2 : 0;
+  };
+  hp.type = BIG_ENDIAN;
+  ConsoleOutput("vnreng: INSERT YU-RIS7");
+  NewHook(hp, "YU-RIS7");
+  return true;
+}
+
 //bool InsertYurisHook()
 //{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 bool InsertYurisHook()
@@ -6530,6 +6564,7 @@ bool InsertYurisHook()
   ok = InsertYuris4Hook() || ok;
   ok = InsertYuris5Hook() || ok;
   ok = InsertYuris6Hook() || ok;
+  ok = InsertYuris7Hook() || ok;
   return ok;
 }
 
