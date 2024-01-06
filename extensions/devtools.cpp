@@ -40,7 +40,7 @@ namespace
 			chromePath,
 			std::filesystem::current_path().wstring()
 		);
-		args += headless ? L" --window-size=1920,1080 --headless" : L" --window-size=850,900";
+		args += headless ? L" --window-size=1920,1080 --headless=new" : L" --window-size=850,900";
 		DWORD exitCode = 0;
 		STARTUPINFOW DUMMY = { sizeof(DUMMY) };
 		PROCESS_INFORMATION processInfo = {};
