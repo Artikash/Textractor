@@ -86,7 +86,7 @@ bool InsertAnex86Hook();        // Anex86: anex86.exe
 bool InsertAOSHook();           // AOS: *.aos
 bool InsertApricoTHook();       // Apricot: arc.a*
 bool InsertArtemisHook();       // Artemis Engine: *.pfs
-bool InsertAtelierHook();       // Atelier Kaguya: message.dat
+bool InsertAtelierHooks();       // Atelier Kaguya: message.dat
 bool InsertBGIHook();           // BGI: BGI.*
 bool InsertBaldrHook();         // Baldr Sky "Zero"
 bool InsertBootupHook();        // Bootup: Bootup.dat

@@ -5583,6 +5583,154 @@ bool InsertAtelierHook()
   return false;
   //ConsoleOutput("Unknown Atelier KAGUYA engine.");
 }
+
+bool InsertAtelierKaguya2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v22713
+    * https://vndb.org/v31685
+    * https://vndb.org/v37081
+    */
+  const BYTE bytes[] = {
+    0x51,                      // push ecx        << hook here
+    0x50,                      // push eax
+    0xE8, XX4,                 // call Start.exe+114307
+    0x83, 0xC4, 0x08,          // add esp,08
+    0x85, 0xC0,                // test eax,eax
+    0x78, 0xA1                 // js Start.exe+48947
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA2: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA2");
+  NewHook(hp, "Atelier KAGUYA2");
+  return true;
+}
+
+bool InsertAtelierKaguya3Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v10082
+    */
+  const BYTE bytes[] = {
+    0x55,                          // push ebp       << hook here
+    0x8B, 0xEC,                    // mov ebp,esp
+    0x6A, 0xFF,                    // push -01
+    0x68, 0x80, 0xB9, 0x4D, 0x00,  // push Start.exe+DB980
+    0x64, 0xA1, XX4,               // mov eax,fs:[00000000]
+    0x50,                          // push eax
+    0x51,                          // push ecx
+    0x81, 0xEC, 0xAC, 0x00, 0x00, 0x00   // sub esp,000000AC
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA3");
+  NewHook(hp, "Atelier KAGUYA3");
+  return true;
+}
+
+bool InsertAtelierKaguya4Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v14705
+    */
+  const BYTE bytes[] = {
+    0xE8, 0x90, 0xA8, 0xFF, 0xFF,  // call Start.exe+18380
+    0x89, 0x45, 0xF8,              // mov [ebp-08],eax
+    0x8B, 0x4D, 0x10,              // mov ecx,[ebp+10]
+    0x51,                          // push ecx
+    0x8B, 0x55, 0x0C,              // mov edx,[ebp+0C]
+    0x52,                          // push edx
+    0x8B, 0x45, 0x08,              // mov eax,[ebp+08]
+    0x50                           // push eax       << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 1 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA4");
+  NewHook(hp, "Atelier KAGUYA4");
+  return true;
+}
+
+bool InsertAtelierKaguya5Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v11224
+    */
+  const BYTE bytes[] = {
+    0xC2, 0x04, 0x00,                    // ret 0004
+    0x55,                                // push ebp       << hook here
+    0x8B, 0xEC,                          // mov ebp,esp
+    0x6A, 0xFF,                          // push -01
+    0x68, XX4,                           // push Start.exe+DA680
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00,  // mov eax,fs:[00000000]
+    0x50,                                // push eax
+    0x51,                                // push ecx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 3;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA5");
+  NewHook(hp, "Atelier KAGUYA5");
+  return true;
+}
+
+bool InsertAtelierHooks()
+{return  InsertAtelierHook() || InsertAtelierKaguya2Hook() || InsertAtelierKaguya3Hook() || InsertAtelierKaguya4Hook() || InsertAtelierKaguya5Hook();}
+
 /********************************************************************************************
 CIRCUS hook:
   Game folder contains advdata folder. Used by CIRCUS games.

@@ -196,7 +196,7 @@ bool DetermineEngineByFile1()
     return true;
   }
   if (Util::CheckFile(L"message.dat")) {
-    InsertAtelierHook();
+    InsertAtelierHooks();
     return true;
   }
   if (Util::CheckFile(L"Check.mdx")) { // jichi 4/1/2014: AUGame
