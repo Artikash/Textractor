@@ -6526,6 +6526,9 @@ bool InsertYuris7Hook()
   /*
   * Sample games:
   * https://vndb.org/v45381
+  * https://vndb.org/v47458
+  * https://vndb.org/v21144
+  * https://vndb.org/v18681
   */
   const BYTE bytes[] = {
     0x03, 0xC1,                   // add eax,ecx
