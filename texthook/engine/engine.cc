@@ -5693,8 +5693,43 @@ bool InsertAtelierKaguya4Hook()
   return true;
 }
 
+bool InsertAtelierKaguya5Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v11224
+    */
+  const BYTE bytes[] = {
+    0xC2, 0x04, 0x00,                    // ret 0004
+    0x55,                                // push ebp       << hook here
+    0x8B, 0xEC,                          // mov ebp,esp
+    0x6A, 0xFF,                          // push -01
+    0x68, XX4,                           // push Start.exe+DA680
+    0x64, 0xA1, 0x00, 0x00, 0x00, 0x00,  // mov eax,fs:[00000000]
+    0x50,                                // push eax
+    0x51,                                // push ecx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Atelier KAGUYA5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 3;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING;
+  hp.filter_fun = NewLineCharToSpaceFilter;
+  ConsoleOutput("vnreng: INSERT Atelier KAGUYA5");
+  NewHook(hp, "Atelier KAGUYA5");
+  return true;
+}
+
 bool InsertAtelierHooks()
-{return  InsertAtelierHook() || InsertAtelierKaguya2Hook() || InsertAtelierKaguya3Hook() || InsertAtelierKaguya4Hook();}
+{return  InsertAtelierHook() || InsertAtelierKaguya2Hook() || InsertAtelierKaguya3Hook() || InsertAtelierKaguya4Hook() || InsertAtelierKaguya5Hook();}
 
 /********************************************************************************************
 CIRCUS hook:
