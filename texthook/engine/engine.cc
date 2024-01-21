@@ -6457,7 +6457,7 @@ static bool Yuris6Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   auto len = reinterpret_cast<size_t *>(size);
   static std::string prevText;
 
-  if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+  if (prevText.length()==*len && prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
     return false;
   prevText.assign(text, *len);
 
