@@ -5673,6 +5673,89 @@ bool InsertCircusHook2() // jichi 10/2/2013: Change return type to bool
   return false;
 }
 
+bool InsertCircusHook3()
+{
+  //mod by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v20218
+  */
+  const BYTE bytes[] = {
+    0xCC,                       // int 3 
+    0x81, 0xEC, XX4,            // sub esp,000004E0        << hook here
+    0xA1, XX4,                  // mov eax,[DSIF.EXE+AD288]
+    0x33, 0xC4,                 // xor eax,esp
+    0x89, 0x84, 0x24, XX4,      // mov [esp+000004DC],eax
+    0x8B, 0x84, 0x24, XX4,      // mov eax,[esp+000004E4]
+    0x53,                       // push ebx
+    0x55,                       // push ebp
+    0x56,                       // push esi
+    0x8B, 0xB4, 0x24, XX4       // mov esi,[esp+000004F4]
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Circus3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_esi_off - 4;
+  hp.split = pusha_ecx_off - 4;
+  hp.type = USING_STRING | USING_SPLIT;
+  ConsoleOutput("vnreng: INSERT Circus3");
+  NewHook(hp, "Circus3");
+
+  return true;
+}
+
+bool CircusFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  //ConsoleOutput("debug:Circus: -%.*s-", *len, text);
+  if (*len <= 1 || cpp_strnstr(text, "\\", *len) || (text[0] == '&' && text[1] == 'n'))
+    return false;
+
+  CharReplacer(text, len, '\n', ' ');
+
+  return true;
+}
+
+bool InsertCircusHook4()
+{
+  //mod by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r46909
+  */
+  const BYTE bytes[] = {
+    0x83, 0xF8, 0xFF,           // cmp eax,-01        << hook here
+    0x0F, 0x84, XX4,            // je DST.exe+1BCF0
+    0x8B, 0x0D, XX4             // mov ecx,[DST.exe+A41F0]
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Circus4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off - 4;
+  hp.split = 4 * 4; //arg4
+  hp.padding = 0x40;
+  hp.type = USING_STRING | USING_SPLIT;
+  hp.filter_fun = CircusFilter;
+  ConsoleOutput("vnreng: INSERT Circus4");
+  NewHook(hp, "Circus4");
+
+  return true;
+}
+
 /********************************************************************************************
 ShinaRio hook:
   Game folder contains rio.ini.
