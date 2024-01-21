@@ -169,6 +169,8 @@ bool InsertWaffleHook();        // WAFFLE: cg.pak
 // CIRCUS: avdata/
 bool InsertCircusHook1();
 bool InsertCircusHook2();
+bool InsertCircusHook3();
+bool InsertCircusHook4();
 
 } // namespace Engine
 

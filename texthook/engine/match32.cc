@@ -181,8 +181,8 @@ bool DetermineEngineByFile1()
     return true;
   }
   if (Util::CheckFile(L"AdvData\\GRP\\NAMES.DAT")) {
-    InsertCircusHook2();
-    return true;
+    if (InsertCircusHook2() || InsertCircusHook3() || InsertCircusHook4())
+      return true;
   }
   if (Util::CheckFile(L"*.noa") || Util::CheckFile(L"data\\*.noa")) {
     InsertCotophaHook();
