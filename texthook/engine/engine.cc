@@ -1627,6 +1627,56 @@ textrender.dll+BE5F - C3                    - ret
   return true;
 }
 
+bool KiriKiriZ5Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (cpp_wcsnstr(text, L"=", *len/sizeof(wchar_t)))
+    return false;
+
+  if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t)))
+    WideStringFilterBetween(text, len, L"[", 1, L"]", 1);
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringFilter(text, len, L"\\x", 2);
+
+  return true;
+}
+
+bool InsertKiriKiriZHook5() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v16193
+    */
+  const BYTE bytes[] = {
+    0x66, 0x8B, 0x04, 0x43           // mov ax,[ebx+eax*2]       << hook here
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off -4;
+  hp.type =  NO_CONTEXT | USING_UNICODE | USING_STRING;
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD *data, DWORD *split, DWORD* len)
+  {
+    if (regof(eax, esp_base) == 1 )
+      *len = wcslen((wchar_t*)*data) * 2;
+  };
+  hp.filter_fun = KiriKiriZ5Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ5");
+  NewHook(hp, "KiriKiriZ5");
+
+  return true;
+}
+
 } // unnamed namespace
 
 // jichi 1/30/2015: Do KiriKiriZ2 first, which might insert to the same location as KiriKiri1.
@@ -1635,6 +1685,7 @@ bool InsertKiriKiriZHook()
   bool ok = InsertKiriKiriZHook_msvc();
   ok = InsertKiriKiriZHook3() || ok;
   ok = InsertKiriKiriZHook4() || ok;
+  ok = InsertKiriKiriZHook5() || ok;
   return InsertKiriKiriZHook2() || InsertKiriKiriZHook1() || ok;
 }
 
