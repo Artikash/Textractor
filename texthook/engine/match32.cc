@@ -65,7 +65,8 @@ bool DeterminePCEngine()
 	  else for (int i = 0; i < 50; ++i)
 		  if (HMODULE module = GetModuleHandleW((DXVersion + L"_" + std::to_wstring(i)).c_str())) PcHooks::hookD3DXFunctions(module);
 
-  for (HMODULE module : { (HMODULE)processStartAddress, GetModuleHandleW(L"node.dll"), GetModuleHandleW(L"nw.dll") })
+  if (!Util::SearchResourceString(L"TVP(KIRIKIRI)")) // Hijack ERROR for some kirikiri engine on V8Hook check
+    for (HMODULE module : { (HMODULE)processStartAddress, GetModuleHandleW(L"node.dll"), GetModuleHandleW(L"nw.dll") })
 	  if (GetProcAddress(module, "?Write@String@v8@@QBEHPAGHHH@Z")) return InsertV8Hook(module);
 
   if (InsertMonoHooks()) {
