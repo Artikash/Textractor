@@ -21728,6 +21728,37 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertDebonosuWorksHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v47955
+	*/
+	const BYTE bytes[] = {
+		0xCC,                       // int 3 
+		0x53,                       // push ebx      <- hook here
+		0x56,                       // push esi
+		0x57,                       // push edi
+		0x8B, 0xF9,                 // mov edi,ecx
+		0xC6, 0x05, XX4, 0x00       // mov byte ptr ["Kagura Genesis.exe"+DCB170],00
+	};
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStopAddress);
+	if (!addr) {
+		ConsoleOutput("vnreng:DebonosuWorks: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr + 1;
+	hp.offset = pusha_eax_off -4;
+    hp.index = 0;
+	hp.type = USING_STRING;
+	ConsoleOutput("vnreng: INSERT DebonosuWorks");
+	NewHook(hp, "DebonosuWorks");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
