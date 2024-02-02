@@ -5897,7 +5897,7 @@ bool Waffle3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
   static std::string prevText;
 
   if (LPSTR bs=cpp_strnstr(text, "\\", *len))
-	if ( bs > text && *--bs >= 65 && *bs <= 122) // garbage text
+	if (bs > text && !IsSJIS(text)) // garbage text
       return false;
 
   if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
