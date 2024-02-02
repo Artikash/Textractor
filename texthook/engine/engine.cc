@@ -363,7 +363,7 @@ void WideStringCharReplacer(wchar_t *str, size_t *size, const wchar_t *src, size
     curlen = len - (cur - str);
     if (curlen == 0)
       break;
-    ::memmove(cur, cur + srclen, 2 * curlen);
+    ::memmove(cur, cur + srclen -1, 2 * curlen);
   }
   *size = len * 2;
 }
@@ -1439,11 +1439,306 @@ bool InsertKiriKiriZHook2()
   return true;
 }
 
+bool KiriKiriZ3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharFilter(text, len, L'\x000A');
+  if (cpp_wcsnstr(text, L"%", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"%", 1, L"%", 1);
+  }
+
+  return true;
+}
+
+bool InsertKiriKiriZHook3() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r109253
+    */
+  const BYTE bytes[] = {
+    0x66, 0x83, 0x3F, 0x00,    // cmp word ptr [edi],00          << hook here
+    0x75, 0x06,                // jne Imouto_no_Seiiki.exe+195C1
+    0x33, 0xDB,                // xor ebx,ebx
+    0x89, 0x1E,                // mov [esi],ebx
+    0xEB, 0x1B                 // jmp Imouto_no_Seiiki.exe+195DC
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edi_off -4;
+  hp.split  = pusha_edx_off -4;
+  hp.type =  NO_CONTEXT | USING_UNICODE | USING_STRING | USING_SPLIT;
+  hp.filter_fun = KiriKiriZ3Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ3");
+  NewHook(hp, "KiriKiriZ3");
+
+  return true;
+}
+
+bool KiriKiriZ4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == L' ' || text[0] == L':' || text[0] == L'@' || text[0] == L'[' || text[0] == L']')
+	return false;
+
+  if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
+    WideStringCharReplacer(text, len, L"[r]", 3, L' ');
+    WideStringFilterBetween(text, len, L"[", 1, L"]", 1);
+  }
+
+  return true;
+}
+
+bool InsertKiriKiriZHook4() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r111774
+    * https://vndb.org/v38021
+    */
+  const BYTE bytes[] = {
+    0xE8, 0xE8, 0xBA, 0xFE, 0xFF,    // call Shironagasu.exe+227B0       << hook here
+    0xC7, 0x45, 0xFC, XX4,           // mov [ebp-04],00000000
+    0xC7, 0x45, 0xF0, XX4,           // mov [ebp-10],00000001
+    0x8B, 0x45, 0x08                 // mov eax,[ebp+08]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off -4;
+  hp.type =  NO_CONTEXT | USING_UNICODE | USING_STRING;
+  hp.filter_fun = KiriKiriZ4Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ4");
+  NewHook(hp, "KiriKiriZ4");
+
+  return true;
+}
+
+bool KiriKiriZ_msvcFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::wstring prevText;
+
+  if (!*len)
+    return false;
+  text[*len/sizeof(wchar_t)] = L'\0';  // clean text
+
+  if (!prevText.compare(text))
+    return false;
+  prevText = text;
+
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  if (cpp_wcsnstr(text, L"%", *len/sizeof(wchar_t))) {
+    WideStringFilterBetween(text, len, L"%", 1, L";", 1);
+  }
+  return true;
+}
+
+bool InsertKiriKiriZHook_msvc()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r76735
+  * https://vndb.org/v22020
+  * https://vndb.org/v26052
+  * https://vndb.org/v17763
+  * https://vndb.org/v15538
+  * https://vndb.org/v18713
+  * https://vndb.org/v19385
+  * https://vndb.org/v18148
+  * https://vndb.org/v19841
+  * https://vndb.org/v24717
+  * https://vndb.org/v30458
+  * https://vndb.org/v33036
+  * https://vndb.org/v27448
+  * https://vndb.org/r67327
+  */
+  auto module = GetModuleHandleW(L"textrender.dll");
+  if (!module)
+    return false;
+
+  const BYTE pattern[] = {
+/*
+textrender.dll+BE39 - 8B 4C 24 2C           - mov ecx,[esp+2C]  << hook here
+textrender.dll+BE3D - 50                    - push eax
+textrender.dll+BE3E - 8B 44 24 2C           - mov eax,[esp+2C]
+textrender.dll+BE42 - 8B 10                 - mov edx,[eax]
+textrender.dll+BE44 - FF D2                 - call edx          << start pattern
+textrender.dll+BE46 - 88 44 24 18           - mov [esp+18],al
+textrender.dll+BE4A - 8B 44 24 10           - mov eax,[esp+10]
+textrender.dll+BE4E - 85 C0                 - test eax,eax
+textrender.dll+BE50 - 74 0B                 - je textrender.dll+BE5D
+textrender.dll+BE52 - 8D 4C 24 18           - lea ecx,[esp+18]
+textrender.dll+BE56 - 51                    - push ecx
+textrender.dll+BE57 - 50                    - push eax
+textrender.dll+BE58 - E8 33E5FFFF           - call textrender.dll+A390
+textrender.dll+BE5D - B0 01                 - mov al,01
+textrender.dll+BE5F - C3                    - ret 
+*/
+    0xFF, XX,
+    0x88, XX, XX, XX,
+    XX, XX, XX, XX,
+    XX, XX,
+    0x74, XX,
+    XX, XX, XX, XX,
+    XX,
+    XX,
+    0xE8, XX, XX, XX, XX,
+    0xB0, 0x01,
+    0xC3
+  };
+  enum { addr_offset = -0x0B };  // 8B 4C 24 2C   - mov ecx,[esp+2C]  << hook here
+
+  ULONG addr = MemDbg::findBytes(pattern, sizeof(pattern), (DWORD)module, Util::QueryModuleLimits(module).second);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ_msvc: pattern not found");
+    return false;
+  }
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off - 4;
+  hp.type = USING_UNICODE | USING_STRING;
+  hp.filter_fun = KiriKiriZ_msvcFilter;
+  ConsoleOutput("Textractor: INSERT KiriKiriZ_msvc");
+  NewHook(hp, "KiriKiriZ_msvc");
+  return true;
+}
+
+bool KiriKiriZ5Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (cpp_wcsnstr(text, L"=", *len/sizeof(wchar_t)))
+    return false;
+
+  if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t)))
+    WideStringFilterBetween(text, len, L"[", 1, L"]", 1);
+  WideStringCharReplacer(text, len, L"\\n", 2, L' ');
+  WideStringFilter(text, len, L"\\x", 2);
+
+  return true;
+}
+
+bool InsertKiriKiriZHook5() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v16193
+    */
+  const BYTE bytes[] = {
+    0x66, 0x8B, 0x04, 0x43           // mov ax,[ebx+eax*2]       << hook here
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ5: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off -4;
+  hp.type =  NO_CONTEXT | USING_UNICODE | USING_STRING;
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD *data, DWORD *split, DWORD* len)
+  {
+    if (regof(eax, esp_base) == 1 )
+      *len = wcslen((wchar_t*)*data) * 2;
+  };
+  hp.filter_fun = KiriKiriZ5Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ5");
+  NewHook(hp, "KiriKiriZ5");
+
+  return true;
+}
+
+bool KiriKiriZ6Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  WideCharReplacer(text, len, L'／', L' ');	// \x0FFF
+  if (cpp_wcsnstr(text, L"$r:", *len/sizeof(wchar_t))){
+    WideStringFilter(text, len, L"$r:", 3);
+    WideStringFilterBetween(text, len, L",", 1, L";", 1);
+  }
+
+  return true;
+}
+
+bool InsertKiriKiriZHook6() 
+{
+  //by Blu3train
+  /*
+   * Sample games:
+   * https://vndb.org/v48419
+   */
+  const BYTE bytes[] = {
+    0xCC,                            // int 3 
+    0x55,                            // push ebp       << hook here
+    0x8B, 0xEC,                      // mov ebp,esp
+    0x51,                            // push ecx
+    0x53,                            // push ebx
+    0x56,                            // push esi
+    0x89, 0x4D, 0xFC                 // mov [ebp-04],ecx
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiriZ6: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_esi_off -4;
+  hp.split  = 19 * 4; //arg 19
+  hp.type =  USING_UNICODE | USING_STRING | USING_SPLIT;
+  hp.filter_fun = KiriKiriZ6Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiriZ6");
+  NewHook(hp, "KiriKiriZ6");
+
+  return true;
+}
+
 } // unnamed namespace
 
 // jichi 1/30/2015: Do KiriKiriZ2 first, which might insert to the same location as KiriKiri1.
 bool InsertKiriKiriZHook()
-{ return InsertKiriKiriZHook2() || InsertKiriKiriZHook1(); }
+{
+  bool ok = InsertKiriKiriZHook_msvc();
+  ok = InsertKiriKiriZHook3() || ok;
+  ok = InsertKiriKiriZHook4() || ok;
+  ok = InsertKiriKiriZHook5() || ok;
+  ok = InsertKiriKiriZHook6() || ok;
+  return InsertKiriKiriZHook2() || InsertKiriKiriZHook1() || ok;
+}
 
 /********************************************************************************************
 BGI hook:
