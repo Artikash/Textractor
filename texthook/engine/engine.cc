@@ -5890,6 +5890,26 @@ bool InsertShinaHook()
   return false;
 }
 
+bool Waffle3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::string prevText;
+
+  if (LPSTR bs=cpp_strnstr(text, "\\", *len))
+	if (bs > text && !IsSJIS(text)) // garbage text
+      return false;
+
+  if (prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+    return false;
+  prevText.assign(text, *len);
+
+  StringCharReplacer(text, len, "\r\n\x81\x40", 4, ' ');
+  StringCharReplacer(text, len, "\r\n", 2, ' ');
+  StringCharReplacer(text, len, "\x81\x40", 2, ' ');
+
+  return true;
+}
 bool InsertWaffleDynamicHook(LPVOID addr, DWORD frame, DWORD stack)
 {
 	ConsoleOutput("WaffleDynamic:triggered");
@@ -6020,6 +6040,30 @@ bool InsertWaffleHook()
       hp.type = DATA_INDIRECT;
       ConsoleOutput("Textractor: INSERT WAFFLE2");
       NewHook(hp, "WAFFLE2");
+      found = true;
+  }
+  //by Blu3train
+/** new waffle3
+*   test on https://vndb.org/v31003
+*/
+  const BYTE bytes2[] = {
+      0xCC,                     // int 3 
+      0x55,                     // push ebp     <- hook here
+      0x8B, 0xEC,               // mov ebp,esp
+      0x8B, 0x55, 0x0C,         // mov edx,[ebp+0C]
+      0x53                      // push ebx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  if (DWORD addr = MemDbg::findBytes(bytes2, sizeof(bytes2), processStartAddress, processStartAddress + range))
+  {
+      HookParam hp = {};
+      hp.address = addr + 1;
+      hp.offset = pusha_eax_off - 4;
+      hp.index = 0x00;
+      hp.filter_fun = Waffle3Filter;
+      hp.type = USING_STRING;
+      ConsoleOutput("Textractor: INSERT WAFFLE3");
+      NewHook(hp, "WAFFLE3");
       found = true;
   }
   //ConsoleOutput("Probably Waffle. Wait for text.");
