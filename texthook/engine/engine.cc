@@ -21829,8 +21829,6 @@ bool InsertMinori2Hook()
     0x89, 0x44, 0x24, 0x14,        // mov [esp+14],eax
     0x8B, 0x47, 0x20               // mov eax,[edi+20]
   };
-  enum { alt_addr_offset = 9 };
-
   ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
   ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
   if (!addr) {
@@ -21840,7 +21838,7 @@ bool InsertMinori2Hook()
 
   ConsoleOutput("vnreng: INSERT Minori2");
   HookParam hp = {};
-  hp.address = addr + alt_addr_offset;
+  hp.address = addr;
   hp.offset = pusha_eax_off -4;
   hp.type = USING_STRING;
   hp.filter_fun = Minori2Filter;
