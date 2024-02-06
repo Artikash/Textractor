@@ -21848,8 +21848,77 @@ bool InsertMinori2Hook()
   return true;
 }
 
+bool InsertMinori3Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r10137
+    */
+  const BYTE bytes[] = {
+    0x0F, 0xB6, 0x08,              // movzx ecx,byte ptr [eax]  << hook here
+    0x3B, 0xCA                     // cmp ecx,edx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.split = pusha_esp_off -4; 
+  hp.split_index = 0;
+  hp.length_offset = 1;
+  hp.codepage = 1252;
+  hp.type = NO_CONTEXT | USING_SPLIT | DATA_INDIRECT;
+  ConsoleOutput("vnreng: INSERT Minori3");
+  NewHook(hp, "Minori3");
+  return true;
+}
+
+bool InsertMinori4Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r10138
+    */
+  const BYTE bytes[] = {
+    0x68, XX4,                     // push ef_latter_en.exe+12EDB0  << hook here
+    0x33, 0xFF,                    // xor edi,edi
+    0x8D, 0xB5, XX4,               // lea esi,[ebp-00000090]
+    0xC7, 0x45, 0x84, XX4          // mov [ebp-7C],0000000F
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.split = pusha_esp_off -4; 
+  hp.split_index = 0;
+  hp.codepage = 1252;
+  hp.type = NO_CONTEXT | USING_STRING | USING_SPLIT;
+  ConsoleOutput("vnreng: INSERT Minori4");
+  NewHook(hp, "Minori4");
+  return true;
+}
+
 bool InsertMinoriHooks()
-{ return InsertMinori1Hook() || InsertMinori2Hook();}
+{ 
+  bool ok = InsertMinori1Hook();
+  ok = InsertMinori2Hook() || ok;
+  ok = InsertMinori3Hook() || ok;
+  ok = InsertMinori4Hook() || ok;
+  return ok;
+}
 
 } // namespace Engine
 
