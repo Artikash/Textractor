@@ -21728,6 +21728,198 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool Minori1EngFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+  StringFilter(text, len, "\\a", 2);
+  StringFilter(text, len, "\\v", 2);
+  CharReplacer(text, len, '\xC4', '-');
+  CharReplacer(text, len, '\x93', '"');
+  CharReplacer(text, len, '\x94', '"');
+  CharReplacer(text, len, '\x92', '\'');
+  StringCharReplacer(text, len, "\\I", 2, '\'');
+  StringCharReplacer(text, len, "\\P", 2, '\'');
+
+  return true;
+}
+
+bool Minori1JapFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  StringFilter(text, len, "\\a", 2);
+  StringFilter(text, len, "\\v", 2);
+  StringFilter(text, len, "\\N", 2);
+
+  if (cpp_strnstr(text, "{", *len)) {
+    StringFilterBetween(text, len, "{", 1, "}", 1);
+  }
+
+  return true;
+}
+
+bool InsertMinori1Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v19644
+    * https://vndb.org/v12562
+    */
+  const BYTE bytes[] = {
+    0x84, 0xC0,             // test al,al                      << hook here
+    0x0F, 0x85, XX4,        // jne trinoline_en_AA.exe+243E1
+    0x68, XX4,              // push trinoline_en_AA.exe+118BF8 << alt eng hook
+    0x33, 0xFF              // xor edi,edi
+  };
+  enum { alt_addr_offset = 8 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori1: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.codepage = 932;
+  hp.type = USING_STRING;
+  hp.filter_fun = Minori1JapFilter;
+  ConsoleOutput("vnreng: INSERT Minori1");
+  NewHook(hp, "Minori1");
+
+  hp.address = addr + alt_addr_offset;
+  hp.codepage = 0;
+  hp.filter_fun = Minori1EngFilter;
+  ConsoleOutput("vnreng: INSERT Minori1eng");
+  NewHook(hp, "Minori1eng");
+
+  return true;
+}
+
+bool Minori2Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  StringCharReplacer(text, len, "\\n", 2, ' ');
+
+  if (cpp_strnstr(text, "{", *len)) {
+    StringFilterBetween(text, len, "{", 1, "}", 1);
+  }
+
+  return true;
+}
+
+bool InsertMinori2Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v35
+    */
+  const BYTE bytes[] = {
+    0x80, 0x38, 0x00,              // cmp byte ptr [eax],00  << hook here
+    0x0F, 0x84, XX4,               // je WindRP.exe+2832A
+    0xB8, 0x20, 0x03, 0x00, 0x00,  // mov eax,00000320
+    0x89, 0x44, 0x24, 0x10,        // mov [esp+10],eax
+    0x89, 0x44, 0x24, 0x14,        // mov [esp+14],eax
+    0x8B, 0x47, 0x20               // mov eax,[edi+20]
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori2: pattern not found");
+    return false;
+  }
+
+  ConsoleOutput("vnreng: INSERT Minori2");
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.type = USING_STRING;
+  hp.filter_fun = Minori2Filter;
+  ConsoleOutput("vnreng: INSERT Minori2");
+  ConsoleOutput("vnreng:Minori2: Please, set text to max speed");
+  NewHook(hp, "Minori2");
+  return true;
+}
+
+bool InsertMinori3Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r10137
+    */
+  const BYTE bytes[] = {
+    0x0F, 0xB6, 0x08,              // movzx ecx,byte ptr [eax]  << hook here
+    0x3B, 0xCA                     // cmp ecx,edx
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori3: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off -4;
+  hp.split = pusha_esp_off -4; 
+  hp.split_index = 0;
+  hp.length_offset = 1;
+  hp.codepage = 1252;
+  hp.type = NO_CONTEXT | USING_SPLIT | DATA_INDIRECT;
+  ConsoleOutput("vnreng: INSERT Minori3");
+  NewHook(hp, "Minori3");
+  return true;
+}
+
+bool InsertMinori4Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/r10138
+    */
+  const BYTE bytes[] = {
+    0x68, XX4,                     // push ef_latter_en.exe+12EDB0  << hook here
+    0x33, 0xFF,                    // xor edi,edi
+    0x8D, 0xB5, XX4,               // lea esi,[ebp-00000090]
+    0xC7, 0x45, 0x84, XX4          // mov [ebp-7C],0000000F
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Minori4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.split = pusha_esp_off -4; 
+  hp.split_index = 0;
+  hp.codepage = 1252;
+  hp.type = NO_CONTEXT | USING_STRING | USING_SPLIT;
+  ConsoleOutput("vnreng: INSERT Minori4");
+  NewHook(hp, "Minori4");
+  return true;
+}
+
+bool InsertMinoriHooks()
+{ 
+  bool ok = InsertMinori1Hook();
+  ok = InsertMinori2Hook() || ok;
+  ok = InsertMinori3Hook() || ok;
+  ok = InsertMinori4Hook() || ok;
+  return ok;
+}
+
 } // namespace Engine
 
 // EOF
