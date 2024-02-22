@@ -6557,6 +6557,48 @@ bool InsertYuris7Hook()
   return true;
 }
 
+bool InsertYuris8Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v47458
+  * https://vndb.org/v45381
+  */
+  const BYTE bytes[] = {
+    0x57,                         // push edi     << hook here
+    0x56,                         // push esi
+    0x55,                         // push ebp
+    0x53,                         // push ebx
+    0x83, 0xEC, 0x10,             // sub esp,10
+    0x8B, 0x5C, 0x24, 0x24,       // mov ebx,[esp+24]
+    0x8B, 0x15, XX4,              // mov edx,[hajiron.exe+47243C]
+    0x8B, 0x0C, 0x9A,             // mov ecx,[edx+ebx*4]
+    0xC6, 0x41, 0x01, 0x03,       // mov byte ptr [ecx+01],03
+    0x8B, 0xC3,                   // mov eax,ebx
+    0xE8,XX4                      // call hajiron.exe+54EA4
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.index = 0;
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD*, DWORD*, DWORD* len)
+  {
+	//*len = (regof(eax,esp_base) == 0x02 && regof(edi,esp_base) == 0x14) ? 2 : 0; //dialogs without names
+	*len = (regof(eax,esp_base) == 0x02 && regof(edi,esp_base) >= 0x62 && regof(edi,esp_base) <= 0x68) ? 2 : 0; //dialogs with names
+  };
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT YU-RIS8");
+  NewHook(hp, "YU-RIS8");
+  return true;
+}
+
 //bool InsertYurisHook()
 //{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 bool InsertYurisHook()
@@ -6568,6 +6610,7 @@ bool InsertYurisHook()
   ok = InsertYuris5Hook() || ok;
   ok = InsertYuris6Hook() || ok;
   ok = InsertYuris7Hook() || ok;
+  ok = InsertYuris8Hook() || ok;
   return ok;
 }
 
