@@ -722,7 +722,7 @@ bool InsertKiriKiriHook() // 9/20/2014 jichi: change return type to bool
 {
   bool k1 = FindKiriKiriHook((DWORD)GetGlyphOutlineW,      processStopAddress - processStartAddress, processStartAddress, 0), // KiriKiri1
        k2 = FindKiriKiriHook((DWORD)GetTextExtentPoint32W, processStopAddress - processStartAddress, processStartAddress, 1), // KiriKiri2
-       k3 = InsertKiriKiri3Hook(); // KiriKiri3
+       k3 = InsertKiriKiri3Hook(), // KiriKiri3
        k4 = InsertKiriKiri4Hook(); // KiriKiri4
   //RegisterEngineType(ENGINE_KIRIKIRI);
   if (k1 && k2) {
