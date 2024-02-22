@@ -656,16 +656,79 @@ bool InsertKiriKiri3Hook()
   return true;
 }
 
+bool KiriKiri4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == L'[' || text[0] == L'@' || (*len<=2 && text[0] == L' '))
+    return false;
+  
+  if (cpp_wcsnstr(text, L"[", *len/sizeof(wchar_t))) {
+    WideStringCharReplacer(text, len, L"[r]", 3, L' ');
+    WideStringFilterBetween(text, len, L"[", 1, L"]\\", 2);
+    // ruby type 1
+    WideStringFilterBetween(text, len, L"[mruby r=", 9, L"\" text=\"", 8); // [mruby r="ゆきみ" text="由紀美"]
+    // ruby type 2
+    WideStringFilterBetween(text, len, L"[ruby text=", 11, L"]", 1); // [ruby text="せんがわ" align="e"][ch text="仙川"]
+    WideStringFilter(text, len, L"[ch text=\"", 10);                 // [ruby text="せんがわ" align="e"][ch text="仙川"]
+    // ruby type 1-2
+    WideStringFilter(text, len, L"\"]", 2);
+    // end ruby
+    WideStringFilterBetween(text, len, L"[", 1, L"]", 1);
+  }
+
+  return true;
+}
+
+bool InsertKiriKiri4Hook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r114393
+  * https://vndb.org/v2916
+  * https://vndb.org/r117083
+  * https://vndb.org/v3851
+  * https://vndb.org/v7804
+  * https://vndb.org/v11123
+  * https://vndb.org/v18650
+  */
+  const BYTE bytes[] = {
+    0xE8, XX4,                     // call Kansen1._GetExceptDLLinfo+67B      <-- hook here
+    0x8D, 0x45, 0xA4,              // lea eax,[ebp-5C]
+    0xFF, 0x45, 0x9C,              // inc [ebp-64]
+    0xE8, XX4                      // call Kansen1.exe+1D561C
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:KiriKiri4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.index = 0;
+  hp.type = NO_CONTEXT | USING_UNICODE | USING_STRING;
+  hp.filter_fun = KiriKiri4Filter;
+  ConsoleOutput("vnreng: INSERT KiriKiri4");
+  NewHook(hp, "KiriKiri4");
+  return true;
+}
+
 bool InsertKiriKiriHook() // 9/20/2014 jichi: change return type to bool
 {
   bool k1 = FindKiriKiriHook((DWORD)GetGlyphOutlineW,      processStopAddress - processStartAddress, processStartAddress, 0), // KiriKiri1
        k2 = FindKiriKiriHook((DWORD)GetTextExtentPoint32W, processStopAddress - processStartAddress, processStartAddress, 1), // KiriKiri2
        k3 = InsertKiriKiri3Hook(); // KiriKiri3
+       k4 = InsertKiriKiri4Hook(); // KiriKiri4
   //RegisterEngineType(ENGINE_KIRIKIRI);
   if (k1 && k2) {
     ConsoleOutput("vnreng:KiriKiri1: disable GDI hooks");
   }
-  return k1 || k2 || k3;
+  return k1 || k2 || k3 || k4;
 }
 
 /** 10/20/2014 jichi: KAGParser
