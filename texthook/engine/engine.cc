@@ -7339,6 +7339,91 @@ bool InsertMalie5Hook()
 	return false;
 }
 
+bool InsertMalie6Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/r72689
+  * https://vndb.org/r44979
+  */
+  const BYTE bytes[] = {
+    0x8B, 0x08,              // mov ecx,[eax]     << hook here
+    0x0F, XX, XX, XX,        // movzx ecx,word ptr [ecx+edx*2]
+    0x89, 0x48, XX,          // mov [eax+04],ecx
+    0x8D, 0x4A, XX,          // lea ecx,[edx+01]
+    0x89, 0x48, XX,          // mov [eax+08],ecx
+    0x8D, 0xA4, 0x24, XX4    // lea esp,[esp+00000000]
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Malie6: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_ebx_off - 4;
+  hp.index = 0;
+  hp.text_fun = [](DWORD esp_base, HookParam* php, BYTE, DWORD *data, DWORD *split, DWORD* len)
+  {
+    const BYTE bytes_eos[] = {
+      0x07, 0x00, 0x06, 0x00          // end of string
+    };
+    if (regof(ecx, esp_base) != regof(edx, esp_base))
+        return;
+    *data += regof(edx, esp_base)*2;
+	if (DWORD foundEOS = MemDbg::findBytes(bytes_eos, sizeof(bytes_eos), (ULONG)*data, (ULONG)(*data + VNR_TEXT_CAPACITY)))
+	  *len = foundEOS - *data;
+  };
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
+  {
+    auto text = reinterpret_cast<LPWSTR>(data);
+    auto len = reinterpret_cast<size_t *>(size);
+
+    size_t lenPurged = 0;
+    for (size_t i = 0; i < *len/2; i++) {
+        // utf-16 characters
+        if (text[i] >= 0x20) {
+            if (!lenPurged && text[i] == 0x3000) //skip space if first char 
+                continue;
+            text[lenPurged++] = text[i];
+        }
+        else {
+            // start command
+            if (text[i] == 0x7) {
+                wchar_t cmd=text[++i];
+                if (cmd == 0x8) { // voice id --> skip
+                    while (text[++i] != 0)
+                        ;
+                } else if (cmd == 0x1) {  // ruby
+                    while (text[++i] != 0) {
+                        if (text[i] == 0xa) { // when we reach 0xa we have the kanji part
+                            while (text[++i] != 0)
+                                ;
+                            break;
+                        }
+                        else
+                            text[lenPurged++] = text[i];
+                    }
+                } else
+				    i++;
+            }
+        }
+    }
+    *len = lenPurged * 2;
+
+    return true;
+  };
+
+  ConsoleOutput("vnreng: INSERT Malie6");
+  NewHook(hp, "Malie6");
+  return true;
+}
+
 // jichi 3/12/2015: Return guessed Malie engine year
 //int GetMalieYear()
 //{
@@ -7372,6 +7457,7 @@ bool InsertMalieHook()
     ok = InsertMalie3Hook() || ok; // jichi 3/7/2014
     ok = InsertMalie4Hook() || ok; 
 	ok = InsertMalie5Hook() || ok;
+	ok = InsertMalie6Hook() || ok;
     return ok;
   }
 }
