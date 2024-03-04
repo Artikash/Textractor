@@ -6352,8 +6352,269 @@ static bool InsertYuris2Hook()
   return true;
 }
 
+static bool Yuris3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  static wchar_t prev_text;
+  wchar_t* pText = reinterpret_cast<wchar_t*>(data);
+
+  if (prev_text == *pText)
+  {
+    prev_text = '\0';
+    return false;
+  }
+  prev_text = *pText;
+  return true;
+}
+
+static bool InsertYuris3Hook()
+{
+  //by Blu3train
+  HookParam hp = {};
+  wcsncpy_s(hp.module, L"kernel32.dll", MAX_MODULE_SIZE - 1);
+  strncpy_s(hp.function, "MultiByteToWideChar", MAX_MODULE_SIZE - 1);
+  hp.address = 6;
+  hp.offset = 0xC; //arg3
+  hp.index = 0;
+  hp.split = 0x1C;
+  hp.split_index = 0;
+  hp.filter_fun = Yuris3Filter;
+  hp.type = USING_STRING | USING_SPLIT | MODULE_OFFSET | FUNCTION_OFFSET;
+  hp.length_offset = 0x10/(short)sizeof(void*); // arg4/arg_sz
+  ConsoleOutput("vnreng: INSERT YU-RIS 3");
+  NewHook(hp, "YU-RIS3");
+  return true;
+}
+
+bool InsertYuris4Hook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v6540
+  */
+  bool found = false;
+  const BYTE pattern[] = {
+        0x52,                               // 52               push edx
+        0x68, 0x00, 0x42, 0x5C, 0x00,       // 68 00425C00      push euphoria.exe+1C4200
+        0xFF, 0x15, 0x90, 0x44, 0x7E, 0x00, // FF 15 90447E00   call dword ptr [euphoria.exe+3E4490]
+        0x83, 0xC4, 0x0C,                   // 83 C4 0C         add esp,0C
+        0xEB, 0x5F,                         // EB 5F            jmp euphoria.exe+4F4C5
+        0xFF, 0x35, 0xA4, 0x19, 0x66, 0x00, // FF 35 A4196600   push [euphoria.exe+2619A4]
+        0x52                                // 52               push edx
+  };
+  enum { addr_offset = 12 }; // distance to the beginning of the function, which is 0x83, 0xC4, 0x0C (add esp,0C)
+
+  for (auto addr : Util::SearchMemory(pattern, sizeof(pattern), PAGE_EXECUTE, processStartAddress, processStopAddress))
+  {
+    HookParam hp = {};
+    hp.address = addr+addr_offset;
+    hp.offset = pusha_edx_off - 4;
+    hp.type = USING_STRING ;
+    ConsoleOutput("Textractor: INSERT YU-RIS 4");
+    NewHook(hp, "YU-RIS4");
+    found = true;
+  }
+  if (!found) ConsoleOutput("Textractor:YU-RIS 4: pattern not found");
+  return found;
+}
+
+bool InsertYuris5Hook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v4037
+  */
+  const BYTE bytes[] = {
+    0x33, 0xD2,          // xor edx,edx
+    0x88, 0x14, 0x0F,    // mov [edi+ecx],dl
+    0xA1, XX4,           // mov eax,[exe+2DE630]
+    0x8B, 0x78, 0x3C,    // mov edi,[eax+3C]
+    0x8B, 0x58, 0x5C,    // mov ebx,[eax+5C]
+    0x88, 0x14, 0x3B     // mov [ebx+edi],dl
+  };
+
+  enum { addr_offset = 0 }; // distance to the beginning of the function, which is 0x55 (push ebp)
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_ecx_off - 4;
+  hp.type = USING_STRING | NO_CONTEXT;
+
+  ConsoleOutput("Textractor: INSERT YU-RIS 5");
+  NewHook(hp, "YU-RIS5");
+
+  return true;
+}
+
+static bool Yuris6Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+  static std::string prevText;
+
+  if (prevText.length()==*len && prevText.find(text, 0, *len) != std::string::npos) // Check if the string is present in the previous one
+    return false;
+  prevText.assign(text, *len);
+
+  // ruby ＜手水舎／ちょうずや＞
+  if (cpp_strnstr(text, "\x81\x83", *len)) {		// \x81\x83 -> '＜'
+    StringFilterBetween(text, len, "\x81\x5E", 2, "\x81\x84", 2); // \x81\x5E -> '／' , \x81\x84 -> '＞'
+    StringFilter(text, len, "\x81\x83", 2);			// \x81\x83 -> '＜'
+  }
+  // ruby ≪美桜／姉さん≫
+  else if (cpp_strnstr(text, "\x81\xE1", *len)) {	// \x81\xE1 -> '≪'
+    StringFilterBetween(text, len, "\x81\x5E", 2, "\x81\xE2", 2); // \x81\x5E -> '／' , \x81\xE2 -> '≫'
+    StringFilter(text, len, "\x81\xE1", 2);			// \x81\xE1 -> '≪'
+  }
+
+  CharReplacer(text, len, '=', '-');
+  StringCharReplacer(text, len, "\xEF\xF0", 2, ' ');
+  StringFilter(text, len, "\xEF\xF2", 2);
+  StringFilter(text, len, "\xEF\xF5", 2);
+  StringFilter(text, len, "\x81\x98", 2);
+
+  return true;
+}
+
+bool InsertYuris6Hook()
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v40058
+  * https://vndb.org/v42883
+  * https://vndb.org/v44092
+  * https://vndb.org/v21171
+  * https://vndb.org/r46910
+  */
+  const BYTE bytes[] = {
+    0xE9, XX4,           // jmp oshitona01.exe+1B629
+    0xBF, XX4,           // mov edi,oshitona01.exe+24EEA0
+    0x8A, 0x17,          // mov dl,[edi]
+    0x47,                // inc edi
+    0x88, 0x16,          // mov [esi],dl
+    0x46,                // inc esi
+    0x84, 0xD2           // test dl,dl
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_eax_off - 4;
+  hp.index = 0x38;
+  hp.filter_fun = Yuris6Filter;
+  hp.type = USING_STRING | NO_CONTEXT | DATA_INDIRECT;
+
+  ConsoleOutput("Textractor: INSERT YU-RIS 6");
+  NewHook(hp, "YU-RIS6");
+
+  return true;
+}
+
+bool InsertYuris7Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v45381
+  * https://vndb.org/v47458
+  * https://vndb.org/v21144
+  * https://vndb.org/v18681
+  */
+  const BYTE bytes[] = {
+    0x03, 0xC1,                   // add eax,ecx
+    0x99,                         // cdq 
+    0xE9, XX4                     // jmp nekonin_spin.exe+55753     << hook here
+  };
+  enum { addr_offset = sizeof(bytes) - 5 };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + addr_offset;
+  hp.offset = pusha_eax_off -4;
+  hp.index = 0;
+  hp.length_offset = 1; // only 1 character
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD*, DWORD*, DWORD* len)
+  {
+	*len = (retof(esp_base) == 0) ? 2 : 0;
+  };
+  hp.type = BIG_ENDIAN;
+  ConsoleOutput("vnreng: INSERT YU-RIS7");
+  NewHook(hp, "YU-RIS7");
+  return true;
+}
+
+bool InsertYuris8Hook() 
+{
+  //by Blu3train
+  /*
+  * Sample games:
+  * https://vndb.org/v47458
+  * https://vndb.org/v45381
+  */
+  const BYTE bytes[] = {
+    0x57,                         // push edi     << hook here
+    0x56,                         // push esi
+    0x55,                         // push ebp
+    0x53,                         // push ebx
+    0x83, 0xEC, 0x10,             // sub esp,10
+    0x8B, 0x5C, 0x24, 0x24,       // mov ebx,[esp+24]
+    0x8B, 0x15, XX4,              // mov edx,[hajiron.exe+47243C]
+    0x8B, 0x0C, 0x9A,             // mov ecx,[edx+ebx*4]
+    0xC6, 0x41, 0x01, 0x03,       // mov byte ptr [ecx+01],03
+    0x8B, 0xC3,                   // mov eax,ebx
+    0xE8,XX4                      // call hajiron.exe+54EA4
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr;
+  hp.offset = pusha_edx_off -4;
+  hp.index = 0;
+  hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD*, DWORD*, DWORD* len)
+  {
+	DWORD textLen = regof(eax,esp_base);
+	if ( textLen > 2)
+	  return;
+	*len = (regof(edi,esp_base) >= 0xFA && regof(edi,esp_base) <= 0xFE || regof(edi,esp_base) >= 0x1A0 && regof(edi,esp_base) <= 0x1C2) ? textLen : 0;
+  };
+  hp.type = USING_STRING;
+  ConsoleOutput("vnreng: INSERT YU-RIS8");
+  NewHook(hp, "YU-RIS8");
+  return true;
+}
+
+//bool InsertYurisHook()
+//{ return InsertYuris1Hook() || InsertYuris2Hook() || InsertYuris3Hook(); }
 bool InsertYurisHook()
-{ return InsertYuris1Hook() || InsertYuris2Hook(); }
+{ 
+  bool ok = InsertYuris1Hook();
+  ok = InsertYuris2Hook() || ok;
+  ok = InsertYuris3Hook() || ok;
+  ok = InsertYuris4Hook() || ok;
+  ok = InsertYuris5Hook() || ok;
+  ok = InsertYuris6Hook() || ok;
+  ok = InsertYuris7Hook() || ok;
+  ok = InsertYuris8Hook() || ok;
+  return ok;
+}
 
 bool InsertCotophaHook1()
 {
