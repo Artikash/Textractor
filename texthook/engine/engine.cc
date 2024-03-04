@@ -21728,6 +21728,42 @@ bool InsertNamcoPS2Hook()
 }
 #endif // 0
 
+bool InsertSakanaGLHook() {
+	//by Blu3train
+	/*
+	* Sample games:
+	* https://vndb.org/v46148
+	*/
+	const BYTE bytes[] = {
+		0x89, XX,                 // mov [ecx],eax       <- hook here
+		0x33, XX,                 // xor ecx,ecx
+		0x85, XX                  // test ebx,ebx
+	};
+    HMODULE module = GetModuleHandleW(L"sakanagl.dll");
+	auto [minAddress, maxAddress] = Util::QueryModuleLimits(module);
+	ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), minAddress, maxAddress);
+	if (!addr) {
+		ConsoleOutput("vnreng:SakanaGL: pattern not found");
+		return false;
+	}
+
+	HookParam hp = {};
+	hp.address = addr;
+	hp.offset = pusha_edx_off -4;
+	hp.index = 0;
+	hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD *data, DWORD*, DWORD *len)
+	{
+		if ( regof(edi,esp_base) != 2)
+			return;	
+		*len = strlen((char*)*data);
+	};
+	hp.type = USING_UTF8 | USING_STRING;
+	ConsoleOutput("vnreng: INSERT SakanaGL");
+	NewHook(hp, "SakanaGL");
+
+	return true;
+}
+
 } // namespace Engine
 
 // EOF
