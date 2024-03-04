@@ -6590,8 +6590,10 @@ bool InsertYuris8Hook()
   hp.index = 0;
   hp.text_fun = [](DWORD esp_base, HookParam*, BYTE, DWORD*, DWORD*, DWORD* len)
   {
-	//*len = (regof(eax,esp_base) == 0x02 && regof(edi,esp_base) == 0x14) ? 2 : 0; //dialogs without names
-	*len = (regof(eax,esp_base) == 0x02 && regof(edi,esp_base) >= 0x62 && regof(edi,esp_base) <= 0x68) ? 2 : 0; //dialogs with names
+	DWORD textLen = regof(eax,esp_base);
+	if ( textLen > 2)
+	  return;
+	*len = (regof(edi,esp_base) >= 0xFA && regof(edi,esp_base) <= 0xFE || regof(edi,esp_base) >= 0x1A0 && regof(edi,esp_base) <= 0x1C2) ? textLen : 0;
   };
   hp.type = USING_STRING;
   ConsoleOutput("vnreng: INSERT YU-RIS8");
