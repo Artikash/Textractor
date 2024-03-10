@@ -6393,9 +6393,78 @@ bool InsertCotophaHook2()
 	return false;
 }
 
+bool InsertCotophaHook4() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v32624
+    */
+  const BYTE bytes[] = {
+    0xCC,                         // int 3 
+    0x55,                         // push ebp     << hook here
+    0x8B, 0xEC,                   // mov ebp,esp
+    0x51,                         // push ecx
+    0x53,                         // push ebx
+    0x56,                         // push esi
+    0x57,                         // push edi
+    0x8B, 0x7D, 0x08,             // mov edi,[ebp+08]
+    0x33, 0xF6,                   // xor esi,esi
+    0x8B, 0xD9,                   // mov ebx,ecx
+    0x85, 0xFF,                   // test edi,edi
+    0x74, 0x0D                    // je ststeady2.glsGetEnabledProcessorType+643F
+  };
+
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr) {
+    ConsoleOutput("vnreng:Cotopha4: pattern not found");
+    return false;
+  }
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = 4 * 1; // arg1
+  hp.index = 0;
+  hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+  hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
+  {
+    auto text = reinterpret_cast<LPWSTR>(data);
+    auto len = reinterpret_cast<size_t *>(size);
+
+    if (text[0] != L'\\')
+      return false;
+
+    size_t lenPurged = 0;
+    for (size_t i = 0; i < *len/2; i++) {
+      if (text[i] != L'\\')
+        text[lenPurged++] = text[i];
+      else {
+        // start command
+        wchar_t cmd=text[++i];
+        if (cmd == 'r') {  // ruby
+          i++; // skip ';' char
+          while (text[++i] != L':') { 
+            if (text[i] == L';') // when we reach '; ' we have the kanji part
+              break;
+            text[lenPurged++] = text[i];
+          }
+		}
+        while (text[++i] != L':')
+          ;
+      }
+    }
+    *len = lenPurged * 2;
+    return true;
+  };
+  ConsoleOutput("vnreng: INSERT Cotopha4");
+  NewHook(hp, "Cotopha4");
+  return true;
+}
+
 bool InsertCotophaHook()
 {
-	return InsertCotophaHook1() | InsertCotophaHook2();
+	return InsertCotophaHook4() || InsertCotophaHook1() || InsertCotophaHook2();
 }
 
 // jichi 5/10/2014
