@@ -6355,6 +6355,41 @@ static bool InsertYuris2Hook()
 bool InsertYurisHook()
 { return InsertYuris1Hook() || InsertYuris2Hook(); }
 
+bool CotophaFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPWSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (*len<=2 || text[0] != L'\\')
+    return false;
+
+  size_t lenPurged = 0;
+  for (size_t i = 0; i < *len/2; i++) {
+    if (text[i] != L'\\') {
+      text[lenPurged++] = text[i];
+    } else {
+      // start command
+      wchar_t cmd=text[++i];
+      if (cmd == 'r') {  // ruby
+        i++; // skip ';' char
+        while (text[++i] != L':') { 
+          if (text[i] == L';') // when we reach '; ' we have the kanji part
+            break;
+          text[lenPurged++] = text[i];
+        }
+      }
+      else if (cmd == L'n' && lenPurged)  // newline
+        text[lenPurged++] = L' '; // for Western language compatibility
+      while (text[++i] != L':')
+        ;
+    }
+  }
+  if (lenPurged)
+    text[lenPurged++] = L' ';  // for Western language compatibility
+  *len = lenPurged * 2;
+  return true;
+}
+
 bool InsertCotophaHook1()
 {
   enum : DWORD { ins = 0xec8b55 }; // mov ebp,esp, sub esp,*  ; jichi 7/12/2014
@@ -6382,10 +6417,7 @@ bool InsertCotophaHook2()
 		hp.address = (uintptr_t)addr;
 		hp.offset = 8;
 		hp.type = USING_UNICODE | USING_STRING;
-		hp.filter_fun = [](void* data, DWORD* len, HookParam*, BYTE)
-		{
-			return std::wstring_view((wchar_t*)data, *len / sizeof(wchar_t)).find(L'\\') != std::wstring_view::npos;
-		};
+		hp.filter_fun = CotophaFilter;
 		ConsoleOutput("Textractor: INSERT Cotopha 2");
 		NewHook(hp, "Cotopha2");
 		return true;
@@ -6393,9 +6425,49 @@ bool InsertCotophaHook2()
 	return false;
 }
 
+bool InsertCotophaHook4() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v32624
+    */
+  const BYTE bytes[] = {
+    0xCC,                         // int 3 
+    0x55,                         // push ebp     << hook here
+    0x8B, 0xEC,                   // mov ebp,esp
+    0x51,                         // push ecx
+    0x53,                         // push ebx
+    0x56,                         // push esi
+    0x57,                         // push edi
+    0x8B, 0x7D, 0x08,             // mov edi,[ebp+08]
+    0x33, 0xF6                    // xor esi,esi
+  };
+
+  if (ULONG procAddr = (ULONG)GetProcAddress(GetModuleHandleW(NULL), "glsGetEnabledProcessorType")) {
+    ULONG range = min(processStopAddress - procAddr, MAX_REL_ADDR);
+    ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), procAddr, procAddr + range);
+    if (!addr) {
+      ConsoleOutput("vnreng:Cotopha4: pattern not found");
+      return false;
+    }
+
+    HookParam hp = {};
+    hp.address = addr + 1;
+    hp.offset = 4 * 1; // arg1
+    hp.index = 0;
+    hp.type = USING_UNICODE | USING_STRING | NO_CONTEXT;
+    hp.filter_fun = CotophaFilter;
+    ConsoleOutput("vnreng: INSERT Cotopha4");
+    NewHook(hp, "Cotopha4");
+    return true;
+  }
+  return false;
+}
+
 bool InsertCotophaHook()
 {
-	return InsertCotophaHook1() | InsertCotophaHook2();
+	return InsertCotophaHook4() || InsertCotophaHook1() || InsertCotophaHook2();
 }
 
 // jichi 5/10/2014
