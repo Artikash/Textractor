@@ -8492,10 +8492,66 @@ bool InsertStuffScript2Hook()
   NewHook(hp, "StuffScript2");
   return true;
 }
+bool StuffScript3Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  auto text = reinterpret_cast<LPSTR>(data);
+  auto len = reinterpret_cast<size_t *>(size);
+
+  if (text[0] == '\x81' && text[1] == '\x40') { //removes space at the beginning of the sentence
+    *len -= 2;
+    ::memmove(text, text + 2, *len);
+  }
+
+  StringFilterBetween(text, len, "/\x81\x79", 3, "\x81\x7A", 2); //remove hidden name
+  StringFilterBetween(text, len, "[", 1, "]", 1); //garbage
+  
+  //ruby
+  CharFilter(text, len, '<');
+  StringFilterBetween(text, len, ",", 1, ">", 1);
+
+  StringCharReplacer(text, len, "_r\x81\x40", 4, ' ');
+  StringCharReplacer(text, len, "_r", 2, ' ');
+
+  return true;
+}
+bool InsertStuffScript3Hook() 
+{
+  //by Blu3train
+    /*
+    * Sample games:
+    * https://vndb.org/v3111
+    */
+  const BYTE bytes[] = {
+    0xCC,                    // int 3 
+    0x81, 0xEC, XX4,         // sub esp,00000140          <-- hook here
+    0xA1, XX4,               // mov eax,[EVOLIMIT.exe+8C1F0]
+    0x33, 0xC4,              // xor eax,esp
+    0x89, 0x84, 0x24, XX4,   // mov [esp+0000013C],eax
+    0x53,                    // push ebx
+    0x55,                    // push ebp
+    0x8B, 0xAC, 0x24, XX4,   // mov ebp,[esp+0000014C]
+    0x8B, 0x45, 0x2C         // mov eax,[ebp+2C]
+  };
+  ULONG range = min(processStopAddress - processStartAddress, MAX_REL_ADDR);
+  ULONG addr = MemDbg::findBytes(bytes, sizeof(bytes), processStartAddress, processStartAddress + range);
+  if (!addr)
+    return false;
+
+  HookParam hp = {};
+  hp.address = addr + 1;
+  hp.offset = pusha_ecx_off -4;
+  hp.index = 0;
+  hp.type = USING_STRING | NO_CONTEXT;
+  hp.filter_fun = StuffScript3Filter;
+  ConsoleOutput("vnreng: INSERT StuffScript3");
+  NewHook(hp, "StuffScript3");
+  return true;
+}
 void InsertStuffScriptHooks()
 {
   InsertStuffScriptHook();
   InsertStuffScript2Hook();
+  InsertStuffScript3Hook();
 }
 bool InsertTriangleHook()
 {
