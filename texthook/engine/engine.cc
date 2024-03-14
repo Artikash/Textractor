@@ -671,6 +671,7 @@ bool KiriKiri4Filter(LPVOID data, DWORD *size, HookParam *, BYTE)
     WideStringFilterBetween(text, len, L"[mruby r=", 9, L"\" text=\"", 8); // [mruby r="ゆきみ" text="由紀美"]
     // ruby type 2
     WideStringFilterBetween(text, len, L"[ruby text=", 11, L"]", 1); // [ruby text="せんがわ" align="e"][ch text="仙川"]
+    WideStringFilterBetween(text, len, L"[Ruby text", 10, L"]", 1);  // [Ruby text = "Sawano"][ch text="沢野"]
     WideStringFilter(text, len, L"[ch text=\"", 10);                 // [ruby text="せんがわ" align="e"][ch text="仙川"]
     // ruby type 1-2
     WideStringFilter(text, len, L"\"]", 2);
@@ -693,6 +694,7 @@ bool InsertKiriKiri4Hook()
   * https://vndb.org/v7804
   * https://vndb.org/v11123
   * https://vndb.org/v18650
+  * https://vndb.org/v38034
   */
   const BYTE bytes[] = {
     0xE8, XX4,                     // call Kansen1._GetExceptDLLinfo+67B      <-- hook here
