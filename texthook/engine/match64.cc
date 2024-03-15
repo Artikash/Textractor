@@ -570,7 +570,6 @@ namespace Engine
 			hp.offset = pusha_rdx_off -4; //RDX
 			hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
 			{
-				static std::wstring prevText;
 				auto text = reinterpret_cast<LPWSTR>(data);
 				auto len = reinterpret_cast<size_t *>(size);
 
