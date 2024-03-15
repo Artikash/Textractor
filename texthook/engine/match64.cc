@@ -6,9 +6,337 @@
 #include "mono/funcinfo.h"
 #include "engine.h"
 #include "util.h"
+#include "cpputil/cppcstring.h"
+
+// Warning: The offset in ITH has -4 offset comparing to pusha and AGTH
+enum pusha_off
+{
+	pusha_rax_off = -0xC,
+	pusha_rbx_off = -0x14,
+	pusha_rcx_off = -0x1c,
+	pusha_rdx_off = -0x24,
+	pusha_rsp_off = -0x2c,
+	pusha_rbp_off = -0x34,
+	pusha_rsi_off = -0x3c,
+	pusha_rdi_off = -0x44,
+	pusha_r8_off  = -0x4c,
+	pusha_r9_off  = -0x54,
+	pusha_r10_off = -0x5c,
+	pusha_r11_off = -0x64,
+	pusha_r12_off = -0x6c,
+	pusha_r13_off = -0x74,
+	pusha_r14_off = -0x7c,
+	pusha_r15_off = -0x84,
+	pusha_off     = -0x8c // pushad offset
+};
+
+#define retof(rsp_base)         *(uintptr_t *)(rsp_base) // return address
+#define regof(name, rsp_base)   *(uintptr_t *)((rsp_base) + pusha_##name##_off - 4)
+#define argof(count, rsp_base)  *(uintptr_t *)((rsp_base) + 4 * (count)) // starts from 1 instead of 0
+
+enum { VNR_TEXT_CAPACITY = 1500 }; // estimated max number of bytes allowed in VNR, slightly larger than VNR's text limit (1000)
+
+namespace { // unnamed helpers
+
+#define XX2 XX,XX       // WORD
+#define XX4 XX2,XX2     // DWORD
+#define XX8 XX4,XX4     // QWORD
+
+// jichi 8/18/2013: Original maximum relative address in ITH
+//enum { MAX_REL_ADDR = 0x200000 };
+
+// jichi 10/1/2013: Increase relative address limit. Certain game engine like Artemis has larger code region
+enum : DWORD { MAX_REL_ADDR = 0x00300000 };
+
+static union {
+  char text_buffer[0x1000];
+  wchar_t wc_buffer[0x800];
+
+  struct { // CodeSection
+    DWORD base;
+    DWORD size;
+  } code_section[0x200];
+};
+DWORD text_buffer_length;
+
+// 7/29/2014 jichi: I should move these functions to different files
+// String utilities
+// Return the address of the first non-zero address
+LPCSTR reverse_search_begin(const char *s, int maxsize = VNR_TEXT_CAPACITY)
+{
+  if (*s)
+    for (int i = 0; i < maxsize; i++, s--)
+      if (!*s)
+        return s + 1;
+  return nullptr;
+}
+
+bool all_ascii(const char *s, int maxsize = VNR_TEXT_CAPACITY)
+{
+  if (s)
+    for (int i = 0; i < maxsize && *s; i++, s++)
+      if ((BYTE)*s > 127) // unsigned char
+        return false;
+  return true;
+}
+
+bool all_ascii(const wchar_t *s, int maxsize = VNR_TEXT_CAPACITY)
+{
+  if (s)
+    for (int i = 0; i < maxsize && *s; i++, s++)
+      if (*s > 127) // unsigned char
+        return false;
+  return true;
+}
+
+// String filters
+
+void CharReplacer(char *str, size_t *size, char fr, char to)
+{
+  size_t len = *size;
+  for (size_t i = 0; i < len; i++)
+    if (str[i] == fr)
+      str[i] = to;
+}
+
+void WideCharReplacer(wchar_t *str, size_t *size, wchar_t fr, wchar_t to)
+{
+  size_t len = *size / 2;
+  for (size_t i = 0; i < len; i++)
+    if (str[i] == fr)
+      str[i] = to;
+}
+
+void CharFilter(char *str, size_t *size, char ch)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = (char *)::memchr(str, ch, len);
+       (cur && --len && (curlen = len - (cur - str)));
+       cur = (char *)::memchr(cur, ch, curlen))
+    ::memmove(cur, cur + 1, curlen);
+  *size = len;
+}
+
+void WideCharFilter(wchar_t *str, size_t *size, wchar_t ch)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnchr(str, ch, len);
+       (cur && --len && (curlen = len - (cur - str)));
+       cur = cpp_wcsnchr(cur, ch, curlen))
+    ::memmove(cur, cur + 1, 2 * curlen);
+  *size = len * 2;
+}
+
+void CharsFilter(char *str, size_t *size, const char *chars)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = cpp_strnpbrk(str, chars, len);
+       (cur && --len && (curlen = len - (cur - str)));
+       cur = cpp_strnpbrk(cur, chars, curlen))
+    ::memmove(cur, cur + 1, curlen);
+  *size = len;
+}
+
+void WideCharsFilter(wchar_t *str, size_t *size, const wchar_t *chars)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnpbrk(str, chars, len);
+       (cur && --len && (curlen = len - (cur - str)));
+       cur = cpp_wcsnpbrk(cur, chars, curlen))
+    ::memmove(cur, cur + 1, 2 * curlen);
+  *size = len * 2;
+}
+
+void StringFilter(char *str, size_t *size, const char *remove, size_t removelen)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = cpp_strnstr(str, remove, len);
+       (cur && (len -= removelen) && (curlen = len - (cur - str)));
+       cur = cpp_strnstr(cur, remove, curlen))
+    ::memmove(cur, cur + removelen, curlen);
+  *size = len;
+}
+
+void WideStringFilter(wchar_t *str, size_t *size, const wchar_t *remove, size_t removelen)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnstr(str, remove, len);
+       (cur && (len -= removelen) && (curlen = len - (cur - str)));
+       cur = cpp_wcsnstr(cur, remove, curlen))
+    ::memmove(cur, cur + removelen, 2 * curlen);
+  *size = len * 2;
+}
+
+void StringFilterBetween(char *str, size_t *size, const char *fr, size_t frlen, const char *to, size_t tolen)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = cpp_strnstr(str, fr, len);
+       cur;
+       cur = cpp_strnstr(cur, fr, curlen)) {
+    curlen = (len - frlen) - (cur - str);
+    auto end = cpp_strnstr(cur + frlen, to, curlen);
+    if (!end)
+      break;
+    curlen = len - (end - str) - tolen;
+    ::memmove(cur, end + tolen, curlen);
+    len -= tolen + (end - cur);
+  }
+  *size = len;
+}
+
+void WideStringFilterBetween(wchar_t *str, size_t *size, const wchar_t *fr, size_t frlen, const wchar_t *to, size_t tolen)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnstr(str, fr, len);
+       cur;
+       cur = cpp_wcsnstr(cur, fr, curlen)) {
+    curlen = (len - frlen) - (cur - str);
+    auto end = cpp_wcsnstr(cur + frlen, to, curlen);
+    if (!end)
+      break;
+    curlen = len - (end - str) - tolen;
+    ::memmove(cur, end + tolen, 2 * curlen);
+    len -= tolen + (end - cur);
+  }
+  *size = len * 2;
+}
+
+void StringCharReplacer(char *str, size_t *size, const char *src, size_t srclen, char ch)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = cpp_strnstr(str, src, len);
+       cur && len;
+       cur = cpp_strnstr(cur, src, curlen)) {
+    *cur++ = ch;
+    len -= srclen - 1;
+    curlen = len - (cur - str);
+    if (curlen == 0)
+      break;
+    ::memmove(cur, cur + srclen - 1, curlen);
+  }
+  *size = len;
+}
+
+void WideStringCharReplacer(wchar_t *str, size_t *size, const wchar_t *src, size_t srclen, wchar_t ch)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnstr(str, src, len);
+       cur && len;
+       cur = cpp_wcsnstr(cur, src, curlen)) {
+    *cur++ = ch;
+    len -= srclen - 1;
+    curlen = len - (cur - str);
+    if (curlen == 0)
+      break;
+    ::memmove(cur, cur + srclen -1, 2 * curlen);
+  }
+  *size = len * 2;
+}
+
+// NOTE: I assume srclen >= dstlen
+void StringReplacer(char *str, size_t *size, const char *src, size_t srclen, const char *dst, size_t dstlen)
+{
+  size_t len = *size,
+         curlen;
+  for (char *cur = cpp_strnstr(str, src, len);
+       cur && len;
+       cur = cpp_strnstr(cur, src, curlen)) {
+    ::memcpy(cur, dst, dstlen);
+    cur += dstlen;
+    len -= srclen - dstlen;
+    curlen = len - (cur - str);
+    if (curlen == 0)
+      break;
+    if (srclen > dstlen)
+      ::memmove(cur, cur + srclen - dstlen, curlen);
+  }
+  *size = len;
+}
+
+void WideStringReplacer(wchar_t *str, size_t *size, const wchar_t *src, size_t srclen, const wchar_t *dst, size_t dstlen)
+{
+  size_t len = *size / 2,
+         curlen;
+  for (wchar_t *cur = cpp_wcsnstr(str, src, len);
+       cur && len;
+       cur = cpp_wcsnstr(cur, src, curlen)) {
+    ::memcpy(cur, dst, 2 * dstlen);
+    cur += dstlen;
+    len -= srclen - dstlen;
+    curlen = len - (cur - str);
+    if (curlen == 0)
+      break;
+    if (srclen > dstlen)
+      ::memmove(cur, cur + srclen - dstlen, 2 * curlen);
+  }
+  *size = len * 2;
+}
+
+bool NewLineCharFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  CharFilter(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size),
+      '\n');
+  return true;
+}
+bool NewLineWideCharFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  CharFilter(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size),
+      L'\n');
+  return true;
+}
+bool NewLineStringFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  StringFilter(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size),
+      "\\n", 2);
+  return true;
+}
+bool NewLineWideStringFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  WideStringFilter(reinterpret_cast<LPWSTR>(data), reinterpret_cast<size_t *>(size),
+      L"\\n", 2);
+  return true;
+}
+bool NewLineCharToSpaceFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  CharReplacer(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size), '\n', ' ');
+  return true;
+}
+bool NewLineWideCharToSpaceFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  WideCharReplacer(reinterpret_cast<LPWSTR>(data), reinterpret_cast<size_t *>(size), L'\n', L' ');
+  return true;
+}
+
+// Remove every characters <= 0x1f (i.e. before space ' ') except 0xa and 0xd.
+bool IllegalCharsFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  CharsFilter(reinterpret_cast<LPSTR>(data), reinterpret_cast<size_t *>(size),
+      "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0e\x0f\x10\x11\x12\x12\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f");
+  return true;
+}
+bool IllegalWideCharsFilter(LPVOID data, DWORD *size, HookParam *, BYTE)
+{
+  WideCharsFilter(reinterpret_cast<LPWSTR>(data), reinterpret_cast<size_t *>(size),
+      L"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0b\x0c\x0e\x0f\x10\x11\x12\x12\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f");
+  return true;
+}
+
+} // unnamed namespace
+
 
 namespace Engine
 {
+	enum : DWORD { X64_MAX_REL_ADDR = 0x00300000 };
 	/** Artikash 6/7/2019
 *   PPSSPP JIT code has pointers, but they are all added to an offset before being used.
 	Find that offset so that hook searching works properly.
@@ -214,6 +542,68 @@ namespace Engine
 		return false;
 	}
 
+	bool InsertLucaSystemHook()
+	{
+		//by Blu3train
+		/*
+		* Sample games:
+		* https://vndb.org/r108105
+		*/
+		const BYTE bytes[] = {
+			0xCC,                                // int 3 
+			0x48, XX4,                           // mov [rsp+18],rbx       <- hook here
+			0x55,                                // push rbp
+			0x56,                                // push rsi
+			0x57,                                // push rdi
+			0x41, 0x54,                          // push r12
+			0x41, 0x55,                          // push r13
+			0x41, 0x56,                          // push r14
+			0x41, 0x57,                          // push r15
+			0x48, 0x8D, 0xAC, 0x24, XX4,         // lea rbp,[rsp-00003810]
+			0xB8, XX4                            // mov eax,00003910
+		};
+
+		ULONG64 range = min(processStopAddress - processStartAddress, X64_MAX_REL_ADDR);
+		for (auto addr : Util::SearchMemory(bytes, sizeof(bytes), PAGE_EXECUTE, processStartAddress, processStartAddress + range)) {
+			HookParam hp = {};
+			hp.address = addr + 1;
+			hp.offset = pusha_rdx_off -4; //RDX
+			hp.filter_fun = [](LPVOID data, DWORD *size, HookParam *, BYTE)
+			{
+				auto text = reinterpret_cast<LPWSTR>(data);
+				auto len = reinterpret_cast<size_t *>(size);
+
+				if (text[0] == L'\x3000') { //removes space at the beginning of the sentence
+					*len -= 2;
+					::memmove(text, text + 1, *len);
+				}
+
+				if ( *text == L'@' ) //Name in square brackets instead of '@'
+					if ( wchar_t *match2 = cpp_wcsnchr(text+1, L'@', *len/2-1) ) {
+						*text = L'[';
+						*match2 = L']';
+					}
+
+				WideStringFilterBetween(text, len, L"$C(", 3, L")", 1);
+				WideStringFilter(text, len, L"$A", 3); // remove $A followed by 1 char
+				WideStringCharReplacer(text, len, L"$d", 2, L'\n');
+				WideCharFilter(text, len, L'\xFF3F');
+				//ruby
+				WideStringFilter(text, len, L"$[", 2);
+				WideStringFilterBetween(text, len, L"$/", 2, L"$]", 2);
+
+				return true;
+			};
+			hp.type = USING_UNICODE | USING_STRING;
+			ConsoleOutput("vnreng: INSERT LucaSystem Hook ");
+			NewHook(hp, "LucaSystem");
+			return true;
+		}
+
+		ConsoleOutput("vnreng:LucaSystem: pattern not found");
+		return false;
+	}
+
 	bool UnsafeDetermineEngineType()
 	{
 		if (Util::CheckFile(L"PPSSPP*.exe") && FindPPSSPP()) return true;
@@ -225,6 +615,11 @@ namespace Engine
 			ConsoleOutput("Textractor: Precompiled Unity found (searching for hooks should work)");
 			wcscpy_s(spDefault.boundaryModule, L"GameAssembly.dll");
 			spDefault.padding = 20;
+			return true;
+		}
+
+		if (Util::CheckFile(L"files/*.PAK")) {
+			InsertLucaSystemHook();
 			return true;
 		}
 
