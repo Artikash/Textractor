@@ -574,8 +574,6 @@ namespace Engine
 				auto text = reinterpret_cast<LPWSTR>(data);
 				auto len = reinterpret_cast<size_t *>(size);
 
-			ConsoleOutput("debug:LucaSystem: text[0]:%x", text[0]);
-
 				if (text[0] == L'\x3000') { //removes space at the beginning of the sentence
 					*len -= 2;
 					::memmove(text, text + 1, *len);
